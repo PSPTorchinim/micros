@@ -81,7 +81,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: IdentityApi
+        MICROSERVICE_NAME: IdentityAPI
     ports:
       - "30001:8080"
     healthcheck:
@@ -127,7 +127,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: MusicApi
+        MICROSERVICE_NAME: MusicAPI
     ports:
       - "30002:8080"
     healthcheck:
@@ -173,7 +173,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: EquipmentApi
+        MICROSERVICE_NAME: EquipmentAPI
     ports:
       - "30003:8080"
     healthcheck:
@@ -219,7 +219,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: DocumentsApi
+        MICROSERVICE_NAME: DocumentsAPI
     ports:
       - "30004:8080"
     healthcheck:
@@ -265,7 +265,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: CompanyApi
+        MICROSERVICE_NAME: CompanyAPI
     ports:
       - "30005:8080"
     healthcheck:
@@ -311,7 +311,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: MailingApi
+        MICROSERVICE_NAME: MailingAPI
     ports:
       - "30006:8080"
     healthcheck:
@@ -357,7 +357,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: PartyApi
+        MICROSERVICE_NAME: PartyAPI
     ports:
       - "30007:8080"
     healthcheck:
