@@ -1,0 +1,112 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [develop, "production", "test"]
+
+jobs:
+  validate_dotnet:
+    name: Validate PR - DotNet
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            "CompanyAPI",
+            "DJHostGateway",
+            "DocumentsAPI",
+            "EquipmentAPI",
+            "IdentityAPI",
+            "MailingAPI",
+            "MusicAPI",
+            "PartyAPI",
+          ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Fetch previous commit for comparison
+
+      - name: Check if service changed
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            service:
+              - 'Services/${{ matrix.service }}/**'
+              - 'Services/Shared/**'
+              - 'Tests/${{ matrix.service }}.Tests/**'
+              - 'Docker/microservice.Dockerfile'
+
+      - name: Setup .NET
+        if: steps.check_changes.outputs.service == 'true'
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.x"
+
+      - name: Restore dependencies
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet restore 'Services/${{ matrix.service }}'
+
+      - name: Download EFCore tools
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Check if DbContext exists
+        if: steps.check_changes.outputs.service == 'true'
+        run: |
+          cd Services/${{ matrix.service }}
+          if dotnet ef dbcontext info; then
+            echo "DbContext found. Creating migration..."
+            dotnet ef migrations add Initial
+          else
+            echo "No DbContext found. Skipping migrations."
+          fi
+
+      - name: Build
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet build 'Services/${{ matrix.service }}' --no-restore --configuration Release
+
+      - name: Run tests
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet test 'Tests/${{ matrix.service }}.Tests' --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+  validate_react:
+    name: Validate PR - React
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["Frontends/dj-panel"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if frontend changed
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - '${{ matrix.service }}/**'
+              - 'Docker/microfrontend.Dockerfile'
+
+      - name: Use Node version
+        if: steps.check_changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Install dependencies
+        if: steps.check_changes.outputs.frontend == 'true'
+        run: npm install
+        working-directory: ${{ matrix.service }}
+
+      - name: Build
+        if: steps.check_changes.outputs.frontend == 'true'
+        run: npm run build
+        working-directory: ${{ matrix.service }}
+
+      - name: Test
+        if: steps.check_changes.outputs.frontend == 'true'
+        run: npm run test
+        working-directory: ${{ matrix.service }}
