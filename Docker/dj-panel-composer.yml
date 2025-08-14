@@ -1,0 +1,403 @@
+services:
+  mongodb_container:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mongosh --eval "db.adminCommand(''ping'')" || mongo --eval "db.adminCommand(''ping'')"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    image: rabbitmq:latest
+    ports:
+      - "25672:5672"
+      - "35672:15672"
+      - "35692:15692"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    image: bitnami/redis:latest
+    ports:
+      - "36379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "${REDIS_PASSWORD}" ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  sqlserver:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - MSSQL_SA_PASSWORD=${SQLSERVER_PASSWORD}
+      - ACCEPT_EULA=Y
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "31433:1433"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -U ${SQLSERVER_USER} -P ${SQLSERVER_PASSWORD} -Q 'SELECT 1' -C || exit 1",
+        ]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  identity_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${IDENTITY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/identityapi:develop-latest
+    ports:
+      - "30001:8080"
+
+  music_be:
+    pull_policy: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${MUSIC_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/musicapi:develop-latest
+    ports:
+      - "30002:8080"
+
+  gear_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${GEAR_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGINS=http://192.168.1.17:50010
+      - HEALTHCHECK_URL=http://localhost:8080/health
+    image: ghcr.io/psptorchinim/micros/services/equipmentapi:develop-latest
+    ports:
+      - "30003:8080"
+
+  documents_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      mongodb_container:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${MONGODB_HOST}
+      - DATABASE_PORT=${MONGODB_PORT}
+      - DATABASE_USER=${MONGODB_USER}
+      - DATABASE_PASSWORD=${MONGODB_PASSWORD}
+      - DATABASE_CATALOG=${DOCUMENTS_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/documentsapi:develop-latest
+    ports:
+      - "30004:8080"
+
+  brand_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/companyapi:develop-latest
+    ports:
+      - "30005:8080"
+
+  mailing_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/mailingapi:develop-latest
+    ports:
+      - "30006:8080"
+
+  party_be:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    image: ghcr.io/psptorchinim/micros/services/partyapi:develop-latest
+    ports:
+      - "30007:8080"
+
+  apigateway:
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      brand_be:
+        condition: service_healthy
+        required: true
+      documents_be:
+        condition: service_healthy
+        required: true
+      gear_be:
+        condition: service_healthy
+        required: true
+      identity_be:
+        condition: service_healthy
+        required: true
+      mailing_be:
+        condition: service_healthy
+        required: true
+      music_be:
+        condition: service_healthy
+        required: true
+      party_be:
+        condition: service_healthy
+        required: true
+    environment:
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_IDENTITY_BE_ADDRESS=${IDENTITY_BE_ADDRESS}
+      - ASPNETCORE_MUSIC_BE_ADDRESS=${MUSIC_BE_ADDRESS}
+      - ASPNETCORE_GEAR_BE_ADDRESS=${GEAR_BE_ADDRESS}
+      - ASPNETCORE_DOCUMENTS_BE_ADDRESS=${DOCUMENTS_BE_ADDRESS}
+      - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
+      - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
+      - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
+    image: ghcr.io/psptorchinim/micros/services/djhostgateway:develop-latest
+    ports:
+      - "30000:8080"
+
+  host_fe:
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      apigateway:
+        condition: service_healthy
+    environment:
+      - REACT_APP_API_GATEWAY=${API_URL}
+      - REACT_APP_PORT=3000
+      - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
+    image: ghcr.io/psptorchinim/micros/frontends/dj-panel:develop-latest
+    ports:
+      - "30080:3000"
