@@ -4,13 +4,12 @@ ARG MICROSERVICE_NAME
 
 RUN apt-get update
 
-COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}/"]
-COPY ["Services/Shared/", "Services/Shared/"]
-COPY ["Tests/${MICROSERVICE_NAME}.Tests/", "Tests/${MICROSERVICE_NAME}.Tests/"]
+COPY ["/Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}"]
+COPY ["/Services/Shared/", "Services/Shared"]
 
 RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
 
-WORKDIR /Services/${MICROSERVICE_NAME}
+WORKDIR Services/${MICROSERVICE_NAME}/
 RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools"
 RUN dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations"
 

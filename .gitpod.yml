@@ -4,7 +4,6 @@ image:
 vscode:
   extensions:
     - ms-dotnettools.vscode-dotnet-runtime
-    - dbaeumer.vscode-eslint
     - dsznajder.es7-react-js-snippets
 
 tasks:
