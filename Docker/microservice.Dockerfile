@@ -7,8 +7,8 @@ RUN apt-get update
 # Debug: Show current directory and contents before COPY
 RUN pwd && ls -al /
 
-COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}"]
-COPY ["Services/Shared/", "Services/Shared"]
+COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}/"]
+COPY ["Services/Shared/", "Services/Shared/"]
 COPY ["Tests/${MICROSERVICE_NAME}.Tests/", "Tests/${MICROSERVICE_NAME}.Tests/"]
 
 RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
