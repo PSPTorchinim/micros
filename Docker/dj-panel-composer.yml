@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - mongo_net
 
   rabbitmq:
     pull_policy: always
@@ -34,6 +36,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - rabbitmq_net
 
   redis:
     pull_policy: always
@@ -48,6 +52,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - redis_net
 
   sqlserver:
     pull_policy: always
@@ -67,10 +73,17 @@ services:
       interval: 10s
       timeout: 15s
       retries: 10
+    networks:
+      - sql_net
 
   identity_be:
-    pull_policy: always
-    restart: unless-stopped
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: IdentityApi
+    ports:
+      - "30001:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -103,12 +116,20 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/identityapi:develop-latest
-    ports:
-      - "30001:8080"
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
 
   music_be:
-    pull_policy: always
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MusicApi
+    ports:
+      - "30002:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -141,13 +162,20 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/musicapi:develop-latest
-    ports:
-      - "30002:8080"
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
 
   gear_be:
-    pull_policy: always
-    restart: unless-stopped
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: EquipmentApi
+    ports:
+      - "30003:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -180,15 +208,20 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGINS=http://192.168.1.17:50010
-      - HEALTHCHECK_URL=http://localhost:8080/health
-    image: ghcr.io/psptorchinim/micros/services/equipmentapi:develop-latest
-    ports:
-      - "30003:8080"
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
 
   documents_be:
-    pull_policy: always
-    restart: unless-stopped
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: DocumentsApi
+    ports:
+      - "30004:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -221,91 +254,66 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/documentsapi:develop-latest
-    ports:
-      - "30004:8080"
+    networks:
+      - mongo_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
 
   brand_be:
-    pull_policy: always
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 30s
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - SECURE_KEY=${SECURE_KEY}
-      - JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/companyapi:develop-latest
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: CompanyApi
     ports:
       - "30005:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
 
   mailing_be:
-    pull_policy: always
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 30s
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - SECURE_KEY=${SECURE_KEY}
-      - JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/mailingapi:develop-latest
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MailingApi
     ports:
       - "30006:8080"
-
-  party_be:
-    pull_policy: always
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -327,7 +335,7 @@ services:
       - DATABASE_USER=${SQLSERVER_USER}
       - DATABASE_PORT=${SQLSERVER_PORT}
       - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - DATABASE_CATALOG=${MAILING_DATABASE_CATALOG}
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - RABBITMQ_USER=${RABBITMQ_USER}
@@ -338,13 +346,66 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-    image: ghcr.io/psptorchinim/micros/services/partyapi:develop-latest
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+
+  party_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: PartyApi
     ports:
       - "30007:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${PARTY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
 
   apigateway:
-    pull_policy: always
-    restart: unless-stopped
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: DjHostGateway
+    ports:
+      - "30000:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 10s
@@ -384,20 +445,34 @@ services:
       - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
       - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
       - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
-    image: ghcr.io/psptorchinim/micros/services/djhostgateway:develop-latest
-    ports:
-      - "30000:8080"
+    networks:
+      - apigw_backends_net
+      - apigw_fe_net
 
   host_fe:
-    pull_policy: always
-    restart: unless-stopped
-    depends_on:
-      apigateway:
-        condition: service_healthy
-    environment:
-      - REACT_APP_API_GATEWAY=${API_URL}
-      - REACT_APP_PORT=3000
-      - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
-    image: ghcr.io/psptorchinim/micros/frontends/dj-panel:develop-latest
+    build:
+      context: ../
+      dockerfile: Docker/microfrontend.Dockerfile
+      args:
+        MICROFRONTEND_NAME: dj-panel
+        PUBLIC_PATH: /
+        PORT: 3000
     ports:
       - "30080:3000"
+    networks:
+      - rabbitmq_net
+      - apigw_fe_net
+
+networks:
+  mongo_net:
+    driver: bridge
+  redis_net:
+    driver: bridge
+  rabbitmq_net:
+    driver: bridge
+  sql_net:
+    driver: bridge
+  apigw_backends_net:
+    driver: bridge
+  apigw_fe_net:
+    driver: bridge
