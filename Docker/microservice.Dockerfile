@@ -4,6 +4,9 @@ ARG MICROSERVICE_NAME
 
 RUN apt-get update
 
+# Debug: Show current directory and contents before COPY
+RUN pwd && ls -al /
+
 COPY ["/Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}"]
 COPY ["/Services/Shared/", "Services/Shared"]
 
