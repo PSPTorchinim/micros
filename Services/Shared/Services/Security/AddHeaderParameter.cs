@@ -21,7 +21,7 @@ namespace Shared.Services.Security
 
             operation.Parameters.Add(new OpenApiParameter
             {
-                Name = "secure_value",
+                Name = "secure_key",
                 In = ParameterLocation.Header,
                 Required = true,
                 Schema = new OpenApiSchema
@@ -30,7 +30,7 @@ namespace Shared.Services.Security
                 }
             });
 
-            _logger.LogInformation("Added 'secure_value' header parameter to operation {OperationId}", operation.OperationId);
+            _logger.LogInformation("Added 'secure_key' header parameter to operation {OperationId}", operation.OperationId);
         }
     }
 }
