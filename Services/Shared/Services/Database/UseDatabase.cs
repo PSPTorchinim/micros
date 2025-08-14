@@ -24,7 +24,7 @@ namespace Shared.Services.Database
             var port = Environment.GetEnvironmentVariable("DATABASE_PORT");
             var user = Environment.GetEnvironmentVariable("DATABASE_USER");
             var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD");
-            return $"mongodb://{user}:{password}@{host}:{port}";
+            return $"mongodb://{user}:{password}@{host}";
         }
 
         public static void ConfigureSqlServer<TContext>(IServiceCollection services) where TContext : DbContext

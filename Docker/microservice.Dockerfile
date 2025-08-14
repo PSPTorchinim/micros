@@ -9,6 +9,7 @@ RUN pwd && ls -al /
 
 COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}"]
 COPY ["Services/Shared/", "Services/Shared"]
+COPY ["Tests/${MICROSERVICE_NAME}.Tests/", "Tests/${MICROSERVICE_NAME}.Tests/"]
 
 RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
 
@@ -17,6 +18,7 @@ RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/t
 RUN dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations"
 
 WORKDIR /
+RUN dotnet test "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
 RUN dotnet build "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/build
 RUN dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/publish
 
