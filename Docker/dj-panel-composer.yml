@@ -403,7 +403,7 @@ services:
       context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: DjHostGateway
+        MICROSERVICE_NAME: DJHostGateway
     ports:
       - "30000:8080"
     healthcheck:
