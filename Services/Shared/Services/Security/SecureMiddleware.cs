@@ -27,8 +27,10 @@ namespace Shared.Services.Security
 
         public async Task InvokeAsync(HttpContext context)
         {
-            context.Request.Headers.TryGetValue("secure_value", out StringValues headerValue);
+            context.Request.Headers.TryGetValue("secure_key", out StringValues headerValue);
             var hash = headerValue.FirstOrDefault();
+
+            _logger.LogInformation("Received request for path: {Path} with secure_key header: {Hash}", context.Request.Path, hash);
 
             if (string.IsNullOrEmpty(hash) || !IsValidHash(hash))
             {
@@ -38,6 +40,8 @@ namespace Shared.Services.Security
                 return;
             }
 
+            _logger.LogInformation("Authorized request for path: {Path}", context.Request.Path);
+
             await _next(context);
         }
 
@@ -45,13 +49,23 @@ namespace Shared.Services.Security
         {
             try
             {
+                _logger.LogDebug("Validating secure_key header...");
+                _logger.LogDebug("Header value (Base64): {Hash}", hash);
                 var hashBytes = Convert.FromBase64String(hash);
                 using var sha256 = SHA256.Create();
-                var computedHashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(_secureKey));
-                return hashBytes.SequenceEqual(computedHashBytes);
+                var keyBytes = Encoding.UTF8.GetBytes(_secureKey);
+                _logger.LogDebug("SECURE_KEY value: {SecureKey}", _secureKey);
+                _logger.LogDebug("SECURE_KEY bytes (UTF8): {KeyBytes}", BitConverter.ToString(keyBytes));
+                var computedHashBytes = sha256.ComputeHash(keyBytes);
+                _logger.LogDebug("Computed hash bytes: {ComputedHash}", BitConverter.ToString(computedHashBytes));
+                _logger.LogDebug("Header hash bytes: {HeaderHash}", BitConverter.ToString(hashBytes));
+                bool isValid = hashBytes.SequenceEqual(computedHashBytes);
+                _logger.LogDebug("Hash validation result: {Result}", isValid);
+                return isValid;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error while validating secure_key header.");
                 return false;
             }
         }
