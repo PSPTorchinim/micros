@@ -1,6 +1,0 @@
-.vs
-*.csproj.user
-obj/
-bin/
-Migrations/
-test
