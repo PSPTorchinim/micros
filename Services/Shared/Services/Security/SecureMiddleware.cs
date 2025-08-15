@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Shared.Services.Security
 {
@@ -17,7 +15,7 @@ namespace Shared.Services.Security
         {
             _next = next;
             _logger = logger;
-            _secureKey = configuration["SecureKey"] ?? Environment.GetEnvironmentVariable("SECURE_KEY");
+            _secureKey = Environment.GetEnvironmentVariable("SECURE_KEY");
 
             if (string.IsNullOrEmpty(_secureKey))
             {
@@ -32,7 +30,7 @@ namespace Shared.Services.Security
 
             _logger.LogInformation("Received request for path: {Path} with secure_key header: {Hash}", context.Request.Path, hash);
 
-            if (string.IsNullOrEmpty(hash) || !IsValidHash(hash))
+            if (string.IsNullOrEmpty(hash) || hash != _secureKey)
             {
                 _logger.LogWarning("Unauthorized request for path: {Path} with hash: {Hash}", context.Request.Path, hash);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -43,31 +41,6 @@ namespace Shared.Services.Security
             _logger.LogInformation("Authorized request for path: {Path}", context.Request.Path);
 
             await _next(context);
-        }
-
-        private bool IsValidHash(string hash)
-        {
-            try
-            {
-                _logger.LogDebug("Validating secure_key header...");
-                _logger.LogDebug("Header value (Base64): {Hash}", hash);
-                var hashBytes = Convert.FromBase64String(hash);
-                using var sha256 = SHA256.Create();
-                var keyBytes = Encoding.UTF8.GetBytes(_secureKey);
-                _logger.LogDebug("SECURE_KEY value: {SecureKey}", _secureKey);
-                _logger.LogDebug("SECURE_KEY bytes (UTF8): {KeyBytes}", BitConverter.ToString(keyBytes));
-                var computedHashBytes = sha256.ComputeHash(keyBytes);
-                _logger.LogDebug("Computed hash bytes: {ComputedHash}", BitConverter.ToString(computedHashBytes));
-                _logger.LogDebug("Header hash bytes: {HeaderHash}", BitConverter.ToString(hashBytes));
-                bool isValid = hashBytes.SequenceEqual(computedHashBytes);
-                _logger.LogDebug("Hash validation result: {Result}", isValid);
-                return isValid;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while validating secure_key header.");
-                return false;
-            }
         }
     }
 }
