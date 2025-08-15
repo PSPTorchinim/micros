@@ -1,6 +1,4 @@
-﻿
-
-using DocumentsAPI.Entities;
+﻿using DocumentsAPI.Entities;
 using DocumentsAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,14 +30,19 @@ namespace DocumentsAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PostV1(DocumentTemplate documentTemplate)
         {
-            return await Handle(async () => await _documentTemplatesService.Add(documentTemplate));
+            return await Handle(
+                async () => await _documentTemplatesService.Add(documentTemplate),
+                result => CreatedAtAction(nameof(GetByTemplateIdV1), result)
+            );
         }
 
         [HttpPut]
-        public async Task<ActionResult<bool>> UpdateV1([FromQuery] string Id, [FromBody] DocumentTemplate documentTemplate)
+        public async Task<IActionResult> UpdateV1([FromQuery] string Id, [FromBody] DocumentTemplate documentTemplate)
         {
-
-            return NotFound();
+            return await Handle(
+                async () => await _documentTemplatesService.Update(new Guid(Id), documentTemplate),
+                updated => updated ? NoContent() : NotFound()
+            );
         }
     }
 }
