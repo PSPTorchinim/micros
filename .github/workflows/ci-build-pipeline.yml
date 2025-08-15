@@ -230,4 +230,7 @@ jobs:
             MICROFRONTEND_NAME=${{ matrix.service }}
             PUBLIC_PATH=/
             PORT=3000
+            API_GATEWAY=https://apigateway-dev.djbeatblaster.com/
+            API_SECURE_KEY=${{ secrets.SECURE_KEY }}
+            API_JWT_TOKEN=${{ secrets.JWT_KEY }}
           tags: ghcr.io/${{ steps.repo_owner.outputs.owner }}/micros/frontends/${{ steps.service_name.outputs.name }}:${{ needs.set_target_branch.outputs.target_branch }}-latest
