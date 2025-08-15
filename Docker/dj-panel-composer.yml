@@ -457,12 +457,11 @@ services:
         MICROFRONTEND_NAME: dj-panel
         PUBLIC_PATH: /
         PORT: 3000
+        API_SECURE_KEY: ${SECURE_KEY}
+        API_JWT_TOKEN: ${JWT_KEY}
+        API_GATEWAY: ${GATEWAY_ADDRESS}
     ports:
       - "3080:3000"
-    environment:
-      - SECURE_KEY=${SECURE_KEY}
-      - JWT_KEY=${JWT_KEY}
-      - REACT_APP_API_GATEWAY=${GATEWAY_ADDRESS}
     networks:
       - rabbitmq_net
       - apigw_fe_net
