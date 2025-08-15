@@ -11,6 +11,7 @@ namespace DocumentsAPI.Services
         Task<IEnumerable<DocumentTemplate>> Get();
         Task<DocumentTemplate> Get(Guid id);
         Task<bool> Add(DocumentTemplate documentTemplate);
+        Task<bool> Update(Guid guid, DocumentTemplate documentTemplate);
     }
 
     public class DocumentTemplatesService : BaseService<IDocumentTemplatesService>, IDocumentTemplatesService
@@ -32,6 +33,11 @@ namespace DocumentsAPI.Services
         }
 
         public Task<DocumentTemplate> Get(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Update(Guid guid, DocumentTemplate documentTemplate)
         {
             throw new NotImplementedException();
         }

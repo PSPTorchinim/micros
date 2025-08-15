@@ -14,15 +14,18 @@ namespace CompanyAPI.Controlles
         }
 
         [HttpGet]
-        public async Task<ActionResult<object>> GetBrandsV1()
+        public async Task<IActionResult> GetBrandsV1()
         {
-            return Ok(await BrandsService.Get());
+            return await Handle(async () => await BrandsService.Get());
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> RegisterBrandV1(RegisterBrandDTO register)
+        public async Task<IActionResult> RegisterBrandV1(RegisterBrandDTO register)
         {
-            return Ok(await BrandsService.RegisterBrand(register));
+            return await Handle(
+                async () => await BrandsService.RegisterBrand(register),
+                result => CreatedAtAction(nameof(GetBrandsV1), result)
+            );
         }
     }
 }
