@@ -7,7 +7,9 @@ const sha256 = (value: string) => SHA256(value).toString();
 const secureValue = sha256(process.env.REACT_APP_API_SECURE_KEY ?? '');
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_GATEWAY,
+  baseURL:
+    process.env.REACT_APP_API_GATEWAY ??
+    'https://apigateway-dev.djbeatblaster.com/',
   headers: {
     'Content-Type': 'application/json',
     secure_value: secureValue,
