@@ -25,6 +25,7 @@ export const GET = async <T>(url: string, skipInterceptor = false) => {
 };
 
 export const POST = async <T>(url: string, data: any) => {
+  console.log(api);
   return api.post<T>(url, data);
 };
 
