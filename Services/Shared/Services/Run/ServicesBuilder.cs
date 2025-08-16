@@ -71,7 +71,8 @@ namespace Shared.Services.Run
                     builder
                         .AllowAnyOrigin()
                         .AllowAnyMethod()
-                        .AllowAnyHeader();
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 });
             });
             Console.WriteLine("CORS configured.");
