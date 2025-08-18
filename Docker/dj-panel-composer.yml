@@ -1,0 +1,480 @@
+services:
+  mongodb_container:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mongosh --eval "db.adminCommand(''ping'')" || mongo --eval "db.adminCommand(''ping'')"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mongo_net
+
+  rabbitmq:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15692:15692"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rabbitmq_net
+
+  redis:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    image: bitnami/redis:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "${REDIS_PASSWORD}" ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - redis_net
+
+  sqlserver:
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - MSSQL_SA_PASSWORD=${SQLSERVER_PASSWORD}
+      - ACCEPT_EULA=Y
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -U ${SQLSERVER_USER} -P ${SQLSERVER_PASSWORD} -Q 'SELECT 1' -C || exit 1",
+        ]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+    networks:
+      - sql_net
+
+  identity_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: IdentityAPI
+    ports:
+      - "3001:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${IDENTITY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+
+  music_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MusicAPI
+    ports:
+      - "3002:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${MUSIC_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+
+  gear_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: EquipmentAPI
+    ports:
+      - "3003:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${GEAR_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+
+  documents_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: DocumentsAPI
+    ports:
+      - "3004:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      mongodb_container:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${MONGODB_HOST}
+      - DATABASE_PORT=${MONGODB_PORT}
+      - DATABASE_USER=${MONGODB_USER}
+      - DATABASE_PASSWORD=${MONGODB_PASSWORD}
+      - DATABASE_CATALOG=${DOCUMENTS_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - mongo_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+
+  brand_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: CompanyAPI
+    ports:
+      - "3005:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+
+  mailing_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MailingAPI
+    ports:
+      - "3006:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${MAILING_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+
+  party_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: PartyAPI
+    ports:
+      - "3007:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${PARTY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+
+  apigateway:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: DJHostGateway
+    ports:
+      - "3000:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    depends_on:
+      brand_be:
+        condition: service_started
+        required: true
+      documents_be:
+        condition: service_started
+        required: true
+      gear_be:
+        condition: service_started
+        required: true
+      identity_be:
+        condition: service_started
+        required: true
+      mailing_be:
+        condition: service_started
+        required: true
+      music_be:
+        condition: service_started
+        required: true
+      party_be:
+        condition: service_started
+        required: true
+    environment:
+      - SECURE_KEY=${SECURE_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_IDENTITY_BE_ADDRESS=${IDENTITY_BE_ADDRESS}
+      - ASPNETCORE_MUSIC_BE_ADDRESS=${MUSIC_BE_ADDRESS}
+      - ASPNETCORE_GEAR_BE_ADDRESS=${GEAR_BE_ADDRESS}
+      - ASPNETCORE_DOCUMENTS_BE_ADDRESS=${DOCUMENTS_BE_ADDRESS}
+      - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
+      - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
+      - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
+    networks:
+      - apigw_backends_net
+      - apigw_fe_net
+
+  # host_fe:
+  #   build:
+  #     context: ../
+  #     dockerfile: Docker/microfrontend.Dockerfile
+  #   ports:
+  #     - "3080:3000"
+  #   environment:
+  #     - REACT_APP_PUBLIC_PATH=/
+  #     - REACT_APP_PORT=3000
+  #     - REACT_APP_API_GATEWAY=${GATEWAY_ADDRESS}
+  #     - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
+  #     - REACT_APP_API_JWT_TOKEN=${JWT_KEY}
+  #   networks:
+  #     - rabbitmq_net
+  #     - apigw_fe_net
+
+networks:
+  mongo_net:
+    driver: bridge
+  redis_net:
+    driver: bridge
+  rabbitmq_net:
+    driver: bridge
+  sql_net:
+    driver: bridge
+  apigw_backends_net:
+    driver: bridge
+  apigw_fe_net:
+    driver: bridge

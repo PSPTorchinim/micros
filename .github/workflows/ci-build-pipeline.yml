@@ -1,0 +1,236 @@
+name: Build artifacts
+
+on:
+  push:
+    branches:
+      - develop
+  schedule:
+    # Every night at 2:00 AM UTC -> build develop
+    - cron: "0 2 * * *"
+    # Every Sunday at 3:00 AM UTC -> build test
+    - cron: "0 3 * * 0"
+    # Every first day of the month at 4:00 AM UTC -> build production
+    - cron: "0 4 1 * *"
+  workflow_dispatch:
+
+jobs:
+  set_target_branch:
+    name: Resolve target branch (for schedules)
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.set.outputs.target_branch }}
+    steps:
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            case "${{ github.event.schedule }}" in
+              "0 2 * * *") TARGET_BRANCH=develop ;;
+              "0 3 * * 0") TARGET_BRANCH=test ;;
+              "0 4 1 * *") TARGET_BRANCH=production ;;
+              *) TARGET_BRANCH=${{ github.ref_name }} ;;
+            esac
+          else
+            TARGET_BRANCH=${{ github.ref_name }}
+          fi
+          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+
+  validate_dotnet:
+    name: Build - DotNet
+    needs: set_target_branch
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            "CompanyAPI",
+            "DJHostGateway",
+            "DocumentsAPI",
+            "EquipmentAPI",
+            "IdentityAPI",
+            "MailingAPI",
+            "MusicAPI",
+            "PartyAPI",
+          ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.set_target_branch.outputs.target_branch }}
+
+      - name: Check if service changed
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            service:
+              - 'Services/${{ matrix.service }}/**'
+              - 'Services/Shared/**'
+              - 'Docker/microservice.Dockerfile'
+              - 'Tests/${{ matrix.service }}.Tests/**'
+
+      - name: Setup .NET
+        if: steps.check_changes.outputs.service == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.x"
+
+      - name: Ensure dotnet tools on PATH
+        if: steps.check_changes.outputs.service == 'true'
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Log in to GitHub Container Registry
+        if: steps.check_changes.outputs.service == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore dependencies
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet restore "Services/${{ matrix.service }}"
+
+      - name: Install EFCore tools
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet tool update --global dotnet-ef
+
+      - name: Check if DbContext exists (no migration creation on CI)
+        if: steps.check_changes.outputs.service == 'true'
+        working-directory: Services/${{ matrix.service }}
+        run: |
+          set -e
+          if dotnet ef dbcontext info --no-build >/dev/null 2>&1; then
+            echo "DbContext found."
+          else
+            echo "No DbContext found (or no design-time factory)."
+          fi
+
+      - name: Build
+        if: steps.check_changes.outputs.service == 'true'
+        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
+
+      - name: Run tests (skip if project folder missing)
+        if: steps.check_changes.outputs.service == 'true'
+        run: |
+          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
+            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+          else
+            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
+          fi
+
+      - name: Publish artifacts
+        if: steps.check_changes.outputs.service == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Services-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
+          path: Services/${{ matrix.service }}/bin/Debug/net9.0/
+
+      - name: Set repository owner to lowercase
+        if: steps.check_changes.outputs.service == 'true'
+        id: repo_owner
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Set service name to lowercase
+        if: steps.check_changes.outputs.service == 'true'
+        id: service_name
+        run: echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        if: steps.check_changes.outputs.service == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Docker/microservice.Dockerfile
+          build-args: |
+            MICROSERVICE_NAME=${{ matrix.service }}
+          tags: ghcr.io/${{ steps.repo_owner.outputs.owner }}/micros/services/${{ steps.service_name.outputs.name }}:${{ needs.set_target_branch.outputs.target_branch }}-latest
+
+  validate_react:
+    name: Build - React
+    needs: set_target_branch
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["dj-panel"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.set_target_branch.outputs.target_branch }}
+
+      - name: Check if frontend changed
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'Frontends/${{ matrix.service }}/**'
+              - 'Docker/microfrontend.Dockerfile'
+
+      - name: Log in to GitHub Container Registry
+        if: steps.check_changes.outputs.frontend == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node version
+        if: steps.check_changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm ci
+
+      - name: Build
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run build
+
+      - name: Test (skip if script missing)
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: |
+          if npm run | grep -qE ' test'; then
+            npm run test
+          else
+            echo "No test script; skipping."
+          fi
+
+      - name: Publish artifacts
+        if: steps.check_changes.outputs.frontend == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Frontends-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
+          path: Frontends/${{ matrix.service }}/dist
+
+      - name: Set repository owner to lowercase
+        if: steps.check_changes.outputs.frontend == 'true'
+        id: repo_owner
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Set service name to lowercase
+        if: steps.check_changes.outputs.frontend == 'true'
+        id: service_name
+        run: echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        if: steps.check_changes.outputs.frontend == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Docker/microfrontend.Dockerfile
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.service }}
+            PUBLIC_PATH=/
+            PORT=3000
+            API_GATEWAY=https://apigateway-dev.djbeatblaster.com/
+            API_SECURE_KEY=${{ secrets.SECURE_KEY }}
+            API_JWT_TOKEN=${{ secrets.JWT_KEY }}
+          tags: ghcr.io/${{ steps.repo_owner.outputs.owner }}/micros/frontends/${{ steps.service_name.outputs.name }}:${{ needs.set_target_branch.outputs.target_branch }}-latest
