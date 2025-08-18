@@ -2,7 +2,6 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [develop, "production", "test"]
 
 jobs:
   validate_dotnet:

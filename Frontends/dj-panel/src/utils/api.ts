@@ -1,11 +1,7 @@
 import axios from 'axios';
-import { SHA256 } from 'crypto-js';
 import { Response } from '../models/response';
 
-// Helper to hash with sha256
-const sha256 = (value: string) => SHA256(value).toString();
-
-const secureValue = sha256(process.env.REACT_APP_API_SECURE_KEY ?? '');
+const secureValue = process.env.REACT_APP_API_SECURE_KEY ?? '';
 
 export const api = axios.create({
   baseURL:

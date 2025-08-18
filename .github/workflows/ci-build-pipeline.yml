@@ -3,12 +3,10 @@ name: Build artifacts
 on:
   push:
     branches:
-      - develop
+      - R*
   schedule:
     # Every night at 2:00 AM UTC -> build develop
     - cron: "0 2 * * *"
-    # Every Sunday at 3:00 AM UTC -> build test
-    - cron: "0 3 * * 0"
     # Every first day of the month at 4:00 AM UTC -> build production
     - cron: "0 4 1 * *"
   workflow_dispatch:
@@ -24,8 +22,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "0 2 * * *") TARGET_BRANCH=develop ;;
-              "0 3 * * 0") TARGET_BRANCH=test ;;
+              "0 2 * * *") TARGET_BRANCH=R* ;;
               "0 4 1 * *") TARGET_BRANCH=production ;;
               *) TARGET_BRANCH=${{ github.ref_name }} ;;
             esac
