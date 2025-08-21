@@ -4,9 +4,7 @@ import { Response } from '../models/response';
 const secureValue = process.env.REACT_APP_API_SECURE_KEY ?? '';
 
 export const api = axios.create({
-  baseURL:
-    process.env.REACT_APP_API_GATEWAY ??
-    'https://apigateway-dev.djbeatblaster.com/',
+  baseURL: process.env.REACT_APP_API_GATEWAY,
   headers: {
     'Content-Type': 'application/json',
     secure_value: secureValue,

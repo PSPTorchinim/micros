@@ -15,10 +15,13 @@ services:
           'mongosh --eval "db.adminCommand(''ping'')" || mongo --eval "db.adminCommand(''ping'')"',
         ]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
     networks:
       - mongo_net
+    logging:
+      driver: none
+    attach: false
 
   rabbitmq:
     pull_policy: always
@@ -34,10 +37,13 @@ services:
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
     networks:
       - rabbitmq_net
+    logging:
+      driver: none
+    attach: false
 
   redis:
     pull_policy: always
@@ -50,10 +56,13 @@ services:
     healthcheck:
       test: ["CMD-SHELL", 'redis-cli -a "${REDIS_PASSWORD}" ping | grep PONG']
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
     networks:
       - redis_net
+    logging:
+      driver: none
+    attach: false
 
   sqlserver:
     pull_policy: always
@@ -75,6 +84,9 @@ services:
       retries: 10
     networks:
       - sql_net
+    logging:
+      driver: none
+    attach: false
 
   identity_be:
     build:
@@ -84,12 +96,6 @@ services:
         MICROSERVICE_NAME: IdentityAPI
     ports:
       - "3001:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -116,6 +122,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -130,12 +137,6 @@ services:
         MICROSERVICE_NAME: MusicAPI
     ports:
       - "3002:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -162,6 +163,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -176,12 +178,6 @@ services:
         MICROSERVICE_NAME: EquipmentAPI
     ports:
       - "3003:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -208,6 +204,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -222,12 +219,6 @@ services:
         MICROSERVICE_NAME: DocumentsAPI
     ports:
       - "3004:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       mongodb_container:
         condition: service_healthy
@@ -254,6 +245,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - mongo_net
       - redis_net
@@ -268,12 +260,6 @@ services:
         MICROSERVICE_NAME: CompanyAPI
     ports:
       - "3005:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -300,6 +286,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -314,12 +301,6 @@ services:
         MICROSERVICE_NAME: MailingAPI
     ports:
       - "3006:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -346,6 +327,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -360,12 +342,6 @@ services:
         MICROSERVICE_NAME: PartyAPI
     ports:
       - "3007:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 30s
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -392,6 +368,7 @@ services:
       - SECURE_KEY=${SECURE_KEY}
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - sql_net
       - redis_net
@@ -406,12 +383,6 @@ services:
         MICROSERVICE_NAME: DJHostGateway
     ports:
       - "3000:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 30s
     depends_on:
       brand_be:
         condition: service_started
@@ -445,6 +416,7 @@ services:
       - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
       - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
       - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
     networks:
       - apigw_backends_net
       - apigw_fe_net
@@ -453,8 +425,11 @@ services:
   #   build:
   #     context: ../
   #     dockerfile: Docker/microfrontend.Dockerfile
+  #     args:
+  #       MICROFRONTEND_NAME: dj-panel
   #   ports:
   #     - "3080:3000"
+
   #   environment:
   #     - REACT_APP_PUBLIC_PATH=/
   #     - REACT_APP_PORT=3000

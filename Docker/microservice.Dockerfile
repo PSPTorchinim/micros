@@ -7,6 +7,7 @@ RUN apt-get update
 COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}/"]
 COPY ["Services/Shared/", "Services/Shared/"]
 COPY ["Tests/${MICROSERVICE_NAME}.Tests/", "Tests/${MICROSERVICE_NAME}.Tests/"]
+SHELL ["/bin/bash","-lc"]
 
 RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
 
@@ -15,11 +16,14 @@ RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/t
 RUN dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations"
 
 WORKDIR /
-RUN dotnet test "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
-RUN dotnet build "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/build
-RUN dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/publish
+RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
+RUN dotnet test    "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release --no-restore
+RUN dotnet build   "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/build --no-restore
+RUN dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
+SHELL ["/bin/bash","-lc"]
 RUN apt-get update 
 RUN apt-get install -y curl
 EXPOSE 8080

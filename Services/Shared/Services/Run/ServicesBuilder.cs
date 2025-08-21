@@ -69,7 +69,7 @@ namespace Shared.Services.Run
                 options.AddPolicy("cors", builder =>
                 {
                     builder
-                        .AllowAnyOrigin()
+                        .WithOrigins(Environment.GetEnvironmentVariable("ASPNETCORE_ORIGIN"))
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
@@ -186,6 +186,7 @@ namespace Shared.Services.Run
             var reverseProxyConfiguration = configBuilder.Build();
 
             services.AddReverseProxy()
+                .RequireCors("cors")
                 .LoadFromConfig(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .AddSwagger(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .ConfigureHttpClient((context, handler) =>

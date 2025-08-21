@@ -13,6 +13,8 @@ namespace Shared.Services.App
     {
         public static WebApplication BuildBasicApp(this WebApplication app, Action<SwaggerOptions>? options = null, Action<SwaggerUIOptions>? uiOptions = null)
         {
+            app.UseCors("cors");
+            app.Logger.LogInformation("CORS policy 'cors' is enabled");
             app.Logger.LogInformation("Configuring Swagger...");
             app.UseSwagger(options);
             app.Logger.LogInformation("Swagger is enabled");
@@ -24,8 +26,6 @@ namespace Shared.Services.App
             app.Logger.LogInformation("Static files middleware is enabled");
             app.UseAuthentication();
             app.Logger.LogInformation("Authentication middleware is enabled");
-            app.UseCors("cors");
-            app.Logger.LogInformation("CORS policy 'cors' is enabled");
             app.UseAuthorization();
             app.Logger.LogInformation("Authorization middleware is enabled");
             app.MapHealthChecks("/healthz/live", new HealthCheckOptions
