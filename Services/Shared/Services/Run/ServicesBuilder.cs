@@ -69,7 +69,7 @@ namespace Shared.Services.Run
                 options.AddPolicy("cors", builder =>
                 {
                     builder
-                        .WithOrigins(Environment.GetEnvironmentVariable("ASPNETCORE_ORIGIN"))
+                        .SetIsOriginAllowed(_ => true) // allow any origin dynamically
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
