@@ -117,7 +117,7 @@ namespace Shared.Services.Run
                         ValidateAudience = systemConfiguration.TokenConfiguration.ValidateAudience,
                         ValidAudience = systemConfiguration.TokenConfiguration.Audience,
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_KEY") ?? ""))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("ASPNETCORE_JWT_KEY") ?? ""))
                     };
                 });
             Console.WriteLine("Authentication configured.");

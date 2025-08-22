@@ -15,7 +15,7 @@ namespace Shared.Services.Security
         {
             _next = next;
             _logger = logger;
-            _secureKey = Environment.GetEnvironmentVariable("SECURE_KEY");
+            _secureKey = Environment.GetEnvironmentVariable("ASPNETCORE_SECURE_KEY");
 
             if (string.IsNullOrEmpty(_secureKey))
             {

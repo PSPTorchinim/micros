@@ -54,7 +54,7 @@ namespace IdentityAPI.Services
             return ExceptionHandler.Handle(() =>
             {
                 _logger.LogInformation("Generating {TokenType} token for user with Id: {UserId}", isRefresh ? "refresh" : "access", user.Id);
-                var key = _configuration.GetSection("TokenConfiguration").GetValue<string>("Key") ?? Environment.GetEnvironmentVariable("JWT_KEY");
+                var key = Environment.GetEnvironmentVariable("ASPNETCORE_JWT_KEY");
                 var issuer = _configuration.GetSection("TokenConfiguration").GetValue<string>("Issuer");
                 var audience = _configuration.GetSection("TokenConfiguration").GetValue<string>("Audience");
                 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
