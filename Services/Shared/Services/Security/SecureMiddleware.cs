@@ -32,7 +32,7 @@ namespace Shared.Services.Security
 
             if (string.IsNullOrEmpty(hash) || hash != _secureKey)
             {
-                _logger.LogWarning("Unauthorized request for path: {Path} with hash: {Hash}", context.Request.Path, hash);
+                _logger.LogWarning("Unauthorized request for path: {Path} with hash: {Hash}, secure_key: {SecureKey}", context.Request.Path, hash, _secureKey);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("UNAUTHORIZED");
                 return;
