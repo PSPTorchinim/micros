@@ -17,6 +17,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Yarp.ReverseProxy.Swagger;
 using Yarp.ReverseProxy.Swagger.Extensions;
+using Yarp.ReverseProxy.Transforms;
 
 namespace Shared.Services.Run
 {
@@ -190,7 +191,15 @@ namespace Shared.Services.Run
                 .AddSwagger(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .AddTransforms(builderContext =>
                 {
-                    builderContext.AddRequestHeader("secure_key", "{http.request.header.Secure-Key}", append: false);
+                    builderContext.AddRequestTransform(ctx =>
+                    {
+                        if (ctx.HttpContext.Request.Headers.TryGetValue("secure_key", out var val))
+                        {
+                            ctx.ProxyRequest.Headers.Remove("secure_key");
+                            ctx.ProxyRequest.Headers.Add("secure_key", (IEnumerable<string>)val);
+                        }
+                        return ValueTask.CompletedTask;
+                    });
                 })
                 .ConfigureHttpClient((context, handler) =>
                 {
