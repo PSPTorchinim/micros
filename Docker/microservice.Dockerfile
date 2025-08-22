@@ -24,7 +24,7 @@ RUN dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
 SHELL ["/bin/bash","-lc"]
-RUN apt-get update 
+RUN apt-get update
 RUN apt-get install -y curl
 EXPOSE 8080
 ARG MICROSERVICE_NAME 
