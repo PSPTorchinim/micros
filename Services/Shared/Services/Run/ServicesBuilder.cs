@@ -188,6 +188,10 @@ namespace Shared.Services.Run
             services.AddReverseProxy()
                 .LoadFromConfig(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .AddSwagger(reverseProxyConfiguration.GetSection("ReverseProxy"))
+                .AddTransforms(builderContext =>
+                {
+                    builderContext.AddRequestHeader("secure_key", "{http.request.header.Secure-Key}", append: false);
+                })
                 .ConfigureHttpClient((context, handler) =>
                 {
                     handler.ActivityHeadersPropagator = DistributedContextPropagator.CreatePassThroughPropagator();

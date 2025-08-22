@@ -169,6 +169,9 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+    logging:
+      driver: none
+    attach: false
 
   gear_be:
     build:
@@ -210,6 +213,9 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+    logging:
+      driver: none
+    attach: false
 
   documents_be:
     build:
@@ -251,6 +257,9 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
 
   brand_be:
     build:
@@ -292,6 +301,9 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
 
   mailing_be:
     build:
@@ -333,6 +345,9 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
 
   party_be:
     build:
@@ -374,6 +389,9 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
 
   apigateway:
     build:
@@ -420,6 +438,9 @@ services:
     networks:
       - apigw_backends_net
       - apigw_fe_net
+    logging:
+      driver: none
+    attach: false
 
   # host_fe:
   #   build:

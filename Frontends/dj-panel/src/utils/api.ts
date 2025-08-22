@@ -7,7 +7,7 @@ export const api = axios.create({
   baseURL: process.env.REACT_APP_API_GATEWAY,
   headers: {
     'Content-Type': 'application/json',
-    secure_value: secureValue,
+    'secure_key': secureValue,
   },
   withCredentials: true,
 });
@@ -16,7 +16,7 @@ export const GET = async <T>(url: string, skipInterceptor = false) => {
   return api.get<Response<T>>(url, {
     headers: {
       ...(!skipInterceptor ? {} : { 'Skip-Interceptor': 'true' }),
-      secure_value: secureValue,
+      secure_key: secureValue,
     },
   });
 };
