@@ -17,6 +17,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Yarp.ReverseProxy.Swagger;
 using Yarp.ReverseProxy.Swagger.Extensions;
+using Yarp.ReverseProxy.Transforms;
 
 namespace Shared.Services.Run
 {
@@ -69,7 +70,7 @@ namespace Shared.Services.Run
                 options.AddPolicy("cors", builder =>
                 {
                     builder
-                        .AllowAnyOrigin()
+                        .SetIsOriginAllowed(_ => true) // allow any origin dynamically
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
@@ -116,7 +117,7 @@ namespace Shared.Services.Run
                         ValidateAudience = systemConfiguration.TokenConfiguration.ValidateAudience,
                         ValidAudience = systemConfiguration.TokenConfiguration.Audience,
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_KEY") ?? ""))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("ASPNETCORE_JWT_KEY") ?? ""))
                     };
                 });
             Console.WriteLine("Authentication configured.");
@@ -188,6 +189,18 @@ namespace Shared.Services.Run
             services.AddReverseProxy()
                 .LoadFromConfig(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .AddSwagger(reverseProxyConfiguration.GetSection("ReverseProxy"))
+                .AddTransforms(builderContext =>
+                {
+                    builderContext.AddRequestTransform(ctx =>
+                    {
+                        if (ctx.HttpContext.Request.Headers.TryGetValue("secure_key", out var val))
+                        {
+                            ctx.ProxyRequest.Headers.Remove("secure_key");
+                            ctx.ProxyRequest.Headers.Add("secure_key", (IEnumerable<string>)val);
+                        }
+                        return ValueTask.CompletedTask;
+                    });
+                })
                 .ConfigureHttpClient((context, handler) =>
                 {
                     handler.ActivityHeadersPropagator = DistributedContextPropagator.CreatePassThroughPropagator();

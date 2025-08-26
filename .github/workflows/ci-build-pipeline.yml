@@ -3,12 +3,10 @@ name: Build artifacts
 on:
   push:
     branches:
-      - develop
+      - R*
   schedule:
     # Every night at 2:00 AM UTC -> build develop
     - cron: "0 2 * * *"
-    # Every Sunday at 3:00 AM UTC -> build test
-    - cron: "0 3 * * 0"
     # Every first day of the month at 4:00 AM UTC -> build production
     - cron: "0 4 1 * *"
   workflow_dispatch:
@@ -24,8 +22,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "0 2 * * *") TARGET_BRANCH=develop ;;
-              "0 3 * * 0") TARGET_BRANCH=test ;;
+              "0 2 * * *") TARGET_BRANCH=R* ;;
               "0 4 1 * *") TARGET_BRANCH=production ;;
               *) TARGET_BRANCH=${{ github.ref_name }} ;;
             esac
@@ -175,6 +172,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
       - name: Use Node version
         if: steps.check_changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
@@ -186,7 +191,7 @@ jobs:
       - name: Install dependencies
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
-        run: npm ci
+        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
       - name: Build
         if: steps.check_changes.outputs.frontend == 'true'

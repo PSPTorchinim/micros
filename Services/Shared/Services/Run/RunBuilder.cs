@@ -13,19 +13,19 @@ namespace Shared.Services.App
     {
         public static WebApplication BuildBasicApp(this WebApplication app, Action<SwaggerOptions>? options = null, Action<SwaggerUIOptions>? uiOptions = null)
         {
+            app.Logger.LogInformation("CORS policy 'cors' is enabled");
             app.Logger.LogInformation("Configuring Swagger...");
             app.UseSwagger(options);
             app.Logger.LogInformation("Swagger is enabled");
             app.UseSwaggerUI(uiOptions);
             app.Logger.LogInformation("Swagger UI is enabled");
             app.UseRouting();
+            app.UseCors("cors");
             app.Logger.LogInformation("Routing is enabled");
             app.UseStaticFiles();
             app.Logger.LogInformation("Static files middleware is enabled");
             app.UseAuthentication();
             app.Logger.LogInformation("Authentication middleware is enabled");
-            app.UseCors("cors");
-            app.Logger.LogInformation("CORS policy 'cors' is enabled");
             app.UseAuthorization();
             app.Logger.LogInformation("Authorization middleware is enabled");
             app.MapHealthChecks("/healthz/live", new HealthCheckOptions
