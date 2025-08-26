@@ -1,0 +1,33 @@
+name: Clear Old GHCR Builds
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Runs daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup-ghcr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker registry credentials
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: List and delete old package versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          KEEP: 2 # Number of recent versions to keep
+        run: |
+          PACKAGES=$(gh api -H "Accept: application/vnd.github+json" /users/${OWNER}/packages?package_type=container | jq -r '.[].name')
+          versions=$(gh api -H "Accept: application/vnd.github+json" \
+            /users/${OWNER}/packages/container/${PACKAGE}/versions \
+            | jq '.[].id' | tail -n +$((KEEP + 1)))
+          for vid in $versions; do
+            echo "Deleting version $vid"
+            gh api --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              /users/${OWNER}/packages/container/${PACKAGE}/versions/$vid
+          done
+
+      - name: Logout from GHCR
+        run: docker logout ghcr.io
