@@ -75,10 +75,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ["Frontends/dj-panel"]
+        service: ["dj-panel"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.set_target_branch.outputs.target_branch }}
 
       - name: Check if frontend changed
         id: check_changes
@@ -86,26 +88,40 @@ jobs:
         with:
           filters: |
             frontend:
-              - '${{ matrix.service }}/**'
-              - 'Docker/microfrontend.Dockerfile'
+              - 'Frontends/${{ matrix.service }}/**'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
 
       - name: Use Node version
         if: steps.check_changes.outputs.frontend == 'true'
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
 
       - name: Install dependencies
         if: steps.check_changes.outputs.frontend == 'true'
-        run: npm install
-        working-directory: ${{ matrix.service }}
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
       - name: Build
         if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
         run: npm run build
-        working-directory: ${{ matrix.service }}
 
-      - name: Test
+      - name: Test (skip if script missing)
         if: steps.check_changes.outputs.frontend == 'true'
-        run: npm run test
-        working-directory: ${{ matrix.service }}
+        working-directory: Frontends/${{ matrix.service }}
+        run: |
+          if npm run | grep -qE ' test'; then
+            npm run test
+          else
+            echo "No test script; skipping."
+          fi

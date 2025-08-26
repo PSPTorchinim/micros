@@ -172,6 +172,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
       - name: Use Node version
         if: steps.check_changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
@@ -183,7 +191,7 @@ jobs:
       - name: Install dependencies
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
-        run: npm ci
+        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
       - name: Build
         if: steps.check_changes.outputs.frontend == 'true'
