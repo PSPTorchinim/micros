@@ -1,0 +1,337 @@
+name: Build artifacts
+
+on:
+  push:
+    branches:
+      - "releases/*"
+  schedule:
+    - cron: "0 2 * * *" # Nightly: build develop
+    - cron: "0 4 1 * *" # Monthly: build production
+  workflow_dispatch:
+
+jobs:
+  set-environment: #this is a job named 'set-environment'
+    runs-on: ubuntu-latest #your preferred OS
+    outputs: #the env value needs to be exposed as an output in order to be reached from other jobs
+      current_env: ${{ steps.set_env.outputs.current_env }} #output variable to store the relevant environment
+    steps:
+      - name: Check if prod
+        if: endsWith(github.ref, '/production')
+        run: |
+          echo "ENVIRONMENT_NAME=Production" >> $GITHUB_ENV
+      - name: Check if releases/R*
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        run: |
+          echo "ENVIRONMENT_NAME=Development" >> $GITHUB_ENV
+      - name: Set output
+        id: set_env
+        run: echo "::set-output name=current_env::${{ env.ENVIRONMENT_NAME }}" #assign the value of ENVIRONMENT_NAME to the output variable 'current_env'
+
+  set_target_branch:
+    environment: ${{ needs.set-environment.outputs.current_env }}
+    name: Resolve target branch (for schedules)
+    runs-on: ubuntu-latest
+    needs: set-environment
+    outputs:
+      target_branch: ${{ steps.set.outputs.target_branch }}
+      docker_tag: ${{ steps.set.outputs.docker_tag }}
+    steps:
+      - id: set
+        name: Set target branch and Docker tag
+        run: |
+          # Default values
+          TARGET_BRANCH="${{ github.ref_name }}"
+          DOCKER_TAG="develop"
+
+          # Handle scheduled events
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            case "${{ github.event.schedule }}" in
+              "0 2 * * *")
+                TARGET_BRANCH="releases/*"
+                DOCKER_TAG="develop"
+                ;;
+              "0 4 1 * *")
+                TARGET_BRANCH="production"
+                DOCKER_TAG="production"
+                ;;
+            esac
+          fi
+
+          # If pushing directly to production or tests branch
+          if [ "$TARGET_BRANCH" = "production" ]; then
+            DOCKER_TAG="production"
+          fi
+
+          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
+
+  validate_dotnet:
+    environment: ${{ needs.set-environment.outputs.current_env }}
+    name: Build - DotNet
+    needs:
+      - set_target_branch
+      - set-environment
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            "CompanyAPI",
+            "DJHostGateway",
+            "DocumentsAPI",
+            "EquipmentAPI",
+            "IdentityAPI",
+            "MailingAPI",
+            "MusicAPI",
+            "PartyAPI",
+          ]
+    env:
+      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
+      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
+      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
+      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
+      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      REDIS_HOST: ${{ vars.REDIS_HOST }}
+      REDIS_PORT: ${{ vars.REDIS_PORT }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
+      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
+      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
+      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
+      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
+      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
+      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
+      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
+      DATABASE_CATALOG: ${{ matrix.service }}
+      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
+      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
+    steps:
+      - name: Validate required environment variables
+        run: |
+          required_vars=(
+            "DATABASE_HOST_SQLSERVER"
+            "DATABASE_PORT_SQLSERVER"
+            "DATABASE_USER_SQLSERVER"
+            "DATABASE_PASSWORD_SQLSERVER"
+            "DATABASE_HOST_MONGODB"
+            "DATABASE_PORT_MONGODB"
+            "DATABASE_USER_MONGODB"
+            "DATABASE_PASSWORD_MONGODB"
+            "REDIS_HOST"
+            "REDIS_PORT"
+            "REDIS_PASSWORD"
+            "RABBITMQ_HOST"
+            "RABBITMQ_PORT"
+            "RABBITMQ_USER"
+            "RABBITMQ_PASSWORD"
+            "SECURE_KEY"
+            "JWT_KEY"
+            "ASPNETCORE_ENVIRONMENT"
+            "ASPNETCORE_IDENTITY_BE_ADDRESS"
+            "ASPNETCORE_MUSIC_BE_ADDRESS"
+            "ASPNETCORE_GEAR_BE_ADDRESS"
+            "ASPNETCORE_DOCUMENTS_BE_ADDRESS"
+            "ASPNETCORE_BRAND_BE_ADDRESS"
+            "ASPNETCORE_PARTY_BE_ADDRESS"
+            "ASPNETCORE_MAILING_BE_ADDRESS"
+            "DATABASE_CATALOG"
+            "DJPANEL_USER_EMAIL"
+            "DJPANEL_USER_PASSWORD"
+          )
+          for var in "${required_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "Error: Environment variable $var is not set."
+              exit 1
+            fi
+          done
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.x"
+
+      - name: Add dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Show dotnet version
+        run: dotnet --version
+
+      - name: Update dotnet-ef tool
+        run: dotnet tool update --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore "Services/${{ matrix.service }}"
+
+      - name: Check for DbContext
+        run: |
+          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
+            echo "DbContext found."
+          else
+            echo "No DbContext found (or no design-time factory)."
+          fi
+
+      - name: Build project
+        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
+
+      - name: Run tests (if present)
+        run: |
+          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
+            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+          else
+            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
+          fi
+        env:
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+      - name: Set repository owner and service name to lowercase
+        id: lower
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Docker/microservice.Dockerfile
+          build-args: |
+            MICROSERVICE_NAME=${{ matrix.service }}
+            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
+            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
+            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
+            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            REDIS_HOST=${{ env.REDIS_HOST }}
+            REDIS_PORT=${{ env.REDIS_PORT }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
+            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            SECURE_KEY=${{ env.SECURE_KEY }}
+            JWT_KEY=${{ env.JWT_KEY }}
+            ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
+            ASPNETCORE_IDENTITY_BE_ADDRESS=${{ env.ASPNETCORE_IDENTITY_BE_ADDRESS }}
+            ASPNETCORE_MUSIC_BE_ADDRESS=${{ env.ASPNETCORE_MUSIC_BE_ADDRESS }}
+            ASPNETCORE_GEAR_BE_ADDRESS=${{ env.ASPNETCORE_GEAR_BE_ADDRESS }}
+            ASPNETCORE_DOCUMENTS_BE_ADDRESS=${{ env.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
+            ASPNETCORE_BRAND_BE_ADDRESS=${{ env.ASPNETCORE_BRAND_BE_ADDRESS }}
+            ASPNETCORE_PARTY_BE_ADDRESS=${{ env.ASPNETCORE_PARTY_BE_ADDRESS }}
+            ASPNETCORE_MAILING_BE_ADDRESS=${{ env.ASPNETCORE_MAILING_BE_ADDRESS }}
+            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
+            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
+            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
+          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/services/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
+
+  validate_react:
+    environment: ${{ needs.set-environment.outputs.current_env }}
+    name: Build - React
+    needs:
+      - set_target_branch
+      - set-environment
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["dj-panel"]
+    env:
+      REACT_APP_API_GATEWAY: ${{ vars.REACT_APP_API_GATEWAY }}
+      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+    steps:
+      - name: Validate required environment variables
+        run: |
+          required_vars=(
+            "REACT_APP_API_GATEWAY"
+            "REACT_APP_API_SECURE_KEY"
+            "REACT_APP_API_JWT_TOKEN"
+          )
+          for var in "${required_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "Error: Environment variable $var is not set."
+              exit 1
+            fi
+          done
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
+      - name: Use Node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
+
+      - name: Build
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run build
+
+      - name: Test (skip if script missing)
+        working-directory: Frontends/${{ matrix.service }}
+        run: |
+          if npm run | grep -qE ' test'; then
+            npm run test
+          else
+            echo "No test script; skipping."
+          fi
+
+      - name: Set repository owner and service name to lowercase
+        id: lower
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Docker/microfrontend.Dockerfile
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.service }}
+            REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
+            REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
+            REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
+          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
