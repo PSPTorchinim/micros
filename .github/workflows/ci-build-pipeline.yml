@@ -1,0 +1,207 @@
+name: Build artifacts
+
+on:
+  push:
+    branches:
+      - "releases/*"
+  schedule:
+    - cron: "0 2 * * *" # Nightly: build develop
+    - cron: "0 4 1 * *" # Monthly: build production
+  workflow_dispatch:
+
+jobs:
+  set_target_branch:
+    name: Resolve target branch (for schedules)
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.set.outputs.target_branch }}
+      docker_tag: ${{ steps.set.outputs.docker_tag }}
+    steps:
+      - id: set
+        run: |
+          # Default values
+          TARGET_BRANCH="${{ github.ref_name }}"
+          DOCKER_TAG="develop"
+
+          # Handle scheduled events
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            case "${{ github.event.schedule }}" in
+              "0 2 * * *")
+                TARGET_BRANCH="releases/*"
+                DOCKER_TAG="develop"
+                ;;
+              "0 4 1 * *")
+                TARGET_BRANCH="production"
+                DOCKER_TAG="production"
+                ;;
+            esac
+          fi
+
+          # If pushing directly to production branch
+          if [ "$TARGET_BRANCH" = "production" ]; then
+            DOCKER_TAG="production"
+          fi
+
+          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
+
+  validate_dotnet:
+    name: Build - DotNet
+    needs: set_target_branch
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            "CompanyAPI",
+            "DJHostGateway",
+            "DocumentsAPI",
+            "EquipmentAPI",
+            "IdentityAPI",
+            "MailingAPI",
+            "MusicAPI",
+            "PartyAPI",
+          ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.x"
+
+      - name: Add dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Show dotnet version
+        run: dotnet --version
+
+      - name: Update dotnet-ef tool
+        run: dotnet tool update --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore "Services/${{ matrix.service }}"
+
+      - name: Check for DbContext
+        run: |
+          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
+            echo "DbContext found."
+          else
+            echo "No DbContext found (or no design-time factory)."
+          fi
+
+      - name: Build project
+        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
+
+      - name: Run tests (if present)
+        run: |
+          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
+            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+          else
+            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
+          fi
+        env:
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Services-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
+          path: Services/${{ matrix.service }}/bin/Debug/net9.0/
+
+      - name: Set repository owner and service name to lowercase
+        id: lower
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Docker/microservice.Dockerfile
+          build-args: |
+            MICROSERVICE_NAME=${{ matrix.service }}
+          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/services/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
+
+  validate_react:
+    name: Build - React
+    needs: set_target_branch
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["dj-panel"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
+      - name: Use Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
+
+      - name: Build
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run build
+
+      - name: Test (skip if script missing)
+        working-directory: Frontends/${{ matrix.service }}
+        run: |
+          if npm run | grep -qE ' test'; then
+            npm run test
+          else
+            echo "No test script; skipping."
+          fi
+
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Frontends-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
+          path: Frontends/${{ matrix.service }}/dist
+
+      - name: Set repository owner and service name to lowercase
+        id: lower
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Docker/microfrontend.Dockerfile
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.service }}
+            PORT=3000
+          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
