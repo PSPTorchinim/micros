@@ -1,0 +1,85 @@
+.navbar-desktop-menu {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.navbar-links {
+  gap: var(--dl-space-space-twounits);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: var(--dl-space-space-twounits);
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.navbar-buttons {
+  gap: var(--dl-space-space-twounits);
+  display: flex;
+  align-items: center;
+  margin-left: var(--dl-space-space-twounits);
+}
+
+.thq-link {
+  display: inline-block;
+  vertical-align: middle; /* Ensures consistent alignment */
+  line-height: 1.5; /* Matches the line height of other links */
+  text-decoration: none; /* Ensures no underline unless specified */
+}
+
+.navbar-dropdown {
+  display: none;
+  position: absolute;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: var(--dl-space-space-unit);
+  z-index: 1000;
+  min-width: 10rem;
+  max-width: 30rem;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.navbar-dropdown.visible {
+  display: block;
+}
+
+.navbar-item {
+  position: relative;
+}
+
+.navbar-item:focus {
+  outline: 2px solid var(--dl-color-primary); /* Add a visible focus outline */
+  outline-offset: 2px;
+}
+
+.navbar-item:hover > .navbar-dropdown {
+  display: block;
+}
+
+.navbar-dropdown .navbar-item {
+  position: relative;
+}
+
+.navbar-dropdown .navbar-item:focus {
+  outline: 2px solid var(--dl-color-primary); /* Add focus outline for nested items */
+  outline-offset: 2px;
+}
+
+.navbar-dropdown .navbar-item:hover > .navbar-dropdown {
+  display: block; /* Ensure nested dropdowns are visible on hover */
+}
+
+.navbar-dropdown .navbar-dropdown {
+  top: 0;
+  left: 75%; /* Position the next layer to the right of its parent */
+  margin-left: 0.5rem; /* Add some spacing between parent and child dropdowns */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better visibility */
+}
+
+@media (max-width: 767px) {
+  .navbar-desktop-menu {
+    display: none;
+  }
+}
