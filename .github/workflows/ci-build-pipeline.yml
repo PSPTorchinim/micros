@@ -19,19 +19,29 @@ jobs:
     steps:
       - id: set
         run: |
+          # Default values
           TARGET_BRANCH="${{ github.ref_name }}"
           DOCKER_TAG="develop"
+
+          # Handle scheduled events
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            if [ "${{ github.event.schedule }}" = "0 2 * * *" ]; then
-              TARGET_BRANCH="releases/*"
-              DOCKER_TAG="develop"
-            elif [ "${{ github.event.schedule }}" = "0 4 1 * *" ]; then
-              TARGET_BRANCH="production"
-              DOCKER_TAG="production"
-            fi
-          elif [ "$TARGET_BRANCH" = "production" ]; then
+            case "${{ github.event.schedule }}" in
+              "0 2 * * *")
+                TARGET_BRANCH="releases/*"
+                DOCKER_TAG="develop"
+                ;;
+              "0 4 1 * *")
+                TARGET_BRANCH="production"
+                DOCKER_TAG="production"
+                ;;
+            esac
+          fi
+
+          # If pushing directly to production branch
+          if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
           fi
+
           echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
 
@@ -55,33 +65,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2 # Fetch previous commit for comparison
 
-      - name: Check if service changed
-        id: check_changes
-        uses: dorny/paths-filter@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          filters: |
-            service:
-              - 'Services/${{ matrix.service }}/**'
-              - 'Services/Shared/**'
-              - 'Docker/microservice.Dockerfile'
-              - 'Tests/${{ matrix.service }}.Tests/**'
+          dotnet-version: "9.x"
 
-      - name: Setup .NET, tools, login, restore, build, test, publish, docker
-        if: steps.check_changes.outputs.service == 'true'
+      - name: Add dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Show dotnet version
+        run: dotnet --version
+
+      - name: Update dotnet-ef tool
+        run: dotnet tool update --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore "Services/${{ matrix.service }}"
+
+      - name: Check for DbContext
         run: |
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-          dotnet --version
-          dotnet tool update --global dotnet-ef
-          dotnet restore "Services/${{ matrix.service }}"
           if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
             echo "DbContext found."
           else
             echo "No DbContext found (or no design-time factory)."
           fi
-          dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
+
+      - name: Build project
+        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
+
+      - name: Run tests (if present)
+        run: |
           if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
             dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
           else
@@ -91,21 +105,18 @@ jobs:
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
       - name: Publish artifacts
-        if: steps.check_changes.outputs.service == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: "Services-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
           path: Services/${{ matrix.service }}/bin/Debug/net9.0/
 
       - name: Set repository owner and service name to lowercase
-        if: steps.check_changes.outputs.service == 'true'
         id: lower
         run: |
           echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
           echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry
-        if: steps.check_changes.outputs.service == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -113,7 +124,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        if: steps.check_changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -132,21 +142,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.set_target_branch.outputs.target_branch }}
-          fetch-depth: 2 # Fetch previous commit for comparison
-
-      - name: Check if frontend changed
-        id: check_changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            frontend:
-              - 'Frontends/${{ matrix.service }}/**'
-              - 'Docker/microfrontend.Dockerfile'
 
       - name: Log in to GitHub Container Registry
-        if: steps.check_changes.outputs.frontend == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -162,7 +159,6 @@ jobs:
             ${{ runner.os }}-npm-cache-
 
       - name: Use Node version
-        if: steps.check_changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -170,17 +166,14 @@ jobs:
           cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
 
       - name: Install dependencies
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
       - name: Build
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: npm run build
 
       - name: Test (skip if script missing)
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: |
           if npm run | grep -qE ' test'; then
@@ -190,21 +183,18 @@ jobs:
           fi
 
       - name: Publish artifacts
-        if: steps.check_changes.outputs.frontend == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: "Frontends-${{ matrix.service }}-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}"
           path: Frontends/${{ matrix.service }}/dist
 
       - name: Set repository owner and service name to lowercase
-        if: steps.check_changes.outputs.frontend == 'true'
         id: lower
         run: |
           echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
           echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
-        if: steps.check_changes.outputs.frontend == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
