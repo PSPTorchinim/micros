@@ -34,6 +34,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting all roles.");
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Calling _rolesRepository.Get()");
                 var roles = (await _rolesRepository.Get()).ToList();
                 _logger.LogInformation("Retrieved {Count} roles.", roles.Count);
                 return roles;
@@ -45,7 +46,9 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting role with Id: {RoleId}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Creating RolePermissionsSpec for Id: {RoleId}", id);
                 var spec = new RolePermissionsSpec(x => x.Id.Equals(id));
+                _logger.LogDebug("Calling _rolesRepository.Get(spec) for Id: {RoleId}", id);
                 var req = await _rolesRepository.Get(spec);
                 if (req == null || !req.Any())
                 {
@@ -64,6 +67,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Adding new role: {RoleName}", request.Name);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Checking if role with name '{RoleName}' exists.", request.Name);
                 var foundByName = await _rolesRepository.Exists(role => role.Name == request.Name);
                 if (foundByName)
                 {
@@ -71,13 +75,16 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.AddRoleExists);
                 }
 
+                _logger.LogDebug("Fetching permissions for new role '{RoleName}'.", request.Name);
+                var permissions = await _permissionsRepository.Get(p => request.Permissions.Contains(p.Id));
                 var toAdd = new Role
                 {
                     Name = request.Name,
                     Description = request.Description,
-                    Permissions = await _permissionsRepository.Get(p => request.Permissions.Contains(p.Id))
+                    Permissions = permissions
                 };
 
+                _logger.LogDebug("Adding role '{RoleName}' to repository.", request.Name);
                 var result = await _rolesRepository.Add(toAdd);
                 _logger.LogInformation("Role '{RoleName}' added successfully: {Result}", request.Name, result);
                 return result;
@@ -89,6 +96,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Editing role with Id: {RoleId}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching role with Id: {RoleId} for edit.", id);
                 var foundByName = (await _rolesRepository.Get(role => role.Id == id)).FirstOrDefault();
                 if (foundByName == null)
                 {
@@ -96,10 +104,12 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.RoleNotExists);
                 }
 
+                _logger.LogDebug("Updating role fields for Id: {RoleId}", id);
                 foundByName.Name = request.Name;
                 foundByName.Description = request.Description;
                 foundByName.Permissions = await _permissionsRepository.Get(p => request.Permissions.Contains(p.Id));
 
+                _logger.LogDebug("Updating role with Id: {RoleId} in repository.", id);
                 var result = await _rolesRepository.Update(foundByName);
                 _logger.LogInformation("Role with Id: {RoleId} updated: {Result}", id, result);
                 return result;
@@ -111,6 +121,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Deleting role with Id: {RoleId}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching role with Id: {RoleId} for deletion.", id);
                 var foundByName = (await _rolesRepository.Get(role => role.Id == id)).FirstOrDefault();
                 if (foundByName == null)
                 {
@@ -124,6 +135,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.RoleHasUsers);
                 }
 
+                _logger.LogDebug("Deleting role with Id: {RoleId} from repository.", id);
                 var result = await _rolesRepository.Delete(foundByName);
                 _logger.LogInformation("Role with Id: {RoleId} deleted: {Result}", id, result);
                 return result;

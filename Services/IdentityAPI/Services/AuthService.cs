@@ -54,23 +54,45 @@ namespace IdentityAPI.Services
             return ExceptionHandler.Handle(() =>
             {
                 _logger.LogInformation("Generating {TokenType} token for user with Id: {UserId}", isRefresh ? "refresh" : "access", user.Id);
+
                 var key = Environment.GetEnvironmentVariable("ASPNETCORE_JWT_KEY");
+                if (string.IsNullOrEmpty(key))
+                {
+                    _logger.LogCritical("ASPNETCORE_JWT_KEY environment variable is not set or empty.");
+                    throw new Exception("JWT key is missing.");
+                }
+                _logger.LogWarning("JWT: {key}", key);
+                _logger.LogDebug("JWT key length: {KeyLength} bytes", Encoding.UTF8.GetBytes(key).Length);
+
                 var issuer = _configuration.GetSection("TokenConfiguration").GetValue<string>("Issuer");
                 var audience = _configuration.GetSection("TokenConfiguration").GetValue<string>("Audience");
+                _logger.LogDebug("Token issuer: {Issuer}, audience: {Audience}", issuer, audience);
+
                 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
                 var time = isRefresh ? _configuration.GetSection("TokenConfiguration").GetValue<long>("TokenExpireTime") : _configuration.GetSection("TokenConfiguration").GetValue<long>("RefreshTokenExpireTime");
+                _logger.LogDebug("Token expiration (seconds): {ExpireTime}", time);
+
                 var expires = DateTime.Now.AddSeconds(time);
                 var claims = GenerateClaims(user);
-                var token = new JwtSecurityToken(
-                    issuer: issuer,
-                    audience: audience,
-                    expires: expires,
-                    claims: claims,
-                    signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
-                );
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-                _logger.LogInformation("{TokenType} token generated for user with Id: {UserId}", isRefresh ? "Refresh" : "Access", user.Id);
-                return tokenString;
+
+                try
+                {
+                    var token = new JwtSecurityToken(
+                        issuer: issuer,
+                        audience: audience,
+                        expires: expires,
+                        claims: claims,
+                        signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
+                    );
+                    var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                    _logger.LogInformation("{TokenType} token generated for user with Id: {UserId}", isRefresh ? "Refresh" : "Access", user.Id);
+                    return tokenString;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex, "Failed to generate JWT token for user {UserId}", user.Id);
+                    throw;
+                }
             }, _logger);
         }
 
@@ -117,18 +139,35 @@ namespace IdentityAPI.Services
                 _logger.LogInformation("Validating token.");
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = _configuration.GetSection("TokenConfiguration").GetValue<string>("Key");
+                if (string.IsNullOrEmpty(key))
+                {
+                    _logger.LogCritical("TokenConfiguration:Key is not set in configuration.");
+                    throw new Exception("JWT key is missing in configuration.");
+                }
+                _logger.LogDebug("Validating token with key length: {KeyLength} bytes", Encoding.ASCII.GetBytes(key).Length);
+
                 var encodedKey = Encoding.ASCII.GetBytes(key);
                 var time = _configuration.GetSection("TokenConfiguration").GetValue<long>("TokenExpiration");
-                tokenHandler.ValidateToken(authToken, new TokenValidationParameters
+                _logger.LogDebug("Token validation clock skew (seconds): {Time}", time);
+
+                try
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(encodedKey),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ClockSkew = TimeSpan.FromSeconds(time)
-                }, out SecurityToken validatedToken);
-                _logger.LogInformation("Token validated successfully.");
-                return true;
+                    tokenHandler.ValidateToken(authToken, new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(encodedKey),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ClockSkew = TimeSpan.FromSeconds(time)
+                    }, out SecurityToken validatedToken);
+                    _logger.LogInformation("Token validated successfully.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Token validation failed.");
+                    throw;
+                }
             }, _logger);
         }
     }
