@@ -125,6 +125,7 @@ jobs:
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
           tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/services/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
 
   validate_react:
     name: Build - React
@@ -191,3 +192,4 @@ jobs:
             MICROFRONTEND_NAME=${{ matrix.service }}
             PORT=3000
           tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
