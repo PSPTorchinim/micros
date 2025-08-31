@@ -9,11 +9,6 @@ on:
     - cron: "0 4 1 * *" # Monthly: build production
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write
-
 jobs:
   set_target_branch:
     name: Resolve target branch (for schedules)
