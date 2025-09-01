@@ -7,6 +7,7 @@ on:
   schedule:
     - cron: "0 2 * * *" # Nightly: build develop
     - cron: "0 4 1 * *" # Monthly: build production
+    - cron: "0 0 * * 0" # Weekly: build tests branch (Sunday at midnight)
   workflow_dispatch:
 
 jobs:
@@ -34,12 +35,18 @@ jobs:
                 TARGET_BRANCH="production"
                 DOCKER_TAG="production"
                 ;;
+              "0 0 * * 0")
+                TARGET_BRANCH="tests"
+                DOCKER_TAG="test"
+                ;;
             esac
           fi
 
-          # If pushing directly to production branch
+          # If pushing directly to production or tests branch
           if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
+          elif [ "$TARGET_BRANCH" = "tests" ]; then
+            DOCKER_TAG="test"
           fi
 
           echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
