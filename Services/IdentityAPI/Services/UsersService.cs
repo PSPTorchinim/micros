@@ -41,9 +41,11 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Login attempt for user: {Email}", loginUser.Email);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching user by email: {Email}", loginUser.Email);
                 var spec = new UserWithRolesAndPermissions(u => u.Email == loginUser.Email);
                 var usersByEmail = await _usersRepository.Get(spec);
                 usersByEmail = usersByEmail.ToList();
+                _logger.LogDebug("Found {Count} users for email: {Email}", usersByEmail.Count(), loginUser.Email);
                 if (usersByEmail.Count() != 1)
                 {
                     _logger.LogWarning("Login failed: user not found or multiple users for email {Email}", loginUser.Email);
@@ -64,6 +66,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.LoginUserBlocked);
                 }
 
+                _logger.LogDebug("Generating access token for user: {Email}", loginUser.Email);
                 var result = _authService.GenerateAccessToken(matchingUser);
 
                 if (result == null)
@@ -75,6 +78,7 @@ namespace IdentityAPI.Services
                 matchingUser.RefreshToken = result.RefreshToken;
                 matchingUser.Token = result.AccessToken;
 
+                _logger.LogDebug("Updating user with new tokens: {Email}", loginUser.Email);
                 await _usersRepository.Update(matchingUser);
 
                 result.User = _mapper.Map<GetUserDTO>(matchingUser);
@@ -93,6 +97,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Register attempt for user: {Email}", registerUser.Email);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Checking if email already exists: {Email}", registerUser.Email);
                 var matchingEmail = await _usersRepository.Count(u => u.Email.Equals(registerUser.Email));
                 if (matchingEmail > 0)
                 {
@@ -100,6 +105,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.RegisterEmailFound);
                 }
 
+                _logger.LogDebug("Creating new user entity for: {Email}", registerUser.Email);
                 var newUser = new User()
                 {
                     Passwords = new List<Password>() {
@@ -128,8 +134,10 @@ namespace IdentityAPI.Services
             _logger.LogInformation("RefreshToken attempt");
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Getting token and user id from context");
                 var token = GetTokenAsync();
                 var userId = GetClaim("Id");
+                _logger.LogDebug("Refreshing token for user id: {UserId}", userId);
                 var newToken = await _authService.RefreshTokenAsync(token, userId);
                 if (newToken == null)
                 {
@@ -144,6 +152,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
+                _logger.LogDebug("Generating new access token for user id: {UserId}", userId);
                 var result = _authService.GenerateAccessToken(matchingUser);
                 if (result == null)
                 {
@@ -162,6 +171,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("BlockUser attempt for user id: {UserId}", request.UserId);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching user for block by id: {UserId}", request.UserId);
                 var user = (await _usersRepository.Get(u => u.Id.Equals(request.UserId))).FirstOrDefault();
                 if (user == null)
                 {
@@ -169,6 +179,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
+                _logger.LogDebug("Appending block to user: {UserId}", request.UserId);
                 user.Blocks.Append(_mapper.Map<Block>(request));
 
                 var result = await _usersRepository.Update(user);
@@ -192,6 +203,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
 
+                _logger.LogDebug("Fetching user for password change by id: {UserId}", id);
                 var user = (await _usersRepository.Get(u => u.Id.Equals(Guid.Parse(id)))).FirstOrDefault();
                 if (user == null)
                 {
@@ -216,11 +228,13 @@ namespace IdentityAPI.Services
                     }
                     else
                     {
+                        _logger.LogDebug("Updating created date for reused password for user id {UserId}", id);
                         usedPassword.CreatedDate = DateTime.Now;
                     }
                 }
                 else
                 {
+                    _logger.LogDebug("Adding new password for user id {UserId}", id);
                     var newPassword = new Password() { CreatedDate = DateTime.Now, Value = request.NewPassword };
                     user.Passwords.Append(newPassword);
                 }
@@ -238,6 +252,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("ForgotPassword attempt for email: {Email}", request.Email);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching user for forgot password by email: {Email}", request.Email);
                 var foundByEmail = (await _usersRepository.Get(x => x.Email.ToLower().Equals(request.Email.ToLower()))).FirstOrDefault();
                 if (foundByEmail == null)
                 {
@@ -245,6 +260,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
+                _logger.LogDebug("Adding new password for forgot password for user: {Email}", request.Email);
                 foundByEmail.Passwords.Add(new Password
                 {
                     CreatedDate = DateTime.Now,
@@ -268,6 +284,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("ActivateAccount attempt for email: {Email}", request.Email);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching user for activation by email: {Email}", request.Email);
                 var user = (await _usersRepository.Get(x => x.Email.Compare(request.Email))).FirstOrDefault();
                 if (user == null)
                 {
@@ -280,6 +297,7 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.WrongActivationCode);
                 }
 
+                _logger.LogDebug("Activating user account for email: {Email}", request.Email);
                 user.Activated = true;
                 var result = await _usersRepository.Update(user);
                 if (result)
@@ -295,8 +313,10 @@ namespace IdentityAPI.Services
             _logger.LogInformation("GetLoggedUserData attempt");
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Getting token and user id from context");
                 var token = GetTokenAsync();
                 var userId = GetClaim("Id");
+                _logger.LogDebug("Fetching user with roles and permissions for id: {UserId}", userId);
                 var spec = new UserWithRolesAndPermissions(u => u.Id.ToString() == userId);
                 var user = (await _usersRepository.Get(spec)).FirstOrDefault();
                 if (user == null)

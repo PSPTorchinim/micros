@@ -1,13 +1,22 @@
 import axios from 'axios';
 import { Response } from '../models/response';
 
-const secureValue = process.env.REACT_APP_API_SECURE_KEY ?? '';
+// Ensure required env variables are present
+const baseURL = process.env.REACT_APP_API_GATEWAY;
+const secureValue = process.env.REACT_APP_API_SECURE_KEY;
+
+if (!baseURL) {
+  throw new Error('REACT_APP_API_GATEWAY environment variable is not set');
+}
+if (!secureValue) {
+  throw new Error('REACT_APP_API_SECURE_KEY environment variable is not set');
+}
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_GATEWAY,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
-    'secure_key': secureValue,
+    secure_key: secureValue,
   },
   withCredentials: true,
 });
@@ -22,7 +31,6 @@ export const GET = async <T>(url: string, skipInterceptor = false) => {
 };
 
 export const POST = async <T>(url: string, data: any) => {
-  console.log(api);
   return api.post<Response<T>>(url, data);
 };
 

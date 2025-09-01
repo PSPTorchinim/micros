@@ -31,6 +31,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting all permissions.");
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Calling _permissionsRepository.Get()");
                 var result = await _permissionsRepository.Get();
                 _logger.LogInformation("Retrieved {Count} permissions.", result.Count);
                 return _mapper.Map<List<GetPermissionsDTO>>(result);
@@ -42,12 +43,14 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Adding permission with name: {Name}", request.Name);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Checking if permission with name {Name} exists.", request.Name);
                 if (await _permissionsRepository.Exists(x => x.Name.Equals(request.Name)))
                 {
                     _logger.LogWarning("Permission with name {Name} already exists.", request.Name);
                     return false;
                 }
                 var req = _mapper.Map<Permission>(request);
+                _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
                 _logger.LogInformation("Permission with name {Name} added: {Result}", request.Name, result);
                 return result;
@@ -59,6 +62,7 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Calling _permissionsRepository.Get() for id: {Id}", id);
                 var req = await _permissionsRepository.Get(p => p.Id.Equals(id));
                 if (req.FirstOrDefault() == null)
                 {
@@ -77,12 +81,14 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Editing permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching permission with id: {Id} for edit.", id);
                 var permission = (await _permissionsRepository.Get(p => p.Id.Equals(id))).FirstOrDefault();
                 if (permission == null)
                 {
                     _logger.LogWarning("Permission with id {Id} not found for edit.", id);
                     return false;
                 }
+                _logger.LogDebug("Updating permission fields for id: {Id}", id);
                 permission.Name = request.Name;
                 permission.Description = request.Description;
                 var result = await _permissionsRepository.Update(permission);
@@ -96,9 +102,11 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Deleting permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>
             {
+                _logger.LogDebug("Fetching permission with id: {Id} for deletion.", id);
                 var permission = (await _permissionsRepository.Get(p => p.Id.Equals(id))).FirstOrDefault();
                 if (permission != null)
                 {
+                    _logger.LogDebug("Permission found. Proceeding to delete id: {Id}", id);
                     var result = await _permissionsRepository.Delete(permission);
                     _logger.LogInformation("Permission with id {Id} deleted: {Result}", id, result);
                     return result;
