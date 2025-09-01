@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './index.css';
-import { UsersService } from '../../../services/users-service';
 import { useAuth } from '../../../hooks/use-auth';
+import { useServices } from '../../../hooks/use-services';
 
 export const LoginComponent = () => {
   const [email, setEmail] = useState('');
@@ -10,24 +10,34 @@ export const LoginComponent = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { setUser, setToken, setRefreshToken } = useAuth();
+  const { usersService } = useServices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await UsersService.Login(email, password);
+      const response = await usersService.Login(email, password);
       if (response.success) {
         console.log('Login successful');
-        if (setUser){
+        if (setUser) {
           console.log('Setting user:', response.data?.user);
           setUser(response.data?.user ?? null); // Check if setUser is defined
           setToken(response.data?.accessToken ?? null); // Check if setToken is defined
           setRefreshToken(response.data?.refreshToken ?? null); // Check if setToken is defined
           //persist user in localStorage
-          localStorage.setItem('user', JSON.stringify(response.data?.user ?? null));
-          localStorage.setItem('token', JSON.stringify(response.data?.accessToken ?? null));
-          localStorage.setItem('refreshToken', JSON.stringify(response.data?.refreshToken ?? null));
+          localStorage.setItem(
+            'user',
+            JSON.stringify(response.data?.user ?? null),
+          );
+          localStorage.setItem(
+            'token',
+            JSON.stringify(response.data?.accessToken ?? null),
+          );
+          localStorage.setItem(
+            'refreshToken',
+            JSON.stringify(response.data?.refreshToken ?? null),
+          );
         }
-        if (setToken){
+        if (setToken) {
           console.log('Setting token:', response.data?.accessToken);
           setToken(response.data?.accessToken ?? null); // Check if setToken is defined
         }
@@ -64,9 +74,7 @@ export const LoginComponent = () => {
           />
         </div>
         {error && <p>{error}</p>}
-        <button type="submit">
-          Login
-        </button>
+        <button type="submit">Login</button>
         <p className="mt-4 text-sm text-center">
           Forgot your password?{' '}
           <a href="/users/forgot-password" className="hover:underline">
