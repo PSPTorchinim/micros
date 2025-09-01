@@ -218,7 +218,7 @@ jobs:
       - name: Delete old service container images (keep only latest)
         uses: smartsquaregmbh/delete-old-packages@v0.8.1
         with:
-          organization: ${{ github.repository_owner }}
+          user: ${{ github.repository_owner }}
           type: container
           names: |
             micros/services/companyapi
@@ -236,7 +236,7 @@ jobs:
       - name: Delete old frontend container images (keep only latest)
         uses: smartsquaregmbh/delete-old-packages@v0.8.1
         with:
-          organization: ${{ github.repository_owner }}
+          user: ${{ github.repository_owner }}
           type: container
           names: |
             micros/frontends/dj-panel
