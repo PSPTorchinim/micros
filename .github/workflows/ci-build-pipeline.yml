@@ -37,7 +37,7 @@ jobs:
             esac
           fi
 
-          # If pushing directly to production branch
+          # If pushing directly to production or tests branch
           if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
           fi

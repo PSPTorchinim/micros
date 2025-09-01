@@ -28,7 +28,7 @@ export class UsersService {
     password: string,
   ): Promise<Response<LoginResponseDTO | null>> {
     const hashedPassword = SHA256(password);
-    return POST<LoginResponseDTO>('identity/api/v1/users/login', {
+    return POST<LoginResponseDTO>('identity/api/v1/Users/Login', {
       email: email,
       password: hashedPassword.toString(),
     })

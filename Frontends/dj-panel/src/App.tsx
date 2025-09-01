@@ -10,21 +10,27 @@ import { navigation } from './content/navigation';
 import { footer } from './content/footer';
 import { AuthProvider } from './providers/auth-provider';
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
+import { ServicesProvider } from './providers/services-provider';
 
 export default function App() {
   return (
     <HashRouter>
-      <AuthProvider>
-        <Routes>
-          <Route element={<Layout navigation={navigation} footer={footer} />}>
-            <Route path="users">
-              <Route path="login" element={<LoginComponent />} />
-              <Route path="forgot-password" element={<ForgotPasswordComponent />} />
+      <ServicesProvider>
+        <AuthProvider>
+          <Routes>
+            <Route element={<Layout navigation={navigation} footer={footer} />}>
+              <Route path="users">
+                <Route path="login" element={<LoginComponent />} />
+                <Route
+                  path="forgot-password"
+                  element={<ForgotPasswordComponent />}
+                />
+              </Route>
+              <Route index element={<HomeComponent {...data} />} />
             </Route>
-            <Route index element={<HomeComponent {...data} />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
+      </ServicesProvider>
     </HashRouter>
   );
 }

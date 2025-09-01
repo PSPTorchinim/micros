@@ -12,11 +12,14 @@ if (!secureValue) {
   throw new Error('REACT_APP_API_SECURE_KEY environment variable is not set');
 }
 
+console.log('API base URL:', baseURL);
+console.log('Secure key is set:', !!secureValue);
+
 export const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
-    secure_key: secureValue,
+    secure_key: secureValue, // Use the hashed value
   },
   withCredentials: true,
 });
@@ -25,7 +28,7 @@ export const GET = async <T>(url: string, skipInterceptor = false) => {
   return api.get<Response<T>>(url, {
     headers: {
       ...(!skipInterceptor ? {} : { 'Skip-Interceptor': 'true' }),
-      secure_key: secureValue,
+      secure_key: secureValue, // Use the hashed value
     },
   });
 };
