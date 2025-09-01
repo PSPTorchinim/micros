@@ -21,8 +21,7 @@ module.exports = (_env, argv = {}) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'bundle.js',
-      // Use REACT_APP_PORT in production builds too
-      publicPath: isProd ? `http://localhost:${PORT}/` : '/',
+      publicPath: '/',
     },
 
     resolve: {
@@ -34,6 +33,7 @@ module.exports = (_env, argv = {}) => {
 
     devServer: {
       port: PORT,
+      allowedHosts: 'all',
       historyApiFallback: true,
       watchFiles: [path.resolve(__dirname, 'src')],
       onListening(devServer) {

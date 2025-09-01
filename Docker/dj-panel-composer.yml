@@ -443,24 +443,22 @@ services:
       driver: none
     attach: false
 
-  # host_fe:
-  #   build:
-  #     context: ../
-  #     dockerfile: Docker/microfrontend.Dockerfile
-  #     args:
-  #       MICROFRONTEND_NAME: dj-panel
-  #   ports:
-  #     - "3080:3000"
+  host_fe:
+    build:
+      context: ../
+      dockerfile: Docker/microfrontend.Dockerfile
+      args:
+        MICROFRONTEND_NAME: dj-panel
+    ports:
+      - "3080:3000"
 
-  #   environment:
-  #     - REACT_APP_PUBLIC_PATH=/
-  #     - REACT_APP_PORT=3000
-  #     - REACT_APP_API_GATEWAY=${GATEWAY_ADDRESS}
-  #     - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
-  #     - REACT_APP_API_JWT_TOKEN=${JWT_KEY}
-  #   networks:
-  #     - rabbitmq_net
-  #     - apigw_fe_net
+    environment:
+      - REACT_APP_API_GATEWAY=${GATEWAY_ADDRESS}
+      - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
+      - REACT_APP_API_JWT_TOKEN=${JWT_KEY}
+    networks:
+      - rabbitmq_net
+      - apigw_fe_net
 
 networks:
   mongo_net:
