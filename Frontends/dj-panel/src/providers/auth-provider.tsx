@@ -1,4 +1,9 @@
-import React, { PropsWithChildren, useEffect, useLayoutEffect, useState } from 'react';
+import React, {
+  PropsWithChildren,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import { AuthContext } from '../context/auth-context';
 import { LoginResponseDTO } from '../models/login-response-dto';
 import { api, GET } from '../utils/api';
@@ -49,29 +54,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-  
+
         if (originalRequest.headers['Skip-Interceptor']) {
           return Promise.reject(error);
         }
-  
+
         if (originalRequest._retry) {
           return Promise.reject(error);
         }
-  
+
         if (error.response?.status === 401 && refreshToken) {
           originalRequest._retry = true;
           try {
             const response = await GET<LoginResponseDTO>(
               '/identity/api/v1/users/refreshToken',
-              true
+              true,
             );
-  
-            const { user, accessToken, refreshToken: newRefreshToken } = response.data;
-  
+
+            const {
+              user,
+              accessToken,
+              refreshToken: newRefreshToken,
+            } = response.data;
+
             setUser(user);
             setToken(accessToken);
             setRefreshToken(newRefreshToken);
-  
+
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return api(originalRequest);
           } catch (refreshError) {
@@ -79,11 +88,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             return Promise.reject(refreshError);
           }
         }
-  
+
         return Promise.reject(error);
-      }
+      },
     );
-  
+
     return () => {
       api.interceptors.response.eject(refreshInterceptor);
     };
@@ -111,7 +120,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, refreshToken, setUser, setToken, setRefreshToken, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        refreshToken,
+        setUser,
+        setToken,
+        setRefreshToken,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

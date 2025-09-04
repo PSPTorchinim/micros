@@ -28,7 +28,7 @@ export const navigation = {
               url: '/users/add',
               permissions: ['users:create'],
             },
-          ]
+          ],
         },
         {
           text: 'Roles',
@@ -44,7 +44,7 @@ export const navigation = {
               url: '/roles/add',
               permissions: ['roles:create'],
             },
-          ]
+          ],
         },
         {
           text: 'Permissions',
@@ -60,8 +60,8 @@ export const navigation = {
               url: '/permissions/add',
               permissions: ['permissions:create'],
             },
-          ]
-        }
+          ],
+        },
       ],
     },
     {
@@ -78,12 +78,12 @@ export const navigation = {
         {
           text: 'Edit Info',
           url: '/company/edit',
-          permissions: ['company:update']
+          permissions: ['company:update'],
         },
         {
           text: 'Add new empoloyee',
           url: '/company/add-employee',
-          permissions: ['company:update']
+          permissions: ['company:update'],
         },
       ],
     },
@@ -105,6 +105,6 @@ export const navigation = {
       url: '/users/profile',
       isAuth: true,
       menu: 'login',
-    }
+    },
   ],
 };

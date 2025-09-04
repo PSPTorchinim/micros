@@ -8,7 +8,8 @@ export const DesktopMenu = (props: any) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const hasPermission = (permissions: string[]) => {
-    const userPermissions = user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
+    const userPermissions =
+      user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
     if (!permissions) return true;
     if (!userPermissions) return false;
     for (const permission of permissions) {
@@ -79,10 +80,18 @@ export const DesktopMenu = (props: any) => {
   return (
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">
-        {renderLinks(props.links.filter((element: any) => element.menu === 'main' && element.url))}
+        {renderLinks(
+          props.links.filter(
+            (element: any) => element.menu === 'main' && element.url,
+          ),
+        )}
       </nav>
       <div className="navbar-buttons">
-        {renderLinks(props.links.filter((element: any) => element.menu === 'login' && element.url))}
+        {renderLinks(
+          props.links.filter(
+            (element: any) => element.menu === 'login' && element.url,
+          ),
+        )}
         {isAuthenticated() && (
           <Link
             to="#"

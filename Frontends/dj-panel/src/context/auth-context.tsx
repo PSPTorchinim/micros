@@ -12,4 +12,6 @@ export type AuthContextData = {
   logout: () => void;
 };
 
-export const AuthContext = createContext<AuthContextData | undefined>(undefined);
+export const AuthContext = createContext<AuthContextData | undefined>(
+  undefined,
+);
