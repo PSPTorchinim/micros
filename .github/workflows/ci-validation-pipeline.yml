@@ -116,11 +116,6 @@ jobs:
         working-directory: Frontends/${{ matrix.service }}
         run: npm run lint
 
-      - name: Build
-        if: steps.check_changes.outputs.frontend == 'true'
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run build
-
       - name: Check formatting
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
@@ -129,9 +124,9 @@ jobs:
       - name: Test (skip if script missing)
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
-        run: |
-          if npm run | grep -qE ' test'; then
-            npm run test
-          else
-            echo "No test script; skipping."
-          fi
+        run: npm run test
+
+      - name: Build
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run build
