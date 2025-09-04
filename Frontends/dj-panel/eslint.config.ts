@@ -1,20 +1,23 @@
 import js from '@eslint/js';
-import reactHooks from 'eslint-plugin-react-hooks';
-import react from 'eslint-plugin-react';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   js.configs.recommended,
-  react.configs.recommended,
-  reactHooks.configs.recommended,
   {
+    plugins: {
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
     languageOptions: {
-      ecmaVersion: 12,
+      ecmaVersion: 2021,
       sourceType: 'module',
       globals: {
         window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
         JSX: 'readonly',
+        jest: 'readonly', // Add jest global for tests
       },
       parserOptions: {
         ecmaFeatures: {
@@ -22,17 +25,14 @@ export default [
         },
       },
     },
-    env: {
-      browser: true,
-      es2021: true,
-      jest: true,
-    },
     settings: {
       react: {
         version: 'detect',
       },
     },
     rules: {
+      ...reactPlugin.configs.recommended.rules,
+      ...reactHooksPlugin.configs.recommended.rules,
       // Add customized rules here as per your project's needs
     },
   },
