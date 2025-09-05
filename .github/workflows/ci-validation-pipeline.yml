@@ -111,17 +111,22 @@ jobs:
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
-      - name: Build
+      - name: Lint
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
-        run: npm run build
+        run: npm run lint
+
+      - name: Check formatting
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run format:check
 
       - name: Test (skip if script missing)
         if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
-        run: |
-          if npm run | grep -qE ' test'; then
-            npm run test
-          else
-            echo "No test script; skipping."
-          fi
+        run: npm run test
+
+      - name: Build
+        if: steps.check_changes.outputs.frontend == 'true'
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run build

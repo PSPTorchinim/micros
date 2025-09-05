@@ -7,20 +7,21 @@ import { useAuth } from '../../../../hooks/use-auth';
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { token, user, logout } = useAuth();
-  
-    const hasPermission = (permissions: string[]) => {
-      const userPermissions = user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
-      if (!permissions) return true;
-      if (!userPermissions) return false;
-      for (const permission of permissions) {
-        if (!userPermissions.includes(permission)) return false;
-      }
-      return true;
-    };
-  
-    const isAuthenticated = () => {
-      return token !== null && token !== undefined && token !== '';
-    };
+
+  const hasPermission = (permissions: string[]) => {
+    const userPermissions =
+      user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
+    if (!permissions) return true;
+    if (!userPermissions) return false;
+    for (const permission of permissions) {
+      if (!userPermissions.includes(permission)) return false;
+    }
+    return true;
+  };
+
+  const isAuthenticated = () => {
+    return token !== null && token !== undefined && token !== '';
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -35,23 +36,25 @@ export const MobileMenu = (props: any) => {
           (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
           (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
         ) {
-        return (
-          <div key={element.text} className="navbar-mobile-item">
-            {element.url ? (
-              <Link to={element.url} className="thq-link thq-body-small">
-                {element.text}
-              </Link>
-            ) : (
-              <span className="thq-link thq-body-small">{element.text}</span>
-            )}
-            {element.children && (
-              <div className="navbar-mobile-dropdown">{renderLinks(element.children)}</div>
-            )}
-          </div>
-        );
-      }
-      return null;
-    });
+          return (
+            <div key={element.text} className="navbar-mobile-item">
+              {element.url ? (
+                <Link to={element.url} className="thq-link thq-body-small">
+                  {element.text}
+                </Link>
+              ) : (
+                <span className="thq-link thq-body-small">{element.text}</span>
+              )}
+              {element.children && (
+                <div className="navbar-mobile-dropdown">
+                  {renderLinks(element.children)}
+                </div>
+              )}
+            </div>
+          );
+        }
+        return null;
+      });
   };
 
   return (
@@ -88,11 +91,19 @@ export const MobileMenu = (props: any) => {
             </div>
           </div>
           <nav className="navbar-mobile-links">
-            {renderLinks(props.links.filter((element: any) => element.menu == 'main' && element.url))}
+            {renderLinks(
+              props.links.filter(
+                (element: any) => element.menu == 'main' && element.url,
+              ),
+            )}
           </nav>
         </div>
         <div className="navbar-mobile-buttons">
-        {renderLinks(props.links.filter((element: any) => element.menu == 'login' && element.url))}
+          {renderLinks(
+            props.links.filter(
+              (element: any) => element.menu == 'login' && element.url,
+            ),
+          )}
           {isAuthenticated() && (
             <Link
               to="#"

@@ -10,7 +10,7 @@ export const Layout = (props: any) => {
       <main className="layout-main">
         <Outlet />
       </main>
-      <Footer {...props.footer}/>
+      <Footer {...props.footer} />
     </div>
   );
 };

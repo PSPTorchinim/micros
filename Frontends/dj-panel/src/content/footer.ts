@@ -1,3 +1,1 @@
-export const footer = {
-    
-};
+export const footer = {};
