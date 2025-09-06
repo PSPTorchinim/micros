@@ -135,312 +135,6 @@ services:
       timeout: 15s
       retries: 10
 
-  identity_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: IdentityAPI
-    ports:
-      - "3001:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${IDENTITY_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - apigw_backends_net
-      - rabbitmq_net
-
-  music_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: MusicAPI
-    ports:
-      - "3002:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${MUSIC_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - apigw_backends_net
-      - rabbitmq_net
-    logging:
-      driver: none
-    attach: false
-
-  gear_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: EquipmentAPI
-    ports:
-      - "3003:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${GEAR_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - apigw_backends_net
-      - rabbitmq_net
-    logging:
-      driver: none
-    attach: false
-
-  documents_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: DocumentsAPI
-    ports:
-      - "3004:8080"
-    depends_on:
-      mongodb_container:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${MONGODB_HOST}
-      - DATABASE_PORT=${MONGODB_PORT}
-      - DATABASE_USER=${MONGODB_USER}
-      - DATABASE_PASSWORD=${MONGODB_PASSWORD}
-      - DATABASE_CATALOG=${DOCUMENTS_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - mongo_net
-      - redis_net
-      - rabbitmq_net
-      - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
-
-  brand_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: CompanyAPI
-    ports:
-      - "3005:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - rabbitmq_net
-      - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
-
-  mailing_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: MailingAPI
-    ports:
-      - "3006:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${MAILING_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - rabbitmq_net
-      - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
-
-  party_be:
-    build:
-      context: ../
-      dockerfile: Docker/microservice.Dockerfile
-      args:
-        MICROSERVICE_NAME: PartyAPI
-    ports:
-      - "3007:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
-      rabbitmq:
-        condition: service_healthy
-        required: true
-    environment:
-      - DATABASE_HOST=${SQLSERVER_HOST}
-      - DATABASE_USER=${SQLSERVER_USER}
-      - DATABASE_PORT=${SQLSERVER_PORT}
-      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
-      - DATABASE_CATALOG=${PARTY_DATABASE_CATALOG}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
-      - ASPNETCORE_JWT_KEY=${JWT_KEY}
-      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
-      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
-    networks:
-      - sql_net
-      - redis_net
-      - rabbitmq_net
-      - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
-
   apigateway:
     build:
       context: ../
@@ -512,6 +206,305 @@ services:
       strapi:
         condition: service_healthy
         required: true
+
+  identity_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: IdentityAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${IDENTITY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+
+  music_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MusicAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${MUSIC_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+    logging:
+      driver: none
+    attach: false
+
+  gear_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: EquipmentAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${GEAR_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - apigw_backends_net
+      - rabbitmq_net
+    logging:
+      driver: none
+    attach: false
+
+  documents_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: DocumentsAPI
+    expose: ["8080"]
+    depends_on:
+      mongodb_container:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${MONGODB_HOST}
+      - DATABASE_PORT=${MONGODB_PORT}
+      - DATABASE_USER=${MONGODB_USER}
+      - DATABASE_PASSWORD=${MONGODB_PASSWORD}
+      - DATABASE_CATALOG=${DOCUMENTS_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - mongo_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
+
+  brand_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: CompanyAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
+
+  mailing_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: MailingAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${MAILING_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
+
+  party_be:
+    build:
+      context: ../
+      dockerfile: Docker/microservice.Dockerfile
+      args:
+        MICROSERVICE_NAME: PartyAPI
+    expose: ["8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      - DATABASE_HOST=${SQLSERVER_HOST}
+      - DATABASE_USER=${SQLSERVER_USER}
+      - DATABASE_PORT=${SQLSERVER_PORT}
+      - DATABASE_PASSWORD=${SQLSERVER_PASSWORD}
+      - DATABASE_CATALOG=${PARTY_DATABASE_CATALOG}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ASPNETCORE_SECURE_KEY=${SECURE_KEY}
+      - ASPNETCORE_JWT_KEY=${JWT_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
+      - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+    networks:
+      - sql_net
+      - redis_net
+      - rabbitmq_net
+      - apigw_backends_net
+    logging:
+      driver: none
+    attach: false
 
 networks:
   mongo_net:
