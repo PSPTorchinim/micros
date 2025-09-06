@@ -23,6 +23,24 @@ services:
       driver: none
     attach: false
 
+  strapiDB:
+    platform: linux/amd64
+    restart: unless-stopped
+    image: postgres:16.0-alpine
+    environment:
+      POSTGRES_USER: ${CMS_DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${CMS_DATABASE_PASSWORD}
+      POSTGRES_DB: ${CMS_DATABASE_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - strapi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CMS_DATABASE_USERNAME}"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
   rabbitmq:
     pull_policy: always
     restart: unless-stopped
@@ -87,6 +105,35 @@ services:
     logging:
       driver: none
     attach: false
+
+  strapi:
+    image: strapi:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
+      DATABASE_HOST: strapiDB
+      DATABASE_PORT: ${CMS_DATABASE_PORT}
+      DATABASE_NAME: ${CMS_DATABASE_NAME}
+      DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
+      JWT_SECRET: ${CMS_JWT_SECRET}
+      ADMIN_JWT_SECRET: ${CMS_ADMIN_JWT_SECRET}
+      APP_KEYS: ${CMS_APP_KEYS}
+      NODE_ENV: ${CMS_NODE_ENV}
+    ports:
+      - "1337:1337"
+    networks:
+      - strapi
+    depends_on:
+      strapiDB:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:1337/admin || exit 1"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
 
   identity_be:
     build:
@@ -451,7 +498,6 @@ services:
         MICROFRONTEND_NAME: dj-panel
     ports:
       - "3080:3000"
-
     environment:
       - REACT_APP_API_GATEWAY=${GATEWAY_ADDRESS}
       - REACT_APP_API_SECURE_KEY=${SECURE_KEY}
@@ -459,6 +505,13 @@ services:
     networks:
       - rabbitmq_net
       - apigw_fe_net
+    depends_on:
+      apigateway:
+        condition: service_healthy
+        required: true
+      strapi:
+        condition: service_healthy
+        required: true
 
 networks:
   mongo_net:
@@ -472,4 +525,6 @@ networks:
   apigw_backends_net:
     driver: bridge
   apigw_fe_net:
+    driver: bridge
+  strapi:
     driver: bridge
