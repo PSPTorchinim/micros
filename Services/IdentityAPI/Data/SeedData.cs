@@ -64,7 +64,7 @@ namespace IdentityAPI.Data
 
                     Email = email,
                     Passwords = new List<Password>() {
-                        new Password() { Value = password?.computeHash() }
+                        new Password() { Value = password.computeHash() }
                     },
                     Roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner")),
                     Activated = true,
