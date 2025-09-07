@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Response } from '../models/response';
+import { Response } from '../models/api/response';
 
 // Ensure required env variables are present
 const baseURL = process.env.REACT_APP_API_GATEWAY;
@@ -11,9 +11,6 @@ if (!baseURL) {
 if (!secureValue) {
   throw new Error('REACT_APP_API_SECURE_KEY environment variable is not set');
 }
-
-console.log('API base URL:', baseURL);
-console.log('Secure key is set:', !!secureValue);
 
 export const api = axios.create({
   baseURL,

@@ -41,19 +41,19 @@ namespace IdentityAPI.Services
 
         /// <summary>
         /// Returns the signing key bytes. Order of precedence:
-        /// 1) ENV: ASPNETCORE_JWT_KEY
+        /// 1) ENV: JWT_KEY
         /// 2) config: TokenConfiguration:Key
         /// Accepts Base64, Hex, or raw UTF8 string. Enforces >= 32 bytes.
         /// </summary>
         private byte[] GetSigningKeyBytes()
         {
             var raw =
-                Environment.GetEnvironmentVariable("ASPNETCORE_JWT_KEY")
+                Environment.GetEnvironmentVariable("JWT_KEY")
                 ?? _configuration["TokenConfiguration:Key"];
 
             if (string.IsNullOrWhiteSpace(raw))
             {
-                _logger.LogCritical("JWT key is missing (ENV ASPNETCORE_JWT_KEY or TokenConfiguration:Key).");
+                _logger.LogCritical("JWT key is missing (ENV JWT_KEY or TokenConfiguration:Key).");
                 throw new Exception("JWT key is missing.");
             }
 

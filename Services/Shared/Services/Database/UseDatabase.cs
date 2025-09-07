@@ -11,20 +11,20 @@ namespace Shared.Services.Database
         private static string GetSQLConnectionString()
         {
             var catalog = Environment.GetEnvironmentVariable("DATABASE_CATALOG");
-            var user = Environment.GetEnvironmentVariable("DATABASE_USER");
-            var host = Environment.GetEnvironmentVariable("DATABASE_HOST");
-            var port = Environment.GetEnvironmentVariable("DATABASE_PORT");
-            var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD");
+            var user = Environment.GetEnvironmentVariable("DATABASE_USER_SQLSERVER");
+            var host = Environment.GetEnvironmentVariable("DATABASE_HOST_SQLSERVER");
+            var port = Environment.GetEnvironmentVariable("DATABASE_PORT_SQLSERVER");
+            var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD_SQLSERVER");
             return $"Data Source={host},{port};Initial Catalog={catalog};User Id={user};Password={password};Trust Server Certificate=True";
         }
 
         private static string GetMongoDBConnectionString()
         {
-            var host = Environment.GetEnvironmentVariable("DATABASE_HOST");
-            var port = Environment.GetEnvironmentVariable("DATABASE_PORT");
-            var user = Environment.GetEnvironmentVariable("DATABASE_USER");
-            var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD");
-            return $"mongodb://{user}:{password}@{host}";
+            var host = Environment.GetEnvironmentVariable("DATABASE_HOST_MONGODB");
+            var port = Environment.GetEnvironmentVariable("DATABASE_PORT_MONGODB");
+            var user = Environment.GetEnvironmentVariable("DATABASE_USER_MONGODB");
+            var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD_MONGODB");
+            return $"mongodb://{user}:{password}@{host}:{port}";
         }
 
         public static void ConfigureSqlServer<TContext>(IServiceCollection services) where TContext : DbContext
