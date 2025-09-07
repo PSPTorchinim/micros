@@ -20,6 +20,44 @@ jobs:
             "MusicAPI",
             "PartyAPI",
           ]
+    env:
+      # SQL Server
+      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
+      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+      # MongoDB
+      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
+      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
+      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
+      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      # Redis
+      REDIS_HOST: ${{ vars.REDIS_HOST }}
+      REDIS_PORT: ${{ vars.REDIS_PORT }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      # RabbitMQ
+      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
+      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
+      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      # JWT/SECURE keys (dummy for CI)
+      SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      # Environment
+      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+      # Service addresses (for apigateway)
+      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
+      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
+      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
+      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
+      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
+      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
+      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
+      # DATABASE_CATALOG for each service (same as service name)
+      DATABASE_CATALOG: ${{ matrix.service }}
+      #DJPanel credentials (dummy for CI)
+      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
+      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,6 +114,10 @@ jobs:
     strategy:
       matrix:
         service: ["dj-panel"]
+    env:
+      REACT_APP_API_GATEWAY: ${GATEWAY_ADDRESS}
+      REACT_APP_API_SECURE_KEY: ${SECURE_KEY}
+      REACT_APP_API_JWT_TOKEN: ${JWT_KEY}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
