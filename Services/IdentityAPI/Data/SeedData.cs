@@ -49,11 +49,22 @@ namespace IdentityAPI.Data
             _logger?.LogInformation("Seeding default user at {Time}", DateTime.UtcNow);
             try
             {
+                var email = Environment.GetEnvironmentVariable("DJPANEL_USER_EMAIL");
+                if (string.IsNullOrEmpty(email))
+                {
+                    throw new Exception("DJPANEL_USER_EMAIL environment variable is not set.");
+                }
+                var password = Environment.GetEnvironmentVariable("DJPANEL_USER_PASSWORD");
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new Exception("DJPANEL_USER_PASSWORD environment variable is not set.");
+                }
                 await usersRepository.Add(new User()
                 {
-                    Email = "huberttroc@gmail.com",
+
+                    Email = email,
                     Passwords = new List<Password>() {
-                        new Password() { Value = "testPassword1234".computeHash() }
+                        new Password() { Value = password?.computeHash() }
                     },
                     Roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner")),
                     Activated = true,

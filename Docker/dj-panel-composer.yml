@@ -242,6 +242,8 @@ services:
       - JWT_KEY=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT}
       - ASPNETCORE_ORIGIN=${ASPNETCORE_ORIGIN}
+      - DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
+      - DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
     networks:
       - sql_net
       - redis_net
