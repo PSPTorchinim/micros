@@ -115,9 +115,9 @@ jobs:
       matrix:
         service: ["dj-panel"]
     env:
-      REACT_APP_API_GATEWAY: ${GATEWAY_ADDRESS}
-      REACT_APP_API_SECURE_KEY: ${SECURE_KEY}
-      REACT_APP_API_JWT_TOKEN: ${JWT_KEY}
+      REACT_APP_API_GATEWAY: ${{ vars.GATEWAY_ADDRESS }}
+      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
