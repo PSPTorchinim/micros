@@ -10,22 +10,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  set-environment: #this is a job named 'set-environment'
-    runs-on: ubuntu-latest #your preferred OS
-    outputs: #the env value needs to be exposed as an output in order to be reached from other jobs
-      current_env: ${{ steps.set_env.outputs.current_env }} #output variable to store the relevant environment
+  set-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
+      - name: Default to Development
+        run: echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
       - name: Check if prod
         if: endsWith(github.ref, '/production')
         run: |
-          echo "ENVIRONMENT_NAME=Production" >> $GITHUB_ENV
+          echo "ENVIRONMENT_NAME=Production" >> "$GITHUB_ENV"
       - name: Check if releases/R*
         if: startsWith(github.ref, 'refs/heads/releases/')
         run: |
-          echo "ENVIRONMENT_NAME=Development" >> $GITHUB_ENV
+          echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
       - name: Set output
         id: set_env
-        run: echo "::set-output name=current_env::${{ env.ENVIRONMENT_NAME }}" #assign the value of ENVIRONMENT_NAME to the output variable 'current_env'
+        run: echo "current_env=${{ env.ENVIRONMENT_NAME }}" >> "$GITHUB_OUTPUT"
 
   set_target_branch:
     environment: ${{ needs.set-environment.outputs.current_env }}
@@ -39,11 +41,8 @@ jobs:
       - id: set
         name: Set target branch and Docker tag
         run: |
-          # Default values
           TARGET_BRANCH="${{ github.ref_name }}"
           DOCKER_TAG="develop"
-
-          # Handle scheduled events
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
               "0 2 * * *")
@@ -56,14 +55,11 @@ jobs:
                 ;;
             esac
           fi
-
-          # If pushing directly to production or tests branch
           if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
           fi
-
-          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
-          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
+          echo "target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=$DOCKER_TAG" >> "$GITHUB_OUTPUT"
 
   validate_dotnet:
     environment: ${{ needs.set-environment.outputs.current_env }}
@@ -115,45 +111,6 @@ jobs:
       DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
       DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
-      - name: Validate required environment variables
-        run: |
-          required_vars=(
-            "DATABASE_HOST_SQLSERVER"
-            "DATABASE_PORT_SQLSERVER"
-            "DATABASE_USER_SQLSERVER"
-            "DATABASE_PASSWORD_SQLSERVER"
-            "DATABASE_HOST_MONGODB"
-            "DATABASE_PORT_MONGODB"
-            "DATABASE_USER_MONGODB"
-            "DATABASE_PASSWORD_MONGODB"
-            "REDIS_HOST"
-            "REDIS_PORT"
-            "REDIS_PASSWORD"
-            "RABBITMQ_HOST"
-            "RABBITMQ_PORT"
-            "RABBITMQ_USER"
-            "RABBITMQ_PASSWORD"
-            "SECURE_KEY"
-            "JWT_KEY"
-            "ASPNETCORE_ENVIRONMENT"
-            "ASPNETCORE_IDENTITY_BE_ADDRESS"
-            "ASPNETCORE_MUSIC_BE_ADDRESS"
-            "ASPNETCORE_GEAR_BE_ADDRESS"
-            "ASPNETCORE_DOCUMENTS_BE_ADDRESS"
-            "ASPNETCORE_BRAND_BE_ADDRESS"
-            "ASPNETCORE_PARTY_BE_ADDRESS"
-            "ASPNETCORE_MAILING_BE_ADDRESS"
-            "DATABASE_CATALOG"
-            "DJPANEL_USER_EMAIL"
-            "DJPANEL_USER_PASSWORD"
-          )
-          for var in "${required_vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "Error: Environment variable $var is not set."
-              exit 1
-            fi
-          done
-
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -163,7 +120,7 @@ jobs:
           dotnet-version: "9.x"
 
       - name: Add dotnet tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Show dotnet version
         run: dotnet --version
@@ -186,14 +143,7 @@ jobs:
         run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
 
       - name: Run tests (if present)
-        run: |
-          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
-            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
-          else
-            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
-          fi
-        env:
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+        run: dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
 
       - name: Set repository owner and service name to lowercase
         id: lower
@@ -261,25 +211,11 @@ jobs:
       REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
       REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
-      - name: Validate required environment variables
-        run: |
-          required_vars=(
-            "REACT_APP_API_GATEWAY"
-            "REACT_APP_API_SECURE_KEY"
-            "REACT_APP_API_JWT_TOKEN"
-          )
-          for var in "${required_vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "Error: Environment variable $var is not set."
-              exit 1
-            fi
-          done
-
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Cache npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
@@ -287,7 +223,7 @@ jobs:
             ${{ runner.os }}-npm-cache-
 
       - name: Use Node version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           cache: "npm"
@@ -297,18 +233,21 @@ jobs:
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
+      - name: Lint
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run lint
+
+      - name: Prettier check
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run format:check
+
       - name: Build
         working-directory: Frontends/${{ matrix.service }}
         run: npm run build
 
-      - name: Test (skip if script missing)
+      - name: Test
         working-directory: Frontends/${{ matrix.service }}
-        run: |
-          if npm run | grep -qE ' test'; then
-            npm run test
-          else
-            echo "No test script; skipping."
-          fi
+        run: npm run test
 
       - name: Set repository owner and service name to lowercase
         id: lower
