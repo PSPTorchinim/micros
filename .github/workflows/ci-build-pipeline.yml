@@ -58,8 +58,8 @@ jobs:
           if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
           fi
-          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
-          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
+          echo "target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=$DOCKER_TAG" >> "$GITHUB_OUTPUT"
 
   validate_dotnet:
     environment: ${{ needs.set-environment.outputs.current_env }}
@@ -220,9 +220,9 @@ jobs:
         id: set_tag
         run: |
           if [ "${{ needs.set-environment.outputs.current_env }}" = "Production" ]; then
-            echo "TAG=prod-latest" >> $GITHUB_OUTPUT
+            echo "TAG=prod-latest" >> "$GITHUB_OUTPUT"
           else
-            echo "TAG=develop-latest" >> $GITHUB_OUTPUT
+            echo "TAG=develop-latest" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create .env file for Docker Compose
@@ -274,13 +274,10 @@ jobs:
         shell: bash
 
       - name: Build stack image
-        run: |
-          docker compose -f Docker/dj-panel-composer.yml build --build-arg TAG=${{ steps.set_tag.outputs.TAG }}
+        run: docker compose -f Docker/dj-panel-composer.yml build --build-arg TAG=${{ steps.set_tag.outputs.TAG }}
 
       - name: Tag stack image
-        run: |
-          docker tag djpanel:latest ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
+        run: docker tag djpanel:latest ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
 
       - name: Push stack image
-        run: |
-          docker push ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
+        run: docker push ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
