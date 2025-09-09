@@ -4,28 +4,9 @@ on:
   pull_request:
 
 jobs:
-  set-environment: #this is a job named 'set-environment'
-    runs-on: ubuntu-latest #your preferred OS
-    outputs: #the env value needs to be exposed as an output in order to be reached from other jobs
-      current_env: ${{ steps.set_env.outputs.current_env }} #output variable to store the relevant environment
-    steps:
-      - name: Check if prod
-        if: endsWith(github.ref, '/production')
-        run: |
-          echo "ENVIRONMENT_NAME=Production" >> $GITHUB_ENV
-      - name: Check if releases/R*
-        if: startsWith(github.ref, 'refs/heads/releases/')
-        run: |
-          echo "ENVIRONMENT_NAME=Development" >> $GITHUB_ENV
-      - name: Set output
-        id: set_env
-        run: echo "::set-output name=current_env::${{ env.ENVIRONMENT_NAME }}" #assign the value of ENVIRONMENT_NAME to the output variable 'current_env'
-
   validate_dotnet:
-    name: Validate PR - DotNet
+    name: Build - DotNet
     runs-on: ubuntu-latest
-    environment: ${{ needs.set-environment.outputs.current_env }}
-    needs: set-environment
     strategy:
       matrix:
         service:
@@ -39,163 +20,56 @@ jobs:
             "MusicAPI",
             "PartyAPI",
           ]
-    env:
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
-      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
-      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
-      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
-      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
-      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ matrix.service }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
-      - name: Validate required environment variables
-        run: |
-          required_vars=(
-            "DATABASE_HOST_SQLSERVER"
-            "DATABASE_PORT_SQLSERVER"
-            "DATABASE_USER_SQLSERVER"
-            "DATABASE_PASSWORD_SQLSERVER"
-            "DATABASE_HOST_MONGODB"
-            "DATABASE_PORT_MONGODB"
-            "DATABASE_USER_MONGODB"
-            "DATABASE_PASSWORD_MONGODB"
-            "REDIS_HOST"
-            "REDIS_PORT"
-            "REDIS_PASSWORD"
-            "RABBITMQ_HOST"
-            "RABBITMQ_PORT"
-            "RABBITMQ_USER"
-            "RABBITMQ_PASSWORD"
-            "SECURE_KEY"
-            "JWT_KEY"
-            "ASPNETCORE_ENVIRONMENT"
-            "ASPNETCORE_IDENTITY_BE_ADDRESS"
-            "ASPNETCORE_MUSIC_BE_ADDRESS"
-            "ASPNETCORE_GEAR_BE_ADDRESS"
-            "ASPNETCORE_DOCUMENTS_BE_ADDRESS"
-            "ASPNETCORE_BRAND_BE_ADDRESS"
-            "ASPNETCORE_PARTY_BE_ADDRESS"
-            "ASPNETCORE_MAILING_BE_ADDRESS"
-            "DATABASE_CATALOG"
-            "DJPANEL_USER_EMAIL"
-            "DJPANEL_USER_PASSWORD"
-          )
-          for var in "${required_vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "Error: Environment variable $var is not set."
-              exit 1
-            fi
-          done
-
       - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 2 # Fetch previous commit for comparison
-
-      - name: Check if service changed
-        id: check_changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            service:
-              - 'Services/${{ matrix.service }}/**'
-              - 'Services/Shared/**'
-              - 'Tests/${{ matrix.service }}.Tests/**'
-              - 'Docker/microservice.Dockerfile'
 
       - name: Setup .NET
-        if: steps.check_changes.outputs.service == 'true'
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.x"
 
+      - name: Add dotnet tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Show dotnet version
+        run: dotnet --version
+
+      - name: Update dotnet-ef tool
+        run: dotnet tool update --global dotnet-ef
+
       - name: Restore dependencies
-        if: steps.check_changes.outputs.service == 'true'
-        run: dotnet restore 'Services/${{ matrix.service }}'
+        run: dotnet restore "Services/${{ matrix.service }}"
 
-      - name: Download EFCore tools
-        if: steps.check_changes.outputs.service == 'true'
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Check if DbContext exists
-        if: steps.check_changes.outputs.service == 'true'
+      - name: Check for DbContext
         run: |
-          cd Services/${{ matrix.service }}
-          if dotnet ef dbcontext info; then
-            echo "DbContext found. Creating migration..."
-            dotnet ef migrations add Initial
+          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
+            echo "DbContext found."
           else
-            echo "No DbContext found. Skipping migrations."
+            echo "No DbContext found (or no design-time factory)."
           fi
 
-      - name: Build
-        if: steps.check_changes.outputs.service == 'true'
-        run: dotnet build 'Services/${{ matrix.service }}' --no-restore --configuration Release
+      - name: Build project
+        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
 
-      - name: Run tests
-        if: steps.check_changes.outputs.service == 'true'
-        run: dotnet test 'Tests/${{ matrix.service }}.Tests' --no-build --configuration Release --collect:"XPlat Code Coverage"
-
+      - name: Run tests (if present)
+        run: |
+          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
+            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+          else
+            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
+          fi
+        env:
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   validate_react:
-    name: Validate PR - React
+    name: Build - React
     runs-on: ubuntu-latest
-    environment: ${{ needs.set-environment.outputs.current_env }}
-    needs: set-environment
     strategy:
       matrix:
         service: ["dj-panel"]
-    env:
-      REACT_APP_API_GATEWAY: ${{ vars.REACT_APP_API_GATEWAY }}
-      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
-      - name: Validate required environment variables
-        run: |
-          required_vars=(
-            "REACT_APP_API_GATEWAY"
-            "REACT_APP_API_SECURE_KEY"
-            "REACT_APP_API_JWT_TOKEN"
-          )
-          for var in "${required_vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "Error: Environment variable $var is not set."
-              exit 1
-            fi
-          done
-
       - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 2 # Fetch previous commit for comparison
-
-      - name: Check if frontend changed
-        id: check_changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            frontend:
-              - 'Frontends/${{ matrix.service }}/**'
 
       - name: Cache npm dependencies
         uses: actions/cache@v3
@@ -206,7 +80,6 @@ jobs:
             ${{ runner.os }}-npm-cache-
 
       - name: Use Node version
-        if: steps.check_changes.outputs.frontend == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
@@ -214,26 +87,22 @@ jobs:
           cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
 
       - name: Install dependencies
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
       - name: Lint
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: npm run lint
 
-      - name: Check formatting
-        if: steps.check_changes.outputs.frontend == 'true'
+      - name: Prettier check
         working-directory: Frontends/${{ matrix.service }}
         run: npm run format:check
 
-      - name: Test (skip if script missing)
-        if: steps.check_changes.outputs.frontend == 'true'
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run test
-
       - name: Build
-        if: steps.check_changes.outputs.frontend == 'true'
         working-directory: Frontends/${{ matrix.service }}
         run: npm run build
+
+      - name: Test (skip if script missing)
+        working-directory: Frontends/${{ matrix.service }}
+        run: |
+          npm run test

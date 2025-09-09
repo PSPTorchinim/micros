@@ -1,53 +1,54 @@
+version: "3.9"
+
 services:
   mongodb_container:
-    pull_policy: always
-    restart: unless-stopped
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
     image: mongo:latest
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USER_MONGODB}
+      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD_MONGODB}
     ports:
       - "27017:27017"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'mongosh --eval "db.adminCommand(''ping'')" || mongo --eval "db.adminCommand(''ping'')"',
-        ]
+      test: ["CMD-SHELL", 'mongosh --eval "db.adminCommand(\'ping\')" || mongo --eval "db.adminCommand(\'ping\')"']
       interval: 10s
       timeout: 15s
       retries: 10
     networks:
       - mongo_net
-    logging:
-      driver: none
-    attach: false
+      - public
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
 
-  strapiDB:
-    platform: linux/amd64
+  strapi_db:
+    image: postgres:15
     restart: unless-stopped
-    image: postgres:16.0-alpine
     environment:
-      POSTGRES_USER: ${CMS_DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${CMS_DATABASE_PASSWORD}
-      POSTGRES_DB: ${CMS_DATABASE_NAME}
+      - POSTGRES_DB=${CMS_DATABASE_NAME}
+      - POSTGRES_USER=${CMS_DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${CMS_DATABASE_PASSWORD}
     ports:
       - "5432:5432"
-    networks:
-      - strapi
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${CMS_DATABASE_USERNAME}"]
       interval: 10s
       timeout: 15s
       retries: 10
+    networks:
+      - strapi
+      - public
+    volumes:
+      - pg_data:/var/lib/postgresql/data
 
   rabbitmq:
-    pull_policy: always
+    image: rabbitmq:latest
     restart: unless-stopped
+    pull_policy: always
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
-    image: rabbitmq:latest
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -59,16 +60,16 @@ services:
       retries: 10
     networks:
       - rabbitmq_net
-    logging:
-      driver: none
-    attach: false
+      - public
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   redis:
-    pull_policy: always
+    image: bitnami/redis:latest
     restart: unless-stopped
+    pull_policy: always
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    image: bitnami/redis:latest
     ports:
       - "6379:6379"
     healthcheck:
@@ -78,41 +79,36 @@ services:
       retries: 10
     networks:
       - redis_net
-    logging:
-      driver: none
-    attach: false
+      - public
+    volumes:
+      - redis_data:/data
 
   sqlserver:
-    pull_policy: always
-    restart: unless-stopped
-    environment:
-      - MSSQL_SA_PASSWORD=${SQLSERVER_PASSWORD}
-      - ACCEPT_EULA=Y
     image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+      - ACCEPT_EULA=Y
     ports:
       - "1433:1433"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -U ${SQLSERVER_USER} -P ${SQLSERVER_PASSWORD} -Q 'SELECT 1' -C || exit 1",
-        ]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -U ${DATABASE_USER_SQLSERVER} -P ${DATABASE_PASSWORD_SQLSERVER} -Q 'SELECT 1' -C || exit 1"]
       interval: 10s
       timeout: 15s
       retries: 10
     networks:
       - sql_net
-    logging:
-      driver: none
-    attach: false
+      - public
+    volumes:
+      - mssql_data:/var/opt/mssql
 
   strapi:
-    image: strapi:latest
+    image: strapi/strapi:latest
     restart: unless-stopped
-    env_file: .env
     environment:
       DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
-      DATABASE_HOST: strapiDB
+      DATABASE_HOST: strapi_db
       DATABASE_PORT: ${CMS_DATABASE_PORT}
       DATABASE_NAME: ${CMS_DATABASE_NAME}
       DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
@@ -125,120 +121,146 @@ services:
       - "1337:1337"
     networks:
       - strapi
+      - public
+      - strapi_fe_net
     depends_on:
-      strapiDB:
+      strapi_db:
         condition: service_healthy
-        required: true
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:1337/admin || exit 1"]
       interval: 10s
       timeout: 15s
       retries: 10
+    volumes:
+      - strapi_app:/srv/app
 
   apigateway:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: DJHostGateway
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
+        MICROSERVICE_NAME: djhostgateway
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        RABBITMQ_HOST: ${RABBITMQ_HOST}
+        RABBITMQ_PORT: ${RABBITMQ_PORT}
+        RABBITMQ_USER: ${RABBITMQ_USER}
+        RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
     ports:
       - "3000:8080"
     depends_on:
       brand_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       documents_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       gear_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       identity_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       mailing_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       music_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
       party_be:
-        condition: service_started
-        required: true
+        condition: service_healthy
     networks:
       - apigw_backends_net
       - apigw_fe_net
-    logging:
-      driver: none
-    attach: false
+      - public
 
   host_fe:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microfrontend.Dockerfile
       args:
         MICROFRONTEND_NAME: dj-panel
-        PORT: 3000
-        REACT_APP_API_GATEWAY: ${GATEWAY_ADDRESS}
-        REACT_APP_API_SECURE_KEY: ${SECURE_KEY}
-        REACT_APP_API_JWT_TOKEN: ${JWT_KEY}
+        REACT_APP_API_GATEWAY: ${REACT_APP_API_GATEWAY}
+        REACT_APP_API_SECURE_KEY: ${REACT_APP_API_SECURE_KEY}
+        REACT_APP_API_JWT_TOKEN: ${REACT_APP_API_JWT_TOKEN}
+    restart: unless-stopped
+    pull_policy: always
     ports:
       - "3080:3000"
     networks:
       - rabbitmq_net
       - apigw_fe_net
+      - public
+      - strapi_fe_net
     depends_on:
       apigateway:
         condition: service_healthy
-        required: true
       strapi:
         condition: service_healthy
-        required: true
 
   identity_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: IdentityAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${IDENTITY_DATABASE_CATALOG}
+        MICROSERVICE_NAME: identityapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
-    expose: ["8080"]
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
@@ -247,262 +269,342 @@ services:
 
   music_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: MusicAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${MUSIC_DATABASE_CATALOG}
+        MICROSERVICE_NAME: musicapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
-    logging:
-      driver: none
-    attach: false
 
   gear_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: EquipmentAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${GEAR_DATABASE_CATALOG}
+        MICROSERVICE_NAME: equipmentapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
-    logging:
-      driver: none
-    attach: false
 
   documents_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: DocumentsAPI
-        DATABASE_HOST_MONGODB: ${MONGODB_HOST}
-        DATABASE_PORT_MONGODB: ${MONGODB_PORT}
-        DATABASE_USER_MONGODB: ${MONGODB_USER}
-        DATABASE_PASSWORD_MONGODB: ${MONGODB_PASSWORD}
-        DATABASE_CATALOG: ${DOCUMENTS_DATABASE_CATALOG}
+        MICROSERVICE_NAME: documentsapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       mongodb_container:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - mongo_net
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
 
   brand_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: CompanyAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${BRAND_DATABASE_CATALOG}
+        MICROSERVICE_NAME: companyapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
 
   mailing_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: MailingAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${MAILING_DATABASE_CATALOG}
+        MICROSERVICE_NAME: mailingapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
 
   party_be:
     build:
-      context: ../
+      context: .
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: PartyAPI
-        DATABASE_HOST_SQLSERVER: ${SQLSERVER_HOST}
-        DATABASE_USER_SQLSERVER: ${SQLSERVER_USER}
-        DATABASE_PORT_SQLSERVER: ${SQLSERVER_PORT}
-        DATABASE_PASSWORD_SQLSERVER: ${SQLSERVER_PASSWORD}
-        DATABASE_CATALOG: ${PARTY_DATABASE_CATALOG}
+        MICROSERVICE_NAME: partyapi
+        DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
+        DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_MONGODB: ${DATABASE_HOST_MONGODB}
+        DATABASE_PORT_MONGODB: ${DATABASE_PORT_MONGODB}
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
         RABBITMQ_HOST: ${RABBITMQ_HOST}
         RABBITMQ_PORT: ${RABBITMQ_PORT}
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-        REDIS_HOST: ${REDIS_HOST}
-        REDIS_PORT: ${REDIS_PORT}
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        ASPNETCORE_SECURE_KEY: ${SECURE_KEY}
-        ASPNETCORE_JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
-    expose: ["8080"]
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_KEY: ${JWT_KEY}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
+        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
+        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
+        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
+        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
+        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
+        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        DATABASE_CATALOG: ${DATABASE_CATALOG}
+        DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
+        DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-        required: true
       redis:
         condition: service_healthy
-        required: true
       rabbitmq:
         condition: service_healthy
-        required: true
     networks:
       - sql_net
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    logging:
-      driver: none
-    attach: false
 
 networks:
   mongo_net:
-    driver: bridge
+    external: false
   redis_net:
-    driver: bridge
+    external: false
   rabbitmq_net:
-    driver: bridge
+    external: false
   sql_net:
-    driver: bridge
+    external: false
   apigw_backends_net:
-    driver: bridge
+    external: false
   apigw_fe_net:
-    driver: bridge
+    external: false
   strapi:
-    driver: bridge
+    external: false
+  strapi_fe_net:
+    external: false
+  public:
+    external: true
+
+volumes:
+  mongo_config:
+    driver: local
+  mongo_data:
+    driver: local
+  mssql_data:
+    driver: local
+  pg_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  strapi_app:
+    driver: local

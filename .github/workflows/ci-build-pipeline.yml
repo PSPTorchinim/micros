@@ -10,11 +10,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  set-environment: #this is a job named 'set-environment'
-    runs-on: ubuntu-latest #your preferred OS
-    outputs: #the env value needs to be exposed as an output in order to be reached from other jobs
-      current_env: ${{ steps.set_env.outputs.current_env }} #output variable to store the relevant environment
+  set-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
+      - name: Default to Development
+        run: echo "ENVIRONMENT_NAME=Development" >> $GITHUB_ENV
       - name: Check if prod
         if: endsWith(github.ref, '/production')
         run: |
@@ -25,7 +27,7 @@ jobs:
           echo "ENVIRONMENT_NAME=Development" >> $GITHUB_ENV
       - name: Set output
         id: set_env
-        run: echo "::set-output name=current_env::${{ env.ENVIRONMENT_NAME }}" #assign the value of ENVIRONMENT_NAME to the output variable 'current_env'
+        run: echo "::set-output name=current_env::${{ env.ENVIRONMENT_NAME }}"
 
   set_target_branch:
     environment: ${{ needs.set-environment.outputs.current_env }}
@@ -39,11 +41,8 @@ jobs:
       - id: set
         name: Set target branch and Docker tag
         run: |
-          # Default values
           TARGET_BRANCH="${{ github.ref_name }}"
           DOCKER_TAG="develop"
-
-          # Handle scheduled events
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
               "0 2 * * *")
@@ -56,12 +55,9 @@ jobs:
                 ;;
             esac
           fi
-
-          # If pushing directly to production or tests branch
           if [ "$TARGET_BRANCH" = "production" ]; then
             DOCKER_TAG="production"
           fi
-
           echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
 
@@ -195,57 +191,6 @@ jobs:
         env:
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
-      - name: Set repository owner and service name to lowercase
-        id: lower
-        run: |
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-
-      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Docker/microservice.Dockerfile
-          build-args: |
-            MICROSERVICE_NAME=${{ matrix.service }}
-            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
-            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
-            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            REDIS_HOST=${{ env.REDIS_HOST }}
-            REDIS_PORT=${{ env.REDIS_PORT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
-            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            SECURE_KEY=${{ env.SECURE_KEY }}
-            JWT_KEY=${{ env.JWT_KEY }}
-            ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
-            ASPNETCORE_IDENTITY_BE_ADDRESS=${{ env.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-            ASPNETCORE_MUSIC_BE_ADDRESS=${{ env.ASPNETCORE_MUSIC_BE_ADDRESS }}
-            ASPNETCORE_GEAR_BE_ADDRESS=${{ env.ASPNETCORE_GEAR_BE_ADDRESS }}
-            ASPNETCORE_DOCUMENTS_BE_ADDRESS=${{ env.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-            ASPNETCORE_BRAND_BE_ADDRESS=${{ env.ASPNETCORE_BRAND_BE_ADDRESS }}
-            ASPNETCORE_PARTY_BE_ADDRESS=${{ env.ASPNETCORE_PARTY_BE_ADDRESS }}
-            ASPNETCORE_MAILING_BE_ADDRESS=${{ env.ASPNETCORE_MAILING_BE_ADDRESS }}
-            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
-            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
-            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
-          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/services/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
-          push: true
-
   validate_react:
     environment: ${{ needs.set-environment.outputs.current_env }}
     name: Build - React
@@ -297,6 +242,14 @@ jobs:
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
+      - name: Lint
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run lint
+
+      - name: Prettier check
+        working-directory: Frontends/${{ matrix.service }}
+        run: npm run prettier-check
+
       - name: Build
         working-directory: Frontends/${{ matrix.service }}
         run: npm run build
@@ -310,11 +263,17 @@ jobs:
             echo "No test script; skipping."
           fi
 
-      - name: Set repository owner and service name to lowercase
-        id: lower
-        run: |
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+  build_and_push_stack:
+    name: Build and Push Full Stack Image
+    runs-on: ubuntu-latest
+    needs:
+      - validate_dotnet
+      - validate_react
+      - set_target_branch
+      - set-environment
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
       - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
         uses: docker/login-action@v2
@@ -323,15 +282,71 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Docker/microfrontend.Dockerfile
-          build-args: |
-            MICROFRONTEND_NAME=${{ matrix.service }}
-            REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
-            REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
-            REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
-          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
-          push: true
+      - name: Set stack image tag
+        id: set_tag
+        run: |
+          if [ "${{ needs.set-environment.outputs.current_env }}" = "Production" ]; then
+            echo "TAG=prod-latest" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=develop-latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create .env file for Docker Compose
+        run: |
+          cat <<EOF > Docker/.env
+          CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
+          CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
+          CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
+          CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
+          CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
+          CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
+          CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
+          CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
+          CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
+          SQLSERVER_PASSWORD=${{ env.SQLSERVER_PASSWORD }}
+          SQLSERVER_USER=${{ env.SQLSERVER_USER }}
+          DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
+          DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
+          DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+          DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+          DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
+          DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
+          DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+          DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+          REDIS_HOST=${{ env.REDIS_HOST }}
+          REDIS_PORT=${{ env.REDIS_PORT }}
+          REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+          RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
+          RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
+          RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+          SECURE_KEY=${{ env.SECURE_KEY }}
+          JWT_KEY=${{ env.JWT_KEY }}
+          ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
+          ASPNETCORE_IDENTITY_BE_ADDRESS=${{ env.ASPNETCORE_IDENTITY_BE_ADDRESS }}
+          ASPNETCORE_MUSIC_BE_ADDRESS=${{ env.ASPNETCORE_MUSIC_BE_ADDRESS }}
+          ASPNETCORE_GEAR_BE_ADDRESS=${{ env.ASPNETCORE_GEAR_BE_ADDRESS }}
+          ASPNETCORE_DOCUMENTS_BE_ADDRESS=${{ env.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
+          ASPNETCORE_BRAND_BE_ADDRESS=${{ env.ASPNETCORE_BRAND_BE_ADDRESS }}
+          ASPNETCORE_PARTY_BE_ADDRESS=${{ env.ASPNETCORE_PARTY_BE_ADDRESS }}
+          ASPNETCORE_MAILING_BE_ADDRESS=${{ env.ASPNETCORE_MAILING_BE_ADDRESS }}
+          DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
+          DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
+          DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
+          REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
+          REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
+          REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
+          EOF
+        shell: bash
+
+      - name: Build stack image
+        run: |
+          docker compose -f Docker/dj-panel-composer.yml build --build-arg TAG=${{ steps.set_tag.outputs.TAG }}
+
+      - name: Tag stack image
+        run: |
+          docker tag djpanel:latest ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
+
+      - name: Push stack image
+        run: |
+          docker push ghcr.io/psptorchinim/micros/djpanel:${{ steps.set_tag.outputs.TAG }}
