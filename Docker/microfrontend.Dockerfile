@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:latest AS builder
+FROM node:20.12.2 AS builder
 
 SHELL ["/bin/bash","-lc"]
 
@@ -22,19 +22,17 @@ ENV REACT_APP_API_JWT_TOKEN=$REACT_APP_API_JWT_TOKEN
 COPY ["Frontends/${MICROFRONTEND_NAME}/package.json", "./"]
 COPY ["Frontends/${MICROFRONTEND_NAME}/", "./"]
 
-RUN npm config set strict-ssl false
-RUN npm cache clean --force
-RUN npm install
-
-# Build the app for production
-RUN npm run build
+RUN npm config set strict-ssl false \
+    && npm cache clean --force \
+    && npm install \
+    && npm run build
 
 # Use a lightweight web server for static files
-FROM node:alpine AS runner
+FROM node:20.12.2-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-RUN npm install -g serve
+RUN npm install -g serve@14.2.0
 
 EXPOSE 3000
 CMD ["serve", "-s", "dist", "-l", "3000"]

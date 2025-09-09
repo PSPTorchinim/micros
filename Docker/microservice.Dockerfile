@@ -64,28 +64,43 @@ ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
 
 RUN apt-get update
 
-COPY ["Services/${MICROSERVICE_NAME}/", "Services/${MICROSERVICE_NAME}/"]
-COPY ["Services/Shared/", "Services/Shared/"]
-COPY ["Tests/${MICROSERVICE_NAME}.Tests/", "Tests/${MICROSERVICE_NAME}.Tests/"]
-SHELL ["/bin/bash","-lc"]
+# Set WORKDIR before COPY (DL3045)
+WORKDIR /
+
+COPY Services/${MICROSERVICE_NAME}/ Services/${MICROSERVICE_NAME}/
+COPY Services/Shared/ Services/Shared/
+COPY Tests/${MICROSERVICE_NAME}.Tests/ Tests/${MICROSERVICE_NAME}.Tests/
+
+# Use absolute WORKDIR (DL3000)
+WORKDIR /Services/${MICROSERVICE_NAME}/
+
+# Combine RUNs, clean apt lists, no-install-recommends, pin version (DL3059, DL3009, DL3015)
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
 
-WORKDIR Services/${MICROSERVICE_NAME}/
-RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools"
-RUN dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations"
+WORKDIR /Services/${MICROSERVICE_NAME}/
+RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools" \
+    && (dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations")
 
 WORKDIR /
-RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj"
-RUN dotnet test    "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release --no-restore
-RUN dotnet build   "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/build --no-restore
-RUN dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+RUN dotnet restore "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" \
+    && dotnet test    "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release --no-restore \
+    && dotnet build   "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/build --no-restore \
+    && dotnet publish "Services/${MICROSERVICE_NAME}/${MICROSERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
 SHELL ["/bin/bash","-lc"]
-RUN apt-get update
-RUN apt-get install -y curl
+
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 ARG MICROSERVICE_NAME
 
@@ -151,9 +166,11 @@ ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
 
 WORKDIR /app
 COPY --from=build /app/publish/ .
+
 ENV APP_EXE=$MICROSERVICE_NAME.dll
 
-ENTRYPOINT dotnet /app/$APP_EXE
+# Use JSON notation for ENTRYPOINT (DL3025)
+ENTRYPOINT ["dotnet", "/app/${APP_EXE}"]
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=90s --retries=6 \
   CMD curl -fsS http://localhost:8080/healthz/live \

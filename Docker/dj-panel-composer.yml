@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mongodb_container:
     image: mongo:latest
@@ -144,10 +142,10 @@ services:
 
   apigateway:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: djhostgateway
+        MICROSERVICE_NAME: DJHostGateway
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -202,7 +200,7 @@ services:
 
   host_fe:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microfrontend.Dockerfile
       args:
         MICROFRONTEND_NAME: dj-panel
@@ -226,10 +224,10 @@ services:
 
   identity_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: identityapi
+        MICROSERVICE_NAME: IdentityAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -277,10 +275,10 @@ services:
 
   music_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: musicapi
+        MICROSERVICE_NAME: MusicAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -328,10 +326,10 @@ services:
 
   gear_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: equipmentapi
+        MICROSERVICE_NAME: EquipmentAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -379,10 +377,10 @@ services:
 
   documents_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: documentsapi
+        MICROSERVICE_NAME: DocumentsAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -430,10 +428,10 @@ services:
 
   brand_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: companyapi
+        MICROSERVICE_NAME: CompanyAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -481,10 +479,10 @@ services:
 
   mailing_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: mailingapi
+        MICROSERVICE_NAME: MailingAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
@@ -532,10 +530,10 @@ services:
 
   party_be:
     build:
-      context: .
+      context: ../
       dockerfile: Docker/microservice.Dockerfile
       args:
-        MICROSERVICE_NAME: partyapi
+        MICROSERVICE_NAME: PartyAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
         DATABASE_PORT_SQLSERVER: ${DATABASE_PORT_SQLSERVER}
         DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
