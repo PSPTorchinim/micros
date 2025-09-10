@@ -1,1 +1,0 @@
-docker-compose -f Docker/chat-composer.yml up --build --no-cache

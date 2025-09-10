@@ -2,23 +2,16 @@ name: djpanel
 
 services:
   mongodb_container:
-    image: mongo:latest
+    build:
+      context: ../
+      dockerfile: Docker/mongodb.Dockerfile
+      args:
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
     restart: unless-stopped
     pull_policy: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USER_MONGODB}
-      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD_MONGODB}
     ports:
       - "27017:27017"
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'mongosh --eval "db.adminCommand(''ping'')" || mongo --eval "db.adminCommand(''ping'')"',
-        ]
-      interval: 10s
-      timeout: 15s
-      retries: 10
     networks:
       - mongo_net
       - public
@@ -27,19 +20,16 @@ services:
       - mongo_config:/data/configdb
 
   strapi_db:
-    image: postgres:15
+    build:
+      context: ../
+      dockerfile: Docker/postgres.Dockerfile
+      args:
+        DATABASE_NAME: ${CMS_DATABASE_NAME}
+        DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
+        DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
     restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${CMS_DATABASE_NAME}
-      - POSTGRES_USER=${CMS_DATABASE_USERNAME}
-      - POSTGRES_PASSWORD=${CMS_DATABASE_PASSWORD}
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${CMS_DATABASE_USERNAME}"]
-      interval: 10s
-      timeout: 15s
-      retries: 10
     networks:
       - strapi
       - public
@@ -47,21 +37,18 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   rabbitmq:
-    image: rabbitmq:latest
+    build:
+      context: ../
+      dockerfile: Docker/rabbitmq.Dockerfile
+      args:
+        RABBITMQ_USER: ${RABBITMQ_USER}
+        RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     restart: unless-stopped
     pull_policy: always
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
       - "5672:5672"
       - "15672:15672"
       - "15692:15692"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 15s
-      retries: 10
     networks:
       - rabbitmq_net
       - public
@@ -69,18 +56,15 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
 
   redis:
-    image: bitnami/redis:latest
+    build:
+      context: ../
+      dockerfile: Docker/redis.Dockerfile
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
     restart: unless-stopped
     pull_policy: always
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "6379:6379"
-    healthcheck:
-      test: ["CMD-SHELL", 'redis-cli -a "${REDIS_PASSWORD}" ping | grep PONG']
-      interval: 10s
-      timeout: 15s
-      retries: 10
     networks:
       - redis_net
       - public
@@ -88,23 +72,15 @@ services:
       - redis_data:/data
 
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: ../
+      dockerfile: Docker/sqlserver.Dockerfile
+      args:
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
     restart: unless-stopped
     pull_policy: always
-    environment:
-      - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
-      - ACCEPT_EULA=Y
     ports:
       - "1433:1433"
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -U ${DATABASE_USER_SQLSERVER} -P ${DATABASE_PASSWORD_SQLSERVER} -Q 'SELECT 1' -C || exit 1",
-        ]
-      interval: 10s
-      timeout: 15s
-      retries: 10
     networks:
       - sql_net
       - public
@@ -112,19 +88,21 @@ services:
       - mssql_data:/var/opt/mssql
 
   strapi:
-    image: strapi/strapi:latest
+    build:
+      context: ../
+      dockerfile: Docker/strapi.Dockerfile
+      args:
+        CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
+        CMS_NODE_ENV: ${CMS_NODE_ENV}
+        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
+        CMS_DATABASE_HOST: ${CMS_DATABASE_HOST}
+        CMS_DATABASE_PORT: ${CMS_DATABASE_PORT}
+        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
+        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
+        CMS_JWT_SECRET: ${CMS_JWT_SECRET}
+        CMS_ADMIN_JWT_SECRET: ${CMS_ADMIN_JWT_SECRET}
+        CMS_APP_KEYS: ${CMS_APP_KEYS}
     restart: unless-stopped
-    environment:
-      DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
-      DATABASE_HOST: strapi_db
-      DATABASE_PORT: ${CMS_DATABASE_PORT}
-      DATABASE_NAME: ${CMS_DATABASE_NAME}
-      DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
-      JWT_SECRET: ${CMS_JWT_SECRET}
-      ADMIN_JWT_SECRET: ${CMS_ADMIN_JWT_SECRET}
-      APP_KEYS: ${CMS_APP_KEYS}
-      NODE_ENV: ${CMS_NODE_ENV}
     ports:
       - "1337:1337"
     networks:
@@ -134,11 +112,6 @@ services:
     depends_on:
       strapi_db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:1337/admin || exit 1"]
-      interval: 10s
-      timeout: 15s
-      retries: 10
     volumes:
       - strapi_app:/srv/app
 
