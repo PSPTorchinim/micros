@@ -22,8 +22,11 @@ ENV REACT_APP_API_JWT_TOKEN=$REACT_APP_API_JWT_TOKEN
 COPY ["Frontends/${MICROFRONTEND_NAME}/package.json", "./"]
 COPY ["Frontends/${MICROFRONTEND_NAME}/", "./"]
 
+# hadolint ignore=DL3059
 RUN npm config set strict-ssl false
+# hadolint ignore=DL3016, DL3059
 RUN npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
+# hadolint ignore=DL3059
 RUN npm run build
 
 # Use a lightweight web server for static files

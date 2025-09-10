@@ -1,0 +1,30 @@
+{{- range .Values.postgres }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pg-data
+              mountPath: {{ .mountPath | default "/var/lib/postgresql/data" }}
+      volumes:
+        - name: pg-data
+          hostPath:
+            path: {{ .hostPath | default "/mnt/{{ .name }}-data" }}
+            type: DirectoryOrCreate
+---
+{{- end }}

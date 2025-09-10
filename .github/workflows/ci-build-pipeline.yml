@@ -1,72 +1,119 @@
-name: Build artifacts
+name: Build Artifacts
 
 on:
-  push:
-    branches:
-      - "releases/*"
   schedule:
     - cron: "0 2 * * *" # Nightly: build develop
     - cron: "0 4 1 * *" # Monthly: build production
   workflow_dispatch:
 
 jobs:
-  set-environment:
+  validate_schedule:
     runs-on: ubuntu-latest
     outputs:
-      current_env: ${{ steps.set_env.outputs.current_env }}
+      result: ${{ steps.validate.outputs.result }}
     steps:
-      - name: Default to Development
+      - name: Validate schedule and branch
+        id: validate
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            if [[ "${GITHUB_REF#refs/heads/}" == "production" && "${{ github.event.schedule }}" == "0 4 1 * *" ]]; then
+              echo "Scheduled monthly build on production branch: OK"
+              echo "result=success" >> "$GITHUB_OUTPUT"
+            elif [[ "${GITHUB_REF#refs/heads/}" =~ ^releases/.*$ && "${{ github.event.schedule }}" == "0 2 * * *" ]]; then
+              echo "Scheduled daily build on releases/* branch: OK"
+              echo "result=success" >> "$GITHUB_OUTPUT"
+            else
+              echo "This scheduled workflow is not allowed to run on this branch."
+              echo "result=failure" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+          else
+            echo "Not a scheduled event, always allow."
+            echo "result=success" >> "$GITHUB_OUTPUT"
+          fi
+
+  get_repo_owner:
+    name: Get Repository Owner (lowercase)
+    runs-on: ubuntu-latest
+    needs: [validate_schedule]
+    if: needs.validate_schedule.outputs.result == 'success'
+    outputs:
+      owner: ${{ steps.owner_lower.outputs.owner }}
+    steps:
+      - name: Convert repository owner to lowercase
+        id: owner_lower
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+  determine_environment:
+    name: Determine Deployment Environment
+    runs-on: ubuntu-latest
+    needs: [validate_schedule]
+    if: needs.validate_schedule.outputs.result == 'success'
+    outputs:
+      environment: ${{ steps.env_set.outputs.environment }}
+    steps:
+      - name: Set default environment to Development
         run: echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
-      - name: Check if prod
+      - name: Override to Production if on production branch
         if: endsWith(github.ref, '/production')
-        run: |
-          echo "ENVIRONMENT_NAME=Production" >> "$GITHUB_ENV"
-      - name: Check if releases/R*
+        run: echo "ENVIRONMENT_NAME=Production" >> "$GITHUB_ENV"
+      - name: Override to Development if on releases/*
         if: startsWith(github.ref, 'refs/heads/releases/')
-        run: |
-          echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
-      - name: Set output
-        id: set_env
-        run: echo "current_env=${{ env.ENVIRONMENT_NAME }}" >> "$GITHUB_OUTPUT"
+        run: echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
+      - name: Output environment name
+        id: env_set
+        run: echo "environment=${{ env.ENVIRONMENT_NAME }}" >> "$GITHUB_OUTPUT"
 
-  set_target_branch:
-    environment: ${{ needs.set-environment.outputs.current_env }}
-    name: Resolve target branch (for schedules)
+  determine_target_branch:
+    name: Determine Target Branch
     runs-on: ubuntu-latest
-    needs: set-environment
+    needs: [validate_schedule] # Only needs validate_schedule
+    if: needs.validate_schedule.outputs.result == 'success'
     outputs:
-      target_branch: ${{ steps.set.outputs.target_branch }}
-      docker_tag: ${{ steps.set.outputs.docker_tag }}
+      target_branch: ${{ steps.branch_set.outputs.target_branch }}
     steps:
-      - id: set
-        name: Set target branch and Docker tag
-        run: |
-          TARGET_BRANCH="${{ github.ref_name }}"
-          DOCKER_TAG="develop"
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            case "${{ github.event.schedule }}" in
-              "0 2 * * *")
-                TARGET_BRANCH="releases/*"
-                DOCKER_TAG="develop"
-                ;;
-              "0 4 1 * *")
-                TARGET_BRANCH="production"
-                DOCKER_TAG="production"
-                ;;
-            esac
-          fi
-          if [ "$TARGET_BRANCH" = "production" ]; then
-            DOCKER_TAG="production"
-          fi
-          echo "target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "docker_tag=$DOCKER_TAG" >> "$GITHUB_OUTPUT"
+      - name: Set default target branch to develop
+        run: echo "TARGET_BRANCH=develop" >> "$GITHUB_ENV"
+      - name: Override to production if on production branch
+        if: endsWith(github.ref, '/production')
+        run: echo "TARGET_BRANCH=production" >> "$GITHUB_ENV"
+      - name: Override to develop if on releases/*
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        run: echo "TARGET_BRANCH=develop" >> "$GITHUB_ENV"
+      - name: Output target branch
+        id: branch_set
+        run: echo "target_branch=${{ env.TARGET_BRANCH }}" >> "$GITHUB_OUTPUT"
 
-  validate_dotnet:
-    environment: ${{ needs.set-environment.outputs.current_env }}
-    name: Build - DotNet
+  determine_docker_tag:
+    name: Determine Docker Tag
+    runs-on: ubuntu-latest
+    needs: [validate_schedule] # Only needs validate_schedule
+    if: needs.validate_schedule.outputs.result == 'success'
+    outputs:
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+    steps:
+      - name: Set docker tag based on branch
+        id: tag_set
+        run: |
+          if [[ "${GITHUB_REF}" == *"/production" ]]; then
+            echo "docker_tag=production" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF}" == refs/heads/releases/* ]]; then
+            echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+          fi
+
+  build_dotnet_services:
+    environment: ${{ needs.determine_environment.outputs.environment }}
+    name: Build & Push .NET Services
     needs:
-      - set_target_branch
-      - set-environment
+      - validate_schedule
+      - get_repo_owner
+      - determine_environment
+      - determine_target_branch
+      - determine_docker_tag
+    if: needs.validate_schedule.outputs.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -112,24 +159,24 @@ jobs:
       DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
       DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
-      - name: Checkout code
+      - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Setup .NET
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.x"
 
-      - name: Add dotnet tools to PATH
+      - name: Add .NET Tools to PATH
         run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Show dotnet version
+      - name: Display .NET Version
         run: dotnet --version
 
-      - name: Update dotnet-ef tool
+      - name: Update dotnet-ef Tool
         run: dotnet tool update --global dotnet-ef
 
-      - name: Restore dependencies
+      - name: Restore Dependencies
         run: dotnet restore "Services/${{ matrix.service }}"
 
       - name: Check for DbContext
@@ -140,26 +187,25 @@ jobs:
             echo "No DbContext found (or no design-time factory)."
           fi
 
-      - name: Build project
+      - name: Build Project
         run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
 
-      - name: Run tests (if present)
+      - name: Run Unit Tests (if present)
         run: dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
 
-      - name: Set repository owner and service name to lowercase
-        id: lower
+      - name: Convert Service Name to Lowercase
+        id: service_lower
         run: |
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
           echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build & Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -194,15 +240,19 @@ jobs:
             DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
             DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
             DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
-          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/services/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/services/${{ steps.service_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
           push: true
 
-  validate_react:
-    environment: ${{ needs.set-environment.outputs.current_env }}
-    name: Build - React
+  build_react_frontends:
+    environment: ${{ needs.determine_environment.outputs.environment }}
+    name: Build & Push React Frontends
     needs:
-      - set_target_branch
-      - set-environment
+      - validate_schedule
+      - get_repo_owner
+      - determine_environment
+      - determine_target_branch
+      - determine_docker_tag
+    if: needs.validate_schedule.outputs.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -213,48 +263,47 @@ jobs:
       REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
       REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
-      - name: Checkout code
+      - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Use Node version
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: Install dependencies
+      - name: Install NPM Dependencies
         working-directory: Frontends/${{ matrix.service }}
         run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
-      - name: Lint
+      - name: Lint Source Code
         working-directory: Frontends/${{ matrix.service }}
         run: npm run lint
 
-      - name: Prettier check
+      - name: Check Code Formatting
         working-directory: Frontends/${{ matrix.service }}
         run: npm run format:check
 
-      - name: Build
+      - name: Build React App
         working-directory: Frontends/${{ matrix.service }}
         run: npm run build
 
-      - name: Test
+      - name: Run React Tests
         working-directory: Frontends/${{ matrix.service }}
         run: npm run test
 
-      - name: Set repository owner and service name to lowercase
-        id: lower
+      - name: Convert Frontend Name to Lowercase
+        id: frontend_lower
         run: |
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
           echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build & Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -264,14 +313,18 @@ jobs:
             REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
             REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
             REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
-          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/frontends/${{ steps.frontend_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
           push: true
 
-  build_databases:
-    name: Build & Push - Databases/Infra
+  build_infrastructure_images:
+    name: Build & Push Infrastructure Images
     needs:
-      - set_target_branch
-      - set-environment
+      - validate_schedule
+      - get_repo_owner
+      - determine_environment
+      - determine_target_branch
+      - determine_docker_tag
+    if: needs.validate_schedule.outputs.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -308,10 +361,8 @@ jobs:
               tag: "strapi",
             }
     env:
-      # MongoDB
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      # Postgres/Strapi
       CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
       CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
       CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
@@ -322,31 +373,27 @@ jobs:
       CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
       CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
       CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
-      # Redis
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      # RabbitMQ
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      # SQL Server
       DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
     steps:
-      - name: Checkout code
+      - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set repository owner and service name to lowercase
-        id: lower
+      - name: Convert Image Name to Lowercase
+        id: infra_lower
         run: |
-          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
           echo "name=$(echo '${{ matrix.image.name }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push ${{ matrix.image.name }} image
+      - name: Build & Push Infrastructure Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -368,5 +415,142 @@ jobs:
             RABBITMQ_USER=${{ env.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
             DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-          tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/infra/${{ matrix.image.tag }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/infra/${{ steps.infra_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
           push: true
+
+  determine_catalog:
+    name: Determine IX Apps Catalog
+    runs-on: ubuntu-latest
+    needs: [validate_schedule]
+    if: needs.validate_schedule.outputs.result == 'success'
+    outputs:
+      catalog: ${{ steps.catalog_set.outputs.catalog }}
+    steps:
+      - name: Set default catalog to dev
+        run: echo "CATALOG=dev" >> "$GITHUB_ENV"
+      - name: Override to stable if on production branch
+        if: endsWith(github.ref, '/production')
+        run: echo "CATALOG=stable" >> "$GITHUB_ENV"
+      - name: Override to dev if on releases/*
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        run: echo "CATALOG=dev" >> "$GITHUB_ENV"
+      - name: Output catalog name
+        id: catalog_set
+        run: echo "catalog=${{ env.CATALOG }}" >> "$GITHUB_OUTPUT"
+
+  publish_to_ix_catalog:
+    name: Publish to IX Apps Catalog
+    runs-on: ubuntu-latest
+    needs:
+      - determine_environment
+      - determine_target_branch
+      - determine_catalog
+      - validate_schedule
+      - build_dotnet_services
+      - build_react_frontends
+      - build_infrastructure_images
+    if: needs.validate_schedule.outputs.result == 'success'
+    outputs:
+      chart_name: ${{ steps.chart_name.outputs.chart_name }}
+      chart_version: ${{ steps.chart_version.outputs.version }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install semver and yq Tools
+        run: |
+          pip install semver
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.43.1/yq_linux_amd64 && sudo chmod +x /usr/local/bin/yq
+
+      - name: Get Chart Name
+        id: chart_name
+        run: |
+          chart_name=$(yq '.name' charts/Chart.yaml | tr '[:upper:]' '[:lower:]')
+          echo "chart_name=$chart_name" >> "$GITHUB_OUTPUT"
+
+      - name: Get and Bump Chart Version
+        id: chart_version
+        run: |
+          branch="${{ needs.determine_target_branch.outputs.target_branch }}"
+          new_version=$(bash .github/scripts/shell/bump_chart_version.sh charts/Chart.yaml "$branch")
+          echo "version=$new_version" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Docker Compose
+        run: |
+          python3 .github/scripts/python/generate_docker_compose_yaml.py charts
+
+      - name: Generate app.yaml
+        run: |
+          bash .github/scripts/shell/generate_app_yaml.sh charts "${{ needs.determine_catalog.outputs.catalog }}"
+
+      - name: List existing files before generating app.yaml
+        run: |
+          echo "Listing charts directory:"
+          ls -l charts
+          echo "Listing library directory:"
+          ls -l library || true
+          echo "Listing library/base_v2_1_49 directory:"
+          ls -l library/base_v2_1_49 || true
+
+      - name: Generate questions.yaml
+        run: |
+          bash .github/scripts/shell/generate_questions_yaml.sh charts
+
+      - name: Generate ix-values.yaml (if needed)
+        run: |
+          test -f charts/ix-values.yaml
+
+      - name: Prepare IX Apps Catalog Structure and Generate item.yaml, library, rendered compose
+        run: |
+          TRAIN="${{ needs.determine_catalog.outputs.catalog }}"
+          mkdir -p "ix-dev/$TRAIN/djpanel"
+          cp charts/app.yaml "ix-dev/$TRAIN/djpanel/"
+          cp charts/questions.yaml "ix-dev/$TRAIN/djpanel/"
+          cp charts/ix-values.yaml "ix-dev/$TRAIN/djpanel/"
+          cp charts/README.md "ix-dev/$TRAIN/djpanel/" || true
+          mkdir -p "ix-dev/$TRAIN/djpanel/templates"
+          cp -r charts/templates/* "ix-dev/$TRAIN/djpanel/templates/"
+          mkdir -p "ix-dev/$TRAIN/djpanel/templates/test_values"
+          if [ ! -f "ix-dev/$TRAIN/djpanel/templates/test_values/basic-values.yaml" ]; then
+            echo "{}" > "ix-dev/$TRAIN/djpanel/templates/test_values/basic-values.yaml"
+          fi
+          python3 .github/scripts/python/ci.py --app djpanel --train "$TRAIN" --test-file basic-values.yaml --render-only=true
+
+      - name: Prepare IX Apps Versioned Folder
+        run: |
+          TRAIN="${{ needs.determine_catalog.outputs.catalog }}"
+          VERSION="${{ steps.chart_version.outputs.version }}"
+          APPDIR="trains/${TRAIN}/djpanel/${VERSION}"
+          mkdir -p "$APPDIR"
+          cp ix-dev/$TRAIN/djpanel/app.yaml "$APPDIR/"
+          cp ix-dev/$TRAIN/djpanel/questions.yaml "$APPDIR/"
+          cp ix-dev/$TRAIN/djpanel/ix-values.yaml "$APPDIR/"
+          cp ix-dev/$TRAIN/djpanel/item.yaml "$APPDIR/"
+          cp ix-dev/$TRAIN/djpanel/README.md "$APPDIR/" || true
+          cp -r ix-dev/$TRAIN/djpanel/templates "$APPDIR/"
+          if [ -d ix-dev/$TRAIN/djpanel/migrations ]; then cp -r ix-dev/$TRAIN/djpanel/migrations "$APPDIR/"; fi
+
+      - name: Publish to IX Apps Catalog Repository
+        env:
+          CATALOG_REPO: ${{ vars.CATALOG_REPO_URL }}
+          CATALOG_BRANCH: master
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPO_TOKEN }}
+        run: |
+          TRAIN="${{ needs.determine_catalog.outputs.catalog }}"
+          VERSION="${{ steps.chart_version.outputs.version }}"
+          APPDIR="trains/${TRAIN}/djpanel/${VERSION}"
+          git clone --depth 1 --branch "$CATALOG_BRANCH" "https://${GITHUB_TOKEN}@${CATALOG_REPO}" catalog-tmp
+          mkdir -p "catalog-tmp/$APPDIR"
+          rsync -a "$APPDIR/" "catalog-tmp/$APPDIR/"
+          cd catalog-tmp
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$APPDIR"
+          git commit -m "Add djpanel ${VERSION} (automated from micros repo)" || echo "No changes to commit"
+          git push origin "$CATALOG_BRANCH"
+
+      - name: Commit Chart Version Bump
+        run: |
+          bash .github/scripts/shell/commit_chart_version.sh "${{ steps.chart_version.outputs.version }}"

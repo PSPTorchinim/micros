@@ -1,0 +1,18 @@
+{{- range .Values.sqlserver }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  type: {{ if .nodePort }}NodePort{{ else }}ClusterIP{{ end }}
+  ports:
+    - port: 1433
+      targetPort: 1433
+      protocol: TCP
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+  selector:
+    app: {{ .name }}
+---
+{{- end }}

@@ -1,0 +1,13 @@
+{{- range .Values.microfrontends }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.storage.microfrontend | default "2Gi" }}
+---
+{{- end }}

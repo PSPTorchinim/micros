@@ -1,0 +1,13 @@
+{{- range .Values.strapi }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-app-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.storage.strapi | default "5Gi" }}
+---
+{{- end }}

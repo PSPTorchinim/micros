@@ -1,0 +1,36 @@
+{{- range .Values.mongodb }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: {{ .mountPathData | default "/data/db" }}
+            - name: mongo-config
+              mountPath: {{ .mountPathConfig | default "/data/configdb" }}
+      volumes:
+        - name: mongo-data
+          hostPath:
+            path: {{ .hostPathData | default "/mnt/{{ .name }}-data" }}
+            type: DirectoryOrCreate
+        - name: mongo-config
+          hostPath:
+            path: {{ .hostPathConfig | default "/mnt/{{ .name }}-config" }}
+            type: DirectoryOrCreate
+---
+{{- end }}

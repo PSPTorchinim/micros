@@ -1,0 +1,90 @@
+ports:
+  mongodb: 27017
+  postgres: 5432
+  rabbitmq: 5672
+  redis: 6379
+  sqlserver: 1433
+  strapi: 1337
+  apigateway: 3000
+
+mongodb:
+  - name: mongodb
+    image: "ghcr.io/psptorchinim/micros/infra/mongodb:develop-latest"
+    nodePort: 27017
+    mountPathData: "/data/db"
+    hostPathData: "/mnt/truenas/mongodb-data"
+    mountPathConfig: "/data/configdb"
+    hostPathConfig: "/mnt/truenas/mongodb-config"
+
+postgres:
+  - name: strapi-db
+    image: "ghcr.io/psptorchinim/micros/infra/postgres:develop-latest"
+    nodePort: 5432
+    mountPath: "/var/lib/postgresql/data"
+    hostPath: "/mnt/truenas/strapi-db-data"
+
+rabbitmq:
+  - name: rabbitmq
+    image: "ghcr.io/psptorchinim/micros/infra/rabbitmq:develop-latest"
+    nodePort: 5672
+    mountPath: "/var/lib/rabbitmq"
+    hostPath: "/mnt/truenas/rabbitmq-data"
+
+redis:
+  - name: redis
+    image: "ghcr.io/psptorchinim/micros/infra/redis:develop-latest"
+    nodePort: 6379
+    mountPath: "/data"
+    hostPath: "/mnt/truenas/redis-data"
+
+sqlserver:
+  - name: sqlserver
+    image: "ghcr.io/psptorchinim/micros/infra/sqlserver:develop-latest"
+    nodePort: 1433
+    mountPath: "/var/opt/mssql"
+    hostPath: "/mnt/truenas/sqlserver-data"
+
+strapi:
+  - name: strapi
+    image: "ghcr.io/psptorchinim/micros/infra/strapi:develop-latest"
+    nodePort: 1337
+    mountPath: "/srv/app"
+    hostPath: "/mnt/truenas/strapi-app"
+
+microservices:
+  # List all your microservices here, matching the Docker Compose and pipeline
+  - name: companyapi
+    image: "ghcr.io/psptorchinim/micros/services/companyapi:develop-latest"
+  - name: djhostgateway
+    image: "ghcr.io/psptorchinim/micros/services/djhostgateway:develop-latest"
+    nodePort: 3000
+  - name: documentsapi
+    image: "ghcr.io/psptorchinim/micros/services/documentsapi:develop-latest"
+  - name: equipmentapi
+    image: "ghcr.io/psptorchinim/micros/services/equipmentapi:develop-latest"
+  - name: identityapi
+    image: "ghcr.io/psptorchinim/micros/services/identityapi:develop-latest"
+  - name: mailingapi
+    image: "ghcr.io/psptorchinim/micros/services/mailingapi:develop-latest"
+  - name: musicapi
+    image: "ghcr.io/psptorchinim/micros/services/musicapi:develop-latest"
+  - name: partyapi
+    image: "ghcr.io/psptorchinim/micros/services/partyapi:develop-latest"
+
+microfrontends:
+  # List all your microfrontends here
+  - name: dj-panel
+    image: "ghcr.io/psptorchinim/micros/frontends/dj-panel:develop-latest"
+    nodePort: 8080
+
+# Storage sizes (adjust as needed)
+storage:
+  mongodbData: 5Gi
+  mongodbConfig: 1Gi
+  postgres: 5Gi
+  rabbitmq: 2Gi
+  redis: 2Gi
+  sqlserver: 10Gi
+  strapi: 5Gi
+  microservice: 2Gi
+  microfrontend: 2Gi

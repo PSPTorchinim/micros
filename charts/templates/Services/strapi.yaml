@@ -1,0 +1,18 @@
+{{- range .Values.strapi }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  type: {{ if .nodePort }}NodePort{{ else }}ClusterIP{{ end }}
+  ports:
+    - port: 1337
+      targetPort: 1337
+      protocol: TCP
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+  selector:
+    app: {{ .name }}
+---
+{{- end }}

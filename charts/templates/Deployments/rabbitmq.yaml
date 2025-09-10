@@ -1,0 +1,32 @@
+{{- range .Values.rabbitmq }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+            - containerPort: 15692
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: {{ .mountPath | default "/var/lib/rabbitmq" }}
+      volumes:
+        - name: rabbitmq-data
+          hostPath:
+            path: {{ .hostPath | default "/mnt/{{ .name }}-data" }}
+            type: DirectoryOrCreate
+---
+{{- end }}

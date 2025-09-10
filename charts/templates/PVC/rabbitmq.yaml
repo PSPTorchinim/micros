@@ -1,0 +1,13 @@
+{{- range .Values.rabbitmq }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.storage.rabbitmq | default "2Gi" }}
+---
+{{- end }}
