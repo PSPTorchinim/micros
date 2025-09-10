@@ -274,3 +274,100 @@ jobs:
             REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
           tags: ghcr.io/${{ steps.lower.outputs.owner }}/micros/frontends/${{ steps.lower.outputs.name }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
           push: true
+
+  build_databases:
+    name: Build & Push - Databases/Infra
+    needs:
+      - set_target_branch
+      - set-environment
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - {
+              name: "mongodb",
+              dockerfile: "Docker/mongodb.Dockerfile",
+              tag: "mongodb",
+            }
+          - {
+              name: "postgres",
+              dockerfile: "Docker/postgres.Dockerfile",
+              tag: "postgres",
+            }
+          - {
+              name: "redis",
+              dockerfile: "Docker/redis.Dockerfile",
+              tag: "redis",
+            }
+          - {
+              name: "rabbitmq",
+              dockerfile: "Docker/rabbitmq.Dockerfile",
+              tag: "rabbitmq",
+            }
+          - {
+              name: "sqlserver",
+              dockerfile: "Docker/sqlserver.Dockerfile",
+              tag: "sqlserver",
+            }
+          - {
+              name: "strapi",
+              dockerfile: "Docker/strapi.Dockerfile",
+              tag: "strapi",
+            }
+    env:
+      # MongoDB
+      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
+      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      # Postgres/Strapi
+      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
+      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
+      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
+      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
+      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
+      CMS_DATABASE_HOST: ${{ vars.CMS_DATABASE_HOST }}
+      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
+      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
+      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
+      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
+      # Redis
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      # RabbitMQ
+      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      # SQL Server
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Log in to GitHub Container Registry (GITHUB_TOKEN)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.image.name }} image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          build-args: |
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
+            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
+            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
+            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
+            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
+            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
+            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
+            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
+            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+          tags: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.tag }}:${{ needs.set_target_branch.outputs.docker_tag }}-latest
+          push: true
