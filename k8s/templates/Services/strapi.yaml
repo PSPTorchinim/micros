@@ -1,4 +1,5 @@
 {{- range .Values.strapi.services }}
+---
 apiVersion: v1
 kind: Service
 metadata:

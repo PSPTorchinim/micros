@@ -1,4 +1,5 @@
 {{- range .Values.microfrontend.services }}
+---
 apiVersion: v1
 kind: Service
 metadata:

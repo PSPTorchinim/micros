@@ -1,4 +1,5 @@
 {{- range .Values.postgres.services }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

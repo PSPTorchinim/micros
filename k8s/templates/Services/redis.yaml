@@ -1,4 +1,5 @@
 {{- range .Values.redis.services }}
+---
 apiVersion: v1
 kind: Service
 metadata:

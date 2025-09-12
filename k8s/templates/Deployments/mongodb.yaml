@@ -1,4 +1,5 @@
 {{- range .Values.mongodb.services }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +7,7 @@ metadata:
   labels:
     app: {{ .name }}
 spec:
-  replicas: 1
+  replicas: {{ .replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .name }}
@@ -17,7 +18,7 @@ spec:
     spec:
       containers:
         - name: {{ .name }}
-          iimage: {{ .image }}:{{ $.Values.global.imageTag }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 27017
           volumeMounts:
