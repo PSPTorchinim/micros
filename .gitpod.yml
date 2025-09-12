@@ -1,0 +1,57 @@
+image:
+  file: .gitpod.Dockerfile
+
+vscode:
+  extensions:
+    - ms-dotnettools.vscode-dotnet-runtime
+    - dsznajder.es7-react-js-snippets
+
+tasks:
+  - name: Services/CompanyAPI
+    init: |
+      cd Services/CompanyAPI
+      dotnet restore
+      dotnet build
+  - name: Services/IdentityAPI
+    init: |
+      cd Services/IdentityAPI
+      dotnet restore
+      dotnet build
+  - name: Services/DJHostGateway
+    init: |
+      cd Services/DJHostGateway
+      dotnet restore
+      dotnet build
+  - name: Services/DocumentsAPI
+    init: |
+      cd Services/DocumentsAPI
+      dotnet restore
+      dotnet build
+  - name: Services/EquipmentAPI
+    init: |
+      cd Services/EquipmentAPI
+      dotnet restore
+      dotnet build
+  - name: Services/MailingAPI
+    init: |
+      cd Services/MailingAPI
+      dotnet restore
+      dotnet build
+  - name: Services/MusicAPI
+    init: |
+      cd Services/MusicAPI
+      dotnet restore
+      dotnet build
+  - name: Services/PartyAPI
+    init: |
+      cd Services/PartyAPI
+      dotnet restore
+      dotnet build
+  - name: Frontends/dj-panel
+    init: |
+      cd Frontends/dj-panel
+      npm install
+  
+  - name: Docker
+    init: |
+      sh run-dj-panel.sh
