@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microfrontend
+  labels:
+    app: microfrontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microfrontend
+  template:
+    metadata:
+      labels:
+        app: microfrontend
+    spec:
+      containers:
+        - name: microfrontend
+          image: your-docker-repo/microfrontend:latest
+          ports:
+            - containerPort: 3000
+      imagePullSecrets:
+        - name: regcred
