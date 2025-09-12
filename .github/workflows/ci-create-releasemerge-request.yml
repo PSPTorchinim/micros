@@ -1,0 +1,37 @@
+name: Create Release Merge Request
+
+on:
+  schedule:
+    - cron: "0 0 20 * *" # Runs at 00:00 UTC on the 20th day of every month
+  workflow_dispatch:
+
+jobs:
+  create-merge-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get latest release branch
+        id: get_branch
+        run: |
+          YY=$(date +'%y')
+          MM=$(date +'%m')
+          BRANCH="releases/R${YY}${MM}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Create Pull Request to production
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: production
+          branch: ${{ steps.get_branch.outputs.branch }}
+          title: "Merge ${{ steps.get_branch.outputs.branch }} into production"
+          body: |
+            Automated merge request from ${{ steps.get_branch.outputs.branch }} to production.
+          draft: false
