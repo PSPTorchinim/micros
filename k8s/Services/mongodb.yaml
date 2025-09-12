@@ -1,12 +1,16 @@
+{{- range .Values.mongodb.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 27017
       targetPort: 27017
-      nodePort: 40005
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
   selector:
-    app: mongodb
+    app: {{ .name }}
+{{- end }}

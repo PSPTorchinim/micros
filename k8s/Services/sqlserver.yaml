@@ -1,12 +1,16 @@
+{{- range .Values.sqlserver.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: sqlserver
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 1433
       targetPort: 1433
-      nodePort: 40002
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
   selector:
-    app: sqlserver
+    app: {{ .name }}
+{{- end }}

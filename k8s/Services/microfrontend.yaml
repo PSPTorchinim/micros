@@ -1,12 +1,16 @@
+{{- range .Values.microfrontend.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: microfrontend
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 50012
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
   selector:
-    app: microfrontend
+    app: {{ .name }}
+{{- end }}

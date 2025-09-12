@@ -1,15 +1,21 @@
+{{- range .Values.rabbitmq.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 5672
       targetPort: 5672
-      nodePort: 40004
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
     - port: 15672
       targetPort: 15672
-      nodePort: 40014
+      {{- if .nodePort15672 }}
+      nodePort: {{ .nodePort15672 }}
+      {{- end }}
   selector:
-    app: rabbitmq
+    app: {{ .name }}
+{{- end }}

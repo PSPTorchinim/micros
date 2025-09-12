@@ -1,12 +1,16 @@
+{{- range .Values.microservice.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: microservice
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 50013
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
   selector:
-    app: microservice
+    app: {{ .name }}
+{{- end }}

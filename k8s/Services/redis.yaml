@@ -1,12 +1,16 @@
+{{- range .Values.redis.services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
+  name: {{ .name }}
 spec:
-  type: NodePort
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
   ports:
     - port: 6379
       targetPort: 6379
-      nodePort: 40003
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
   selector:
-    app: redis
+    app: {{ .name }}
+{{- end }}
