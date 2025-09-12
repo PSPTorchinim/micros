@@ -1,0 +1,31 @@
+{{- range .Values.postgres.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  labels:
+    app: {{ .name }}
+spec:
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: {{ .name }}-pvc
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: {{ .name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .name }}-pvc
+{{- end }}
