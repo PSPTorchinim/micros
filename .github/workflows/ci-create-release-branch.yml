@@ -1,0 +1,38 @@
+name: Create Release Branch
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - production
+
+jobs:
+  create-release-branch:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current year and month
+        id: date
+        run: |
+          YY=$(date +'%y')
+          MM=$(date +'%m')
+          echo "branch=releases/R${YY}${MM}" >> $GITHUB_OUTPUT
+
+      - name: Create release branch if not exists
+        run: |
+          git fetch origin
+          if git show-ref --verify --quiet refs/remotes/origin/${{ steps.date.outputs.branch }}; then
+              echo "Branch already exists. Skipping."
+              exit 0
+          fi
+          git checkout -b ${{ steps.date.outputs.branch }}
+          git push origin ${{ steps.date.outputs.branch }}
