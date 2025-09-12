@@ -1,0 +1,36 @@
+{{- range .Values.mongodb.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  labels:
+    app: {{ .name }}
+spec:
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: {{ .name }}-pvc
+              mountPath: /data/db
+            - name: {{ .name }}-config-pvc
+              mountPath: /data/configdb
+      volumes:
+        - name: {{ .name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .name }}-pvc
+        - name: {{ .name }}-config-pvc
+          persistentVolumeClaim:
+            claimName: {{ .name }}-config-pvc
+{{- end }}

@@ -1,0 +1,17 @@
+{{- range .Values.postgres.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  type: {{- if .nodePort }} NodePort {{- else }} ClusterIP {{- end }}
+  ports:
+    - port: 5432
+      targetPort: 5432
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+  selector:
+    app: {{ .name }}
+{{- end }}

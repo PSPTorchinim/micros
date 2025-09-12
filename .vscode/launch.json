@@ -1,0 +1,204 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Run All Services",
+      "configurations": [
+        "Launch CompanyAPI",
+        "Launch DJHostGateway",
+        "Launch EquipmentAPI",
+        "Launch IdentityAPI",
+        "Launch MusicAPI",
+        "Launch PartyAPI",
+        "Launch DocumentsAPI",
+        "Launch MailingAPI",
+        "Launch DJPanel"
+      ]
+    }
+  ],
+  "configurations": [
+    {
+      "command": "npm run start:dev",
+      "name": "Launch DJPanel",
+      "request": "launch",
+      "type": "node-terminal",
+      "localRoot": "${workspaceFolder}/Frontends/dj-panel"
+    },
+    {
+      "name": "Launch CompanyAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build CompanyAPI",
+      "program": "${workspaceFolder}/Services/CompanyAPI/bin/Debug/net9.0/CompanyAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/CompanyAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch DJHostGateway",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build DJHostGateway",
+      "program": "${workspaceFolder}/Services/DJHostGateway/bin/Debug/net9.0/DJHostGateway.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/DJHostGateway",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch EquipmentAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build EquipmentAPI",
+      "program": "${workspaceFolder}/Services/EquipmentAPI/bin/Debug/net9.0/EquipmentAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/EquipmentAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch IdentityAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build IdentityAPI",
+      "program": "${workspaceFolder}/Services/IdentityAPI/bin/Debug/net9.0/IdentityAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/IdentityAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch MusicAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build MusicAPI",
+      "program": "${workspaceFolder}/Services/MusicAPI/bin/Debug/net9.0/MusicAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/MusicAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch PartyAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build PartyAPI",
+      "program": "${workspaceFolder}/Services/PartyAPI/bin/Debug/net9.0/PartyAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/PartyAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch DocumentsAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build DocumentsAPI",
+      "program": "${workspaceFolder}/Services/DocumentsAPI/bin/Debug/net9.0/DocumentsAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/DocumentsAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    },
+    {
+      "name": "Launch MailingAPI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build MailingAPI",
+      "program": "${workspaceFolder}/Services/MailingAPI/bin/Debug/net9.0/MailingAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/MailingAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      },
+      "launchSettingsProfile": "http"
+    }
+  ]
+}
