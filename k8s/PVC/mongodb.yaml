@@ -1,21 +1,23 @@
+{{- range .Values.mongodb.services }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongodb-pvc
+  name: {{ .name }}-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .pvcDataSize | default "2Gi" }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongodb-config-pvc
+  name: {{ .name }}-config-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .pvcConfigSize | default "2Gi" }}
+{{- end }}

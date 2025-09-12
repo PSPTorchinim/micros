@@ -1,11 +1,13 @@
+{{- range .Values.microfrontend.services }}
 apiVersion: v1
-kind: Service
+kind: PersistentVolumeClaim
 metadata:
-  name: microfrontend
+  name: {{ .name }}-pvc
 spec:
-  type: ClusterIP
-  ports:
-    - port: 3000
-      targetPort: 3000
-  selector:
-    app: microfrontend
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .pvcSize | default "2Gi" }}
+{{- end }}
+

@@ -1,10 +1,12 @@
+{{- range .Values.strapi.services }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: strapi-pvc
+  name: {{ .name }}-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .pvcSize | default "2Gi" }}
+{{- end }}

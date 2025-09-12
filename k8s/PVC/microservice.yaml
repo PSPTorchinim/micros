@@ -1,11 +1,12 @@
+{{- range .Values.microservice.services }}
 apiVersion: v1
-kind: Service
+kind: PersistentVolumeClaim
 metadata:
-  name: microservice
+  name: {{ .name }}-pvc
 spec:
-  type: ClusterIP
-  ports:
-    - port: 8080
-      targetPort: 8080
-  selector:
-    app: microservice
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .pvcSize | default "2Gi" }}
+{{- end }}
