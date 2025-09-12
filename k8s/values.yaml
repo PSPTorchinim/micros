@@ -1,0 +1,81 @@
+global:
+  imageTag: develop-latest
+
+mongodb:
+  services:
+    - name: mongodb_container
+      image: ghcr.io/psptorchinim/micros/infra/mongodb
+      nodePort: 27017
+      pvcSize: 5Gi
+      configPvcSize: 1Gi
+
+postgres:
+  services:
+    - name: strapi_db
+      image: ghcr.io/psptorchinim/micros/infra/postgres
+      nodePort: 5432
+      pvcSize: 5Gi
+
+rabbitmq:
+  services:
+    - name: rabbitmq
+      image: ghcr.io/psptorchinim/micros/infra/rabbitmq
+      nodePort: 5672
+      nodePort15672: 15672
+      pvcSize: 2Gi
+
+redis:
+  services:
+    - name: redis
+      image: ghcr.io/psptorchinim/micros/infra/redis
+      nodePort: 6379
+      pvcSize: 2Gi
+
+sqlserver:
+  services:
+    - name: sqlserver
+      image: ghcr.io/psptorchinim/micros/infra/sqlserver
+      nodePort: 1433
+      pvcSize: 10Gi
+
+strapi:
+  services:
+    - name: strapi
+      image: ghcr.io/psptorchinim/micros/infra/strapi
+      nodePort: 1337
+      pvcSize: 5Gi
+
+microfrontend:
+  services:
+    - name: dj-panel
+      image: ghcr.io/psptorchinim/micros/frontends/dj-panel
+      nodePort: 3000
+      pvcSize: 2Gi
+
+microservice:
+  services:
+    - name: apigateway
+      image: ghcr.io/psptorchinim/micros/services/djhostgateway
+      nodePort: 8080
+      pvcSize: 2Gi
+    - name: identity_be
+      image: ghcr.io/psptorchinim/micros/services/identityapi
+      pvcSize: 2Gi
+    - name: music_be
+      image: ghcr.io/psptorchinim/micros/services/musicapi
+      pvcSize: 2Gi
+    - name: gear_be
+      image: ghcr.io/psptorchinim/micros/services/equipmentapi
+      pvcSize: 2Gi
+    - name: documents_be
+      image: ghcr.io/psptorchinim/micros/services/documentsapi
+      pvcSize: 2Gi
+    - name: brand_be
+      image: ghcr.io/psptorchinim/micros/services/companyapi
+      pvcSize: 2Gi
+    - name: mailing_be
+      image: ghcr.io/psptorchinim/micros/services/mailingapi
+      pvcSize: 2Gi
+    - name: party_be
+      image: ghcr.io/psptorchinim/micros/services/partyapi
+      pvcSize: 2Gi
