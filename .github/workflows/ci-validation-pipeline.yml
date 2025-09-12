@@ -284,7 +284,7 @@ jobs:
 
       - name: Render Helm templates
         run: |
-          helm template test ./charts -f ./charts/ix-values.yaml > rendered.yaml
+          helm template test ./k8s -f ./k8s/values.yaml > rendered.yaml
 
       - name: Validate rendered Kubernetes YAML
         run: |
