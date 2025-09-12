@@ -1,0 +1,52 @@
+name: Cleanup Old GHCR Packages
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # Runs every night at 2:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup-ghcr-packages:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # .NET Services
+          - { type: "services", name: "companyapi" }
+          - { type: "services", name: "djhostgateway" }
+          - { type: "services", name: "documentsapi" }
+          - { type: "services", name: "equipmentapi" }
+          - { type: "services", name: "identityapi" }
+          - { type: "services", name: "mailingapi" }
+          - { type: "services", name: "musicapi" }
+          - { type: "services", name: "partyapi" }
+          # React Frontends
+          - { type: "frontends", name: "dj-panel" }
+          # Infrastructure Images
+          - { type: "infra", name: "mongodb" }
+          - { type: "infra", name: "postgres" }
+          - { type: "infra", name: "redis" }
+          - { type: "infra", name: "rabbitmq" }
+          - { type: "infra", name: "sqlserver" }
+          - { type: "infra", name: "strapi" }
+    steps:
+      - name: Delete old tagged package versions from GHCR
+        uses: actions/delete-package-versions@v5
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: micros/${{ matrix.type }}/${{ matrix.name }}
+          package-type: "container"
+          min-versions-to-keep: 3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old untagged (SHA) package versions from GHCR
+        uses: actions/delete-package-versions@v5
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: micros/${{ matrix.type }}/${{ matrix.name }}
+          package-type: "container"
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
