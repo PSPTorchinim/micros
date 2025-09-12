@@ -2,7 +2,7 @@ name: Build Artifacts
 
 on:
   schedule:
-    - cron: "0 2 * * *" # Nightly: build develop
+    - cron: "0 0 * * *" # Nightly: build develop
     - cron: "0 4 1 * *" # Monthly: build production
   workflow_dispatch:
 
@@ -417,23 +417,3 @@ jobs:
             DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
           tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/infra/${{ steps.infra_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
           push: true
-
-  determine_catalog:
-    name: Determine IX Apps Catalog
-    runs-on: ubuntu-latest
-    needs: [validate_schedule]
-    if: needs.validate_schedule.outputs.result == 'success'
-    outputs:
-      catalog: ${{ steps.catalog_set.outputs.catalog }}
-    steps:
-      - name: Set default catalog to dev
-        run: echo "CATALOG=dev" >> "$GITHUB_ENV"
-      - name: Override to stable if on production branch
-        if: endsWith(github.ref, '/production')
-        run: echo "CATALOG=stable" >> "$GITHUB_ENV"
-      - name: Override to dev if on releases/*
-        if: startsWith(github.ref, 'refs/heads/releases/')
-        run: echo "CATALOG=dev" >> "$GITHUB_ENV"
-      - name: Output catalog name
-        id: catalog_set
-        run: echo "catalog=${{ env.CATALOG }}" >> "$GITHUB_OUTPUT"
