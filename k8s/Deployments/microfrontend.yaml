@@ -1,23 +1,30 @@
+{{- range .Values.microfrontend.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: microfrontend
+  name: {{ .name }}
   labels:
-    app: microfrontend
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: microfrontend
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: microfrontend
+        app: {{ .name }}
     spec:
       containers:
-        - name: microfrontend
-          image: your-docker-repo/microfrontend:latest
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 3000
-      imagePullSecrets:
-        - name: regcred
+          volumeMounts:
+            - name: {{ .name }}-pvc
+              mountPath: /app/dist
+      volumes:
+        - name: {{ .name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .name }}-pvc
+{{- end }}

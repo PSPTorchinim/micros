@@ -1,30 +1,30 @@
+{{- range .Values.strapi.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: strapi
+  name: {{ .name }}
   labels:
-    app: strapi
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: strapi
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: strapi
+        app: {{ .name }}
     spec:
       containers:
-        - name: strapi
-          image: strapi/strapi:latest
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 1337
           volumeMounts:
-            - name: strapi-pvc
+            - name: {{ .name }}-pvc
               mountPath: /srv/app
       volumes:
-        - name: strapi-pvc
+        - name: {{ .name }}-pvc
           persistentVolumeClaim:
-            claimName: strapi-pvc
-      imagePullSecrets:
-        - name: regcred
+            claimName: {{ .name }}-pvc
+{{- end }}

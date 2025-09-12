@@ -1,28 +1,30 @@
+{{- range .Values.redis.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: {{ .name }}
   labels:
-    app: redis
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: redis
+        app: {{ .name }}
     spec:
       containers:
-        - name: redis
-          image: bitnami/redis:latest
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 6379
           volumeMounts:
-            - name: redis-pvc
+            - name: {{ .name }}-pvc
               mountPath: /data
       volumes:
-        - name: redis-pvc
+        - name: {{ .name }}-pvc
           persistentVolumeClaim:
-            claimName: redis-pvc
+            claimName: {{ .name }}-pvc
+{{- end }}

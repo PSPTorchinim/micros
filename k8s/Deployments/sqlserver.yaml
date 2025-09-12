@@ -1,64 +1,30 @@
+{{- range .Values.sqlserver.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sqlserver
+  name: {{ .name }}
   labels:
-    app: sqlserver
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sqlserver
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: sqlserver
+        app: {{ .name }}
     spec:
       containers:
-        - name: sqlserver
-          image: mcr.microsoft.com/mssql/server:2022-latest
-          env:
-            - name: ACCEPT_EULA
-              value: "Y"
-            - name: MSSQL_SA_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sqlserver-secret
-                  key: sa-password
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 1433
-          readinessProbe:
-            exec:
-              command:
-                - /opt/mssql-tools18/bin/sqlcmd
-                - -U
-                - sa
-                - -P
-                - "$(MSSQL_SA_PASSWORD)"
-                - -Q
-                - "SELECT 1"
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-          livenessProbe:
-            exec:
-              command:
-                - /opt/mssql-tools18/bin/sqlcmd
-                - -U
-                - sa
-                - -P
-                - "$(MSSQL_SA_PASSWORD)"
-                - -Q
-                - "SELECT 1"
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
           volumeMounts:
-            - name: sqlserver-pvc
+            - name: {{ .name }}-pvc
               mountPath: /var/opt/mssql
       volumes:
-        - name: sqlserver-pvc
+        - name: {{ .name }}-pvc
           persistentVolumeClaim:
-            claimName: sqlserver-pvc
+            claimName: {{ .name }}-pvc
+{{- end }}

@@ -1,30 +1,32 @@
+{{- range .Values.rabbitmq.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: {{ .name }}
   labels:
-    app: rabbitmq
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rabbitmq
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: rabbitmq
+        app: {{ .name }}
     spec:
       containers:
-        - name: rabbitmq
-          image: rabbitmq:latest
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 5672
             - containerPort: 15672
             - containerPort: 15692
           volumeMounts:
-            - name: rabbitmq-pvc
+            - name: {{ .name }}-pvc
               mountPath: /var/lib/rabbitmq
       volumes:
-        - name: rabbitmq-pvc
+        - name: {{ .name }}-pvc
           persistentVolumeClaim:
-            claimName: rabbitmq-pvc
+            claimName: {{ .name }}-pvc
+{{- end }}

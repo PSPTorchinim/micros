@@ -1,28 +1,30 @@
+{{- range .Values.microservice.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: microservice
+  name: {{ .name }}
   labels:
-    app: microservice
+    app: {{ .name }}
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: microservice
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: microservice
+        app: {{ .name }}
     spec:
       containers:
-        - name: microservice
-          image: your-docker-repo/microservice:latest
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
           ports:
             - containerPort: 8080
-      resources:
-        requests:
-          memory: "512Mi"
-          cpu: "500m"
-        limits:
-          memory: "1Gi"
-          cpu: "1"
+          volumeMounts:
+            - name: {{ .name }}-pvc
+              mountPath: /app/data
+      volumes:
+        - name: {{ .name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .name }}-pvc
+{{- end }}

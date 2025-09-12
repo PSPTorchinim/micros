@@ -1,32 +1,35 @@
+{{- range .Values.mongodb.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb
+  name: {{ .name }}
   labels:
-    app: mongodb
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongodb
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: mongodb
+        app: {{ .name }}
     spec:
       containers:
-        - name: mongodb
-          image: mongo:latest
+        - name: {{ .name }}
+          iimage: {{ .image }}:{{ $.Values.global.imageTag }}
+          ports:
+            - containerPort: 27017
           volumeMounts:
-            - name: mongodb-pvc
+            - name: {{ .name }}-pvc
               mountPath: /data/db
-            - name: mongodb-config-pvc
+            - name: {{ .name }}-config-pvc
               mountPath: /data/configdb
       volumes:
-        - name: mongodb-pvc
+        - name: {{ .name }}-pvc
           persistentVolumeClaim:
-            claimName: mongodb-pvc
-        - name: mongodb-config-pvc
+            claimName: {{ .name }}-pvc
+        - name: {{ .name }}-config-pvc
           persistentVolumeClaim:
-            claimName: mongodb-config-pvc
-      restartPolicy: Always
+            claimName: {{ .name }}-config-pvc
+{{- end }}
