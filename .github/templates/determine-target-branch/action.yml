@@ -1,0 +1,20 @@
+name: Determine Target branch
+description: Determine the target branch for the service
+outputs:
+  target_branch:
+    description: The target branch determined based on the current branch
+    value: ${{ steps.tag_set.outputs.target_branch }}
+runs:
+  using: composite
+  steps:
+    - name: Set target branch based on ref
+      id: tag_set
+      shell: bash
+      run: |
+        if [[ "${GITHUB_REF}" == *"/production" ]]; then
+          echo "target_branch=production" >> "$GITHUB_OUTPUT"
+        elif [[ "${GITHUB_REF}" == refs/heads/releases/* ]]; then
+          echo "target_branch=develop" >> "$GITHUB_OUTPUT"
+        else
+          echo "target_branch=develop" >> "$GITHUB_OUTPUT"
+        fi

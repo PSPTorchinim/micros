@@ -1,0 +1,13 @@
+{{- range .Values.postgres.services }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .pvcSize | default "2Gi" }}
+{{- end }}

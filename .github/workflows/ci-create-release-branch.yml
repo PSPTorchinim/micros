@@ -1,0 +1,73 @@
+name: Create Release Branch
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - production
+  workflow_dispatch:
+
+jobs:
+  create-release-branch:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get current year and month
+        id: date
+        run: |
+          YY=$(date +'%y')
+          MM=$(date +'%m')
+          echo "branch=releases/R${YY}${MM}" >> "$GITHUB_OUTPUT"
+
+      - name: Get latest production SHA
+        id: prod_sha
+        run: |
+          SHA=$(git ls-remote origin production | cut -f1)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Unset merged branch from default (set production as default)
+        run: |
+          gh repo edit --default-branch production
+        env:
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_PAT }}
+
+      - name: Delete merged branch
+        if: github.event_name == 'pull_request'
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.PIPELINE_PAT }}
+          branches: ${{ github.event.pull_request.head.ref }}
+
+      - name: Check if release branch exists
+        id: check_branch
+        run: |
+          BRANCH_NAME="${{ steps.date.outputs.branch }}"
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release branch from production
+        if: steps.check_branch.outputs.exists == 'false'
+        uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_PAT }}
+        with:
+          branch: ${{ steps.date.outputs.branch }}
+          sha: ${{ steps.prod_sha.outputs.sha }}
+
+      - name: Set new release branch as default
+        if: steps.check_branch.outputs.exists == 'false'
+        run: |
+          OWNER_REPO="${{ github.repository }}"
+          API_URL="https://api.github.com/repos/$OWNER_REPO"
+          NEW_DEFAULT="${{ steps.date.outputs.branch }}"
+          curl -s -X PATCH -H "Authorization: token ${{ secrets.PIPELINE_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            $API_URL \
+            -d "{\"default_branch\":\"$NEW_DEFAULT\"}"
