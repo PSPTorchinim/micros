@@ -25,14 +25,15 @@ jobs:
         run: |
           YY=$(date +'%y')
           MM=$(date +'%m')
-          echo "branch=releases/R${YY}${MM}" >> $GITHUB_OUTPUT
+          echo "branch=releases/R${YY}${MM}" >> "$GITHUB_OUTPUT"
 
       - name: Create release branch if not exists
         run: |
           git fetch origin
-          if git show-ref --verify --quiet refs/remotes/origin/${{ steps.date.outputs.branch }}; then
+          # shellcheck disable=SC2086
+          if git show-ref --verify --quiet "refs/remotes/origin/${{ steps.date.outputs.branch }}"; then
               echo "Branch already exists. Skipping."
               exit 0
           fi
-          git checkout -b ${{ steps.date.outputs.branch }}
-          git push origin ${{ steps.date.outputs.branch }}
+          git checkout -b "${{ steps.date.outputs.branch }}"
+          git push origin "${{ steps.date.outputs.branch }}"
