@@ -236,7 +236,7 @@ jobs:
         uses: ./.github/templates/ghcr
         with:
           tag: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/frontends/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          dockerfile: Docker/microservice.Dockerfile
+          dockerfile: Docker/microfrontend.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             MICROFRONTEND_NAME=${{ matrix.service }}
