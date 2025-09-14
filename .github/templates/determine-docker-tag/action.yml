@@ -1,5 +1,9 @@
 name: Determine Docker Tag
 description: Determine the Docker tag for the service
+outputs:
+  docker_tag:
+    description: The Docker tag determined based on the branch
+    value: ${{ steps.tag_set.outputs.docker_tag }}
 runs:
   using: composite
   steps:
