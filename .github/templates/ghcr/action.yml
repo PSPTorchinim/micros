@@ -1,0 +1,39 @@
+name: GHCR Push Docker Image
+description: Pushes a Docker image to GitHub Container Registry (GHCR)
+inputs:
+  tag:
+    description: Docker image tag
+    required: true
+  dockerfile:
+    description: Path to the Dockerfile
+    required: true
+  build-args:
+    description: Docker build arguments
+    required: false
+  github-token:
+    description: GitHub token for registry login
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Convert tag to lowercase
+      id: tag_lowercase
+      run: |
+        echo "tag=$(echo '${{ inputs.tag }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+
+    - name: Build & Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        build-args: ${{ inputs.build-args }}
+        tags: ${{ steps.tag_lowercase.outputs.tag }}
+        push: true

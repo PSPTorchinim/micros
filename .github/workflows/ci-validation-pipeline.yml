@@ -4,29 +4,23 @@ on:
   pull_request:
 
 jobs:
-  set-environment:
+  determine_environment:
     runs-on: ubuntu-latest
+    name: Determine Environment
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
-      - name: Default to Development
-        run: echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
-      - name: Check if prod
-        if: endsWith(github.ref, '/production')
-        run: |
-          echo "ENVIRONMENT_NAME=Production" >> "$GITHUB_ENV"
-      - name: Check if releases/R*
-        if: startsWith(github.ref, 'refs/heads/releases/')
-        run: |
-          echo "ENVIRONMENT_NAME=Development" >> "$GITHUB_ENV"
-      - name: Set output
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+      - name: Set Environment
         id: set_env
-        run: echo "current_env=${{ env.ENVIRONMENT_NAME }}" >> "$GITHUB_OUTPUT"
+        uses: ./.github/templates/determine-environment
 
   validate_dotnet:
     name: Build - DotNet
     runs-on: ubuntu-latest
-    needs: set-environment
+    needs: determine_environment
+    environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 15
     strategy:
       matrix:
@@ -45,47 +39,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build .NET Service
+        uses: ./.github/templates/build-dotnet-service
         with:
-          dotnet-version: "9.x"
-
-      - name: Add dotnet tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-
-      - name: Show dotnet version
-        run: dotnet --version
-
-      - name: Update dotnet-ef tool
-        run: dotnet tool update --global dotnet-ef
-
-      - name: Restore dependencies
-        run: dotnet restore "Services/${{ matrix.service }}"
-
-      - name: Check for DbContext
-        run: |
-          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
-            echo "DbContext found."
-          else
-            echo "No DbContext found (or no design-time factory)."
-          fi
-
-      - name: Build project
-        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
-
-      - name: Run tests (if present)
-        run: |
-          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
-            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
-          else
-            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
-          fi
-        env:
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+          service: ${{ matrix.service }}
 
   validate_react:
     name: Build - React
-    needs: set-environment
+    needs: determine_environment
+    environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -95,45 +57,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-cache-
-
-      - name: Use Node version
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "npm"
-          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
-
-      - name: Install dependencies
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
-
-      - name: Lint
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run lint
-
-      - name: Prettier check
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run format:check
-
-      - name: Build
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run build
-
-      - name: Test (skip if script missing)
-        working-directory: Frontends/${{ matrix.service }}
-        run: |
-          npm run test
+          service: ${{ matrix.service }}
 
   validate_dockerfiles:
     name: Validate Dockerfiles
-    needs: set-environment
+    needs: determine_environment
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -150,7 +81,8 @@ jobs:
 
   validate_composers:
     name: Validate Docker Compose files
-    needs: set-environment
+    needs: determine_environment
+    environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -255,7 +187,8 @@ jobs:
   validate_github_workflows:
     name: Validate GitHub Actions workflows
     runs-on: ubuntu-latest
-    needs: set-environment
+    needs: determine_environment
+    environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -266,7 +199,8 @@ jobs:
 
   validate_kubernetes:
     name: Validate Kubernetes YAML (Helm templates)
-    needs: set-environment
+    needs: determine_environment
+    environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
