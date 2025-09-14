@@ -1,5 +1,8 @@
 name: Determine Target branch
 description: Determine the target branch for the service
+outputs:
+  target_branch:
+    description: The target branch determined based on the current branch
 runs:
   using: composite
   steps:
