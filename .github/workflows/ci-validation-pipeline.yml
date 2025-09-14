@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build .NET Service
-        uses: ./.github/actions/build-dotnet-service
+        uses: ./.github/templates/build-dotnet-service
         with:
           service: ${{ matrix.service }}
 
