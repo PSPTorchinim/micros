@@ -6,20 +6,13 @@ on:
       - closed
     branches:
       - production
+  workflow_dispatch:
 
 jobs:
   create-release-branch:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Git user
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Get current year and month
         id: date
         run: |
@@ -27,13 +20,16 @@ jobs:
           MM=$(date +'%m')
           echo "branch=releases/R${YY}${MM}" >> "$GITHUB_OUTPUT"
 
-      - name: Create release branch if not exists
-        run: |
-          git fetch origin
-          # shellcheck disable=SC2086
-          if git show-ref --verify --quiet "refs/remotes/origin/${{ steps.date.outputs.branch }}"; then
-              echo "Branch already exists. Skipping."
-              exit 0
-          fi
-          git checkout -b "${{ steps.date.outputs.branch }}"
-          git push origin "${{ steps.date.outputs.branch }}"
+      - name: Delete merged branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branches: ${{ github.event.pull_request.head.ref }}
+
+      - name: Create release branch
+        uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: refs/heads/${{ steps.date.outputs.branch }}
+          sha: ${{ github.event.pull_request.head.sha }}
