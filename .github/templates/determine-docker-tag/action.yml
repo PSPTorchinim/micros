@@ -1,0 +1,16 @@
+name: Determine Docker Tag
+description: Determine the Docker tag for the service
+runs:
+  using: composite
+  steps:
+    - name: Set docker tag based on branch
+      id: tag_set
+      shell: bash
+      run: |
+        if [[ "${GITHUB_REF}" == *"/production" ]]; then
+          echo "docker_tag=production" >> "$GITHUB_OUTPUT"
+        elif [[ "${GITHUB_REF}" == refs/heads/releases/* ]]; then
+          echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+        else
+          echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+        fi

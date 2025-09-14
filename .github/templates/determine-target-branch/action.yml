@@ -1,0 +1,20 @@
+name: Determine Target branch
+description: Determine the target branch for the service
+runs:
+  using: composite
+  steps:
+    - name: Set default target branch to develop
+      run: echo "TARGET_BRANCH=develop" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Override to production if on production branch
+      if: endsWith(github.ref, '/production')
+      run: echo "TARGET_BRANCH=production" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Override to develop if on releases/*
+      if: startsWith(github.ref, 'refs/heads/releases/')
+      run: echo "TARGET_BRANCH=develop" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Output target branch
+      id: branch_set
+      run: echo "target_branch=${{ env.TARGET_BRANCH }}" >> "$GITHUB_OUTPUT"
+      shell: bash
