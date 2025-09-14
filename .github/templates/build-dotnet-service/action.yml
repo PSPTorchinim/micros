@@ -1,0 +1,46 @@
+name: Build .NET Service
+description: Common build steps for .NET microservices
+inputs:
+  service:
+    description: Service name
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: "9.x"
+
+    - name: Add .NET Tools to PATH
+      run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      shell: bash
+
+    - name: Display .NET Version
+      run: dotnet --version
+      shell: bash
+
+    - name: Update dotnet-ef Tool
+      run: dotnet tool update --global dotnet-ef
+      shell: bash
+
+    - name: Restore Dependencies
+      run: dotnet restore "Services/${{ inputs.service }}"
+      shell: bash
+
+    - name: Check for DbContext
+      run: |
+        if dotnet ef dbcontext info --no-build -p "Services/${{ inputs.service }}" >/dev/null 2>&1; then
+          echo "DbContext found."
+        else
+          echo "No DbContext found (or no design-time factory)."
+        fi
+      shell: bash
+
+    - name: Build Project
+      run: dotnet build "Services/${{ inputs.service }}" --no-restore -c Debug
+      shell: bash
+
+    - name: Run Unit Tests (if present)
+      run: dotnet test "Tests/${{ inputs.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+      shell: bash

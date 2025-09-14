@@ -36,7 +36,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           package-name: micros/${{ matrix.type }}/${{ matrix.name }}
           package-type: "container"
-          min-versions-to-keep: 3
+          min-versions-to-keep: 1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -46,7 +46,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           package-name: micros/${{ matrix.type }}/${{ matrix.name }}
           package-type: "container"
-          min-versions-to-keep: 3
+          min-versions-to-keep: 1
           delete-only-untagged-versions: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

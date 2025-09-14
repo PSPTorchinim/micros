@@ -162,54 +162,17 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+      - name: Build .NET Service
+        uses: ./.github/templates/build-dotnet-service
         with:
-          dotnet-version: "9.x"
+          service: ${{ matrix.service }}
 
-      - name: Add .NET Tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-
-      - name: Display .NET Version
-        run: dotnet --version
-
-      - name: Update dotnet-ef Tool
-        run: dotnet tool update --global dotnet-ef
-
-      - name: Restore Dependencies
-        run: dotnet restore "Services/${{ matrix.service }}"
-
-      - name: Check for DbContext
-        run: |
-          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
-            echo "DbContext found."
-          else
-            echo "No DbContext found (or no design-time factory)."
-          fi
-
-      - name: Build Project
-        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
-
-      - name: Run Unit Tests (if present)
-        run: dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
-
-      - name: Convert Service Name to Lowercase
-        id: service_lower
-        run: |
-          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Login and Push to GitHub Container Registry
+        uses: ./.github/templates/ghcr
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Docker/microservice.Dockerfile
+          tag: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/services/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
+          dockerfile: Docker/microservice.Dockerfile
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
             DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
@@ -240,8 +203,6 @@ jobs:
             DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
             DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
             DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
-          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/services/${{ steps.service_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          push: true
 
   build_react_frontends:
     environment: ${{ needs.determine_environment.outputs.environment }}
@@ -266,55 +227,22 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
         with:
-          node-version: "20.x"
+          working-dir: ${{ matrix.service }}
 
-      - name: Install NPM Dependencies
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
-
-      - name: Lint Source Code
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run lint
-
-      - name: Check Code Formatting
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run format:check
-
-      - name: Build React App
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run build
-
-      - name: Run React Tests
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run test
-
-      - name: Convert Frontend Name to Lowercase
-        id: frontend_lower
-        run: |
-          echo "name=$(echo '${{ matrix.service }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Login and Push to GitHub Container Registry
+        uses: ./.github/templates/ghcr
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Docker/microfrontend.Dockerfile
+          tag: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/frontends/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
+          dockerfile: Docker/microservice.Dockerfile
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             MICROFRONTEND_NAME=${{ matrix.service }}
             REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
             REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
             REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
-          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/frontends/${{ steps.frontend_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          push: true
 
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
@@ -381,39 +309,9 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Login and Push to GitHub Container Registry
+        uses: ./.github/templates/ghcr
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Convert Image Name to Lowercase
-        id: infra_lower
-        run: |
-          echo "name=$(echo '${{ matrix.image.name }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      - name: Build & Push Infrastructure Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.image.dockerfile }}
-          build-args: |
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
-            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
-            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
-            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
-            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
-            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
-            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
-            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
-            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
-            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-          tags: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/infra/${{ steps.infra_lower.outputs.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          push: true
+          tag: ghcr.io/${{ needs.get_repo_owner.outputs.owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          dockerfile: ${{ matrix.image.dockerfile }}

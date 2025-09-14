@@ -45,43 +45,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build .NET Service
+        uses: ./.github/actions/build-dotnet-service
         with:
-          dotnet-version: "9.x"
-
-      - name: Add dotnet tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-
-      - name: Show dotnet version
-        run: dotnet --version
-
-      - name: Update dotnet-ef tool
-        run: dotnet tool update --global dotnet-ef
-
-      - name: Restore dependencies
-        run: dotnet restore "Services/${{ matrix.service }}"
-
-      - name: Check for DbContext
-        run: |
-          if dotnet ef dbcontext info --no-build -p "Services/${{ matrix.service }}" >/dev/null 2>&1; then
-            echo "DbContext found."
-          else
-            echo "No DbContext found (or no design-time factory)."
-          fi
-
-      - name: Build project
-        run: dotnet build "Services/${{ matrix.service }}" --no-restore -c Debug
-
-      - name: Run tests (if present)
-        run: |
-          if [ -d "Tests/${{ matrix.service }}.Tests" ]; then
-            dotnet test "Tests/${{ matrix.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
-          else
-            echo "No Tests/${{ matrix.service }}.Tests directory; skipping tests."
-          fi
-        env:
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+          service: ${{ matrix.service }}
 
   validate_react:
     name: Build - React
@@ -95,41 +62,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-cache-
-
-      - name: Use Node version
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "npm"
-          cache-dependency-path: Frontends/${{ matrix.service }}/package-lock.json
-
-      - name: Install dependencies
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
-
-      - name: Lint
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run lint
-
-      - name: Prettier check
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run format:check
-
-      - name: Build
-        working-directory: Frontends/${{ matrix.service }}
-        run: npm run build
-
-      - name: Test (skip if script missing)
-        working-directory: Frontends/${{ matrix.service }}
-        run: |
-          npm run test
+          service: ${{ matrix.service }}
 
   validate_dockerfiles:
     name: Validate Dockerfiles
