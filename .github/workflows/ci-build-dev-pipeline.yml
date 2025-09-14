@@ -20,15 +20,11 @@ jobs:
     name: Determine Docker Tag
     runs-on: ubuntu-latest
     outputs:
-      docker_tag: ${{ steps.set_docker_tag.outputs.docker_tag }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
     steps:
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
-      - name: Set output for docker_tag
-        id: set_docker_tag
-        run: echo "docker_tag=${{ steps.tag_set.outputs.docker_tag }}" >> $GITHUB_OUTPUT
-        shell: bash
 
   build_dotnet_services:
     environment: Development

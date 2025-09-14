@@ -10,29 +10,21 @@ jobs:
     name: Determine Target Branch
     runs-on: ubuntu-latest
     outputs:
-      target_branch: ${{ steps.set_target_branch.outputs.target_branch }}
+      target_branch: ${{ steps.branch_set.outputs.target_branch }}
     steps:
       - name: Determine target branch based on branch
         id: branch_set
         uses: ./.github/templates/determine-target-branch
-      - name: Set output for target_branch
-        id: set_target_branch
-        run: echo "target_branch=${{ steps.branch_set.outputs.target_branch }}" >> $GITHUB_OUTPUT
-        shell: bash
 
   determine_docker_tag:
     name: Determine Docker Tag
     runs-on: ubuntu-latest
     outputs:
-      docker_tag: ${{ steps.set_docker_tag.outputs.docker_tag }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
     steps:
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
-      - name: Set output for docker_tag
-        id: set_docker_tag
-        run: echo "docker_tag=${{ steps.tag_set.outputs.docker_tag }}" >> $GITHUB_OUTPUT
-        shell: bash
 
   build_dotnet_services:
     environment: Production
