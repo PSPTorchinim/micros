@@ -14,20 +14,25 @@ runs:
 
     - name: Install NPM Dependencies
       working-directory: ${{ inputs.working-dir }}
+      shell: bash
       run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
     - name: Lint Source Code
       working-directory: ${{ inputs.working-dir }}
+      shell: bash
       run: npm run lint
 
     - name: Check Code Formatting
       working-directory: ${{ inputs.working-dir }}
+      shell: bash
       run: npm run format:check
 
     - name: Build React App
       working-directory: ${{ inputs.working-dir }}
+      shell: bash
       run: npm run build
 
     - name: Run React Tests
       working-directory: ${{ inputs.working-dir }}
+      shell: bash
       run: npm run test
