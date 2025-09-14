@@ -1,7 +1,7 @@
 name: Build React Service
 description: Common build steps for React microfrontend
 inputs:
-  working-dir:
+  service:
     description: Working directory for the service
     required: true
 runs:
@@ -13,26 +13,26 @@ runs:
         node-version: "20.x"
 
     - name: Install NPM Dependencies
-      working-directory: ${{ inputs.working-dir }}
+      working-directory: Frontends/${{ inputs.service }}
       shell: bash
       run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
     - name: Lint Source Code
-      working-directory: ${{ inputs.working-dir }}
+      working-directory: Frontends/${{ inputs.service }}
       shell: bash
       run: npm run lint
 
     - name: Check Code Formatting
-      working-directory: ${{ inputs.working-dir }}
+      working-directory: Frontends/${{ inputs.service }}
       shell: bash
       run: npm run format:check
 
     - name: Build React App
-      working-directory: ${{ inputs.working-dir }}
+      working-directory: Frontends/${{ inputs.service }}
       shell: bash
       run: npm run build
 
     - name: Run React Tests
-      working-directory: ${{ inputs.working-dir }}
+      working-directory: Frontends/${{ inputs.service }}
       shell: bash
       run: npm run test

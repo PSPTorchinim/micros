@@ -230,7 +230,7 @@ jobs:
       - name: Build React Service
         uses: ./.github/templates/build-react-service
         with:
-          working-dir: ${{ matrix.service }}
+          service: ${{ matrix.service }}
 
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
