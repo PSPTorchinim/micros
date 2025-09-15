@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:20.12.2 AS builder
+FROM node:20.19.0 AS builder
 
 SHELL ["/bin/bash","-lc"]
 
@@ -30,11 +30,13 @@ RUN npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 RUN npm run build
 
 # Use a lightweight web server for static files
-FROM node:20.12.2-alpine AS runner
+FROM node:20.19.0 AS runner
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 RUN npm install -g serve@14.2.0
+
+ENV NUGET_PACKAGES=/root/.nuget/packages
 
 EXPOSE 3000
 CMD ["serve", "-s", "dist", "-l", "3000"]

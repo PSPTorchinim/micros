@@ -67,9 +67,13 @@ RUN apt-get update
 # Set WORKDIR before COPY (DL3045)
 WORKDIR /
 
-COPY Services/${MICROSERVICE_NAME}/ Services/${MICROSERVICE_NAME}/
-COPY Services/Shared/ Services/Shared/
-COPY Tests/${MICROSERVICE_NAME}.Tests/ Tests/${MICROSERVICE_NAME}.Tests/
+COPY Services/${MICROSERVICE_NAME}/*.csproj ./Services/${MICROSERVICE_NAME}/
+COPY Services/Shared/*.csproj ./Services/Shared/
+RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
+
+# Dopiero potem kopiuj resztę kodu
+COPY Services/${MICROSERVICE_NAME}/ ./Services/${MICROSERVICE_NAME}/
+COPY Services/Shared/ ./Services/Shared/
 
 # Use absolute WORKDIR (DL3000)
 WORKDIR /Services/${MICROSERVICE_NAME}/
@@ -163,10 +167,10 @@ ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
 WORKDIR /app
 COPY --from=build /app/publish/ .
 
-ENV APP_EXE=$MICROSERVICE_NAME.dll
+ENV APP_EXE=${MICROSERVICE_NAME}.dll
 
-# Use JSON notation for ENTRYPOINT (DL3025)
-ENTRYPOINT ["dotnet", "/app/${APP_EXE}"]
+# Use shell form ENTRYPOINT for env var substitution
+ENTRYPOINT dotnet $APP_EXE
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=90s --retries=6 \
   CMD curl -fsS http://localhost:8080/healthz/live \
