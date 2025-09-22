@@ -77,17 +77,8 @@ COPY Services/Shared/ ./Services/Shared/
 
 # Use absolute WORKDIR (DL3000)
 WORKDIR /Services/${MICROSERVICE_NAME}/
-
-# Combine RUNs, clean apt lists, no-install-recommends, pin version (DL3059, DL3009, DL3015)
-# hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /Services/${MICROSERVICE_NAME}/
 RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools" \
     && (dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations") \
-    && dotnet restore \
     && dotnet test -c Release --no-restore \
     && dotnet build -c Release -o /app/build --no-restore \
     && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
