@@ -10,6 +10,108 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "migration-add-djhostgateway",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/DJHostGateway'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-identityapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/IdentityAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-musicapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/MusicAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-equipmentapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/EquipmentAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-documentsapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/DocumentsAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-companyapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/CompanyAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-partyapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/PartyAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-mailingapi",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-Command",
+        "cd '${workspaceFolder}/Services/MailingAPI'; if (dotnet ef dbcontext list 2>$null) { dotnet ef migrations add ${input:migrationName} } else { Write-Host 'No DbContext found, skipping migrations' }"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "migration-add-all",
+      "dependsOn": [
+        "migration-add-djhostgateway",
+        "migration-add-identityapi",
+        "migration-add-musicapi",
+        "migration-add-equipmentapi",
+        "migration-add-documentsapi",
+        "migration-add-companyapi",
+        "migration-add-partyapi",
+        "migration-add-mailingapi"
+      ],
+      "group": "build"
+    },
+    {
       "label": "build-djhostgateway",
       "command": "dotnet",
       "type": "process",
@@ -18,7 +120,8 @@
         "${workspaceFolder}/Services/DJHostGateway/DJHostGateway.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-djhostgateway"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -30,7 +133,8 @@
         "${workspaceFolder}/Services/IdentityAPI/IdentityAPI.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-identityapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -39,7 +143,8 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/Services/MusicAPI/MusicAPI.csproj"],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-musicapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -51,7 +156,8 @@
         "${workspaceFolder}/Services/EquipmentAPI/EquipmentAPI.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-equipmentapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -63,7 +169,8 @@
         "${workspaceFolder}/Services/DocumentsAPI/DocumentsAPI.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-documentsapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -75,7 +182,8 @@
         "${workspaceFolder}/Services/CompanyAPI/CompanyAPI.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-companyapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -84,7 +192,8 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/Services/PartyAPI/PartyAPI.csproj"],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-partyapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -96,7 +205,8 @@
         "${workspaceFolder}/Services/MailingAPI/MailingAPI.csproj"
       ],
       "group": "build",
-      "dependsOn": "build-shared",
+      "dependsOn": ["build-shared", "migration-add-mailingapi"],
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
     },
     {
@@ -139,7 +249,17 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/Services"],
       "group": "build",
+      "dependsOn": "migration-add-all",
+      "dependsOrder": "sequence",
       "problemMatcher": "$msCompile"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "description": "Migration name",
+      "default": "InitialCreate",
+      "type": "promptString"
     }
   ]
 }

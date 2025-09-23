@@ -1,6 +1,5 @@
 ﻿using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
-using Microsoft.Extensions.Logging; // Add for logging
 using Shared.Helpers;
 using Shared.Services.Database;
 
@@ -20,7 +19,7 @@ namespace IdentityAPI.Data
             this.rolesRepository = serviceProvider.GetRequiredService<IRolesRepository>();
             this.permissionsRepository = serviceProvider.GetRequiredService<IPermissionsRepository>();
             this.serviceProvider = serviceProvider;
-            this._logger = serviceProvider.GetService(typeof(ILogger<SeedData>)) as ILogger<SeedData>; // Assign logger
+            this._logger = serviceProvider.GetRequiredService<ILogger<SeedData>>();
         }
 
         public async Task InitializeAsync()
@@ -102,41 +101,47 @@ namespace IdentityAPI.Data
         private async Task SeedPermissions()
         {
             _logger?.LogInformation("Seeding permissions at {Time}", DateTime.UtcNow);
+            List<Task> tasks = new List<Task>();
             try
             {
                 new List<string>(["users", "permissions", "roles", "blocks", "company"]).ForEach(entry =>
                 {
                     new List<string>(["read", "update", "delete"]).ForEach(command =>
                         {
-                            permissionsRepository.Add(new Permission()
+                            tasks.Add(permissionsRepository.Add(new Permission()
                             {
                                 Name = $"{entry}:{command}",
                                 Description = $"{command} {entry}"
-                            }).Wait();
+                            }));
                             _logger?.LogDebug("Permission seeded: {Permission}", $"{entry}:{command}");
 
-                            permissionsRepository.Add(new Permission()
+                            tasks.Add(permissionsRepository.Add(new Permission()
                             {
                                 Name = $"{entry}:{command}:all",
                                 Description = $"{command} all {entry}"
-                            }).Wait();
+                            }));
                             _logger?.LogDebug("Permission seeded: {Permission}", $"{entry}:{command}:all");
                         }
                     );
 
-                    permissionsRepository.Add(new Permission()
+                    tasks.Add(permissionsRepository.Add(new Permission()
                     {
                         Name = $"{entry}:create",
                         Description = $"create {entry}"
-                    }).Wait();
+                    }));
+
+                    
                     _logger?.LogDebug("Permission seeded: {Permission}", $"{entry}:create");
                 });
 
-                permissionsRepository.Add(new Permission()
+                tasks.Add(permissionsRepository.Add(new Permission()
                 {
                     Name = $"users:block",
                     Description = $"block users"
-                }).Wait();
+                }));
+
+                await Task.WhenAll(tasks);
+
                 _logger?.LogDebug("Permission seeded: users:block");
 
                 _logger?.LogInformation("Permissions seeded successfully at {Time}", DateTime.UtcNow);

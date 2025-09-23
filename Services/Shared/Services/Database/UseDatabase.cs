@@ -53,14 +53,16 @@ namespace Shared.Services.Database
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<C>();
+                var logger = services.GetRequiredService<ILogger<P>>();
+                
                 try
                 {
                     await action(context);
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<P>>();
-                    logger.LogError(ex, "An error occurred migration the DB.");
+                    logger.LogError(ex, "An error occurred during database operation.");
+                    throw;
                 }
             }
             return app;
@@ -68,19 +70,67 @@ namespace Shared.Services.Database
 
         public static async Task<WebApplication> UseSQLServerAsync<C, P>(WebApplication app) where C : DbContext
         {
-            var x = await app.UseDatabaseScopeAsync<C, P>(async context =>
+            bool runMigrations = app.Services.GetService<C>() is not null;
+            return await app.UseDatabaseScopeAsync<C, P>(async context =>
             {
                 try
                 {
-                    await context.Database.EnsureCreatedAsync();
+                    if (runMigrations)
+                    {
+
+                        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                        if (pendingMigrations.Any())
+                        {
+                            await context.Database.MigrateAsync();
+                        }
+                        else
+                        {
+                            await context.Database.EnsureCreatedAsync();
+                        }
+                    }
+                    else
+                    {
+                        await context.Database.EnsureCreatedAsync();
+                    }
+
                     return true;
                 }
                 catch (Exception ex)
                 {
+                    var logger = app.Services.GetRequiredService<ILogger<P>>();
+                    logger.LogWarning(ex, "Database setup failed, but continuing application startup");
                     return false;
                 }
             });
-            return x;
+        }
+
+        public static async Task<WebApplication> EnsureDatabaseCreatedAsync<C, P>(WebApplication app) where C : DbContext
+        {
+            return await app.UseDatabaseScopeAsync<C, P>(async context =>
+            {
+                try
+                {
+                    var created = await context.Database.EnsureCreatedAsync();
+                    var logger = app.Services.GetRequiredService<ILogger<P>>();
+                    
+                    if (created)
+                    {
+                        logger.LogInformation("Database {DatabaseName} was created successfully", context.Database.GetDbConnection().Database);
+                    }
+                    else
+                    {
+                        logger.LogInformation("Database {DatabaseName} already exists", context.Database.GetDbConnection().Database);
+                    }
+                    
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var logger = app.Services.GetRequiredService<ILogger<P>>();
+                    logger.LogError(ex, "Failed to ensure database creation");
+                    return false;
+                }
+            });
         }
     }
 }
