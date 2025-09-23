@@ -14,7 +14,8 @@
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
-    "generate:contentful-types": "cross-env cf-content-types-generator -s $REACT_APP_CONTENTFUL_SPACE_ID -t $REACT_APP_CONTENTFUL_ACCESS_TOKEN"
+    "map:api": "cross-env",
+    "map:strapi": "cross-env"
   },
   "license": "MIT",
   "author": {
