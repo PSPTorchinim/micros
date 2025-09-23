@@ -4,7 +4,7 @@
   "info": {
     "singularName": "hero-image",
     "pluralName": "hero-images",
-    "displayName": "HeroImage"
+    "displayName": "Hero"
   },
   "options": {
     "draftAndPublish": true
@@ -23,15 +23,35 @@
         }
       }
     },
-    "Published": {
-      "type": "boolean",
+    "Type": {
+      "type": "enumeration",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "enum": [
+        "Single Image",
+        "Slider Image",
+        "Single Video"
+      ]
     },
-    "Image": {
+    "MediaSlider": {
+      "type": "media",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "MediaSingle": {
       "type": "media",
       "pluginOptions": {
         "i18n": {

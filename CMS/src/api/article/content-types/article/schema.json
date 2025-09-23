@@ -29,25 +29,6 @@
       },
       "required": true
     },
-    "Published": {
-      "type": "boolean",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true,
-      "default": false
-    },
-    "PublishDate": {
-      "type": "datetime",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
     "Content": {
       "type": "blocks",
       "pluginOptions": {
