@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "articles",
+  "info": {
+    "singularName": "article",
+    "pluralName": "articles",
+    "displayName": "Article"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "NameID": {
+      "type": "uid",
+      "targetField": "Title",
+      "required": true
+    },
+    "Title": {
+      "type": "string",
+      "required": true
+    },
+    "Published": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "PublishDate": {
+      "type": "datetime",
+      "required": true
+    },
+    "Content": {
+      "type": "blocks"
+    }
+  }
+}
