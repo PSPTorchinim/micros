@@ -43,13 +43,13 @@ RUN apk add --no-cache \
     vips-dev
 
 # Copy package.json and package-lock.json (if available)
-COPY Frontends/CMS/package*.json ./
+COPY CMS/package*.json ./
 
 # Install Node.js dependencies
 RUN npm ci --only=production
 
 # Copy the rest of the application
-COPY Frontends/CMS/ ./
+COPY CMS/ ./
 
 # Build the Strapi admin panel
 RUN npm run build
