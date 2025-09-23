@@ -2,6 +2,14 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "build-shared",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/Services/Shared/Shared.csproj"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "build-djhostgateway",
       "command": "dotnet",
       "type": "process",
@@ -10,6 +18,7 @@
         "${workspaceFolder}/Services/DJHostGateway/DJHostGateway.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -21,6 +30,7 @@
         "${workspaceFolder}/Services/IdentityAPI/IdentityAPI.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -29,6 +39,7 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/Services/MusicAPI/MusicAPI.csproj"],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -40,6 +51,7 @@
         "${workspaceFolder}/Services/EquipmentAPI/EquipmentAPI.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -51,6 +63,7 @@
         "${workspaceFolder}/Services/DocumentsAPI/DocumentsAPI.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -62,6 +75,7 @@
         "${workspaceFolder}/Services/CompanyAPI/CompanyAPI.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -70,6 +84,7 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/Services/PartyAPI/PartyAPI.csproj"],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -81,6 +96,7 @@
         "${workspaceFolder}/Services/MailingAPI/MailingAPI.csproj"
       ],
       "group": "build",
+      "dependsOn": "build-shared",
       "problemMatcher": "$msCompile"
     },
     {
@@ -109,37 +125,21 @@
       "problemMatcher": []
     },
     {
+      "label": "build-strapi",
+      "type": "npm",
+      "script": "build",
+      "path": "CMS",
+      "group": "build",
+      "dependsOn": "install-strapi",
+      "problemMatcher": []
+    },
+    {
       "label": "build-all-services",
-      "dependsOrder": "sequence",
-      "dependsOn": [
-        "build-djhostgateway",
-        "build-identityapi",
-        "build-musicapi",
-        "build-equipmentapi",
-        "build-documentsapi",
-        "build-companyapi",
-        "build-partyapi",
-        "build-mailingapi"
-      ],
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/Services"],
       "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "build-all-frontends",
-      "dependsOrder": "sequence",
-      "dependsOn": ["build-dj-panel", "install-strapi"],
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "build-all",
-      "dependsOrder": "sequence",
-      "dependsOn": ["build-all-services", "build-all-frontends"],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "problemMatcher": []
+      "problemMatcher": "$msCompile"
     }
   ]
 }
