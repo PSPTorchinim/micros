@@ -30,6 +30,36 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Local Development": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5007",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "MailingDB",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "YourStrong@Passw0rd",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "admin",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "password",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      }
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
