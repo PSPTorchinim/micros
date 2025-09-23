@@ -17,7 +17,7 @@ I've added a "Local Development" launch profile to each microservice that includ
 | DocumentsAPI                | 5004 | Local Development | `/documents/api/*` | MongoDB       | DocumentsDB   |
 | CompanyAPI (Brand)          | 5005 | Local Development | `/brand/api/*`     | SQL Server    | BrandDB       |
 | PartyAPI                    | 5006 | Local Development | `/party/api/*`     | SQL Server    | PartyDB       |
-| MailingAPI                  | 5007 | Local Development | `/mailing/api/*`   | MongoDB       | MailingDB     |
+| MailingAPI                  | 5007 | Local Development | `/mailing/api/*`   | -             | MailingDB     |
 
 ## Environment Variables
 
