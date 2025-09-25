@@ -15,7 +15,7 @@ namespace Shared.Services.Database
             var host = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_HOST_SQLSERVER");
             var port = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PORT_SQLSERVER");
             var password = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PASSWORD_SQLSERVER");
-            return $"Data Source={host},{port};Initial Catalog={catalog};User Id={user};Password={password};Trust Server Certificate=True";
+            return $"Data Source={host};Initial Catalog={catalog};User Id={user};Password={password};Trust Server Certificate=True";
         }
 
         private static string GetMongoDBConnectionString()
@@ -70,64 +70,24 @@ namespace Shared.Services.Database
 
         public static async Task<WebApplication> UseSQLServerAsync<C, P>(WebApplication app) where C : DbContext
         {
-            bool runMigrations = app.Services.GetService<C>() is not null;
+            var logger = app.Services.GetRequiredService<ILogger<P>>();
             return await app.UseDatabaseScopeAsync<C, P>(async context =>
             {
                 try
                 {
-                    if (runMigrations)
+                    if (await context.Database.EnsureCreatedAsync())
                     {
-
-                        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-                        if (pendingMigrations.Any())
-                        {
-                            await context.Database.MigrateAsync();
-                        }
-                        else
-                        {
-                            await context.Database.EnsureCreatedAsync();
-                        }
+                        logger.LogInformation("Database {DatabaseName} was created successfully", context.Database.GetDbConnection().Database);
+                        return true;
                     }
-                    else
-                    {
-                        await context.Database.EnsureCreatedAsync();
-                    }
-
-                    return true;
+                    
+                    logger.LogInformation("Database {DatabaseName} already exists", context.Database.GetDbConnection().Database);
+                    return false;
                 }
                 catch (Exception ex)
                 {
                     var logger = app.Services.GetRequiredService<ILogger<P>>();
                     logger.LogWarning(ex, "Database setup failed, but continuing application startup");
-                    return false;
-                }
-            });
-        }
-
-        public static async Task<WebApplication> EnsureDatabaseCreatedAsync<C, P>(WebApplication app) where C : DbContext
-        {
-            return await app.UseDatabaseScopeAsync<C, P>(async context =>
-            {
-                try
-                {
-                    var created = await context.Database.EnsureCreatedAsync();
-                    var logger = app.Services.GetRequiredService<ILogger<P>>();
-                    
-                    if (created)
-                    {
-                        logger.LogInformation("Database {DatabaseName} was created successfully", context.Database.GetDbConnection().Database);
-                    }
-                    else
-                    {
-                        logger.LogInformation("Database {DatabaseName} already exists", context.Database.GetDbConnection().Database);
-                    }
-                    
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    var logger = app.Services.GetRequiredService<ILogger<P>>();
-                    logger.LogError(ex, "Failed to ensure database creation");
                     return false;
                 }
             });

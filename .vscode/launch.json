@@ -34,7 +34,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5006",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -72,7 +72,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5002",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -110,7 +110,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5007",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -148,7 +148,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5001",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -186,7 +186,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5003",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -224,7 +224,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5004",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -262,7 +262,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5005",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
@@ -300,7 +300,7 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "ASPNETCORE_URLS": "http://localhost:5000",
         "ASPNETCORE_IDENTITY_BE_ADDRESS": "http://localhost:5001",
         "ASPNETCORE_MUSIC_BE_ADDRESS": "http://localhost:5002",

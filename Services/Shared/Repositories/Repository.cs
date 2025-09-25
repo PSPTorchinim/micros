@@ -25,9 +25,7 @@ namespace Shared.Repositories
             {
                 var result = await _context.AddAsync(entity);
                 result.State = EntityState.Added;
-                var success = await _context.SaveChangesAsync() > 0;
-                _logger.LogInformation("Entity of type {EntityType} added: {Success}", typeof(T).Name, success);
-                return success;
+                return true;
             }, _logger);
         }
 
@@ -201,6 +199,11 @@ namespace Shared.Repositories
             }, _logger);
         }
         #endregion
+
+        public virtual async Task<bool> Save()
+        {
+            return (await _context.SaveChangesAsync()) > 0;
+        }
 
     }
 }

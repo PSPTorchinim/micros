@@ -86,6 +86,7 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Adding role '{RoleName}' to repository.", request.Name);
                 var result = await _rolesRepository.Add(toAdd);
+                await _rolesRepository.Save();
                 _logger.LogInformation("Role '{RoleName}' added successfully: {Result}", request.Name, result);
                 return result;
             }, _logger);
@@ -111,6 +112,7 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Updating role with Id: {RoleId} in repository.", id);
                 var result = await _rolesRepository.Update(foundByName);
+                await _rolesRepository.Save();
                 _logger.LogInformation("Role with Id: {RoleId} updated: {Result}", id, result);
                 return result;
             }, _logger);

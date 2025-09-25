@@ -80,6 +80,7 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Updating user with new tokens: {Email}", loginUser.Email);
                 await _usersRepository.Update(matchingUser);
+                await _usersRepository.Save();
 
                 result.User = _mapper.Map<GetUserDTO>(matchingUser);
 
@@ -119,6 +120,7 @@ namespace IdentityAPI.Services
                 };
 
                 await _usersRepository.Add(newUser);
+                await _usersRepository.Save();
 
                 _logger.LogInformation("User registered successfully: {Email}", registerUser.Email);
 
@@ -183,6 +185,7 @@ namespace IdentityAPI.Services
                 user.Blocks.Append(_mapper.Map<Block>(request));
 
                 var result = await _usersRepository.Update(user);
+                await _usersRepository.Save();
                 if (result)
                     _logger.LogInformation("User blocked successfully: {UserId}", request.UserId);
                 else
@@ -239,6 +242,7 @@ namespace IdentityAPI.Services
                     user.Passwords.Append(newPassword);
                 }
                 var result = await _usersRepository.Update(user);
+                await _usersRepository.Save();
                 if (result)
                     _logger.LogInformation("Password changed successfully for user id: {UserId}", id);
                 else
@@ -271,6 +275,7 @@ namespace IdentityAPI.Services
                 ///send mail about password change
 
                 var result = await _usersRepository.Update(foundByEmail);
+                await _usersRepository.Save();
                 if (result)
                     _logger.LogInformation("ForgotPassword: password reset for user {Email}", request.Email);
                 else
@@ -300,6 +305,7 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Activating user account for email: {Email}", request.Email);
                 user.Activated = true;
                 var result = await _usersRepository.Update(user);
+                await _usersRepository.Save();
                 if (result)
                     _logger.LogInformation("Account activated for user: {Email}", request.Email);
                 else
