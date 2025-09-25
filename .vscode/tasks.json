@@ -23,6 +23,7 @@
       ],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-djhostgateway",
       "problemMatcher": "$msCompile"
     },
     {
@@ -32,6 +33,7 @@
       "args": ["build", "${workspaceFolder}/Services/MusicAPI/MusicAPI.csproj"],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-identityapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -44,6 +46,7 @@
       ],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-musicapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -56,6 +59,7 @@
       ],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-equipmentapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -68,6 +72,7 @@
       ],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-documentsapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -77,6 +82,7 @@
       "args": ["build", "${workspaceFolder}/Services/PartyAPI/PartyAPI.csproj"],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-companyapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -89,6 +95,7 @@
       ],
       "group": "build",
       "dependsOrder": "sequence",
+      "dependsOn": "build-partyapi",
       "problemMatcher": "$msCompile"
     },
     {
@@ -126,13 +133,10 @@
       "problemMatcher": []
     },
     {
-      "label": "build-all-services",
-      "command": "dotnet",
-      "type": "process",
-      "args": ["build", "${workspaceFolder}/Services"],
+      "label": "build-all-services-sequential",
+      "dependsOn": "build-mailingapi",
       "group": "build",
-      "dependsOrder": "sequence",
-      "problemMatcher": "$msCompile"
+      "dependsOrder": "sequence"
     }
   ]
 }
