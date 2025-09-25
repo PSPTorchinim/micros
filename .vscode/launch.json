@@ -17,7 +17,7 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/Frontends/dj-panel",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": ["run", "dev"],
       "skipFiles": ["<node_internals>/**"],
       "preLaunchTask": "build-dj-panel"
     },
