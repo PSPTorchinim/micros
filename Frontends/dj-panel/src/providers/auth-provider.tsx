@@ -5,10 +5,10 @@ import React, {
   useState,
 } from 'react';
 import { AuthContext } from '../context/auth-context';
-import { LoginResponseDTO } from '../models/login-response-dto';
 import { api, GET } from '../utils/api';
-import { GetUserDTO } from '../models/get-user-dto';
 import { useNavigate } from 'react-router-dom';
+import { GetUserDTO } from '../models/api/get-user-dto';
+import { LoginResponseDTO } from '../models/api/login-response-dto';
 
 type AuthProviderProps = PropsWithChildren;
 
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               user,
               accessToken,
               refreshToken: newRefreshToken,
-            } = response.data;
+            } = response.data.data;
 
             setUser(user);
             setToken(accessToken);

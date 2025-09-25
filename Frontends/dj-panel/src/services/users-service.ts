@@ -1,7 +1,7 @@
 import { SHA256 } from 'crypto-js';
 import { POST, PUT } from '../utils/api';
-import { LoginResponseDTO } from '../models/login-response-dto';
-import { Response } from '../models/response';
+import { LoginResponseDTO } from '../models/api/login-response-dto';
+import { Response } from '../models/api/response';
 
 export class UsersService {
   public static async forgotPassword(
