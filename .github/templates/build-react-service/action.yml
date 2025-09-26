@@ -17,16 +17,6 @@ runs:
       shell: bash
       run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
-    - name: Map API models
-      working-directory: Frontends/${{ inputs.service }}
-      shell: bash
-      run: npm run map-api
-
-    - name: Map Strapi models
-      working-directory: Frontends/${{ inputs.service }}
-      shell: bash
-      run: npm run map-strapi
-
     - name: Lint Source Code
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
