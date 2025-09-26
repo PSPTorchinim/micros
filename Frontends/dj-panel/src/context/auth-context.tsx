@@ -1,6 +1,6 @@
 // filepath: c:\Projects\Private\Micros\Frontends\dj-panel\src\context\auth-context.tsx
 import { createContext } from 'react';
-import { GetUserDTO } from '../models/get-user-dto';
+import { GetUserDTO } from '../models/api';
 
 export type AuthContextData = {
   user?: GetUserDTO | null;
