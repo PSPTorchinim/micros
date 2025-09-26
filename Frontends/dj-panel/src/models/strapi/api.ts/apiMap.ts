@@ -1096,27 +1096,27 @@ export type UsersPermissionsPermissionsTree = Record<
 >;
 
 export enum HeroImageRequestTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
+  SingleImage = 'Single Image',
+  SliderImage = 'Slider Image',
+  SingleVideo = 'Single Video',
 }
 
 export enum HeroImageTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
+  SingleImage = 'Single Image',
+  SliderImage = 'Slider Image',
+  SingleVideo = 'Single Video',
 }
 
 export enum HeroImageTypeEnum1 {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
+  SingleImage = 'Single Image',
+  SliderImage = 'Slider Image',
+  SingleVideo = 'Single Video',
 }
 
 export enum PageTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
+  SingleImage = 'Single Image',
+  SliderImage = 'Slider Image',
+  SingleVideo = 'Single Video',
 }
 
 export enum OkEnum {
@@ -1145,13 +1145,13 @@ import type {
   AxiosResponse,
   HeadersDefaults,
   ResponseType,
-} from "axios";
-import axios from "axios";
+} from 'axios';
+import axios from 'axios';
 
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
+  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -1168,11 +1168,11 @@ export interface FullRequestParams
 
 export type RequestParams = Omit<
   FullRequestParams,
-  "body" | "method" | "query" | "path"
+  'body' | 'method' | 'query' | 'path'
 >;
 
 export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
+  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
   securityWorker?: (
     securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
@@ -1181,17 +1181,17 @@ export interface ApiConfig<SecurityDataType = unknown>
 }
 
 export enum ContentType {
-  Json = "application/json",
-  JsonApi = "application/vnd.api+json",
-  FormData = "multipart/form-data",
-  UrlEncoded = "application/x-www-form-urlencoded",
-  Text = "text/plain",
+  Json = 'application/json',
+  JsonApi = 'application/vnd.api+json',
+  FormData = 'multipart/form-data',
+  UrlEncoded = 'application/x-www-form-urlencoded',
+  Text = 'text/plain',
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
+  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
   private secure?: boolean;
   private format?: ResponseType;
 
@@ -1203,7 +1203,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || "http://localhost:1337/api",
+      baseURL: axiosConfig.baseURL || 'http://localhost:1337/api',
     });
     this.secure = secure;
     this.format = format;
@@ -1237,7 +1237,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === "object" && formItem !== null) {
+    if (typeof formItem === 'object' && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -1275,7 +1275,7 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === "boolean" ? secure : this.secure) &&
+      ((typeof secure === 'boolean' ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
@@ -1286,7 +1286,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.FormData &&
       body &&
       body !== null &&
-      typeof body === "object"
+      typeof body === 'object'
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
@@ -1295,7 +1295,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.Text &&
       body &&
       body !== null &&
-      typeof body !== "string"
+      typeof body !== 'string'
     ) {
       body = JSON.stringify(body);
     }
@@ -1304,7 +1304,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { "Content-Type": type } : {}),
+        ...(type ? { 'Content-Type': type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -1342,15 +1342,15 @@ export class Api<
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
         /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
+        'pagination[withCount]'?: boolean;
         /** Page number (default: 0) */
-        "pagination[page]"?: number;
+        'pagination[page]'?: number;
         /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
+        'pagination[pageSize]'?: number;
         /** Offset value (default: 0) */
-        "pagination[start]"?: number;
+        'pagination[start]'?: number;
         /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
+        'pagination[limit]'?: number;
         /** Fields to return (ex: title,author) */
         fields?: string;
         /** Relations to return */
@@ -1364,10 +1364,10 @@ export class Api<
     ) =>
       this.request<ArticleListResponse, Error>({
         path: `/articles`,
-        method: "GET",
+        method: 'GET',
         query: query,
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1382,11 +1382,11 @@ export class Api<
     postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
       this.request<ArticleResponse, Error>({
         path: `/articles`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1401,9 +1401,9 @@ export class Api<
     getArticlesId: (id: number, params: RequestParams = {}) =>
       this.request<ArticleResponse, Error>({
         path: `/articles/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1422,11 +1422,11 @@ export class Api<
     ) =>
       this.request<ArticleResponse, Error>({
         path: `/articles/${id}`,
-        method: "PUT",
+        method: 'PUT',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1441,9 +1441,9 @@ export class Api<
     deleteArticlesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/articles/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
@@ -1461,15 +1461,15 @@ export class Api<
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
         /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
+        'pagination[withCount]'?: boolean;
         /** Page number (default: 0) */
-        "pagination[page]"?: number;
+        'pagination[page]'?: number;
         /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
+        'pagination[pageSize]'?: number;
         /** Offset value (default: 0) */
-        "pagination[start]"?: number;
+        'pagination[start]'?: number;
         /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
+        'pagination[limit]'?: number;
         /** Fields to return (ex: title,author) */
         fields?: string;
         /** Relations to return */
@@ -1483,10 +1483,10 @@ export class Api<
     ) =>
       this.request<HeroImageListResponse, Error>({
         path: `/hero-images`,
-        method: "GET",
+        method: 'GET',
         query: query,
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1501,11 +1501,11 @@ export class Api<
     postHeroImages: (data: HeroImageRequest, params: RequestParams = {}) =>
       this.request<HeroImageResponse, Error>({
         path: `/hero-images`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1520,9 +1520,9 @@ export class Api<
     getHeroImagesId: (id: number, params: RequestParams = {}) =>
       this.request<HeroImageResponse, Error>({
         path: `/hero-images/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1541,11 +1541,11 @@ export class Api<
     ) =>
       this.request<HeroImageResponse, Error>({
         path: `/hero-images/${id}`,
-        method: "PUT",
+        method: 'PUT',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1560,9 +1560,9 @@ export class Api<
     deleteHeroImagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/hero-images/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
@@ -1580,15 +1580,15 @@ export class Api<
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
         /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
+        'pagination[withCount]'?: boolean;
         /** Page number (default: 0) */
-        "pagination[page]"?: number;
+        'pagination[page]'?: number;
         /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
+        'pagination[pageSize]'?: number;
         /** Offset value (default: 0) */
-        "pagination[start]"?: number;
+        'pagination[start]'?: number;
         /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
+        'pagination[limit]'?: number;
         /** Fields to return (ex: title,author) */
         fields?: string;
         /** Relations to return */
@@ -1602,10 +1602,10 @@ export class Api<
     ) =>
       this.request<PageListResponse, Error>({
         path: `/pages`,
-        method: "GET",
+        method: 'GET',
         query: query,
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1620,11 +1620,11 @@ export class Api<
     postPages: (data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1639,9 +1639,9 @@ export class Api<
     getPagesId: (id: number, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1656,11 +1656,11 @@ export class Api<
     putPagesId: (id: number, data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages/${id}`,
-        method: "PUT",
+        method: 'PUT',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1675,9 +1675,9 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
@@ -1706,11 +1706,11 @@ export class Api<
     ) =>
       this.request<UploadFile[], any>({
         path: `/upload`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.FormData,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1741,12 +1741,12 @@ export class Api<
     ) =>
       this.request<UploadFile[], any>({
         path: `/upload?id=${id}`,
-        method: "POST",
+        method: 'POST',
         query: query,
         body: data,
         secure: true,
         type: ContentType.FormData,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1761,9 +1761,9 @@ export class Api<
     filesList: (params: RequestParams = {}) =>
       this.request<UploadFile[], any>({
         path: `/upload/files`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1778,9 +1778,9 @@ export class Api<
     filesDetail: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
         path: `/upload/files/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1795,9 +1795,9 @@ export class Api<
     filesDelete: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
         path: `/upload/files/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
@@ -1814,7 +1814,7 @@ export class Api<
     connectDetail: (provider: string, params: RequestParams = {}) =>
       this.request<any, void | Error>({
         path: `/connect/${provider}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
         ...params,
       }),
@@ -1837,11 +1837,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1864,11 +1864,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local/register`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1884,9 +1884,9 @@ export class Api<
     callbackList: (provider: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/${provider}/callback`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1912,11 +1912,11 @@ export class Api<
         Error
       >({
         path: `/auth/forgot-password`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1939,11 +1939,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/reset-password`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1966,11 +1966,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/change-password`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -1992,7 +1992,7 @@ export class Api<
     ) =>
       this.request<any, void | Error>({
         path: `/auth/email-confirmation`,
-        method: "GET",
+        method: 'GET',
         query: query,
         secure: true,
         ...params,
@@ -2021,11 +2021,11 @@ export class Api<
         Error
       >({
         path: `/auth/send-email-confirmation`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
@@ -2047,9 +2047,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/permissions`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2072,9 +2072,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2103,10 +2103,10 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2127,9 +2127,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2159,10 +2159,10 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${role}`,
-        method: "PUT",
+        method: 'PUT',
         body: data,
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2183,9 +2183,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${role}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2201,9 +2201,9 @@ export class Api<
     usersList: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser[], Error>({
         path: `/users`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2231,11 +2231,11 @@ export class Api<
         Error
       >({
         path: `/users`,
-        method: "POST",
+        method: 'POST',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2251,9 +2251,9 @@ export class Api<
     usersDetail: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/${id}`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2282,11 +2282,11 @@ export class Api<
         Error
       >({
         path: `/users/${id}`,
-        method: "PUT",
+        method: 'PUT',
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2302,9 +2302,9 @@ export class Api<
     usersDelete: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2320,9 +2320,9 @@ export class Api<
     getUsersPermissionsUsersRoles: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/me`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
 
@@ -2338,9 +2338,9 @@ export class Api<
     countList: (params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/users/count`,
-        method: "GET",
+        method: 'GET',
         secure: true,
-        format: "json",
+        format: 'json',
         ...params,
       }),
   };
