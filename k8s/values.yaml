@@ -87,3 +87,25 @@ microservice:
       image: ghcr.io/psptorchinim/micros/services/partyapi
       pvcSize: 2Gi
       replicas: 2
+
+grafana:
+  services:
+    - name: grafana
+      image: ghcr.io/psptorchinim/micros/infra/grafana
+      nodePort: 3001
+      pvcSize: 2Gi
+      adminUser: admin
+      adminPassword: admin
+
+loki:
+  services:
+    - name: loki
+      image: ghcr.io/psptorchinim/micros/infra/loki
+      nodePort: 3100
+      pvcSize: 2Gi
+
+promtail:
+  services:
+    - name: promtail
+      image: ghcr.io/psptorchinim/micros/infra/promtail
+      # No nodePort needed for promtail

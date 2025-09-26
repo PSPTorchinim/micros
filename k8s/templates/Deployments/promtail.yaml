@@ -1,0 +1,32 @@
+{{- range .Values.promtail.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  labels:
+    app: {{ .name }}
+spec:
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: {{ .image }}:{{ $.Values.global.imageTag }}
+          ports:
+            - containerPort: 9080
+          volumeMounts:
+            - name: {{ .name }}-config
+              mountPath: /etc/promtail
+              readOnly: true
+      volumes:
+        - name: {{ .name }}-config
+          configMap:
+            name: promtail-config
+{{- end }}

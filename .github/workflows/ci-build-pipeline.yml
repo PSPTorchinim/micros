@@ -219,6 +219,17 @@ jobs:
               dockerfile: "Docker/strapi.Dockerfile",
               tag: "strapi",
             }
+          - {
+              name: "grafana",
+              dockerfile: "Docker/grafana.Dockerfile",
+              tag: "grafana",
+            }
+          - { name: "loki", dockerfile: "Docker/loki.Dockerfile", tag: "loki" }
+          - {
+              name: "promtail",
+              dockerfile: "Docker/promtail.Dockerfile",
+              tag: "promtail",
+            }
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}

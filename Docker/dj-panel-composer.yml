@@ -1,6 +1,45 @@
 name: djpanel
 
 services:
+  loki:
+    build:
+      context: ../
+      dockerfile: Docker/loki.Dockerfile
+      args:
+        LOKI_CONFIG_FILE: /etc/loki/local-config.yaml
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    networks:
+      - public
+
+  promtail:
+    build:
+      context: ../
+      dockerfile: Docker/promtail.Dockerfile
+      args:
+        PROMTAIL_CONFIG_FILE: /etc/promtail/promtail.yaml
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+      - ./promtail-config.yaml:/etc/promtail/promtail.yaml
+    networks:
+      - public
+
+  grafana:
+    build:
+      context: ../
+      dockerfile: Docker/grafana.Dockerfile
+      args:
+        GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+        GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    networks:
+      - public
+
   mongodb_container:
     build:
       context: ../

@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        file: ["microservice", "microfrontend"]
+        file: ["microservice", "microfrontend", "grafana", "loki", "promtail"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
