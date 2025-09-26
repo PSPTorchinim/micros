@@ -10,1045 +10,1133 @@
  * ---------------------------------------------------------------
  */
 
-export interface ApiArticleArticleDocument {
-  /**
-   * The document ID, represented by a UUID
-   * @format uuid
-   * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-   */
-  documentId: string;
-  id: number;
-  /** A UID field */
+export interface Error {
+  data?: object | object[] | null;
+  error: {
+    status?: number;
+    name?: string;
+    message?: string;
+    details?: object;
+  };
+}
+
+export interface ArticleRequest {
+  data: {
+    NameID: string;
+    Title: string;
+    Content?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ArticleListResponse {
+  data?: Article[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Article {
+  id?: number;
+  documentId?: string;
   NameID: string;
-  /** A string field */
   Title: string;
-  /** A blocks field */
-  Content: any[];
-  /** A datetime field */
+  Content?: any;
+  /** @format date-time */
   createdAt?: string;
-  /** A datetime field */
+  /** @format date-time */
   updatedAt?: string;
-  /**
-   * A datetime field
-   * @default "2025-09-26T12:59:12.770Z"
-   */
-  publishedAt: string;
-  /** A string field */
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
   locale?: string;
-  /** A relational field */
-  localizations?: ApiArticleArticleDocument[];
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    NameID?: string;
+    Title?: string;
+    Content?: any;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
 }
 
-export interface PluginUploadFileDocument {
-  /**
-   * The document ID, represented by a UUID
-   * @format uuid
-   * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-   */
-  documentId: string;
-  id: number;
-  /** A string field */
-  name: string;
-  /** A string field */
-  alternativeText?: string;
-  /** A string field */
-  caption?: string;
-  /**
-   * An integer field
-   * @min -9007199254740991
-   * @max 9007199254740991
-   */
-  width?: number;
-  /**
-   * An integer field
-   * @min -9007199254740991
-   * @max 9007199254740991
-   */
-  height?: number;
-  /** A JSON field */
-  formats?: any;
-  /** A string field */
-  hash: string;
-  /** A string field */
-  ext?: string;
-  /** A string field */
-  mime: string;
-  /** A decimal field */
-  size: number;
-  /** A string field */
-  url: string;
-  /** A string field */
-  previewUrl?: string;
-  /** A string field */
-  provider: string;
-  /** A JSON field */
-  provider_metadata?: any;
-  /** A datetime field */
-  createdAt?: string;
-  /** A datetime field */
-  updatedAt?: string;
-  /**
-   * A datetime field
-   * @default "2025-09-26T12:59:12.790Z"
-   */
-  publishedAt: string;
-  related: any;
+export interface ArticleResponse {
+  data?: Article;
+  meta?: object;
 }
 
-export interface ApiHeroImageHeroImageDocument {
-  /**
-   * The document ID, represented by a UUID
-   * @format uuid
-   * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-   */
-  documentId: string;
-  id: number;
-  /** A string field */
+export interface HeroImageRequest {
+  data: {
+    Name?: string;
+    Type?: HeroImageRequestTypeEnum;
+    MediaSlider?: (number | string)[];
+    MediaSingle?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface HeroImageListResponse {
+  data?: HeroImage[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface HeroImage {
+  id?: number;
+  documentId?: string;
   Name?: string;
-  /** An enum field */
-  Type?: ApiHeroImageHeroImageDocumentTypeEnum;
-  /** A datetime field */
+  Type?: HeroImageTypeEnum;
+  MediaSlider?: {
+    id?: number;
+    documentId?: string;
+    name?: string;
+    alternativeText?: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    formats?: any;
+    hash?: string;
+    ext?: string;
+    mime?: string;
+    /** @format float */
+    size?: number;
+    url?: string;
+    previewUrl?: string;
+    provider?: string;
+    provider_metadata?: any;
+    related?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    folder?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      pathId?: number;
+      parent?: {
+        id?: number;
+        documentId?: string;
+      };
+      children?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      files?: {
+        id?: number;
+        documentId?: string;
+        name?: string;
+        alternativeText?: string;
+        caption?: string;
+        width?: number;
+        height?: number;
+        formats?: any;
+        hash?: string;
+        ext?: string;
+        mime?: string;
+        /** @format float */
+        size?: number;
+        url?: string;
+        previewUrl?: string;
+        provider?: string;
+        provider_metadata?: any;
+        related?: {
+          id?: number;
+          documentId?: string;
+        }[];
+        folder?: {
+          id?: number;
+          documentId?: string;
+        };
+        folderPath?: string;
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+          firstname?: string;
+          lastname?: string;
+          username?: string;
+          /** @format email */
+          email?: string;
+          resetPasswordToken?: string;
+          registrationToken?: string;
+          isActive?: boolean;
+          roles?: {
+            id?: number;
+            documentId?: string;
+            name?: string;
+            code?: string;
+            description?: string;
+            users?: {
+              id?: number;
+              documentId?: string;
+            }[];
+            permissions?: {
+              id?: number;
+              documentId?: string;
+              action?: string;
+              actionParameters?: any;
+              subject?: string;
+              properties?: any;
+              conditions?: any;
+              role?: {
+                id?: number;
+                documentId?: string;
+              };
+              /** @format date-time */
+              createdAt?: string;
+              /** @format date-time */
+              updatedAt?: string;
+              /** @format date-time */
+              publishedAt?: string;
+              createdBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              updatedBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              locale?: string;
+              localizations?: {
+                id?: number;
+                documentId?: string;
+              }[];
+            }[];
+            /** @format date-time */
+            createdAt?: string;
+            /** @format date-time */
+            updatedAt?: string;
+            /** @format date-time */
+            publishedAt?: string;
+            createdBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            updatedBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            locale?: string;
+            localizations?: {
+              id?: number;
+              documentId?: string;
+            }[];
+          }[];
+          blocked?: boolean;
+          preferedLanguage?: string;
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      path?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    folderPath?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  MediaSingle?: {
+    id?: number;
+    documentId?: string;
+    name?: string;
+    alternativeText?: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    formats?: any;
+    hash?: string;
+    ext?: string;
+    mime?: string;
+    /** @format float */
+    size?: number;
+    url?: string;
+    previewUrl?: string;
+    provider?: string;
+    provider_metadata?: any;
+    related?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    folder?: {
+      id?: number;
+      documentId?: string;
+    };
+    folderPath?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  /** @format date-time */
   createdAt?: string;
-  /** A datetime field */
+  /** @format date-time */
   updatedAt?: string;
-  /**
-   * A datetime field
-   * @default "2025-09-26T12:59:12.792Z"
-   */
-  publishedAt: string;
-  /** A string field */
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
   locale?: string;
-  /** A media field */
-  MediaSlider?: PluginUploadFileDocument[];
-  /** A media field */
-  MediaSingle?: PluginUploadFileDocument[];
-  /** A relational field */
-  localizations?: ApiHeroImageHeroImageDocument[];
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    Name?: string;
+    Type?: HeroImageTypeEnum1;
+    MediaSlider?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      alternativeText?: string;
+      caption?: string;
+      width?: number;
+      height?: number;
+      formats?: any;
+      hash?: string;
+      ext?: string;
+      mime?: string;
+      /** @format float */
+      size?: number;
+      url?: string;
+      previewUrl?: string;
+      provider?: string;
+      provider_metadata?: any;
+      related?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      folder?: {
+        id?: number;
+        documentId?: string;
+      };
+      folderPath?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    MediaSingle?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      alternativeText?: string;
+      caption?: string;
+      width?: number;
+      height?: number;
+      formats?: any;
+      hash?: string;
+      ext?: string;
+      mime?: string;
+      /** @format float */
+      size?: number;
+      url?: string;
+      previewUrl?: string;
+      provider?: string;
+      provider_metadata?: any;
+      related?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      folder?: {
+        id?: number;
+        documentId?: string;
+      };
+      folderPath?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
 }
 
-export interface ApiPagePageDocument {
-  /**
-   * The document ID, represented by a UUID
-   * @format uuid
-   * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-   */
-  documentId: string;
-  id: number;
-  /** A UID field */
+export interface HeroImageResponse {
+  data?: HeroImage;
+  meta?: object;
+}
+
+export interface PageRequest {
+  data: {
+    PageID: string;
+    Name: string;
+    URL: string;
+    /** @example "string or id" */
+    hero_image?: number | string;
+    subpages?: (number | string)[];
+    pages?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface PageListResponse {
+  data?: Page[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Page {
+  id?: number;
+  documentId?: string;
   PageID: string;
-  /** A string field */
   Name: string;
-  /** A string field */
   URL: string;
-  /** A datetime field */
+  hero_image?: {
+    id?: number;
+    documentId?: string;
+    Name?: string;
+    Type?: PageTypeEnum;
+    MediaSlider?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      alternativeText?: string;
+      caption?: string;
+      width?: number;
+      height?: number;
+      formats?: any;
+      hash?: string;
+      ext?: string;
+      mime?: string;
+      /** @format float */
+      size?: number;
+      url?: string;
+      previewUrl?: string;
+      provider?: string;
+      provider_metadata?: any;
+      related?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      folder?: {
+        id?: number;
+        documentId?: string;
+        name?: string;
+        pathId?: number;
+        parent?: {
+          id?: number;
+          documentId?: string;
+        };
+        children?: {
+          id?: number;
+          documentId?: string;
+        }[];
+        files?: {
+          id?: number;
+          documentId?: string;
+          name?: string;
+          alternativeText?: string;
+          caption?: string;
+          width?: number;
+          height?: number;
+          formats?: any;
+          hash?: string;
+          ext?: string;
+          mime?: string;
+          /** @format float */
+          size?: number;
+          url?: string;
+          previewUrl?: string;
+          provider?: string;
+          provider_metadata?: any;
+          related?: {
+            id?: number;
+            documentId?: string;
+          }[];
+          folder?: {
+            id?: number;
+            documentId?: string;
+          };
+          folderPath?: string;
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+            firstname?: string;
+            lastname?: string;
+            username?: string;
+            /** @format email */
+            email?: string;
+            resetPasswordToken?: string;
+            registrationToken?: string;
+            isActive?: boolean;
+            roles?: {
+              id?: number;
+              documentId?: string;
+              name?: string;
+              code?: string;
+              description?: string;
+              users?: {
+                id?: number;
+                documentId?: string;
+              }[];
+              permissions?: {
+                id?: number;
+                documentId?: string;
+                action?: string;
+                actionParameters?: any;
+                subject?: string;
+                properties?: any;
+                conditions?: any;
+                role?: {
+                  id?: number;
+                  documentId?: string;
+                };
+                /** @format date-time */
+                createdAt?: string;
+                /** @format date-time */
+                updatedAt?: string;
+                /** @format date-time */
+                publishedAt?: string;
+                createdBy?: {
+                  id?: number;
+                  documentId?: string;
+                };
+                updatedBy?: {
+                  id?: number;
+                  documentId?: string;
+                };
+                locale?: string;
+                localizations?: {
+                  id?: number;
+                  documentId?: string;
+                }[];
+              }[];
+              /** @format date-time */
+              createdAt?: string;
+              /** @format date-time */
+              updatedAt?: string;
+              /** @format date-time */
+              publishedAt?: string;
+              createdBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              updatedBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              locale?: string;
+              localizations?: {
+                id?: number;
+                documentId?: string;
+              }[];
+            }[];
+            blocked?: boolean;
+            preferedLanguage?: string;
+            /** @format date-time */
+            createdAt?: string;
+            /** @format date-time */
+            updatedAt?: string;
+            /** @format date-time */
+            publishedAt?: string;
+            createdBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            updatedBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            locale?: string;
+            localizations?: {
+              id?: number;
+              documentId?: string;
+            }[];
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        }[];
+        path?: string;
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      };
+      folderPath?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    MediaSingle?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      alternativeText?: string;
+      caption?: string;
+      width?: number;
+      height?: number;
+      formats?: any;
+      hash?: string;
+      ext?: string;
+      mime?: string;
+      /** @format float */
+      size?: number;
+      url?: string;
+      previewUrl?: string;
+      provider?: string;
+      provider_metadata?: any;
+      related?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      folder?: {
+        id?: number;
+        documentId?: string;
+      };
+      folderPath?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  subpages?: {
+    id?: number;
+    documentId?: string;
+    PageID?: string;
+    Name?: string;
+    URL?: string;
+    hero_image?: {
+      id?: number;
+      documentId?: string;
+    };
+    subpages?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    pages?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  pages?: {
+    id?: number;
+    documentId?: string;
+  }[];
+  /** @format date-time */
   createdAt?: string;
-  /** A datetime field */
+  /** @format date-time */
   updatedAt?: string;
-  /**
-   * A datetime field
-   * @default "2025-09-26T12:59:12.814Z"
-   */
-  publishedAt: string;
-  /** A string field */
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
   locale?: string;
-  /** A relational field */
-  hero_image?: ApiHeroImageHeroImageDocument;
-  /** A relational field */
-  subpages?: ApiPagePageDocument[];
-  /** A relational field */
-  pages?: ApiPagePageDocument[];
-  /** A relational field */
-  localizations?: ApiPagePageDocument[];
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
 }
 
-/** An enum field */
-export enum ApiHeroImageHeroImageDocumentTypeEnum {
+export interface PageResponse {
+  data?: Page;
+  meta?: object;
+}
+
+export interface UploadFile {
+  id?: number;
+  name?: string;
+  alternativeText?: string;
+  caption?: string;
+  /** @format integer */
+  width?: number;
+  /** @format integer */
+  height?: number;
+  formats?: number;
+  hash?: string;
+  ext?: string;
+  mime?: string;
+  /** @format double */
+  size?: number;
+  url?: string;
+  previewUrl?: string;
+  provider?: string;
+  provider_metadata?: object;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+}
+
+export interface UsersPermissionsRole {
+  id?: number;
+  name?: string;
+  description?: string;
+  type?: string;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+}
+
+export interface UsersPermissionsUser {
+  /** @example 1 */
+  id?: number;
+  /** @example "foo.bar" */
+  username?: string;
+  /** @example "foo.bar@strapi.io" */
+  email?: string;
+  /** @example "local" */
+  provider?: string;
+  /** @example true */
+  confirmed?: boolean;
+  /** @example false */
+  blocked?: boolean;
+  /**
+   * @format date-time
+   * @example "2022-06-02T08:32:06.258Z"
+   */
+  createdAt?: string;
+  /**
+   * @format date-time
+   * @example "2022-06-02T08:32:06.267Z"
+   */
+  updatedAt?: string;
+}
+
+export interface UsersPermissionsUserRegistration {
+  /** @example "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" */
+  jwt?: string;
+  user?: UsersPermissionsUser;
+}
+
+export type UsersPermissionsPermissionsTree = Record<
+  string,
+  {
+    /** every controller of the api */
+    controllers?: Record<
+      string,
+      Record<
+        string,
+        {
+          enabled?: boolean;
+          policy?: string;
+        }
+      >
+    >;
+  }
+>;
+
+export enum HeroImageRequestTypeEnum {
   SingleImage = "Single Image",
   SliderImage = "Slider Image",
   SingleVideo = "Single Video",
 }
 
-export enum ArticleGetArticlesParamsFieldsEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsFiltersEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsSortEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsSortEnum1 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsSortEnum2 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum ArticleGetArticlesParamsSortEnum4 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum ArticleGetArticlesParamsPopulateEnum {
-  Localizations = "localizations",
-}
-
-export enum ArticleGetArticlesParamsPopulateEnum1 {
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum ArticleGetArticlesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum ArticlePostArticlesParamsFieldsEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum ArticlePostArticlesParamsPopulateEnum {
-  Localizations = "localizations",
-}
-
-export enum ArticlePostArticlesParamsPopulateEnum1 {
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum ArticlePostArticlesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum ArticleGetArticlesByIdParamsFieldsEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum ArticleGetArticlesByIdParamsPopulateEnum {
-  Localizations = "localizations",
-}
-
-export enum ArticleGetArticlesByIdParamsPopulateEnum1 {
-  Localizations = "localizations",
-}
-
-export enum ArticleGetArticlesByIdParamsFiltersEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum1 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum2 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum4 {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum ArticleGetArticlesByIdParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum ArticleGetArticlesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum ArticlePutArticlesByIdParamsFieldsEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum ArticlePutArticlesByIdParamsPopulateEnum {
-  Localizations = "localizations",
-}
-
-export enum ArticlePutArticlesByIdParamsPopulateEnum1 {
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum ArticlePutArticlesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum ArticleDeleteArticlesByIdParamsFieldsEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum ArticleDeleteArticlesByIdParamsPopulateEnum {
-  Localizations = "localizations",
-}
-
-export enum ArticleDeleteArticlesByIdParamsPopulateEnum1 {
-  Localizations = "localizations",
-}
-
-export enum ArticleDeleteArticlesByIdParamsFiltersEnum {
-  NameID = "NameID",
-  Title = "Title",
-  Content = "Content",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum ArticleDeleteArticlesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-/** An enum field */
-export enum HeroImageGetHeroImagesTypeEnum {
+export enum HeroImageTypeEnum {
   SingleImage = "Single Image",
   SliderImage = "Slider Image",
   SingleVideo = "Single Video",
 }
 
-export enum HeroImageGetHeroImagesParamsFieldsEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsFiltersEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum1 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum2 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum4 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum HeroImageGetHeroImagesParamsPopulateEnum {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImageGetHeroImagesParamsPopulateEnum1 {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum HeroImageGetHeroImagesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-/** An enum field */
-export enum HeroImagePostHeroImagesTypeEnum {
+export enum HeroImageTypeEnum1 {
   SingleImage = "Single Image",
   SliderImage = "Slider Image",
   SingleVideo = "Single Video",
 }
 
-/** An enum field */
-export enum HeroImagePostHeroImagesTypeEnum1 {
+export enum PageTypeEnum {
   SingleImage = "Single Image",
   SliderImage = "Slider Image",
   SingleVideo = "Single Video",
 }
 
-export enum HeroImagePostHeroImagesParamsFieldsEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
+export enum OkEnum {
+  True = true,
 }
 
-/** Populate a single relation, component, file, or dynamic zone */
-export enum HeroImagePostHeroImagesParamsPopulateEnum {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
+export enum SentEnum {
+  True = true,
 }
 
-export enum HeroImagePostHeroImagesParamsPopulateEnum1 {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
+export enum OkEnum1 {
+  True = true,
 }
 
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum HeroImagePostHeroImagesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
+export enum OkEnum2 {
+  True = true,
 }
 
-/** An enum field */
-export enum HeroImageGetHeroImagesByIdTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsFieldsEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum HeroImageGetHeroImagesByIdParamsPopulateEnum {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsPopulateEnum1 {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsFiltersEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum1 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum2 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum4 {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum HeroImageGetHeroImagesByIdParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum HeroImageGetHeroImagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-/** An enum field */
-export enum HeroImagePutHeroImagesByIdTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
-}
-
-/** An enum field */
-export enum HeroImagePutHeroImagesByIdTypeEnum1 {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
-}
-
-export enum HeroImagePutHeroImagesByIdParamsFieldsEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum HeroImagePutHeroImagesByIdParamsPopulateEnum {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImagePutHeroImagesByIdParamsPopulateEnum1 {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum HeroImagePutHeroImagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-/** An enum field */
-export enum HeroImageDeleteHeroImagesByIdTypeEnum {
-  SingleImage = "Single Image",
-  SliderImage = "Slider Image",
-  SingleVideo = "Single Video",
-}
-
-export enum HeroImageDeleteHeroImagesByIdParamsFieldsEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum HeroImageDeleteHeroImagesByIdParamsPopulateEnum {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImageDeleteHeroImagesByIdParamsPopulateEnum1 {
-  MediaSlider = "MediaSlider",
-  MediaSingle = "MediaSingle",
-  Localizations = "localizations",
-}
-
-export enum HeroImageDeleteHeroImagesByIdParamsFiltersEnum {
-  Name = "Name",
-  Type = "Type",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum HeroImageDeleteHeroImagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum PageGetPagesParamsFieldsEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsFiltersEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsSortEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsSortEnum1 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsSortEnum2 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum PageGetPagesParamsSortEnum4 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum PageGetPagesParamsPopulateEnum {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PageGetPagesParamsPopulateEnum1 {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum PageGetPagesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum PagePostPagesParamsFieldsEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum PagePostPagesParamsPopulateEnum {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PagePostPagesParamsPopulateEnum1 {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum PagePostPagesParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum PageGetPagesByIdParamsFieldsEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum PageGetPagesByIdParamsPopulateEnum {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PageGetPagesByIdParamsPopulateEnum1 {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PageGetPagesByIdParamsFiltersEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesByIdParamsSortEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesByIdParamsSortEnum1 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesByIdParamsSortEnum2 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesByIdParamsSortEnum3 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum PageGetPagesByIdParamsSortEnum4 {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-export enum PageGetPagesByIdParamsSortEnum5 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum PageGetPagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum PagePutPagesByIdParamsFieldsEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum PagePutPagesByIdParamsPopulateEnum {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PagePutPagesByIdParamsPopulateEnum1 {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum PagePutPagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum PageDeletePagesByIdParamsFieldsEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Populate a single relation, component, file, or dynamic zone */
-export enum PageDeletePagesByIdParamsPopulateEnum {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PageDeletePagesByIdParamsPopulateEnum1 {
-  HeroImage = "hero_image",
-  Subpages = "subpages",
-  Pages = "pages",
-  Localizations = "localizations",
-}
-
-export enum PageDeletePagesByIdParamsFiltersEnum {
-  PageID = "PageID",
-  Name = "Name",
-  URL = "URL",
-  CreatedAt = "createdAt",
-  UpdatedAt = "updatedAt",
-  PublishedAt = "publishedAt",
-  Locale = "locale",
-}
-
-/** Fetch documents based on their status. Default to "published" if not specified. */
-export enum PageDeletePagesByIdParamsStatusEnum {
-  Draft = "draft",
-  Published = "published",
-}
-
-export enum ContentTypeBuilderGetContentTypesKindEnum {
-  CollectionType = "collectionType",
-  SingleType = "singleType",
-}
-
-export enum ContentTypeBuilderGetContentTypesParamsKindEnum {
-  CollectionType = "collectionType",
-  SingleType = "singleType",
-}
-
-export enum ContentTypeBuilderGetContentTypesByUidKindEnum {
-  CollectionType = "collectionType",
-  SingleType = "singleType",
-}
-
-export enum UploadGetFilesParamsSortEnum {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum UploadGetFilesParamsSortEnum1 {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum UsersPermissionsGetUsersParamsSortEnum {
-  Asc = "asc",
-  Desc = "desc",
-}
-
-export enum UsersPermissionsGetUsersParamsSortEnum1 {
-  Asc = "asc",
-  Desc = "desc",
+export enum OkEnum3 {
+  True = true,
 }
 
 import type {
@@ -1115,7 +1203,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || "",
+      baseURL: axiosConfig.baseURL || "http://localhost:1337/api",
     });
     this.secure = secure;
     this.format = format;
@@ -1227,10 +1315,15 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title cms
- * @version 0.1.0
+ * @title DJ Beat Blaster CMS API
+ * @version 1.0.0
+ * @license Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0.html)
+ * @termsOfService YOUR_TERMS_OF_SERVICE_URL
+ * @baseUrl http://localhost:1337/api
+ * @externalDocs https://docs.strapi.io/developer-docs/latest/getting-started/introduction.html
+ * @contact DJ Beat Blaster Team <support@djbeatblaster.com> (mywebsite.io)
  *
- * API documentation for cms v0.1.0
+ * API documentation for DJ Beat Blaster CMS with JSON schemas
  */
 export class Api<
   SecurityDataType extends unknown,
@@ -1239,111 +1332,41 @@ export class Api<
     /**
      * No description
      *
-     * @tags article
-     * @name ArticleGetArticles
+     * @tags Article
+     * @name GetArticles
      * @request GET:/articles
+     * @secure
      */
-    articleGetArticles: (
+    getArticles: (
       query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: ArticleGetArticlesParamsFieldsEnum[];
-        /** Filters to apply to the query */
-        filters?: Record<ArticleGetArticlesParamsFiltersEnum, any>;
-        _q?: string;
-        /** Pagination parameters */
-        pagination?: {
-          /** Include total count in response */
-          withCount?: boolean;
-        } & (
-          | {
-              /**
-               * Page number (1-based)
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              page: number;
-              /**
-               * Number of entries per page
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              pageSize: number;
-            }
-          | {
-              /**
-               * Number of entries to skip
-               * @min 0
-               * @max 9007199254740991
-               */
-              start: number;
-              /**
-               * Maximum number of entries to return
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              limit: number;
-            }
-        );
-        /** Sort the result */
-        sort?:
-          | ArticleGetArticlesParamsSortEnum
-          | ArticleGetArticlesParamsSortEnum1[]
-          | Record<
-              ArticleGetArticlesParamsSortEnum2,
-              ArticleGetArticlesParamsSortEnum3
-            >
-          | Record<
-              ArticleGetArticlesParamsSortEnum4,
-              ArticleGetArticlesParamsSortEnum5
-            >[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | ArticleGetArticlesParamsPopulateEnum
-          | ArticleGetArticlesParamsPopulateEnum1[];
-        /** Select a locale */
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
         locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: ArticleGetArticlesParamsStatusEnum;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            NameID: string;
-            /** A string field */
-            Title: string;
-            /** A blocks field */
-            Content: any[];
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.767Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            localizations?: ApiArticleArticleDocument[];
-          }[];
-        },
-        void
-      >({
+      this.request<ArticleListResponse, Error>({
         path: `/articles`,
         method: "GET",
         query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -1351,80 +1374,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags article
-     * @name ArticlePostArticles
+     * @tags Article
+     * @name PostArticles
      * @request POST:/articles
+     * @secure
      */
-    articlePostArticles: (
-      data: {
-        data: {
-          /** A UID field */
-          NameID: string;
-          /** A string field */
-          Title: string;
-          /** A blocks field */
-          Content: any[];
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.777Z"
-           */
-          publishedAt: string;
-          /** A string field */
-          locale?: string;
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: ArticlePostArticlesParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | ArticlePostArticlesParamsPopulateEnum
-          | ArticlePostArticlesParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: ArticlePostArticlesParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            NameID: string;
-            /** A string field */
-            Title: string;
-            /** A blocks field */
-            Content: any[];
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.778Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            localizations?: ApiArticleArticleDocument[];
-          };
-        },
-        void
-      >({
+    postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
+      this.request<ArticleResponse, Error>({
         path: `/articles`,
         method: "POST",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -1433,77 +1393,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags article
-     * @name ArticleGetArticlesById
+     * @tags Article
+     * @name GetArticlesId
      * @request GET:/articles/{id}
+     * @secure
      */
-    articleGetArticlesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: ArticleGetArticlesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | ArticleGetArticlesByIdParamsPopulateEnum
-          | ArticleGetArticlesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<ArticleGetArticlesByIdParamsFiltersEnum, any>;
-        /** Sort the result */
-        sort?:
-          | ArticleGetArticlesByIdParamsSortEnum
-          | ArticleGetArticlesByIdParamsSortEnum1[]
-          | Record<
-              ArticleGetArticlesByIdParamsSortEnum2,
-              ArticleGetArticlesByIdParamsSortEnum3
-            >
-          | Record<
-              ArticleGetArticlesByIdParamsSortEnum4,
-              ArticleGetArticlesByIdParamsSortEnum5
-            >[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: ArticleGetArticlesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            NameID: string;
-            /** A string field */
-            Title: string;
-            /** A blocks field */
-            Content: any[];
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.774Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            localizations?: ApiArticleArticleDocument[];
-          };
-        },
-        void
-      >({
+    getArticlesId: (id: number, params: RequestParams = {}) =>
+      this.request<ArticleResponse, Error>({
         path: `/articles/${id}`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -1511,81 +1410,21 @@ export class Api<
     /**
      * No description
      *
-     * @tags article
-     * @name ArticlePutArticlesById
+     * @tags Article
+     * @name PutArticlesId
      * @request PUT:/articles/{id}
+     * @secure
      */
-    articlePutArticlesById: (
-      id: string,
-      data: {
-        data: {
-          /** A UID field */
-          NameID?: string;
-          /** A string field */
-          Title?: string;
-          /** A blocks field */
-          Content?: any[];
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.780Z"
-           */
-          publishedAt?: string;
-          /** A string field */
-          locale?: string;
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: ArticlePutArticlesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | ArticlePutArticlesByIdParamsPopulateEnum
-          | ArticlePutArticlesByIdParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: ArticlePutArticlesByIdParamsStatusEnum;
-      },
+    putArticlesId: (
+      id: number,
+      data: ArticleRequest,
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            NameID: string;
-            /** A string field */
-            Title: string;
-            /** A blocks field */
-            Content: any[];
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.781Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            localizations?: ApiArticleArticleDocument[];
-          };
-        },
-        void
-      >({
+      this.request<ArticleResponse, Error>({
         path: `/articles/${id}`,
         method: "PUT",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -1594,65 +1433,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags article
-     * @name ArticleDeleteArticlesById
+     * @tags Article
+     * @name DeleteArticlesId
      * @request DELETE:/articles/{id}
+     * @secure
      */
-    articleDeleteArticlesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: ArticleDeleteArticlesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | ArticleDeleteArticlesByIdParamsPopulateEnum
-          | ArticleDeleteArticlesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<ArticleDeleteArticlesByIdParamsFiltersEnum, any>;
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: ArticleDeleteArticlesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            NameID: string;
-            /** A string field */
-            Title: string;
-            /** A blocks field */
-            Content: any[];
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.783Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            localizations?: ApiArticleArticleDocument[];
-          };
-        },
-        void
-      >({
+    deleteArticlesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
         path: `/articles/${id}`,
         method: "DELETE",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -1661,113 +1451,41 @@ export class Api<
     /**
      * No description
      *
-     * @tags hero-image
-     * @name HeroImageGetHeroImages
+     * @tags Hero-image
+     * @name GetHeroImages
      * @request GET:/hero-images
+     * @secure
      */
-    heroImageGetHeroImages: (
+    getHeroImages: (
       query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: HeroImageGetHeroImagesParamsFieldsEnum[];
-        /** Filters to apply to the query */
-        filters?: Record<HeroImageGetHeroImagesParamsFiltersEnum, any>;
-        _q?: string;
-        /** Pagination parameters */
-        pagination?: {
-          /** Include total count in response */
-          withCount?: boolean;
-        } & (
-          | {
-              /**
-               * Page number (1-based)
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              page: number;
-              /**
-               * Number of entries per page
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              pageSize: number;
-            }
-          | {
-              /**
-               * Number of entries to skip
-               * @min 0
-               * @max 9007199254740991
-               */
-              start: number;
-              /**
-               * Maximum number of entries to return
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              limit: number;
-            }
-        );
-        /** Sort the result */
-        sort?:
-          | HeroImageGetHeroImagesParamsSortEnum
-          | HeroImageGetHeroImagesParamsSortEnum1[]
-          | Record<
-              HeroImageGetHeroImagesParamsSortEnum2,
-              HeroImageGetHeroImagesParamsSortEnum3
-            >
-          | Record<
-              HeroImageGetHeroImagesParamsSortEnum4,
-              HeroImageGetHeroImagesParamsSortEnum5
-            >[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | HeroImageGetHeroImagesParamsPopulateEnum
-          | HeroImageGetHeroImagesParamsPopulateEnum1[];
-        /** Select a locale */
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
         locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: HeroImageGetHeroImagesParamsStatusEnum;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A string field */
-            Name?: string;
-            /** An enum field */
-            Type?: HeroImageGetHeroImagesTypeEnum;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.788Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A media field */
-            MediaSlider?: PluginUploadFileDocument[];
-            /** A media field */
-            MediaSingle?: PluginUploadFileDocument[];
-            /** A relational field */
-            localizations?: ApiHeroImageHeroImageDocument[];
-          }[];
-        },
-        void
-      >({
+      this.request<HeroImageListResponse, Error>({
         path: `/hero-images`,
         method: "GET",
         query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -1775,84 +1493,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags hero-image
-     * @name HeroImagePostHeroImages
+     * @tags Hero-image
+     * @name PostHeroImages
      * @request POST:/hero-images
+     * @secure
      */
-    heroImagePostHeroImages: (
-      data: {
-        data: {
-          /** A string field */
-          Name?: string;
-          /** An enum field */
-          Type?: HeroImagePostHeroImagesTypeEnum1;
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.799Z"
-           */
-          publishedAt: string;
-          /** A string field */
-          locale?: string;
-          /** A media field */
-          MediaSlider?: any[];
-          /** A media field */
-          MediaSingle?: any[];
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: HeroImagePostHeroImagesParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | HeroImagePostHeroImagesParamsPopulateEnum
-          | HeroImagePostHeroImagesParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: HeroImagePostHeroImagesParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A string field */
-            Name?: string;
-            /** An enum field */
-            Type?: HeroImagePostHeroImagesTypeEnum;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.799Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A media field */
-            MediaSlider?: PluginUploadFileDocument[];
-            /** A media field */
-            MediaSingle?: PluginUploadFileDocument[];
-            /** A relational field */
-            localizations?: ApiHeroImageHeroImageDocument[];
-          };
-        },
-        void
-      >({
+    postHeroImages: (data: HeroImageRequest, params: RequestParams = {}) =>
+      this.request<HeroImageResponse, Error>({
         path: `/hero-images`,
         method: "POST",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -1861,79 +1512,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags hero-image
-     * @name HeroImageGetHeroImagesById
+     * @tags Hero-image
+     * @name GetHeroImagesId
      * @request GET:/hero-images/{id}
+     * @secure
      */
-    heroImageGetHeroImagesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: HeroImageGetHeroImagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | HeroImageGetHeroImagesByIdParamsPopulateEnum
-          | HeroImageGetHeroImagesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<HeroImageGetHeroImagesByIdParamsFiltersEnum, any>;
-        /** Sort the result */
-        sort?:
-          | HeroImageGetHeroImagesByIdParamsSortEnum
-          | HeroImageGetHeroImagesByIdParamsSortEnum1[]
-          | Record<
-              HeroImageGetHeroImagesByIdParamsSortEnum2,
-              HeroImageGetHeroImagesByIdParamsSortEnum3
-            >
-          | Record<
-              HeroImageGetHeroImagesByIdParamsSortEnum4,
-              HeroImageGetHeroImagesByIdParamsSortEnum5
-            >[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: HeroImageGetHeroImagesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A string field */
-            Name?: string;
-            /** An enum field */
-            Type?: HeroImageGetHeroImagesByIdTypeEnum;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.796Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A media field */
-            MediaSlider?: PluginUploadFileDocument[];
-            /** A media field */
-            MediaSingle?: PluginUploadFileDocument[];
-            /** A relational field */
-            localizations?: ApiHeroImageHeroImageDocument[];
-          };
-        },
-        void
-      >({
+    getHeroImagesId: (id: number, params: RequestParams = {}) =>
+      this.request<HeroImageResponse, Error>({
         path: `/hero-images/${id}`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -1941,85 +1529,21 @@ export class Api<
     /**
      * No description
      *
-     * @tags hero-image
-     * @name HeroImagePutHeroImagesById
+     * @tags Hero-image
+     * @name PutHeroImagesId
      * @request PUT:/hero-images/{id}
+     * @secure
      */
-    heroImagePutHeroImagesById: (
-      id: string,
-      data: {
-        data: {
-          /** A string field */
-          Name?: string;
-          /** An enum field */
-          Type?: HeroImagePutHeroImagesByIdTypeEnum1;
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.802Z"
-           */
-          publishedAt?: string;
-          /** A string field */
-          locale?: string;
-          /** A media field */
-          MediaSlider?: any[];
-          /** A media field */
-          MediaSingle?: any[];
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: HeroImagePutHeroImagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | HeroImagePutHeroImagesByIdParamsPopulateEnum
-          | HeroImagePutHeroImagesByIdParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: HeroImagePutHeroImagesByIdParamsStatusEnum;
-      },
+    putHeroImagesId: (
+      id: number,
+      data: HeroImageRequest,
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A string field */
-            Name?: string;
-            /** An enum field */
-            Type?: HeroImagePutHeroImagesByIdTypeEnum;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.803Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A media field */
-            MediaSlider?: PluginUploadFileDocument[];
-            /** A media field */
-            MediaSingle?: PluginUploadFileDocument[];
-            /** A relational field */
-            localizations?: ApiHeroImageHeroImageDocument[];
-          };
-        },
-        void
-      >({
+      this.request<HeroImageResponse, Error>({
         path: `/hero-images/${id}`,
         method: "PUT",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -2028,67 +1552,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags hero-image
-     * @name HeroImageDeleteHeroImagesById
+     * @tags Hero-image
+     * @name DeleteHeroImagesId
      * @request DELETE:/hero-images/{id}
+     * @secure
      */
-    heroImageDeleteHeroImagesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: HeroImageDeleteHeroImagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | HeroImageDeleteHeroImagesByIdParamsPopulateEnum
-          | HeroImageDeleteHeroImagesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<HeroImageDeleteHeroImagesByIdParamsFiltersEnum, any>;
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: HeroImageDeleteHeroImagesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A string field */
-            Name?: string;
-            /** An enum field */
-            Type?: HeroImageDeleteHeroImagesByIdTypeEnum;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.806Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A media field */
-            MediaSlider?: PluginUploadFileDocument[];
-            /** A media field */
-            MediaSingle?: PluginUploadFileDocument[];
-            /** A relational field */
-            localizations?: ApiHeroImageHeroImageDocument[];
-          };
-        },
-        void
-      >({
+    deleteHeroImagesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
         path: `/hero-images/${id}`,
         method: "DELETE",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -2097,111 +1570,41 @@ export class Api<
     /**
      * No description
      *
-     * @tags page
-     * @name PageGetPages
+     * @tags Page
+     * @name GetPages
      * @request GET:/pages
+     * @secure
      */
-    pageGetPages: (
+    getPages: (
       query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: PageGetPagesParamsFieldsEnum[];
-        /** Filters to apply to the query */
-        filters?: Record<PageGetPagesParamsFiltersEnum, any>;
-        _q?: string;
-        /** Pagination parameters */
-        pagination?: {
-          /** Include total count in response */
-          withCount?: boolean;
-        } & (
-          | {
-              /**
-               * Page number (1-based)
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              page: number;
-              /**
-               * Number of entries per page
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              pageSize: number;
-            }
-          | {
-              /**
-               * Number of entries to skip
-               * @min 0
-               * @max 9007199254740991
-               */
-              start: number;
-              /**
-               * Maximum number of entries to return
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              limit: number;
-            }
-        );
-        /** Sort the result */
-        sort?:
-          | PageGetPagesParamsSortEnum
-          | PageGetPagesParamsSortEnum1[]
-          | Record<PageGetPagesParamsSortEnum2, PageGetPagesParamsSortEnum3>
-          | Record<PageGetPagesParamsSortEnum4, PageGetPagesParamsSortEnum5>[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | PageGetPagesParamsPopulateEnum
-          | PageGetPagesParamsPopulateEnum1[];
-        /** Select a locale */
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
         locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: PageGetPagesParamsStatusEnum;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            PageID: string;
-            /** A string field */
-            Name: string;
-            /** A string field */
-            URL: string;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.812Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            hero_image?: ApiHeroImageHeroImageDocument;
-            /** A relational field */
-            subpages?: ApiPagePageDocument[];
-            /** A relational field */
-            pages?: ApiPagePageDocument[];
-            /** A relational field */
-            localizations?: ApiPagePageDocument[];
-          }[];
-        },
-        void
-      >({
+      this.request<PageListResponse, Error>({
         path: `/pages`,
         method: "GET",
         query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -2209,96 +1612,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags page
-     * @name PagePostPages
+     * @tags Page
+     * @name PostPages
      * @request POST:/pages
+     * @secure
      */
-    pagePostPages: (
-      data: {
-        data: {
-          /** A UID field */
-          PageID: string;
-          /** A string field */
-          Name: string;
-          /** A string field */
-          URL: string;
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.835Z"
-           */
-          publishedAt: string;
-          /** A string field */
-          locale?: string;
-          /**
-           * A relational field
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          hero_image?: string;
-          /** A relational field */
-          subpages?: string[];
-          /** A relational field */
-          pages?: string[];
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: PagePostPagesParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | PagePostPagesParamsPopulateEnum
-          | PagePostPagesParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: PagePostPagesParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            PageID: string;
-            /** A string field */
-            Name: string;
-            /** A string field */
-            URL: string;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.837Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            hero_image?: ApiHeroImageHeroImageDocument;
-            /** A relational field */
-            subpages?: ApiPagePageDocument[];
-            /** A relational field */
-            pages?: ApiPagePageDocument[];
-            /** A relational field */
-            localizations?: ApiPagePageDocument[];
-          };
-        },
-        void
-      >({
+    postPages: (data: PageRequest, params: RequestParams = {}) =>
+      this.request<PageResponse, Error>({
         path: `/pages`,
         method: "POST",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -2307,83 +1631,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags page
-     * @name PageGetPagesById
+     * @tags Page
+     * @name GetPagesId
      * @request GET:/pages/{id}
+     * @secure
      */
-    pageGetPagesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: PageGetPagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | PageGetPagesByIdParamsPopulateEnum
-          | PageGetPagesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<PageGetPagesByIdParamsFiltersEnum, any>;
-        /** Sort the result */
-        sort?:
-          | PageGetPagesByIdParamsSortEnum
-          | PageGetPagesByIdParamsSortEnum1[]
-          | Record<
-              PageGetPagesByIdParamsSortEnum2,
-              PageGetPagesByIdParamsSortEnum3
-            >
-          | Record<
-              PageGetPagesByIdParamsSortEnum4,
-              PageGetPagesByIdParamsSortEnum5
-            >[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: PageGetPagesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            PageID: string;
-            /** A string field */
-            Name: string;
-            /** A string field */
-            URL: string;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.831Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            hero_image?: ApiHeroImageHeroImageDocument;
-            /** A relational field */
-            subpages?: ApiPagePageDocument[];
-            /** A relational field */
-            pages?: ApiPagePageDocument[];
-            /** A relational field */
-            localizations?: ApiPagePageDocument[];
-          };
-        },
-        void
-      >({
+    getPagesId: (id: number, params: RequestParams = {}) =>
+      this.request<PageResponse, Error>({
         path: `/pages/${id}`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -2391,97 +1648,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags page
-     * @name PagePutPagesById
+     * @tags Page
+     * @name PutPagesId
      * @request PUT:/pages/{id}
+     * @secure
      */
-    pagePutPagesById: (
-      id: string,
-      data: {
-        data: {
-          /** A UID field */
-          PageID?: string;
-          /** A string field */
-          Name?: string;
-          /** A string field */
-          URL?: string;
-          /**
-           * A datetime field
-           * @default "2025-09-26T12:59:12.841Z"
-           */
-          publishedAt?: string;
-          /** A string field */
-          locale?: string;
-          /**
-           * A relational field
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          hero_image?: string;
-          /** A relational field */
-          subpages?: string[];
-          /** A relational field */
-          pages?: string[];
-        };
-      },
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: PagePutPagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | PagePutPagesByIdParamsPopulateEnum
-          | PagePutPagesByIdParamsPopulateEnum1[];
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: PagePutPagesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            PageID: string;
-            /** A string field */
-            Name: string;
-            /** A string field */
-            URL: string;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.843Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            hero_image?: ApiHeroImageHeroImageDocument;
-            /** A relational field */
-            subpages?: ApiPagePageDocument[];
-            /** A relational field */
-            pages?: ApiPagePageDocument[];
-            /** A relational field */
-            localizations?: ApiPagePageDocument[];
-          };
-        },
-        void
-      >({
+    putPagesId: (id: number, data: PageRequest, params: RequestParams = {}) =>
+      this.request<PageResponse, Error>({
         path: `/pages/${id}`,
         method: "PUT",
-        query: query,
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -2490,614 +1667,85 @@ export class Api<
     /**
      * No description
      *
-     * @tags page
-     * @name PageDeletePagesById
+     * @tags Page
+     * @name DeletePagesId
      * @request DELETE:/pages/{id}
+     * @secure
      */
-    pageDeletePagesById: (
-      id: string,
-      query?: {
-        /** The fields to return, this doesn't include populatable fields like relations, components, files, or dynamic zones */
-        fields?: PageDeletePagesByIdParamsFieldsEnum[];
-        /** Populate all the first level relations, components, files, and dynamic zones for the entry */
-        populate?:
-          | "*"
-          | PageDeletePagesByIdParamsPopulateEnum
-          | PageDeletePagesByIdParamsPopulateEnum1[];
-        /** Filters to apply to the query */
-        filters?: Record<PageDeletePagesByIdParamsFiltersEnum, any>;
-        /** Select a locale */
-        locale?: string;
-        /** Fetch documents based on their status. Default to "published" if not specified. */
-        status?: PageDeletePagesByIdParamsStatusEnum;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /**
-             * The document ID, represented by a UUID
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            id: number;
-            /** A UID field */
-            PageID: string;
-            /** A string field */
-            Name: string;
-            /** A string field */
-            URL: string;
-            /** A datetime field */
-            createdAt?: string;
-            /** A datetime field */
-            updatedAt?: string;
-            /**
-             * A datetime field
-             * @default "2025-09-26T12:59:12.847Z"
-             */
-            publishedAt: string;
-            /** A string field */
-            locale?: string;
-            /** A relational field */
-            hero_image?: ApiHeroImageHeroImageDocument;
-            /** A relational field */
-            subpages?: ApiPagePageDocument[];
-            /** A relational field */
-            pages?: ApiPagePageDocument[];
-            /** A relational field */
-            localizations?: ApiPagePageDocument[];
-          };
-        },
-        void
-      >({
+    deletePagesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
         path: `/pages/${id}`,
         method: "DELETE",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
   };
-  contentTypeBuilder = {
+  uploadFile = {
     /**
-     * No description
+     * @description Upload files
      *
-     * @tags content-type-builder
-     * @name ContentTypeBuilderGetContentTypes
-     * @request GET:/content-types
+     * @tags Upload - File
+     * @name UploadCreate
+     * @request POST:/upload
+     * @secure
      */
-    contentTypeBuilderGetContentTypes: (
+    uploadCreate: (
+      data: {
+        /** The folder where the file(s) will be uploaded to (only supported on strapi-provider-upload-aws-s3). */
+        path?: string;
+        /** The ID of the entry which the file(s) will be linked to */
+        refId?: string;
+        /** The unique ID (uid) of the model which the file(s) will be linked to (api::restaurant.restaurant). */
+        ref?: string;
+        /** The field of the entry which the file(s) will be precisely linked to. */
+        field?: string;
+        files: File[];
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<UploadFile[], any>({
+        path: `/upload`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Upload file information
+     *
+     * @tags Upload - File
+     * @name UploadIdCreate
+     * @request POST:/upload?id={id}
+     * @secure
+     */
+    uploadIdCreate: (
+      id: string,
       query: {
-        kind: ContentTypeBuilderGetContentTypesParamsKindEnum;
+        /** File id */
+        id: string;
+      },
+      data: {
+        fileInfo?: {
+          name?: string;
+          alternativeText?: string;
+          caption?: string;
+        };
+        /** @format binary */
+        files?: File;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          data: {
-            /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-            uid: string;
-            plugin?: string;
-            apiID: string;
-            schema: {
-              displayName: string;
-              singularName: string;
-              pluralName: string;
-              description: string;
-              draftAndPublish: boolean;
-              kind: ContentTypeBuilderGetContentTypesKindEnum;
-              collectionName?: string;
-              attributes: Record<
-                string,
-                | {
-                    type: "media";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    multiple: boolean;
-                    required?: boolean;
-                    allowedTypes?: string[];
-                  }
-                | {
-                    type: "relation";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    relation: string;
-                    /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-                    target: string;
-                    targetAttribute: string | null;
-                    autoPopulate?: boolean;
-                    mappedBy?: string;
-                    inversedBy?: string;
-                  }
-                | {
-                    type: "component";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    component: string;
-                    repeatable: boolean;
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "dynamiczone";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    components: string[];
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "uid";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    targetField?: string;
-                  }
-                | {
-                    type: string;
-                    required?: boolean;
-                    unique?: boolean;
-                    default?: any;
-                    min?: number | string;
-                    max?: number | string;
-                    minLength?: number;
-                    maxLength?: number;
-                    enum?: string[];
-                    regex?: string;
-                    private?: boolean;
-                    configurable?: boolean;
-                    pluginOptions?: Record<string, any>;
-                  }
-              >;
-              visible: boolean;
-              restrictRelationsTo: string[] | null;
-              pluginOptions?: Record<string, any>;
-              options?: Record<string, any>;
-              reviewWorkflows?: boolean;
-              populateCreatorFields?: boolean;
-              comment?: string;
-              version?: string;
-            };
-          }[];
-        },
-        void
-      >({
-        path: `/content-types`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags content-type-builder
-     * @name ContentTypeBuilderGetContentTypesByUid
-     * @request GET:/content-types/{uid}
-     */
-    contentTypeBuilderGetContentTypesByUid: (
-      uid: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-            uid: string;
-            plugin?: string;
-            apiID: string;
-            schema: {
-              displayName: string;
-              singularName: string;
-              pluralName: string;
-              description: string;
-              draftAndPublish: boolean;
-              kind: ContentTypeBuilderGetContentTypesByUidKindEnum;
-              collectionName?: string;
-              attributes: Record<
-                string,
-                | {
-                    type: "media";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    multiple: boolean;
-                    required?: boolean;
-                    allowedTypes?: string[];
-                  }
-                | {
-                    type: "relation";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    relation: string;
-                    /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-                    target: string;
-                    targetAttribute: string | null;
-                    autoPopulate?: boolean;
-                    mappedBy?: string;
-                    inversedBy?: string;
-                  }
-                | {
-                    type: "component";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    component: string;
-                    repeatable: boolean;
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "dynamiczone";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    components: string[];
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "uid";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    targetField?: string;
-                  }
-                | {
-                    type: string;
-                    required?: boolean;
-                    unique?: boolean;
-                    default?: any;
-                    min?: number | string;
-                    max?: number | string;
-                    minLength?: number;
-                    maxLength?: number;
-                    enum?: string[];
-                    regex?: string;
-                    private?: boolean;
-                    configurable?: boolean;
-                    pluginOptions?: Record<string, any>;
-                  }
-              >;
-              visible: boolean;
-              restrictRelationsTo: string[] | null;
-              pluginOptions?: Record<string, any>;
-              options?: Record<string, any>;
-              reviewWorkflows?: boolean;
-              populateCreatorFields?: boolean;
-              comment?: string;
-              version?: string;
-            };
-          };
-        },
-        void
-      >({
-        path: `/content-types/${uid}`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags content-type-builder
-     * @name ContentTypeBuilderGetComponents
-     * @request GET:/components
-     */
-    contentTypeBuilderGetComponents: (params: RequestParams = {}) =>
-      this.request<
-        {
-          data: {
-            /** @pattern ^[\w-]+\.[\w-]+$ */
-            uid: string;
-            category: string;
-            apiId: string;
-            schema: {
-              displayName: string;
-              description: string;
-              icon?: string;
-              connection?: string;
-              collectionName?: string;
-              attributes: Record<
-                string,
-                | {
-                    type: "media";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    multiple: boolean;
-                    required?: boolean;
-                    allowedTypes?: string[];
-                  }
-                | {
-                    type: "relation";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    relation: string;
-                    /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-                    target: string;
-                    targetAttribute: string | null;
-                    autoPopulate?: boolean;
-                    mappedBy?: string;
-                    inversedBy?: string;
-                  }
-                | {
-                    type: "component";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    component: string;
-                    repeatable: boolean;
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "dynamiczone";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    components: string[];
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "uid";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    targetField?: string;
-                  }
-                | {
-                    type: string;
-                    required?: boolean;
-                    unique?: boolean;
-                    default?: any;
-                    min?: number | string;
-                    max?: number | string;
-                    minLength?: number;
-                    maxLength?: number;
-                    enum?: string[];
-                    regex?: string;
-                    private?: boolean;
-                    configurable?: boolean;
-                    pluginOptions?: Record<string, any>;
-                  }
-              >;
-              pluginOptions?: Record<string, any>;
-            };
-          }[];
-        },
-        void
-      >({
-        path: `/components`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags content-type-builder
-     * @name ContentTypeBuilderGetComponentsByUid
-     * @request GET:/components/{uid}
-     */
-    contentTypeBuilderGetComponentsByUid: (
-      uid: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          data: {
-            /** @pattern ^[\w-]+\.[\w-]+$ */
-            uid: string;
-            category: string;
-            apiId: string;
-            schema: {
-              displayName: string;
-              description: string;
-              icon?: string;
-              connection?: string;
-              collectionName?: string;
-              attributes: Record<
-                string,
-                | {
-                    type: "media";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    multiple: boolean;
-                    required?: boolean;
-                    allowedTypes?: string[];
-                  }
-                | {
-                    type: "relation";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    relation: string;
-                    /** @pattern ^((strapi|admin)::[\w-]+|(api|plugin)::[\w-]+\.[\w-]+)$ */
-                    target: string;
-                    targetAttribute: string | null;
-                    autoPopulate?: boolean;
-                    mappedBy?: string;
-                    inversedBy?: string;
-                  }
-                | {
-                    type: "component";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    component: string;
-                    repeatable: boolean;
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "dynamiczone";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    components: string[];
-                    required?: boolean;
-                    min?: number;
-                    max?: number;
-                  }
-                | {
-                    type: "uid";
-                    configurable?: false;
-                    private?: boolean;
-                    pluginOptions?: Record<string, any>;
-                    targetField?: string;
-                  }
-                | {
-                    type: string;
-                    required?: boolean;
-                    unique?: boolean;
-                    default?: any;
-                    min?: number | string;
-                    max?: number | string;
-                    minLength?: number;
-                    maxLength?: number;
-                    enum?: string[];
-                    regex?: string;
-                    private?: boolean;
-                    configurable?: boolean;
-                    pluginOptions?: Record<string, any>;
-                  }
-              >;
-              pluginOptions?: Record<string, any>;
-            };
-          };
-        },
-        void
-      >({
-        path: `/components/${uid}`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-  };
-  upload = {
-    /**
-     * No description
-     *
-     * @tags upload
-     * @name UploadPost
-     * @request POST:/
-     */
-    uploadPost: (
-      query?: {
-        /**
-         * @exclusiveMin 0
-         * @max 9007199254740991
-         */
-        id?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        | {
-            /**
-             * @exclusiveMin 0
-             * @max 9007199254740991
-             */
-            id: number;
-            /**
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            name: string;
-            alternativeText?: string | null;
-            caption?: string | null;
-            /**
-             * @min -9007199254740991
-             * @max 9007199254740991
-             */
-            width?: number;
-            /**
-             * @min -9007199254740991
-             * @max 9007199254740991
-             */
-            height?: number;
-            formats?: Record<string, any>;
-            hash: string;
-            ext?: string;
-            mime: string;
-            size: number;
-            url: string;
-            previewUrl?: string | null;
-            folder?: number;
-            folderPath: string;
-            provider: string;
-            provider_metadata?: Record<string, any> | null;
-            createdAt: string;
-            updatedAt: string;
-            createdBy?: number;
-            updatedBy?: number;
-          }
-        | {
-            /**
-             * @exclusiveMin 0
-             * @max 9007199254740991
-             */
-            id: number;
-            /**
-             * @format uuid
-             * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-             */
-            documentId: string;
-            name: string;
-            alternativeText?: string | null;
-            caption?: string | null;
-            /**
-             * @min -9007199254740991
-             * @max 9007199254740991
-             */
-            width?: number;
-            /**
-             * @min -9007199254740991
-             * @max 9007199254740991
-             */
-            height?: number;
-            formats?: Record<string, any>;
-            hash: string;
-            ext?: string;
-            mime: string;
-            size: number;
-            url: string;
-            previewUrl?: string | null;
-            folder?: number;
-            folderPath: string;
-            provider: string;
-            provider_metadata?: Record<string, any> | null;
-            createdAt: string;
-            updatedAt: string;
-            createdBy?: number;
-            updatedBy?: number;
-          }[],
-        void
-      >({
-        path: `/`,
+      this.request<UploadFile[], any>({
+        path: `/upload?id=${id}`,
         method: "POST",
         query: query,
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
         format: "json",
         ...params,
       }),
@@ -3105,107 +1753,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags upload
-     * @name UploadGetFiles
-     * @request GET:/files
+     * @tags Upload - File
+     * @name FilesList
+     * @request GET:/upload/files
+     * @secure
      */
-    uploadGetFiles: (
-      query?: {
-        /** Select specific fields to return in the response */
-        fields?: string | string[];
-        /** Specify which relations to populate in the response */
-        populate?: "*" | string | string[] | Record<string, any>;
-        /** Sort the results by specified fields */
-        sort?:
-          | string
-          | string[]
-          | Record<string, UploadGetFilesParamsSortEnum>
-          | Record<string, UploadGetFilesParamsSortEnum1>[];
-        /** Pagination parameters */
-        pagination?: {
-          /** Include total count in response */
-          withCount?: boolean;
-        } & (
-          | {
-              /**
-               * Page number (1-based)
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              page: number;
-              /**
-               * Number of entries per page
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              pageSize: number;
-            }
-          | {
-              /**
-               * Number of entries to skip
-               * @min 0
-               * @max 9007199254740991
-               */
-              start: number;
-              /**
-               * Maximum number of entries to return
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              limit: number;
-            }
-        );
-        /** Apply filters to the query */
-        filters?: Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          /**
-           * @exclusiveMin 0
-           * @max 9007199254740991
-           */
-          id: number;
-          /**
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          documentId: string;
-          name: string;
-          alternativeText?: string | null;
-          caption?: string | null;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          width?: number;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          height?: number;
-          formats?: Record<string, any>;
-          hash: string;
-          ext?: string;
-          mime: string;
-          size: number;
-          url: string;
-          previewUrl?: string | null;
-          folder?: number;
-          folderPath: string;
-          provider: string;
-          provider_metadata?: Record<string, any> | null;
-          createdAt: string;
-          updatedAt: string;
-          createdBy?: number;
-          updatedBy?: number;
-        }[],
-        void
-      >({
-        path: `/files`,
+    filesList: (params: RequestParams = {}) =>
+      this.request<UploadFile[], any>({
+        path: `/upload/files`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -3213,66 +1770,16 @@ export class Api<
     /**
      * No description
      *
-     * @tags upload
-     * @name UploadGetFilesById
-     * @request GET:/files/{id}
+     * @tags Upload - File
+     * @name FilesDetail
+     * @request GET:/upload/files/{id}
+     * @secure
      */
-    uploadGetFilesById: (
-      id: number,
-      query?: {
-        /** Select specific fields to return in the response */
-        fields?: string | string[];
-        /** Specify which relations to populate in the response */
-        populate?: "*" | string | string[] | Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          /**
-           * @exclusiveMin 0
-           * @max 9007199254740991
-           */
-          id: number;
-          /**
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          documentId: string;
-          name: string;
-          alternativeText?: string | null;
-          caption?: string | null;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          width?: number;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          height?: number;
-          formats?: Record<string, any>;
-          hash: string;
-          ext?: string;
-          mime: string;
-          size: number;
-          url: string;
-          previewUrl?: string | null;
-          folder?: number;
-          folderPath: string;
-          provider: string;
-          provider_metadata?: Record<string, any> | null;
-          createdAt: string;
-          updatedAt: string;
-          createdBy?: number;
-          updatedBy?: number;
-        },
-        void
-      >({
-        path: `/files/${id}`,
+    filesDetail: (id: string, params: RequestParams = {}) =>
+      this.request<UploadFile, any>({
+        path: `/upload/files/${id}`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -3280,239 +1787,86 @@ export class Api<
     /**
      * No description
      *
-     * @tags upload
-     * @name UploadDeleteFilesById
-     * @request DELETE:/files/{id}
+     * @tags Upload - File
+     * @name FilesDelete
+     * @request DELETE:/upload/files/{id}
+     * @secure
      */
-    uploadDeleteFilesById: (id: number, params: RequestParams = {}) =>
-      this.request<
-        {
-          /**
-           * @exclusiveMin 0
-           * @max 9007199254740991
-           */
-          id: number;
-          /**
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          documentId: string;
-          name: string;
-          alternativeText?: string | null;
-          caption?: string | null;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          width?: number;
-          /**
-           * @min -9007199254740991
-           * @max 9007199254740991
-           */
-          height?: number;
-          formats?: Record<string, any>;
-          hash: string;
-          ext?: string;
-          mime: string;
-          size: number;
-          url: string;
-          previewUrl?: string | null;
-          folder?: number;
-          folderPath: string;
-          provider: string;
-          provider_metadata?: Record<string, any> | null;
-          createdAt: string;
-          updatedAt: string;
-          createdBy?: number;
-          updatedBy?: number;
-        },
-        void
-      >({
-        path: `/files/${id}`,
+    filesDelete: (id: string, params: RequestParams = {}) =>
+      this.request<UploadFile, any>({
+        path: `/upload/files/${id}`,
         method: "DELETE",
+        secure: true,
         format: "json",
         ...params,
       }),
   };
-  i18N = {
+  usersPermissionsAuth = {
     /**
-     * No description
+     * @description Redirects to provider login before being redirect to /auth/{provider}/callback
      *
-     * @tags i18n
-     * @name I18NGetLocales
-     * @request GET:/locales
+     * @tags Users-Permissions - Auth
+     * @name ConnectDetail
+     * @summary Login with a provider
+     * @request GET:/connect/{provider}
+     * @secure
      */
-    i18NGetLocales: (params: RequestParams = {}) =>
-      this.request<
-        {
-          /**
-           * @exclusiveMin 0
-           * @max 9007199254740991
-           */
-          id: number;
-          /**
-           * @format uuid
-           * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$
-           */
-          documentId: string;
-          name: string;
-          /**
-           * @minLength 2
-           * @maxLength 2
-           */
-          code: string;
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string | null;
-          isDefault: boolean;
-        }[],
-        void
-      >({
-        path: `/locales`,
+    connectDetail: (provider: string, params: RequestParams = {}) =>
+      this.request<any, void | Error>({
+        path: `/connect/${provider}`,
         method: "GET",
-        format: "json",
-        ...params,
-      }),
-  };
-  usersPermissions = {
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsGetConnect
-     * @request GET:/connect/(.*)
-     */
-    usersPermissionsGetConnect: (params: RequestParams = {}) =>
-      this.request<any, void>({
-        path: `/connect/(.*)`,
-        method: "GET",
+        secure: true,
         ...params,
       }),
 
     /**
-     * No description
+     * @description Returns a jwt token and user info
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthLocal
+     * @tags Users-Permissions - Auth
+     * @name LocalCreate
+     * @summary Local login
      * @request POST:/auth/local
+     * @secure
      */
-    usersPermissionsPostAuthLocal: (
+    localCreate: (
       data: {
-        identifier: string;
-        password: string;
+        identifier?: string;
+        password?: string;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          jwt: string;
-          user: {
-            id: number;
-            documentId: string;
-            username: string;
-            email: string;
-            provider: string;
-            confirmed: boolean;
-            blocked: boolean;
-            role?:
-              | number
-              | {
-                  id: number;
-                  name: string;
-                  description: string | null;
-                  type: string;
-                  createdAt: string;
-                  updatedAt: string;
-                };
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
-          };
-        },
-        void
-      >({
+      this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
       }),
 
     /**
-     * No description
+     * @description Returns a jwt token and user info
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthLocalRegister
+     * @tags Users-Permissions - Auth
+     * @name LocalRegisterCreate
+     * @summary Register a user
      * @request POST:/auth/local/register
+     * @secure
      */
-    usersPermissionsPostAuthLocalRegister: (
+    localRegisterCreate: (
       data: {
-        username: string;
-        /**
-         * @format email
-         * @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-         */
-        email: string;
-        password: string;
+        username?: string;
+        email?: string;
+        password?: string;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        | {
-            jwt: string;
-            user: {
-              id: number;
-              documentId: string;
-              username: string;
-              email: string;
-              provider: string;
-              confirmed: boolean;
-              blocked: boolean;
-              role?:
-                | number
-                | {
-                    id: number;
-                    name: string;
-                    description: string | null;
-                    type: string;
-                    createdAt: string;
-                    updatedAt: string;
-                  };
-              createdAt: string;
-              updatedAt: string;
-              publishedAt: string;
-            };
-          }
-        | {
-            user: {
-              id: number;
-              documentId: string;
-              username: string;
-              email: string;
-              provider: string;
-              confirmed: boolean;
-              blocked: boolean;
-              role?:
-                | number
-                | {
-                    id: number;
-                    name: string;
-                    description: string | null;
-                    type: string;
-                    createdAt: string;
-                    updatedAt: string;
-                  };
-              createdAt: string;
-              updatedAt: string;
-              publishedAt: string;
-            };
-          },
-        void
-      >({
+      this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local/register`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -3521,44 +1875,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsGetAuthByProviderCallback
+     * @tags Users-Permissions - Auth
+     * @name CallbackList
+     * @summary Default Callback from provider auth
      * @request GET:/auth/{provider}/callback
+     * @secure
      */
-    usersPermissionsGetAuthByProviderCallback: (
-      provider: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          jwt: string;
-          user: {
-            id: number;
-            documentId: string;
-            username: string;
-            email: string;
-            provider: string;
-            confirmed: boolean;
-            blocked: boolean;
-            role?:
-              | number
-              | {
-                  id: number;
-                  name: string;
-                  description: string | null;
-                  type: string;
-                  createdAt: string;
-                  updatedAt: string;
-                };
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
-          };
-        },
-        void
-      >({
+    callbackList: (provider: string, params: RequestParams = {}) =>
+      this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/${provider}/callback`,
         method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -3566,29 +1893,28 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthForgotPassword
+     * @tags Users-Permissions - Auth
+     * @name ForgotPasswordCreate
+     * @summary Send rest password email
      * @request POST:/auth/forgot-password
+     * @secure
      */
-    usersPermissionsPostAuthForgotPassword: (
+    forgotPasswordCreate: (
       data: {
-        /**
-         * @format email
-         * @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-         */
-        email: string;
+        email?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<
         {
-          ok: boolean;
+          ok?: OkEnum;
         },
-        void
+        Error
       >({
         path: `/auth/forgot-password`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -3597,49 +1923,52 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthResetPassword
+     * @tags Users-Permissions - Auth
+     * @name ResetPasswordCreate
+     * @summary Rest user password
      * @request POST:/auth/reset-password
+     * @secure
      */
-    usersPermissionsPostAuthResetPassword: (
+    resetPasswordCreate: (
       data: {
-        code: string;
+        password?: string;
+        passwordConfirmation?: string;
+        code?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<UsersPermissionsUserRegistration, Error>({
+        path: `/auth/reset-password`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Auth
+     * @name ChangePasswordCreate
+     * @summary Update user's own password
+     * @request POST:/auth/change-password
+     * @secure
+     */
+    changePasswordCreate: (
+      data: {
         password: string;
+        currentPassword: string;
         passwordConfirmation: string;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          jwt: string;
-          user: {
-            id: number;
-            documentId: string;
-            username: string;
-            email: string;
-            provider: string;
-            confirmed: boolean;
-            blocked: boolean;
-            role?:
-              | number
-              | {
-                  id: number;
-                  name: string;
-                  description: string | null;
-                  type: string;
-                  createdAt: string;
-                  updatedAt: string;
-                };
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
-          };
-        },
-        void
-      >({
-        path: `/auth/reset-password`,
+      this.request<UsersPermissionsUserRegistration, Error>({
+        path: `/auth/change-password`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -3648,118 +1977,78 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsGetAuthEmailConfirmation
+     * @tags Users-Permissions - Auth
+     * @name EmailConfirmationList
+     * @summary Confirm user email
      * @request GET:/auth/email-confirmation
+     * @secure
      */
-    usersPermissionsGetAuthEmailConfirmation: (params: RequestParams = {}) =>
-      this.request<any, void>({
+    emailConfirmationList: (
+      query?: {
+        /** confirmation token received by email */
+        confirmation?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<any, void | Error>({
         path: `/auth/email-confirmation`,
         method: "GET",
+        query: query,
+        secure: true,
         ...params,
       }),
 
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthSendEmailConfirmation
+     * @tags Users-Permissions - Auth
+     * @name SendEmailConfirmationCreate
+     * @summary Send confirmation email
      * @request POST:/auth/send-email-confirmation
+     * @secure
      */
-    usersPermissionsPostAuthSendEmailConfirmation: (
+    sendEmailConfirmationCreate: (
       data: {
-        /**
-         * @format email
-         * @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-         */
-        email: string;
+        email?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<
         {
-          email: string;
-          sent: boolean;
+          email?: string;
+          sent?: SentEnum;
         },
-        void
+        Error
       >({
         path: `/auth/send-email-confirmation`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
       }),
-
+  };
+  usersPermissionsUsersRoles = {
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPostAuthChangePassword
-     * @request POST:/auth/change-password
+     * @tags Users-Permissions - Users & Roles
+     * @name PermissionsList
+     * @summary Get default generated permissions
+     * @request GET:/users-permissions/permissions
+     * @secure
      */
-    usersPermissionsPostAuthChangePassword: (
-      data: {
-        currentPassword: string;
-        password: string;
-        passwordConfirmation: string;
-      },
-      params: RequestParams = {},
-    ) =>
+    permissionsList: (params: RequestParams = {}) =>
       this.request<
         {
-          jwt: string;
-          user: {
-            id: number;
-            documentId: string;
-            username: string;
-            email: string;
-            provider: string;
-            confirmed: boolean;
-            blocked: boolean;
-            role?:
-              | number
-              | {
-                  id: number;
-                  name: string;
-                  description: string | null;
-                  type: string;
-                  createdAt: string;
-                  updatedAt: string;
-                };
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
-          };
+          permissions?: UsersPermissionsPermissionsTree;
         },
-        void
+        Error
       >({
-        path: `/auth/change-password`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsGetUsersCount
-     * @request GET:/users/count
-     */
-    usersPermissionsGetUsersCount: (
-      query?: {
-        /** Apply filters to the query */
-        filters?: Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<number, void>({
-        path: `/users/count`,
+        path: `/users-permissions/permissions`,
         method: "GET",
-        query: query,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -3767,378 +2056,24 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsGetUsers
-     * @request GET:/users
+     * @tags Users-Permissions - Users & Roles
+     * @name RolesList
+     * @summary List roles
+     * @request GET:/users-permissions/roles
+     * @secure
      */
-    usersPermissionsGetUsers: (
-      query?: {
-        /** Select specific fields to return in the response */
-        fields?: string | string[];
-        /** Specify which relations to populate in the response */
-        populate?: "*" | string | string[] | Record<string, any>;
-        /** Sort the results by specified fields */
-        sort?:
-          | string
-          | string[]
-          | Record<string, UsersPermissionsGetUsersParamsSortEnum>
-          | Record<string, UsersPermissionsGetUsersParamsSortEnum1>[];
-        /** Pagination parameters */
-        pagination?: {
-          /** Include total count in response */
-          withCount?: boolean;
-        } & (
-          | {
-              /**
-               * Page number (1-based)
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              page: number;
-              /**
-               * Number of entries per page
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              pageSize: number;
-            }
-          | {
-              /**
-               * Number of entries to skip
-               * @min 0
-               * @max 9007199254740991
-               */
-              start: number;
-              /**
-               * Maximum number of entries to return
-               * @exclusiveMin 0
-               * @max 9007199254740991
-               */
-              limit: number;
-            }
-        );
-        /** Apply filters to the query */
-        filters?: Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
+    rolesList: (params: RequestParams = {}) =>
       this.request<
         {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        }[],
-        void
-      >({
-        path: `/users`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsPostUsers
-     * @request POST:/users
-     */
-    usersPermissionsPostUsers: (
-      data: {
-        username: string;
-        /**
-         * @format email
-         * @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-         */
-        email: string;
-        password: string;
-        role?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        },
-        void
-      >({
-        path: `/users`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsGetUsersMe
-     * @request GET:/users/me
-     */
-    usersPermissionsGetUsersMe: (
-      query?: {
-        /** Select specific fields to return in the response */
-        fields?: string | string[];
-        /** Specify which relations to populate in the response */
-        populate?: "*" | string | string[] | Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        },
-        void
-      >({
-        path: `/users/me`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsGetUsersById
-     * @request GET:/users/{id}
-     */
-    usersPermissionsGetUsersById: (
-      id: string,
-      query?: {
-        /** Select specific fields to return in the response */
-        fields?: string | string[];
-        /** Specify which relations to populate in the response */
-        populate?: "*" | string | string[] | Record<string, any>;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        },
-        void
-      >({
-        path: `/users/${id}`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsPutUsersById
-     * @request PUT:/users/{id}
-     */
-    usersPermissionsPutUsersById: (
-      id: string,
-      data: {
-        username?: string;
-        /**
-         * @format email
-         * @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-         */
-        email?: string;
-        password?: string;
-        role?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        },
-        void
-      >({
-        path: `/users/${id}`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsDeleteUsersById
-     * @request DELETE:/users/{id}
-     */
-    usersPermissionsDeleteUsersById: (id: string, params: RequestParams = {}) =>
-      this.request<
-        {
-          id: number;
-          documentId: string;
-          username: string;
-          email: string;
-          provider: string;
-          confirmed: boolean;
-          blocked: boolean;
-          role?:
-            | number
-            | {
-                id: number;
-                name: string;
-                description: string | null;
-                type: string;
-                createdAt: string;
-                updatedAt: string;
-              };
-          createdAt: string;
-          updatedAt: string;
-          publishedAt: string;
-        },
-        void
-      >({
-        path: `/users/${id}`,
-        method: "DELETE",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsGetRolesById
-     * @request GET:/roles/{id}
-     */
-    usersPermissionsGetRolesById: (id: string, params: RequestParams = {}) =>
-      this.request<
-        {
-          role: {
-            id: number;
-            documentId: string;
-            name: string;
-            description: string | null;
-            type: string;
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
+          roles?: (UsersPermissionsRole & {
             nb_users?: number;
-            permissions?: Record<
-              string,
-              {
-                controllers: Record<
-                  string,
-                  Record<
-                    string,
-                    {
-                      enabled: boolean;
-                      policy: string;
-                    }
-                  >
-                >;
-              }
-            >;
-            users?: any[];
-          };
+          })[];
         },
-        void
+        Error
       >({
-        path: `/roles/${id}`,
+        path: `/users-permissions/roles`,
         method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -4146,75 +2081,31 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsGetRoles
-     * @request GET:/roles
+     * @tags Users-Permissions - Users & Roles
+     * @name RolesCreate
+     * @summary Create a role
+     * @request POST:/users-permissions/roles
+     * @secure
      */
-    usersPermissionsGetRoles: (params: RequestParams = {}) =>
-      this.request<
-        {
-          roles: {
-            id: number;
-            documentId: string;
-            name: string;
-            description: string | null;
-            type: string;
-            createdAt: string;
-            updatedAt: string;
-            publishedAt: string;
-            nb_users?: number;
-            permissions?: Record<
-              string,
-              {
-                controllers: Record<
-                  string,
-                  Record<
-                    string,
-                    {
-                      enabled: boolean;
-                      policy: string;
-                    }
-                  >
-                >;
-              }
-            >;
-            users?: any[];
-          }[];
-        },
-        void
-      >({
-        path: `/roles`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags users-permissions
-     * @name UsersPermissionsPostRoles
-     * @request POST:/roles
-     */
-    usersPermissionsPostRoles: (
+    rolesCreate: (
       data: {
-        name: string;
+        name?: string;
         description?: string;
-        type: string;
-        permissions?: Record<string, any>;
+        type?: string;
+        permissions?: UsersPermissionsPermissionsTree;
       },
       params: RequestParams = {},
     ) =>
       this.request<
         {
-          ok: boolean;
+          ok?: OkEnum1;
         },
-        void
+        Error
       >({
-        path: `/roles`,
+        path: `/users-permissions/roles`,
         method: "POST",
         body: data,
-        type: ContentType.Json,
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -4222,29 +2113,127 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsPutRolesByRole
-     * @request PUT:/roles/{role}
+     * @tags Users-Permissions - Users & Roles
+     * @name RolesDetail
+     * @summary Get a role
+     * @request GET:/users-permissions/roles/{id}
+     * @secure
      */
-    usersPermissionsPutRolesByRole: (
+    rolesDetail: (id: string, params: RequestParams = {}) =>
+      this.request<
+        {
+          role?: UsersPermissionsRole;
+        },
+        Error
+      >({
+        path: `/users-permissions/roles/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name RolesUpdate
+     * @summary Update a role
+     * @request PUT:/users-permissions/roles/{role}
+     * @secure
+     */
+    rolesUpdate: (
       role: string,
       data: {
         name?: string;
         description?: string;
         type?: string;
-        permissions?: Record<string, any>;
+        permissions?: UsersPermissionsPermissionsTree;
       },
       params: RequestParams = {},
     ) =>
       this.request<
         {
-          ok: boolean;
+          ok?: OkEnum2;
         },
-        void
+        Error
       >({
-        path: `/roles/${role}`,
+        path: `/users-permissions/roles/${role}`,
         method: "PUT",
         body: data,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name RolesDelete
+     * @summary Delete a role
+     * @request DELETE:/users-permissions/roles/{role}
+     * @secure
+     */
+    rolesDelete: (role: string, params: RequestParams = {}) =>
+      this.request<
+        {
+          ok?: OkEnum3;
+        },
+        Error
+      >({
+        path: `/users-permissions/roles/${role}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name UsersList
+     * @summary Get list of users
+     * @request GET:/users
+     * @secure
+     */
+    usersList: (params: RequestParams = {}) =>
+      this.request<UsersPermissionsUser[], Error>({
+        path: `/users`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name UsersCreate
+     * @summary Create a user
+     * @request POST:/users
+     * @secure
+     */
+    usersCreate: (
+      data: {
+        email: string;
+        username: string;
+        password: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UsersPermissionsUser & {
+          role?: UsersPermissionsRole;
+        },
+        Error
+      >({
+        path: `/users`,
+        method: "POST",
+        body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -4253,22 +2242,17 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsDeleteRolesByRole
-     * @request DELETE:/roles/{role}
+     * @tags Users-Permissions - Users & Roles
+     * @name UsersDetail
+     * @summary Get a user
+     * @request GET:/users/{id}
+     * @secure
      */
-    usersPermissionsDeleteRolesByRole: (
-      role: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          ok: boolean;
-        },
-        void
-      >({
-        path: `/roles/${role}`,
-        method: "DELETE",
+    usersDetail: (id: string, params: RequestParams = {}) =>
+      this.request<UsersPermissionsUser, Error>({
+        path: `/users/${id}`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),
@@ -4276,33 +2260,86 @@ export class Api<
     /**
      * No description
      *
-     * @tags users-permissions
-     * @name UsersPermissionsGetPermissions
-     * @request GET:/permissions
+     * @tags Users-Permissions - Users & Roles
+     * @name UsersUpdate
+     * @summary Update a user
+     * @request PUT:/users/{id}
+     * @secure
      */
-    usersPermissionsGetPermissions: (params: RequestParams = {}) =>
+    usersUpdate: (
+      id: string,
+      data: {
+        email: string;
+        username: string;
+        password: string;
+      },
+      params: RequestParams = {},
+    ) =>
       this.request<
-        {
-          permissions: Record<
-            string,
-            {
-              controllers: Record<
-                string,
-                Record<
-                  string,
-                  {
-                    enabled: boolean;
-                    policy: string;
-                  }
-                >
-              >;
-            }
-          >;
+        UsersPermissionsUser & {
+          role?: UsersPermissionsRole;
         },
-        void
+        Error
       >({
-        path: `/permissions`,
+        path: `/users/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name UsersDelete
+     * @summary Delete a user
+     * @request DELETE:/users/{id}
+     * @secure
+     */
+    usersDelete: (id: string, params: RequestParams = {}) =>
+      this.request<UsersPermissionsUser, Error>({
+        path: `/users/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name GetUsersPermissionsUsersRoles
+     * @summary Get authenticated user info
+     * @request GET:/users/me
+     * @secure
+     */
+    getUsersPermissionsUsersRoles: (params: RequestParams = {}) =>
+      this.request<UsersPermissionsUser, Error>({
+        path: `/users/me`,
         method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users-Permissions - Users & Roles
+     * @name CountList
+     * @summary Get user count
+     * @request GET:/users/count
+     * @secure
+     */
+    countList: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/users/count`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),
