@@ -1,22 +1,21 @@
 import { SHA256 } from 'crypto-js';
-import { POST, PUT } from '../utils/api';
-import { LoginResponseDTO } from '../models/api/login-response-dto';
-import { Response } from '../models/api/response';
+import {
+  BooleanResponse,
+  LoginResponseDTOResponse,
+  microservicesClient,
+} from '../models/api';
 
 export class UsersService {
-  public static async forgotPassword(
-    email: string,
-  ): Promise<Response<boolean | null>> {
-    return PUT<boolean>('identity/api/v1/users/forgotpassword', {
-      email: email,
-    })
+  public static async forgotPassword(email: string): Promise<BooleanResponse> {
+    return microservicesClient.identity.users
+      .apiV1UsersForgotPasswordUpdate({ email: email })
       .then((response) => {
         return response.data;
       })
       .catch((error) => {
         return {
           success: false,
-          data: null,
+          data: false,
           message: error.message,
           errors: [error.message],
         };
@@ -26,22 +25,26 @@ export class UsersService {
   public static async Login(
     email: string,
     password: string,
-  ): Promise<Response<LoginResponseDTO | null>> {
+  ): Promise<LoginResponseDTOResponse> {
     const hashedPassword = SHA256(password);
-    return POST<LoginResponseDTO>('identity/api/v1/Users/Login', {
+    const requestBody = {
       email: email,
       password: hashedPassword.toString(),
-    })
+    };
+    return microservicesClient.identity.users
+      .apiV1UsersLoginCreate(requestBody)
       .then((response) => {
         return response.data;
       })
       .catch((error) => {
-        return {
-          success: false,
-          data: null,
-          message: error.message,
-          errors: [error.message],
-        };
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: null,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
       });
   }
 }

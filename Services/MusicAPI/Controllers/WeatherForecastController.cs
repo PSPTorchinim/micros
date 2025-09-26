@@ -19,6 +19,7 @@ namespace MusicMicroservice.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<WeatherForecast>))]
         public IEnumerable<WeatherForecast> Get()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast

@@ -335,6 +335,35 @@
   ],
   "compounds": [
     {
+      "name": "Launch Services Stack",
+      "configurations": [
+        "C#: IdentityAPI Debug",
+        "C#: PartyAPI Debug",
+        "C#: MusicAPI Debug",
+        "C#: MailingAPI Debug",
+        "C#: EquipmentAPI Debug",
+        "C#: DocumentsAPI Debug",
+        "C#: CompanyAPI Debug",
+        "C#: DJHostGateway Debug"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Launch Frontends Stack",
+      "configurations": ["CMS: Strapi Debug", "DJ Panel: React Debug"],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
       "name": "Launch Full Stack",
       "configurations": [
         "C#: IdentityAPI Debug",
