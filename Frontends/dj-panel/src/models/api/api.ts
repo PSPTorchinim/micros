@@ -9,11 +9,6 @@
  * ---------------------------------------------------------------
  */
 
-import router from '@/router';
-import { useUserStore } from '@/store/userStore';
-import { HttpStatusCode } from 'axios';
-import axiosRetry from 'axios-retry';
-
 import { Api as BrandApi } from './brand/apiMap';
 export * from './brand/apiMap';
 import { Api as DocumentsApi } from './documents/apiMap';
@@ -46,11 +41,11 @@ export class UnifiedApi<SecurityDataType extends unknown> {
   public party: PartyApi<SecurityDataType>;
 
   constructor(config: ApiConfig<SecurityDataType> = {}) {
-    // Apply default configuration with error handling
+    // Apply default configuration
     const defaultConfig = {
       baseURL: process.env.REACT_APP_API_GATEWAY || '',
       withCredentials: true,
-      validateStatus: this.handleApiError,
+      validateStatus: (status: number) => status >= 200 && status < 300,
       ...config,
     };
 
@@ -61,46 +56,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     this.mailing = new MailingApi(defaultConfig);
     this.music = new MusicApi(defaultConfig);
     this.party = new PartyApi(defaultConfig);
-
-    // Configure retry logic for all services
-    this.configureRetryLogic();
   }
-
-  private configureRetryLogic() {
-    const services = [
-      this.brand,
-      this.documents,
-      this.gear,
-      this.identity,
-      this.mailing,
-      this.music,
-      this.party,
-    ];
-
-    services.forEach((service) => {
-      if (service.instance && service.instance.interceptors) {
-        axiosRetry(service.instance, {
-          retries: NUMBER_OF_RETRIES,
-          shouldResetTimeout: true,
-          retryDelay: axiosRetry.exponentialDelay,
-          retryCondition: (response) => {
-            return response.code === 'ECONNABORTED';
-          },
-        });
-      }
-    });
-  }
-
-  private handleApiError = (status: number): boolean => {
-    const userStore = useUserStore();
-    if (status === HttpStatusCode.Unauthorized && userStore.user?.id) {
-      userStore.clearCache();
-      router.go(0);
-    }
-    return (
-      status >= HttpStatusCode.Ok && status < HttpStatusCode.MultipleChoices
-    );
-  };
 
   /**
    * Set security data for all services
@@ -155,11 +111,7 @@ export function createApi<SecurityDataType extends unknown>(
 /**
  * Default unified API instance
  */
-export const microservicesClient = createApi({
-  baseURL: process.env.REACT_APP_API_GATEWAY || '',
-  withCredentials: true,
-  validateStatus: (status) => status >= 200 && status < 300,
-});
+export const microservicesClient = createApi();
 
 // Export individual service clients for direct access if needed
 export const createBrandApi = (config?: ApiConfig) => new BrandApi(config);

@@ -93,11 +93,6 @@ function generateMergedApiClient() {
  * ---------------------------------------------------------------
  */
 
-import router from "@/router";
-import { useUserStore } from "@/store/userStore";
-import { HttpStatusCode } from "axios";
-import axiosRetry from "axios-retry";
-
 `;
 
   // Import all service APIs and their types
@@ -138,11 +133,11 @@ export class UnifiedApi<SecurityDataType extends unknown> {
 
   mergedContent += `
   constructor(config: ApiConfig<SecurityDataType> = {}) {
-    // Apply default configuration with error handling
+    // Apply default configuration
     const defaultConfig = {
       baseURL: process.env.REACT_APP_API_GATEWAY || '',
       withCredentials: true,
-      validateStatus: this.handleApiError,
+      validateStatus: (status: number) => status >= 200 && status < 300,
       ...config,
     };
 
@@ -153,37 +148,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     mergedContent += `    this.${name} = new ${className}(defaultConfig);\n`;
   }
 
-  // Add axios retry configuration for all services
-  mergedContent += `
-    // Configure retry logic for all services
-    this.configureRetryLogic();
-  }
-
-  private configureRetryLogic() {
-    const services = [${serviceNames.map((s) => `this.${s.name}`).join(', ')}];
-    
-    services.forEach(service => {
-      if (service.instance && service.instance.interceptors) {
-        axiosRetry(service.instance, {
-          retries: NUMBER_OF_RETRIES,
-          shouldResetTimeout: true,
-          retryDelay: axiosRetry.exponentialDelay,
-          retryCondition: (response) => {
-            return response.code === "ECONNABORTED";
-          },
-        });
-      }
-    });
-  }
-
-  private handleApiError = (status: number): boolean => {
-    const userStore = useUserStore();
-    if (status === HttpStatusCode.Unauthorized && userStore.user?.id) {
-      userStore.clearCache();
-      router.go(0);
-    }
-    return status >= HttpStatusCode.Ok && status < HttpStatusCode.MultipleChoices;
-  };
+  mergedContent += `  }
 
   /**
    * Set security data for all services
