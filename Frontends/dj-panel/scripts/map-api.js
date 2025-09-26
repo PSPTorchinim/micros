@@ -12,9 +12,6 @@ if (fs.existsSync(envPath)) {
   require('dotenv').config();
 }
 
-// Temporary debug line - remove after testing
-console.log('🔧 API Gateway URL:', process.env.REACT_APP_API_GATEWAY);
-
 // Define microservices configuration
 const microservices = {
   brand: {

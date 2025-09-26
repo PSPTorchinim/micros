@@ -15,7 +15,7 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "map:api": "node scripts/map-api.js",
-    "map:strapi": "cross-env npx openapi-typescript \"${REACT_APP_STRAPI}\" -o ./src/models/strapi-schema.d.ts"
+    "map:strapi": "node scripts/map-strapi.js"
   },
   "license": "MIT",
   "author": {
