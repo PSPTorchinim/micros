@@ -15,7 +15,7 @@ namespace Shared.Services.Database
             var host = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_HOST_SQLSERVER");
             var port = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PORT_SQLSERVER");
             var password = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PASSWORD_SQLSERVER");
-            return $"Data Source={host};Initial Catalog={catalog};User Id={user};Password={password};Trust Server Certificate=True";
+            return $"Data Source={host},{port};Initial Catalog={catalog};User Id={user};Password={password};Trust Server Certificate=True";
         }
 
         private static string GetMongoDBConnectionString()
