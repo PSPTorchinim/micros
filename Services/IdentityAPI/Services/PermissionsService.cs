@@ -52,6 +52,7 @@ namespace IdentityAPI.Services
                 var req = _mapper.Map<Permission>(request);
                 _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
+                await _permissionsRepository.Save();
                 _logger.LogInformation("Permission with name {Name} added: {Result}", request.Name, result);
                 return result;
             }, _logger);
@@ -92,6 +93,7 @@ namespace IdentityAPI.Services
                 permission.Name = request.Name;
                 permission.Description = request.Description;
                 var result = await _permissionsRepository.Update(permission);
+                await _permissionsRepository.Save();
                 _logger.LogInformation("Permission with id {Id} updated: {Result}", id, result);
                 return result;
             }, _logger);
@@ -108,6 +110,7 @@ namespace IdentityAPI.Services
                 {
                     _logger.LogDebug("Permission found. Proceeding to delete id: {Id}", id);
                     var result = await _permissionsRepository.Delete(permission);
+                    await _permissionsRepository.Save();
                     _logger.LogInformation("Permission with id {Id} deleted: {Result}", id, result);
                     return result;
                 }

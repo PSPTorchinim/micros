@@ -67,23 +67,18 @@ RUN apt-get update
 # Set WORKDIR before COPY (DL3045)
 WORKDIR /
 
-COPY Services/${MICROSERVICE_NAME}/ Services/${MICROSERVICE_NAME}/
-COPY Services/Shared/ Services/Shared/
-COPY Tests/${MICROSERVICE_NAME}.Tests/ Tests/${MICROSERVICE_NAME}.Tests/
+COPY Services/${MICROSERVICE_NAME}/*.csproj ./Services/${MICROSERVICE_NAME}/
+COPY Services/Shared/*.csproj ./Services/Shared/
+RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
+
+# Dopiero potem kopiuj resztę kodu
+COPY Services/${MICROSERVICE_NAME}/ ./Services/${MICROSERVICE_NAME}/
+COPY Services/Shared/ ./Services/Shared/
 
 # Use absolute WORKDIR (DL3000)
 WORKDIR /Services/${MICROSERVICE_NAME}/
-
-# Combine RUNs, clean apt lists, no-install-recommends, pin version (DL3059, DL3009, DL3015)
-# hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /Services/${MICROSERVICE_NAME}/
 RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools" \
     && (dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations") \
-    && dotnet restore \
     && dotnet test -c Release --no-restore \
     && dotnet build -c Release -o /app/build --no-restore \
     && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
@@ -163,10 +158,10 @@ ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
 WORKDIR /app
 COPY --from=build /app/publish/ .
 
-ENV APP_EXE=$MICROSERVICE_NAME.dll
+ENV APP_EXE=${MICROSERVICE_NAME}.dll
 
-# Use JSON notation for ENTRYPOINT (DL3025)
-ENTRYPOINT ["dotnet", "/app/${APP_EXE}"]
+# Use JSON notation with shell -c for env var substitution
+ENTRYPOINT ["sh", "-c", "dotnet $APP_EXE"]
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=90s --retries=6 \
   CMD curl -fsS http://localhost:8080/healthz/live \

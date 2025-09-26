@@ -1,111 +1,142 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-        {
-            "type": "npm",
-            "script": "build:dev",
-            "path": "Frontends/dj-panel",
-            "group": "build",
-            "problemMatcher": [],
-            "label": "npm: build:dev - Frontends/dj-panel",
-            "detail": "webpack --mode development"
-        },
-        {
-            "type": "npm",
-            "script": "build:start",
-            "path": "Frontends/dj-panel",
-            "group": "build",
-            "problemMatcher": [],
-            "label": "npm: build:start - Frontends/dj-panel",
-            "detail": "cd dist && npx serve"
-        },
-        {
-            "label": "build CompanyAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/CompanyAPI/CompanyAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build DJHostGateway",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/DJHostGateway/DJHostGateway.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build DocumentsAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/DocumentsAPI/DocumentsAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build EquipmentAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/EquipmentAPI/EquipmentAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build IdentityAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/IdentityAPI/IdentityAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build MailingAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/MailingAPI/MailingAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build MusicAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/MusicAPI/MusicAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build PartyAPI",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Services/PartyAPI/PartyAPI.csproj"
-            ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-djhostgateway",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/DJHostGateway/DJHostGateway.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-identityapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/IdentityAPI/IdentityAPI.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-djhostgateway",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-musicapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/Services/MusicAPI/MusicAPI.csproj"],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-identityapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-equipmentapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/EquipmentAPI/EquipmentAPI.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-musicapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-documentsapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/DocumentsAPI/DocumentsAPI.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-equipmentapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-companyapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/CompanyAPI/CompanyAPI.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-documentsapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-partyapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/Services/PartyAPI/PartyAPI.csproj"],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-companyapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-mailingapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Services/MailingAPI/MailingAPI.csproj"
+      ],
+      "group": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": "build-partyapi",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "install-dj-panel",
+      "type": "npm",
+      "script": "install",
+      "path": "Frontends/dj-panel",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build-dj-panel",
+      "type": "npm",
+      "script": "build:dev",
+      "path": "Frontends/dj-panel",
+      "group": "build",
+      "dependsOn": "install-dj-panel",
+      "problemMatcher": []
+    },
+    {
+      "label": "install-strapi",
+      "type": "npm",
+      "script": "install",
+      "path": "CMS",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build-strapi",
+      "type": "npm",
+      "script": "build",
+      "path": "CMS",
+      "group": "build",
+      "dependsOn": "install-strapi",
+      "problemMatcher": []
+    },
+    {
+      "label": "build-all-services-sequential",
+      "dependsOn": "build-mailingapi",
+      "group": "build",
+      "dependsOrder": "sequence"
+    }
+  ]
 }

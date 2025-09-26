@@ -24,6 +24,11 @@ namespace IdentityAPI.Data
         {
             _logger?.LogInformation("Configuring model in OnModelCreating.");
 
+            modelBuilder.Entity<User>().HasKey(u => u.Id);
+            modelBuilder.Entity<Role>().HasKey(r => r.Id);
+            modelBuilder.Entity<Permission>().HasKey(p => p.Id);
+            modelBuilder.Entity<Password>().HasKey(p => p.Id);
+            modelBuilder.Entity<Block>().HasKey(b => b.Id);
             modelBuilder.Entity<User>().HasIndex(p => p.Email).IsUnique();
             modelBuilder.Entity<User>().Property(x => x.CreatedDate).HasDefaultValueSql("getdate()");
             modelBuilder.Entity<Password>().Property(x => x.CreatedDate).HasDefaultValueSql("getdate()");

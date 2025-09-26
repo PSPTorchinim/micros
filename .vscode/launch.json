@@ -1,204 +1,388 @@
 {
   "version": "0.2.0",
-  "compounds": [
-    {
-      "name": "Run All Services",
-      "configurations": [
-        "Launch CompanyAPI",
-        "Launch DJHostGateway",
-        "Launch EquipmentAPI",
-        "Launch IdentityAPI",
-        "Launch MusicAPI",
-        "Launch PartyAPI",
-        "Launch DocumentsAPI",
-        "Launch MailingAPI",
-        "Launch DJPanel"
-      ]
-    }
-  ],
   "configurations": [
     {
-      "command": "npm run start:dev",
-      "name": "Launch DJPanel",
+      "name": "CMS: Strapi Debug",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "localRoot": "${workspaceFolder}/Frontends/dj-panel"
+      "cwd": "${workspaceFolder}/CMS",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "develop"],
+      "skipFiles": ["<node_internals>/**"],
+      "preLaunchTask": "build-strapi"
     },
     {
-      "name": "Launch CompanyAPI",
-      "type": "coreclr",
+      "name": "DJ Panel: React Debug",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "build CompanyAPI",
-      "program": "${workspaceFolder}/Services/CompanyAPI/bin/Debug/net9.0/CompanyAPI.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Services/CompanyAPI",
-      "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
+      "cwd": "${workspaceFolder}/Frontends/dj-panel",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "skipFiles": ["<node_internals>/**"],
+      "preLaunchTask": "build-dj-panel"
     },
     {
-      "name": "Launch DJHostGateway",
+      "name": "C#: PartyAPI Debug",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build DJHostGateway",
-      "program": "${workspaceFolder}/Services/DJHostGateway/bin/Debug/net9.0/DJHostGateway.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Services/DJHostGateway",
-      "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
-    },
-    {
-      "name": "Launch EquipmentAPI",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build EquipmentAPI",
-      "program": "${workspaceFolder}/Services/EquipmentAPI/bin/Debug/net9.0/EquipmentAPI.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Services/EquipmentAPI",
-      "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
-    },
-    {
-      "name": "Launch IdentityAPI",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build IdentityAPI",
-      "program": "${workspaceFolder}/Services/IdentityAPI/bin/Debug/net9.0/IdentityAPI.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Services/IdentityAPI",
-      "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
-    },
-    {
-      "name": "Launch MusicAPI",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build MusicAPI",
-      "program": "${workspaceFolder}/Services/MusicAPI/bin/Debug/net9.0/MusicAPI.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Services/MusicAPI",
-      "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
-    },
-    {
-      "name": "Launch PartyAPI",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build PartyAPI",
       "program": "${workspaceFolder}/Services/PartyAPI/bin/Debug/net9.0/PartyAPI.dll",
       "args": [],
       "cwd": "${workspaceFolder}/Services/PartyAPI",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5006",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "PartyAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
       },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
+      "preLaunchTask": "build-partyapi"
     },
     {
-      "name": "Launch DocumentsAPI",
+      "name": "C#: MusicAPI Debug",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build DocumentsAPI",
-      "program": "${workspaceFolder}/Services/DocumentsAPI/bin/Debug/net9.0/DocumentsAPI.dll",
+      "program": "${workspaceFolder}/Services/MusicAPI/bin/Debug/net9.0/MusicAPI.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Services/DocumentsAPI",
+      "cwd": "${workspaceFolder}/Services/MusicAPI",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5002",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "MusicAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
       },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
-      },
-      "launchSettingsProfile": "http"
+      "preLaunchTask": "build-musicapi"
     },
     {
-      "name": "Launch MailingAPI",
+      "name": "C#: MailingAPI Debug",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build MailingAPI",
       "program": "${workspaceFolder}/Services/MailingAPI/bin/Debug/net9.0/MailingAPI.dll",
       "args": [],
       "cwd": "${workspaceFolder}/Services/MailingAPI",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s/swagger"
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5007",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "MailingAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
       },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
+      "preLaunchTask": "build-mailingapi"
+    },
+    {
+      "name": "C#: IdentityAPI Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Services/IdentityAPI/bin/Debug/net9.0/IdentityAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/IdentityAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
-      "launchSettingsProfile": "http"
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5001",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "IdentityAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      },
+      "preLaunchTask": "build-identityapi"
+    },
+    {
+      "name": "C#: EquipmentAPI Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Services/EquipmentAPI/bin/Debug/net9.0/EquipmentAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/EquipmentAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5003",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "EquipmentAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      },
+      "preLaunchTask": "build-equipmentapi"
+    },
+    {
+      "name": "C#: DocumentsAPI Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Services/DocumentsAPI/bin/Debug/net9.0/DocumentsAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/DocumentsAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5004",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "DocumentsDB",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      },
+      "preLaunchTask": "build-documentsapi"
+    },
+    {
+      "name": "C#: CompanyAPI Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Services/CompanyAPI/bin/Debug/net9.0/CompanyAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/CompanyAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5005",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "CompanyAPI",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      },
+      "preLaunchTask": "build-companyapi"
+    },
+    {
+      "name": "C#: DJHostGateway Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Services/DJHostGateway/bin/Debug/net9.0/DJHostGateway.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Services/DJHostGateway",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
+        "ASPNETCORE_URLS": "http://localhost:5000",
+        "ASPNETCORE_IDENTITY_BE_ADDRESS": "http://localhost:5001",
+        "ASPNETCORE_MUSIC_BE_ADDRESS": "http://localhost:5002",
+        "ASPNETCORE_GEAR_BE_ADDRESS": "http://localhost:5003",
+        "ASPNETCORE_DOCUMENTS_BE_ADDRESS": "http://localhost:5004",
+        "ASPNETCORE_BRAND_BE_ADDRESS": "http://localhost:5005",
+        "ASPNETCORE_PARTY_BE_ADDRESS": "http://localhost:5006",
+        "ASPNETCORE_MAILING_BE_ADDRESS": "http://localhost:5007",
+        "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+        "ASPNETCORE_DATABASE_CATALOG": "DJHostGateway",
+        "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
+        "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+        "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+        "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "3RNqyBW2TUI8RBcdL2VTIQ0WZt5FsVtc",
+        "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
+        "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+        "ASPNETCORE_DATABASE_USER_MONGODB": "DJBeatBlaster",
+        "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "LBn5x9dgolVs684Lfuq6Iux49",
+        "ASPNETCORE_REDIS_HOST": "localhost",
+        "ASPNETCORE_REDIS_PORT": "6379",
+        "ASPNETCORE_REDIS_PASSWORD": "",
+        "ASPNETCORE_RABBITMQ_HOST": "localhost",
+        "ASPNETCORE_RABBITMQ_PORT": "5672",
+        "ASPNETCORE_RABBITMQ_USER": "guest",
+        "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+        "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+        "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!"
+      },
+      "preLaunchTask": "build-djhostgateway"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Services Stack",
+      "configurations": [
+        "C#: IdentityAPI Debug",
+        "C#: PartyAPI Debug",
+        "C#: MusicAPI Debug",
+        "C#: MailingAPI Debug",
+        "C#: EquipmentAPI Debug",
+        "C#: DocumentsAPI Debug",
+        "C#: CompanyAPI Debug",
+        "C#: DJHostGateway Debug"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Launch Frontends Stack",
+      "configurations": ["CMS: Strapi Debug", "DJ Panel: React Debug"],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Launch Full Stack",
+      "configurations": [
+        "C#: IdentityAPI Debug",
+        "C#: PartyAPI Debug",
+        "C#: MusicAPI Debug",
+        "C#: MailingAPI Debug",
+        "C#: EquipmentAPI Debug",
+        "C#: DocumentsAPI Debug",
+        "C#: CompanyAPI Debug",
+        "C#: DJHostGateway Debug",
+        "CMS: Strapi Debug",
+        "DJ Panel: React Debug"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
     }
   ]
 }

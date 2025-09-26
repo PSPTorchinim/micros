@@ -5,10 +5,12 @@ import React, {
   useState,
 } from 'react';
 import { AuthContext } from '../context/auth-context';
-import { LoginResponseDTO } from '../models/login-response-dto';
-import { api, GET } from '../utils/api';
-import { GetUserDTO } from '../models/get-user-dto';
 import { useNavigate } from 'react-router-dom';
+import {
+  GetUserDTO,
+  microservicesClient,
+  LoginResponseDTO,
+} from '../models/api';
 
 type AuthProviderProps = PropsWithChildren;
 
@@ -50,65 +52,71 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const refreshInterceptor = api.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
+    const refreshInterceptor =
+      microservicesClient.identity.instance.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+          const originalRequest = error.config;
 
-        if (originalRequest.headers['Skip-Interceptor']) {
-          return Promise.reject(error);
-        }
-
-        if (originalRequest._retry) {
-          return Promise.reject(error);
-        }
-
-        if (error.response?.status === 401 && refreshToken) {
-          originalRequest._retry = true;
-          try {
-            const response = await GET<LoginResponseDTO>(
-              '/identity/api/v1/users/refreshToken',
-              true,
-            );
-
-            const {
-              user,
-              accessToken,
-              refreshToken: newRefreshToken,
-            } = response.data;
-
-            setUser(user);
-            setToken(accessToken);
-            setRefreshToken(newRefreshToken);
-
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return api(originalRequest);
-          } catch (refreshError) {
-            logout();
-            return Promise.reject(refreshError);
+          if (originalRequest.headers['Skip-Interceptor']) {
+            return Promise.reject(error);
           }
-        }
 
-        return Promise.reject(error);
-      },
-    );
+          if (originalRequest._retry) {
+            return Promise.reject(error);
+          }
+
+          if (error.response?.status === 401 && refreshToken) {
+            originalRequest._retry = true;
+            try {
+              const response =
+                await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+
+              const {
+                user,
+                accessToken,
+                refreshToken: newRefreshToken,
+              } = response.data as LoginResponseDTO;
+
+              setUser(user ?? null);
+              setToken(accessToken ?? null);
+              setRefreshToken(newRefreshToken ?? null);
+
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+              return microservicesClient.identity.instance(originalRequest);
+            } catch (refreshError) {
+              logout();
+              return Promise.reject(refreshError);
+            }
+          }
+
+          return Promise.reject(error);
+        },
+      );
 
     return () => {
-      api.interceptors.response.eject(refreshInterceptor);
+      microservicesClient.identity.instance.interceptors.response.eject(
+        refreshInterceptor,
+      );
     };
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const authInterceptor = api.interceptors.request.use((config: any) => {
-      config.headers.Authorization =
-        !config._retry && token
-          ? `Bearer ${token}`
-          : config.headers.Authorization;
-      return config;
-    });
+    const authInterceptor =
+      microservicesClient.identity.instance.interceptors.request.use(
+        (config: any) => {
+          config.headers.Authorization =
+            !config._retry && token
+              ? `Bearer ${token}`
+              : config.headers.Authorization;
+          return config;
+        },
+      );
 
     return () => {
-      api.interceptors.request.eject(authInterceptor);
+      microservicesClient.identity.instance.interceptors.request.eject(
+        authInterceptor,
+      );
     };
   }, [token]);
 

@@ -43,11 +43,11 @@ export const LoginComponent = () => {
         }
         navigate('/dashboard');
       } else {
-        setError(response.message);
+        setError(response.message ?? 'An error occurred.');
       }
     } catch (err: any) {
       console.log(err);
-      setError(err.message);
+      setError(err.message ?? 'An error occurred.');
     }
   };
 

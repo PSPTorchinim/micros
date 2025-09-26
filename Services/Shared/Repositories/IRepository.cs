@@ -19,5 +19,6 @@ namespace Shared.Repositories
         Task<List<T>> Get(ISpecification<T> specification);
         Task<bool> Update(T entity);
         Task<bool> UpdateRange(List<T> entities);
+        Task<bool> Save();
     }
 }
