@@ -4,12 +4,11 @@ services:
   mongodb_container:
     build:
       context: ../
-      dockerfile: Docker/mongodb.Dockerfile
+      dockerfile: Docker/infra/mongodb.Dockerfile
       args:
         DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
         DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
     restart: unless-stopped
-    pull_policy: always
     ports:
       - "27017:27017"
     networks:
@@ -22,11 +21,11 @@ services:
   strapi_db:
     build:
       context: ../
-      dockerfile: Docker/postgres.Dockerfile
+      dockerfile: Docker/infra/postgres.Dockerfile
       args:
-        DATABASE_NAME: ${CMS_DATABASE_NAME}
-        DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
-        DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
+        DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}
+        DATABASE_USERNAME_POSTGRES: ${CMS_DATABASE_USERNAME}
+        DATABASE_PASSWORD_POSTGRES: ${CMS_DATABASE_PASSWORD}
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -39,16 +38,17 @@ services:
   rabbitmq:
     build:
       context: ../
-      dockerfile: Docker/rabbitmq.Dockerfile
+      dockerfile: Docker/infra/rabbitmq.Dockerfile
       args:
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     ports:
-      - "5672:5672"
       - "15672:15672"
-      - "15692:15692"
+    expose:
+      - "5672"
+      - "15672"
+      - "15692"
     networks:
       - rabbitmq_net
       - public
@@ -58,11 +58,10 @@ services:
   redis:
     build:
       context: ../
-      dockerfile: Docker/redis.Dockerfile
+      dockerfile: Docker/infra/redis.Dockerfile
       args:
         REDIS_PASSWORD: ${REDIS_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     ports:
       - "6379:6379"
     networks:
@@ -74,11 +73,10 @@ services:
   sqlserver:
     build:
       context: ../
-      dockerfile: Docker/sqlserver.Dockerfile
+      dockerfile: Docker/infra/sqlserver.Dockerfile
       args:
         DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
     restart: unless-stopped
-    pull_policy: always
     ports:
       - "1433:1433"
     networks:
@@ -87,41 +85,10 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
 
-  strapi:
-    build:
-      context: ../
-      dockerfile: Docker/strapi.Dockerfile
-      args:
-        CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
-        CMS_NODE_ENV: ${CMS_NODE_ENV}
-        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
-        CMS_DATABASE_HOST: ${CMS_DATABASE_HOST}
-        CMS_DATABASE_PORT: ${CMS_DATABASE_PORT}
-        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
-        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
-        CMS_JWT_SECRET: ${CMS_JWT_SECRET}
-        CMS_ADMIN_JWT_SECRET: ${CMS_ADMIN_JWT_SECRET}
-        CMS_APP_KEYS: ${CMS_APP_KEYS}
-        CMS_API_TOKEN_SALT: ${CMS_API_TOKEN_SALT}
-        CMS_TRANSFER_TOKEN_SALT: ${CMS_TRANSFER_TOKEN_SALT}
-        CMS_ENCRYPTION_KEY: ${CMS_ENCRYPTION_KEY}
-    restart: unless-stopped
-    ports:
-      - "1337:1337"
-    networks:
-      - strapi
-      - public
-      - strapi_fe_net
-    depends_on:
-      strapi_db:
-        condition: service_healthy
-    volumes:
-      - strapi_app:/srv/app
-
   apigateway:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: DJHostGateway
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -141,19 +108,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${APIGATEWAY_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     ports:
       - "3000:8080"
     depends_on:
@@ -179,14 +145,13 @@ services:
   host_fe:
     build:
       context: ../
-      dockerfile: Docker/microfrontend.Dockerfile
+      dockerfile: Docker/frontends/react.Dockerfile
       args:
         MICROFRONTEND_NAME: dj-panel
-        REACT_APP_API_GATEWAY: ${REACT_APP_API_GATEWAY}
-        REACT_APP_API_SECURE_KEY: ${SECURE_KEY}
-        REACT_APP_API_JWT_TOKEN: ${JWT_KEY}
+        API_GATEWAY: ${API_GATEWAY}
+        SECURE_KEY: ${SECURE_KEY}
+        JWT_TOKEN: ${JWT_KEY}
     restart: unless-stopped
-    pull_policy: always
     ports:
       - "3080:3000"
     networks:
@@ -200,10 +165,41 @@ services:
       strapi:
         condition: service_healthy
 
+  strapi:
+    build:
+      context: ../
+      dockerfile: Docker/infra/strapi.Dockerfile
+      args:
+        CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
+        CMS_NODE_ENV: ${CMS_NODE_ENV}
+        CMS_DATABASE_HOST: ${CMS_DATABASE_HOST}
+        CMS_DATABASE_PORT: ${CMS_DATABASE_PORT}
+        DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}
+        DATABASE_USERNAME_POSTGRES: ${CMS_DATABASE_USERNAME}
+        DATABASE_PASSWORD_POSTGRES: ${CMS_DATABASE_PASSWORD}
+        CMS_JWT_SECRET: ${CMS_JWT_SECRET}
+        CMS_ADMIN_JWT_SECRET: ${CMS_ADMIN_JWT_SECRET}
+        CMS_APP_KEYS: ${CMS_APP_KEYS}
+        CMS_API_TOKEN_SALT: ${CMS_API_TOKEN_SALT}
+        CMS_TRANSFER_TOKEN_SALT: ${CMS_TRANSFER_TOKEN_SALT}
+        CMS_ENCRYPTION_KEY: ${CMS_ENCRYPTION_KEY}
+    restart: unless-stopped
+    ports:
+      - "1337:1337"
+    networks:
+      - strapi
+      - public
+      - strapi_fe_net
+    depends_on:
+      strapi_db:
+        condition: service_healthy
+    volumes:
+      - strapi_app:/srv/app
+
   identity_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: IdentityAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -223,19 +219,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${IDENTITY_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -254,7 +249,7 @@ services:
   music_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: MusicAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -274,19 +269,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${MUSIC_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -305,7 +299,7 @@ services:
   gear_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: EquipmentAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -325,19 +319,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${GEAR_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -356,7 +349,7 @@ services:
   documents_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: DocumentsAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -376,19 +369,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${DOCUMENTS_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -407,7 +399,7 @@ services:
   brand_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: CompanyAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -427,19 +419,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${BRAND_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -458,7 +449,7 @@ services:
   mailing_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: MailingAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -478,19 +469,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${MAILING_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -509,7 +499,7 @@ services:
   party_be:
     build:
       context: ../
-      dockerfile: Docker/microservice.Dockerfile
+      dockerfile: Docker/services/dotnet.Dockerfile
       args:
         MICROSERVICE_NAME: PartyAPI
         DATABASE_HOST_SQLSERVER: ${DATABASE_HOST_SQLSERVER}
@@ -529,19 +519,18 @@ services:
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
         SECURE_KEY: ${SECURE_KEY}
         JWT_KEY: ${JWT_KEY}
-        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-        ASPNETCORE_IDENTITY_BE_ADDRESS: ${ASPNETCORE_IDENTITY_BE_ADDRESS}
-        ASPNETCORE_MUSIC_BE_ADDRESS: ${ASPNETCORE_MUSIC_BE_ADDRESS}
-        ASPNETCORE_GEAR_BE_ADDRESS: ${ASPNETCORE_GEAR_BE_ADDRESS}
-        ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-        ASPNETCORE_BRAND_BE_ADDRESS: ${ASPNETCORE_BRAND_BE_ADDRESS}
-        ASPNETCORE_PARTY_BE_ADDRESS: ${ASPNETCORE_PARTY_BE_ADDRESS}
-        ASPNETCORE_MAILING_BE_ADDRESS: ${ASPNETCORE_MAILING_BE_ADDRESS}
+        ENVIRONMENT: ${ENVIRONMENT}
+        IDENTITY_BE_ADDRESS: ${IDENTITY_BE_ADDRESS}
+        MUSIC_BE_ADDRESS: ${MUSIC_BE_ADDRESS}
+        GEAR_BE_ADDRESS: ${GEAR_BE_ADDRESS}
+        DOCUMENTS_BE_ADDRESS: ${DOCUMENTS_BE_ADDRESS}
+        BRAND_BE_ADDRESS: ${BRAND_BE_ADDRESS}
+        PARTY_BE_ADDRESS: ${PARTY_BE_ADDRESS}
+        MAILING_BE_ADDRESS: ${MAILING_BE_ADDRESS}
         DATABASE_CATALOG: ${PARTY_DATABASE_CATALOG}
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull_policy: always
     expose:
       - "8080"
     depends_on:

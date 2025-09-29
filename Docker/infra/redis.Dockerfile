@@ -1,4 +1,4 @@
-FROM bitnami/redis:latest
+FROM redis:8
 
 ARG REDIS_PASSWORD
 

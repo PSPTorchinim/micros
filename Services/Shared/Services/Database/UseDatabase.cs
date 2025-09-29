@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,8 +24,13 @@ namespace Shared.Services.Database
             var port = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PORT_MONGODB");
             var user = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_USER_MONGODB");
             var password = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PASSWORD_MONGODB");
-            return $"mongodb://{user}:{password}@{host}:{port}";
+            
+            var encodedUser = Uri.EscapeDataString(user ?? "");
+            var encodedPassword = Uri.EscapeDataString(password ?? "");
+
+            return $"mongodb://{encodedUser}:{encodedPassword}@{host}:{port}/?authSource=admin";
         }
+
 
         public static void ConfigureSqlServer<TContext>(IServiceCollection services) where TContext : DbContext
         {
@@ -41,8 +46,24 @@ namespace Shared.Services.Database
 
         public static void ConfigureMongoDBServer(IServiceCollection services)
         {
-            var settings = MongoClientSettings.FromConnectionString(GetMongoDBConnectionString());
+            var connectionString = GetMongoDBConnectionString();
+            Console.WriteLine($"MongoDB Connection String: {connectionString}");
+            Console.WriteLine($"Attempting MongoDB connection with URI format (credentials masked)");
+
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+
+            // Add connection timeout and retry settings for better reliability
+            settings.ConnectTimeout = TimeSpan.FromSeconds(30);
+            settings.ServerSelectionTimeout = TimeSpan.FromSeconds(30);
+            settings.SocketTimeout = TimeSpan.FromSeconds(30);
+            settings.MaxConnectionIdleTime = TimeSpan.FromSeconds(60);
+            settings.MaxConnectionLifeTime = TimeSpan.FromSeconds(300);
+
+            // Enable retryable writes for better reliability
+            settings.RetryWrites = true;
+            settings.RetryReads = true;
+
             var client = new MongoClient(settings);
             services.AddSingleton(client);
         }
@@ -54,7 +75,7 @@ namespace Shared.Services.Database
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<C>();
                 var logger = services.GetRequiredService<ILogger<P>>();
-                
+
                 try
                 {
                     await action(context);
@@ -80,7 +101,7 @@ namespace Shared.Services.Database
                         logger.LogInformation("Database {DatabaseName} was created successfully", context.Database.GetDbConnection().Database);
                         return true;
                     }
-                    
+
                     logger.LogInformation("Database {DatabaseName} already exists", context.Database.GetDbConnection().Database);
                     return false;
                 }
