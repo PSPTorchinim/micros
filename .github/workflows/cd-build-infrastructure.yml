@@ -1,0 +1,22 @@
+name: Build TrueNAS Infrastructure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get_truenas_ports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get TrueNAS Ports (SSH)
+        id: get_truenas_ports
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "Running on host: $(hostname)"
+            echo "User: $(whoami)"
+            echo "Current date: $(date)"
+            # Example: list listening ports (Linux/TrueNAS SCALE)
+            ss -tulpn | grep LISTEN || netstat -an | grep LISTEN || true
