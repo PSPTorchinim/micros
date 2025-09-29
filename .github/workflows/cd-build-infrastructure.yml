@@ -1,0 +1,391 @@
+name: Build TrueNAS Infrastructure
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types:
+      - completed
+
+jobs:
+  determine_environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.slug.outputs.env_slug }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set Environment
+        id: set_env
+        uses: ./.github/templates/determine-environment
+
+      - name: Compute env slug
+        id: slug
+        run: |
+          env_raw='${{ steps.set_env.outputs.current_env }}'
+          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
+
+  determine_docker_tag:
+    name: Determine Docker Tag
+    runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - id: tag_set
+        uses: ./.github/templates/determine-docker-tag
+
+  determine_compose_timestamp:
+    name: Determine Compose File Timestamp
+    runs-on: ubuntu-latest
+    outputs:
+      compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
+      compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - id: timestamp_set
+        uses: ./.github/templates/determine-compose-timestamp
+
+  stop_app:
+    name: Stop TrueNAS app and ensure it is stopped
+    runs-on: ubuntu-latest
+    needs: [determine_environment]
+    outputs:
+      stopped_app: ${{ steps.mark.outputs.stopped_app }}
+    steps:
+      - name: Stop app (use app.stop or scale->0), then wait for STOPPED
+        id: stopwait
+        uses: appleboy/ssh-action@v1
+        env:
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: ENV_SLUG
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            name="dj-panel-${ENV_SLUG}"
+            echo "Stopping app: $name"
+
+            # Try graceful stop; if not available, scale to 0
+            if midclt call app.stop "$name" 2>/dev/null; then
+              echo "Stopped via app.stop (request sent)"
+            else
+              echo "app.stop not available; trying chart.release.scale -> 0"
+              if midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null; then
+                echo "Scaled to 0 replicas (request sent)"
+              else
+                echo "WARN: stop/scale request failed; continuing to wait-check anyway."
+              fi
+            fi
+
+            # Sanitize JSON helper: strip control chars that can break grep
+            sanitize() { tr -d '\000-\010\013\014\016-\037\177'; }
+
+            # Wait until app state reports STOPPED (best-effort; 90s max)
+            i=0; max=45
+            while [ $i -lt $max ]; do
+              out="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null | sanitize || true)"
+              if printf '%s' "$out" | grep -q '"state"[[:space:]]*:[[:space:]]*"STOPPED"'; then
+                echo "CONFIRMED: app state is STOPPED"
+                break
+              fi
+              i=$((i+1))
+              sleep 2
+            done
+
+            if [ $i -ge $max ]; then
+              echo "WARN: app did not confirm STOPPED within timeout; proceeding anyway so ports scan reflects current state."
+            fi
+
+            echo "STOPPED_APP=$name"
+
+      - name: Mark output
+        id: mark
+        run: |
+          out='${{ steps.stopwait.outputs.stdout }}'
+          app=$(echo "$out" | awk -F= '/^STOPPED_APP=/{print $2}' | tail -n1)
+          test -n "$app" || app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+          echo "stopped_app=$app" >> "$GITHUB_OUTPUT"
+
+  get_truenas_ports:
+    name: Get TrueNAS Ports (after stop)
+    runs-on: ubuntu-latest
+    needs: [stop_app]
+    outputs:
+      ports: ${{ steps.get_netstat_ports.outputs.stdout }}
+    steps:
+      - name: Get Netstat Listening Ports
+        id: get_netstat_ports
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            netstat -tuln 2>/dev/null \
+              | awk 'NR>2 {print $4}' \
+              | sed -E 's/.*:([0-9]+)$/\1/' \
+              | grep -E '^[0-9]+$' \
+              | sort -n | uniq
+
+  get_cloudflare_tunnel_ports:
+    name: Get Cloudflare Tunnel Ports
+    runs-on: ubuntu-latest
+    outputs:
+      tunnel_ports: ${{ steps.format_output.outputs.ports }}
+    steps:
+      - name: Get Cloudflare Tunnel Config
+        id: get_tunnel_ports
+        run: |
+          response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
+            -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
+            -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
+          echo "response=$response" >> "$GITHUB_OUTPUT"
+
+      - name: Format Output
+        id: format_output
+        run: |
+          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' \
+            | jq -r '.result.config.ingress[].service' \
+            | grep -E '^https?://' | grep -oE ':[0-9]+' \
+            | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
+          echo "ports=$ports" >> "$GITHUB_OUTPUT"
+
+  calculate_unused_ports:
+    name: Calculate Unused External and Internal Ports
+    runs-on: ubuntu-latest
+    needs: [get_truenas_ports, get_cloudflare_tunnel_ports]
+    outputs:
+      external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
+      internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Calculate unused internal ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_internal_ports
+        with:
+          start_port: 40000
+          end_port: 50000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+      - name: Calculate unused external ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_external_ports
+        with:
+          start_port: 50000
+          end_port: 60000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+  generate_and_upload_compose:
+    name: Generate & Upload new compose
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_environment,
+        determine_docker_tag,
+        determine_compose_timestamp,
+        calculate_unused_ports,
+      ]
+    outputs:
+      new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Install yq on runner
+        run: |
+          sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Generate compose (preserve depends_on; skip networks)
+        id: gen
+        env: { LOG_LEVEL: DEBUG }
+        run: |
+          set -euxo pipefail
+          chmod +x .github/scripts/generate-compose-file.sh
+          output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          .github/scripts/generate-compose-file.sh \
+            "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
+            "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
+            "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
+            "${{ github.repository_owner }}" \
+            "${{ github.event.repository.name }}" \
+            "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
+            "$output_file"
+          echo "compose_file=$output_file" >> "$GITHUB_OUTPUT"
+
+      - name: Package compose (base64)
+        id: pkg
+        run: |
+          set -euo pipefail
+          f="${{ steps.gen.outputs.compose_file }}"
+          test -f "$f"
+          echo "compose_name=$f" >> "$GITHUB_OUTPUT"
+          echo "compose_b64=$(base64 -w0 "$f")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to TrueNAS Images dataset
+        id: upload
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files
+          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          COMPOSE_NAME: ${{ steps.pkg.outputs.compose_name }}
+          COMPOSE_B64: ${{ steps.pkg.outputs.compose_b64 }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,COMPOSE_NAME,COMPOSE_B64
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -eu
+            POOL="${TRUENAS_POOL}"
+            ENV_DIR="${CURRENT_ENV}"
+            DST_DIR="/mnt/${POOL}/Apps/DJPanel/${ENV_DIR}/Images"
+            mkdir -p "$DST_DIR"
+            dst_name="${COMPOSE_NAME##*/}"
+            dst_path="${DST_DIR}/${dst_name}"
+            printf '%s' "$COMPOSE_B64" | base64 -d > "$dst_path"
+            chmod 664 "$dst_path" || true
+            echo "COMPOSE_ABS=$dst_path"
+
+      - name: Parse upload path
+        id: parse_upload
+        run: |
+          out='${{ steps.upload.outputs.stdout }}'
+          abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
+          test -n "$abs"
+          echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
+
+  update_include_file:
+    name: Point aggregator to ONLY the new compose
+    runs-on: ubuntu-latest
+    needs: [determine_environment, generate_and_upload_compose]
+    steps:
+      - name: Rewrite aggregator include (no yq/jq needed)
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files
+          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
+          NEW_COMPOSE_ABS: ${{ needs.generate_and_upload_compose.outputs.new_compose_abs }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            base="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
+            agg="${base}/dj-panel-${ENV_SLUG}.yml"
+            mkdir -p "$base"
+            printf 'include:\n  - %s\n' "$NEW_COMPOSE_ABS" > "$agg"
+            echo "Updated aggregator: $agg"
+
+  start_app:
+    name: Start TrueNAS app and verify it's running
+    runs-on: ubuntu-latest
+    needs: [determine_environment, update_include_file]
+    steps:
+      - name: Start app (use app.start or scale->1) and wait for RUNNING
+        uses: appleboy/ssh-action@v1
+        env:
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: ENV_SLUG
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            name="dj-panel-${ENV_SLUG}"
+            echo "Starting app: $name"
+
+            started=0
+            if midclt call app.start "$name" 2>/dev/null; then
+              echo "Started via app.start"
+              started=1
+            else
+              echo "app.start not available; trying chart.release.scale -> 1"
+              if midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null; then
+                echo "Scaled to 1 replica"
+                started=1
+              fi
+            fi
+
+            if [ "$started" -ne 1 ]; then
+              echo "ERROR: could not start app '$name' with known methods."
+              exit 1
+            fi
+
+            # --- Verify it actually started ---
+            sanitize() { tr -d '\000-\010\013\014\016-\037\177'; }
+
+            echo "Waiting for app state to become RUNNING/DEPLOYED..."
+            i=0; max=150  # ~5 minutes at 2s per check
+            while [ $i -lt $max ]; do
+              out="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null | sanitize || true)"
+              # Match common state fields across SCALE versions: "state" or "status"
+              if printf '%s\n' "$out" | grep -Eq '"(state|status)"[[:space:]]*:[[:space:]]*"(RUNNING|DEPLOYED|ACTIVE)"'; then
+                echo "✅ App '$name' is UP."
+                exit 0
+              fi
+              i=$((i+1))
+              sleep 2
+            done
+
+            echo "ERROR: app '$name' did not reach RUNNING within timeout."
+            # Dump some context to help debug but don't fail silently
+            midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null || true
+            exit 1
+
+  deployment_summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_docker_tag,
+        determine_compose_timestamp,
+        determine_environment,
+        generate_and_upload_compose,
+        update_include_file,
+        start_app,
+      ]
+    steps:
+      - name: Summary
+        run: |
+          echo "=== TrueNAS DJ Panel Deployment Summary ==="
+          echo "Docker Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
+          echo "Latest Tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
+          echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
+          echo "New compose absolute: ${{ needs.generate_and_upload_compose.outputs.new_compose_abs }}"
+          echo "App was STOPPED -> ports scanned -> compose updated -> STARTED"

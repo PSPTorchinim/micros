@@ -1,0 +1,21 @@
+name: Determine Compose File Timestamp
+description: Generate a timestamp for compose file naming to track deployments
+outputs:
+  compose_timestamp:
+    description: The timestamp for compose file naming (YYYYMMDD-HHMMSS format)
+    value: ${{ steps.timestamp_set.outputs.compose_timestamp }}
+  compose_file_name:
+    description: The complete compose file name with timestamp
+    value: ${{ steps.timestamp_set.outputs.compose_file_name }}
+runs:
+  using: composite
+  steps:
+    - name: Generate timestamp for compose file
+      id: timestamp_set
+      shell: bash
+      run: |
+        # Generate timestamp in UTC (YYYYMMDD-HHMMSS format)
+        TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+
+        echo "compose_timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
+        echo "compose_file_name=dj-panel-composer-$TIMESTAMP.yml" >> "$GITHUB_OUTPUT"
