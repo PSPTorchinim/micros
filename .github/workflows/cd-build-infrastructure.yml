@@ -5,18 +5,39 @@ on:
 
 jobs:
   get_truenas_ports:
+    name: Get TrueNAS Ports
     runs-on: ubuntu-latest
+    outputs:
+      ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
-      - name: Get TrueNAS Ports (SSH)
-        id: get_truenas_ports
+      - name: Get Netstat Listening Ports
+        id: get_netstat_ports
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            echo "Running on host: $(hostname)"
-            echo "User: $(whoami)"
-            echo "Current date: $(date)"
-            # Example: list listening ports (Linux/TrueNAS SCALE)
-            ss -tulpn | grep LISTEN || netstat -an | grep LISTEN || true
+            netstat -an | awk '{print $4}' | grep -Eo ':[0-9]+$' | cut -d: -f2 | sort -n | uniq
+
+  get_cloudflare_tunnel_ports:
+    name: Get Cloudflare Tunnel Ports
+    runs-on: ubuntu-latest
+    outputs:
+      tunnel_ports: ${{ steps.format_output.outputs.ports }}
+    steps:
+      - name: Get Cloudflare DNS Records
+        id: get_tunnel_ports
+        run: |
+          response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
+            -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
+            -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
+          echo $response
+          echo "response=$response" >> $GITHUB_OUTPUT
+
+      - name: Format Output
+        id: format_output
+        run: |
+          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
+          echo $ports
+          echo "ports=$ports" >> $GITHUB_OUTPUT
