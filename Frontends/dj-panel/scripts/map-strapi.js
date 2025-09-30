@@ -14,14 +14,7 @@ if (fs.existsSync(envPath)) {
 
 const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
 
-const outputPath = path.join(
-  __dirname,
-  '..',
-  'src',
-  'models',
-  'strapi',
-  'api.ts',
-);
+const outputPath = path.join(__dirname, '..', 'src', 'models', 'strapi');
 
 console.log('🔄 Generating Strapi API types...');
 console.log(`📡 Strapi URL: ${STRAPI_URL}`);

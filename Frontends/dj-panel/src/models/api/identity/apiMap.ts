@@ -198,13 +198,13 @@ import type {
   AxiosResponse,
   HeadersDefaults,
   ResponseType,
-} from 'axios';
-import axios from 'axios';
+} from "axios";
+import axios from "axios";
 
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
+  extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -221,11 +221,11 @@ export interface FullRequestParams
 
 export type RequestParams = Omit<
   FullRequestParams,
-  'body' | 'method' | 'query' | 'path'
+  "body" | "method" | "query" | "path"
 >;
 
 export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
+  extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
   securityWorker?: (
     securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
@@ -234,17 +234,17 @@ export interface ApiConfig<SecurityDataType = unknown>
 }
 
 export enum ContentType {
-  Json = 'application/json',
-  JsonApi = 'application/vnd.api+json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded',
-  Text = 'text/plain',
+  Json = "application/json",
+  JsonApi = "application/vnd.api+json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private secure?: boolean;
   private format?: ResponseType;
 
@@ -256,7 +256,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || '',
+      baseURL: axiosConfig.baseURL || "",
     });
     this.secure = secure;
     this.format = format;
@@ -290,7 +290,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === 'object' && formItem !== null) {
+    if (typeof formItem === "object" && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -328,7 +328,7 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === 'boolean' ? secure : this.secure) &&
+      ((typeof secure === "boolean" ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
@@ -339,7 +339,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.FormData &&
       body &&
       body !== null &&
-      typeof body === 'object'
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
@@ -348,7 +348,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.Text &&
       body &&
       body !== null &&
-      typeof body !== 'string'
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -357,7 +357,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { 'Content-Type': type } : {}),
+        ...(type ? { "Content-Type": type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -386,9 +386,9 @@ export class Api<
     apiV1PermissionsList: (params: RequestParams = {}) =>
       this.request<GetPermissionsDTOIEnumerableResponse, any>({
         path: `/identity/api/v1/Permissions`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -406,11 +406,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Permissions`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -425,9 +425,9 @@ export class Api<
     apiV1PermissionsDetail: (id: string, params: RequestParams = {}) =>
       this.request<GetPermissionDTOResponse, any>({
         path: `/identity/api/v1/Permissions/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -442,7 +442,7 @@ export class Api<
     apiV1PermissionsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/identity/api/v1/Permissions/Hello`,
-        method: 'GET',
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -459,9 +459,9 @@ export class Api<
     apiV1RolesList: (params: RequestParams = {}) =>
       this.request<RoleIEnumerableResponse, any>({
         path: `/identity/api/v1/Roles`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -476,11 +476,11 @@ export class Api<
     apiV1RolesCreate: (data: AddRoleRequest, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Roles`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -495,9 +495,9 @@ export class Api<
     apiV1RolesDetail: (id: string, params: RequestParams = {}) =>
       this.request<RoleResponse, any>({
         path: `/identity/api/v1/Roles/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -516,11 +516,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Roles/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -535,9 +535,9 @@ export class Api<
     apiV1RolesDelete: (id: string, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Roles/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -552,7 +552,7 @@ export class Api<
     apiV1RolesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/identity/api/v1/Roles/Hello`,
-        method: 'GET',
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -572,11 +572,11 @@ export class Api<
     ) =>
       this.request<LoginResponseDTOResponse, any>({
         path: `/identity/api/v1/Users/Login`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -594,11 +594,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Users/Register`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -613,9 +613,9 @@ export class Api<
     apiV1UsersMeList: (params: RequestParams = {}) =>
       this.request<LoginResponseDTOResponse, any>({
         path: `/identity/api/v1/Users/Me`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -630,9 +630,9 @@ export class Api<
     apiV1UsersRefreshTokenList: (params: RequestParams = {}) =>
       this.request<LoginResponseDTOResponse, any>({
         path: `/identity/api/v1/Users/RefreshToken`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -647,11 +647,11 @@ export class Api<
     apiV1UsersBlockUpdate: (data: BlockUserDTO, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Users/Block`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -669,11 +669,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Users/ChangePassword`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -691,11 +691,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Users/ForgotPassword`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -713,11 +713,11 @@ export class Api<
     ) =>
       this.request<BooleanResponse, any>({
         path: `/identity/api/v1/Users/ActivateAccount`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -732,7 +732,7 @@ export class Api<
     apiV1UsersHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/identity/api/v1/Users/Hello`,
-        method: 'GET',
+        method: "GET",
         secure: true,
         ...params,
       }),

@@ -9,7 +9,23 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "develop"],
       "skipFiles": ["<node_internals>/**"],
-      "preLaunchTask": "build-strapi"
+      "preLaunchTask": "build-strapi",
+      "env": {
+        "DATABASE_CLIENT": "postgres",
+        "DATABASE_HOST": "localhost",
+        "DATABASE_PORT": "5432",
+        "DATABASE_NAME": "strapi",
+        "DATABASE_USERNAME": "postgres",
+        "DATABASE_PASSWORD": "postgres",
+        "NODE_ENV": "development",
+        "APP_KEYS": "devKeyA,devKeyB,devKeyC,devKeyD",
+        "API_TOKEN_SALT": "devApiTokenSalt123",
+        "TRANSFER_TOKEN_SALT": "devTransferTokenSalt123",
+        "JWT_SECRET": "devJwtSecretChangeMe",
+        "ADMIN_JWT_SECRET": "devAdminJwtSecretChangeMe",
+        "ENCRYPTION_KEY": "devEncryptionKeyChangeMe1234567890",
+        "DATABASE_SSL": "false"
+      }
     },
     {
       "name": "DJ Panel: React Debug",
@@ -19,7 +35,14 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "skipFiles": ["<node_internals>/**"],
-      "preLaunchTask": "build-dj-panel"
+      "preLaunchTask": "build-dj-panel",
+      "env": {
+        "REACT_APP_API_GATEWAY_URL": "http://localhost:5000",
+        "REACT_APP_STRAPI_URL": "http://localhost:1337",
+        "NODE_ENV": "development",
+        "REACT_APP_API_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "REACT_APP_API_JWT_TOKEN": "LocalDevelopmentJWTToken123456789012345678901234567890"
+      }
     },
     {
       "name": "C#: PartyAPI Debug",

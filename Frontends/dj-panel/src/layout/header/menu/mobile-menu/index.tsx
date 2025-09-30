@@ -10,7 +10,7 @@ export const MobileMenu = (props: any) => {
 
   const hasPermission = (permissions: string[]) => {
     const userPermissions =
-      user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
+      user?.roles?.flatMap((r) => r.permissions?.map((p) => p.name)) || [];
     if (!permissions) return true;
     if (!userPermissions) return false;
     for (const permission of permissions) {

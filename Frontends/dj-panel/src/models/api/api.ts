@@ -103,7 +103,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
  * Create a new unified API instance with custom configuration
  */
 export function createApi<SecurityDataType extends unknown>(
-  config: ApiConfig<SecurityDataType> = {},
+  config: ApiConfig<SecurityDataType> = {}
 ): UnifiedApi<SecurityDataType> {
   return new UnifiedApi<SecurityDataType>(config);
 }
@@ -115,11 +115,9 @@ export const microservicesClient = createApi();
 
 // Export individual service clients for direct access if needed
 export const createBrandApi = (config?: ApiConfig) => new BrandApi(config);
-export const createDocumentsApi = (config?: ApiConfig) =>
-  new DocumentsApi(config);
+export const createDocumentsApi = (config?: ApiConfig) => new DocumentsApi(config);
 export const createGearApi = (config?: ApiConfig) => new GearApi(config);
-export const createIdentityApi = (config?: ApiConfig) =>
-  new IdentityApi(config);
+export const createIdentityApi = (config?: ApiConfig) => new IdentityApi(config);
 export const createMailingApi = (config?: ApiConfig) => new MailingApi(config);
 export const createMusicApi = (config?: ApiConfig) => new MusicApi(config);
 export const createPartyApi = (config?: ApiConfig) => new PartyApi(config);
