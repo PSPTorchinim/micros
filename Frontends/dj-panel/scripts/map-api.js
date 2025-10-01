@@ -95,17 +95,19 @@ function generateMergedApiClient() {
 
 `;
 
-  // Import all service APIs and their types
+  // Import specific APIs only
   const imports = [];
   const serviceNames = [];
 
   for (const serviceName of Object.keys(microservices)) {
     const capitalizedName =
       serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+
+    // Import only the Api class with a renamed alias to avoid conflicts
     imports.push(
       `import { Api as ${capitalizedName}Api } from './${serviceName}/apiMap';`,
     );
-    imports.push(`export * from './${serviceName}/apiMap';`);
+
     serviceNames.push({
       name: serviceName,
       className: `${capitalizedName}Api`,
@@ -114,13 +116,41 @@ function generateMergedApiClient() {
 
   mergedContent += imports.join('\n') + '\n\n';
 
-  // Add ApiConfig import
-  mergedContent += `import { ApiConfig } from './brand/apiMap';\n\n`;
+  // Define and EXPORT our own types
+  mergedContent += `// Define basic types for API configuration - EXPORTED
+export interface ApiConfig<SecurityDataType = unknown> {
+  baseURL?: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+  withCredentials?: boolean;
+  validateStatus?: (status: number) => boolean;
+  securityWorker?: (securityData: SecurityDataType | null) => any;
+  [key: string]: any;
+}
 
-  // Add constants and configuration
-  mergedContent += `const NUMBER_OF_RETRIES = 3;
+export enum ContentType {
+  Json = "application/json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
+}
 
-/**
+export class HttpClient<SecurityDataType = unknown> {
+  public instance: any;
+  constructor(config: ApiConfig<SecurityDataType> = {}) {
+    // Basic implementation - actual functionality comes from generated APIs
+    this.instance = config;
+  }
+}
+
+export type QueryParamsType = Record<string | number, any>;
+export type RequestParams = any;
+export type FullRequestParams = any;
+
+`;
+
+  // Add the unified API class
+  mergedContent += `/**
  * Unified API client that combines all microservice APIs
  */
 export class UnifiedApi<SecurityDataType extends unknown> {
@@ -158,7 +188,9 @@ export class UnifiedApi<SecurityDataType extends unknown> {
 
   // Set security data for all services
   for (const { name } of serviceNames) {
-    mergedContent += `    this.${name}.setSecurityData(data);\n`;
+    mergedContent += `    if (this.${name}.setSecurityData) {
+      this.${name}.setSecurityData(data);
+    }\n`;
   }
 
   mergedContent += `  }
@@ -194,21 +226,77 @@ export function createApi<SecurityDataType extends unknown>(
 export const microservicesClient = createApi();
 
 // Export individual service clients for direct access if needed
-export const createBrandApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'brand')?.className || 'BrandApi'}(config);
-export const createDocumentsApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'documents')?.className || 'DocumentsApi'}(config);
-export const createGearApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'gear')?.className || 'GearApi'}(config);
-export const createIdentityApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'identity')?.className || 'IdentityApi'}(config);
-export const createMailingApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'mailing')?.className || 'MailingApi'}(config);
-export const createMusicApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'music')?.className || 'MusicApi'}(config);
-export const createPartyApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'party')?.className || 'PartyApi'}(config);
 `;
+
+  for (const { name, className } of serviceNames) {
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+    mergedContent += `export const create${capitalizedName}Api = <T = unknown>(config: ApiConfig<T> = {}) => new ${className}(config);\n`;
+  }
 
   // Write the merged API file
   fs.writeFileSync(outputPath, mergedContent);
   console.log(`✅ Merged API client generated at: ${outputPath}`);
 
+  // Generate service-specific type exports
+  generateServiceTypeExports();
+
   // Generate index file for easy imports
   generateIndexFile();
+}
+
+function generateServiceTypeExports() {
+  console.log('🔄 Generating service-specific type exports...');
+
+  for (const serviceName of Object.keys(microservices)) {
+    const capitalizedName =
+      serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+    const exportPath = path.join(
+      __dirname,
+      '..',
+      'src',
+      'models',
+      'api',
+      `${serviceName}.ts`,
+    );
+
+    const exportContent = `/* eslint-disable */
+/* tslint:disable */
+// @ts-nocheck
+/*
+ * ---------------------------------------------------------------
+ * ## ${capitalizedName.toUpperCase()} SERVICE TYPE EXPORTS     ##
+ * ---------------------------------------------------------------
+ */
+
+// Import all types from the service
+import * as ${capitalizedName}Types from './${serviceName}/apiMap';
+
+// Export the Api class with a specific name to avoid conflicts
+export { Api as ${capitalizedName}Api } from './${serviceName}/apiMap';
+
+// Try to export other types safely (without re-exporting to avoid conflicts)
+export type ${capitalizedName}QueryParamsType = ${capitalizedName}Types.QueryParamsType;
+export type ${capitalizedName}RequestParams = ${capitalizedName}Types.RequestParams;
+export type ${capitalizedName}FullRequestParams = ${capitalizedName}Types.FullRequestParams;
+export type ${capitalizedName}ApiConfig = ${capitalizedName}Types.ApiConfig<any>;
+
+// Create a namespace export for clean access to all types
+export namespace ${capitalizedName} {
+  // Re-export all types within the namespace
+  export type Api<T = any> = ${capitalizedName}Types.Api<T>;
+  export const ContentType = ${capitalizedName}Types.ContentType;
+  export type HttpClient<T = any> = ${capitalizedName}Types.HttpClient<T>;
+  export type QueryParamsType = ${capitalizedName}Types.QueryParamsType;
+  export type RequestParams = ${capitalizedName}Types.RequestParams;
+  export type FullRequestParams = ${capitalizedName}Types.FullRequestParams;
+  export type ApiConfig<T = any> = ${capitalizedName}Types.ApiConfig<T>;
+}
+`;
+
+    fs.writeFileSync(exportPath, exportContent);
+  }
+
+  console.log('✅ Service-specific type exports generated');
 }
 
 function generateIndexFile() {
@@ -233,30 +321,42 @@ function generateIndexFile() {
  * ---------------------------------------------------------------
  */
 
-// Export the main API client (similar to your existing aocmsAxiosClient)
-export { microservicesClient, createApi, UnifiedApi } from './api';
-
-// Export individual service creators
-export {
-  createBrandApi,
-  createDocumentsApi,
-  createGearApi,
-  createIdentityApi,
-  createMailingApi,
-  createMusicApi,
-  createPartyApi,
+// Export ONLY the main API client classes and functions (no types to avoid warnings)
+export { 
+  microservicesClient, 
+  createApi, 
+  UnifiedApi
 } from './api';
 
-// Export all types and interfaces
-export * from './api';
-
-// Re-export individual service modules for direct access if needed
+// Export individual service creators
 ${Object.keys(microservices)
-  .map(
-    (service) =>
-      `export * as ${service.charAt(0).toUpperCase() + service.slice(1)} from './${service}/apiMap';`,
-  )
+  .map((service) => {
+    const capitalizedName = service.charAt(0).toUpperCase() + service.slice(1);
+    return `export { create${capitalizedName}Api } from './api';`;
+  })
   .join('\n')}
+
+// Export service-specific namespaces
+${Object.keys(microservices)
+  .map((service) => {
+    const capitalizedName = service.charAt(0).toUpperCase() + service.slice(1);
+    return `export { ${capitalizedName} } from './${service}';`;
+  })
+  .join('\n')}
+
+// Export service-specific API classes with unique names
+${Object.keys(microservices)
+  .map((service) => {
+    const capitalizedName = service.charAt(0).toUpperCase() + service.slice(1);
+    return `export { ${capitalizedName}Api } from './${service}';`;
+  })
+  .join('\n')}
+
+// Types are available via direct imports if needed:
+// import type { ApiConfig, ContentType, QueryParamsType } from './api';
+// or via namespaced imports:
+// import type { Brand } from './brand';
+// const config: Brand.ApiConfig = {};
 `;
 
   fs.writeFileSync(indexPath, indexContent);
@@ -293,10 +393,29 @@ async function main() {
     try {
       generateMergedApiClient();
       console.log('\n🎉 Merged API client generated successfully!');
-      console.log('\n📖 Usage example:');
-      console.log('import { microservicesClient } from "@/models";');
+      console.log('\n📖 Usage examples:');
+      console.log('// Using unified client:');
+      console.log('import { microservicesClient } from "@/models/api";');
       console.log(
-        'const brands = await microservicesClient.brand.brands.apiV1BrandsList();',
+        'const result = await microservicesClient.identity.users.apiV1UsersLoginCreate({',
+      );
+      console.log('  email: "user@example.com",');
+      console.log('  password: "password"');
+      console.log('});');
+      console.log('');
+      console.log('// Using individual service client:');
+      console.log('import { createIdentityApi } from "@/models/api";');
+      console.log('const identityApi = createIdentityApi();');
+      console.log('');
+      console.log('// Using service-specific types:');
+      console.log('import { Identity } from "@/models/api";');
+      console.log(
+        'const loginData: Identity.LoginUserRequestDTO = { email: "...", password: "..." };',
+      );
+      console.log('');
+      console.log('// Direct type imports (if needed):');
+      console.log(
+        'import { LoginUserRequestDTO } from "@/models/api/identity/apiMap";',
       );
     } catch (error) {
       console.error('❌ Failed to generate merged API client:', error.message);

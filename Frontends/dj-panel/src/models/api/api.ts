@@ -10,23 +10,42 @@
  */
 
 import { Api as BrandApi } from './brand/apiMap';
-export * from './brand/apiMap';
 import { Api as DocumentsApi } from './documents/apiMap';
-export * from './documents/apiMap';
 import { Api as GearApi } from './gear/apiMap';
-export * from './gear/apiMap';
 import { Api as IdentityApi } from './identity/apiMap';
-export * from './identity/apiMap';
 import { Api as MailingApi } from './mailing/apiMap';
-export * from './mailing/apiMap';
 import { Api as MusicApi } from './music/apiMap';
-export * from './music/apiMap';
 import { Api as PartyApi } from './party/apiMap';
-export * from './party/apiMap';
 
-import { ApiConfig } from './brand/apiMap';
+// Define basic types for API configuration - EXPORTED
+export interface ApiConfig<SecurityDataType = unknown> {
+  baseURL?: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+  withCredentials?: boolean;
+  validateStatus?: (status: number) => boolean;
+  securityWorker?: (securityData: SecurityDataType | null) => any;
+  [key: string]: any;
+}
 
-const NUMBER_OF_RETRIES = 3;
+export enum ContentType {
+  Json = "application/json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
+}
+
+export class HttpClient<SecurityDataType = unknown> {
+  public instance: any;
+  constructor(config: ApiConfig<SecurityDataType> = {}) {
+    // Basic implementation - actual functionality comes from generated APIs
+    this.instance = config;
+  }
+}
+
+export type QueryParamsType = Record<string | number, any>;
+export type RequestParams = any;
+export type FullRequestParams = any;
 
 /**
  * Unified API client that combines all microservice APIs
@@ -62,13 +81,27 @@ export class UnifiedApi<SecurityDataType extends unknown> {
    * Set security data for all services
    */
   public setSecurityData(data: SecurityDataType | null) {
-    this.brand.setSecurityData(data);
-    this.documents.setSecurityData(data);
-    this.gear.setSecurityData(data);
-    this.identity.setSecurityData(data);
-    this.mailing.setSecurityData(data);
-    this.music.setSecurityData(data);
-    this.party.setSecurityData(data);
+    if (this.brand.setSecurityData) {
+      this.brand.setSecurityData(data);
+    }
+    if (this.documents.setSecurityData) {
+      this.documents.setSecurityData(data);
+    }
+    if (this.gear.setSecurityData) {
+      this.gear.setSecurityData(data);
+    }
+    if (this.identity.setSecurityData) {
+      this.identity.setSecurityData(data);
+    }
+    if (this.mailing.setSecurityData) {
+      this.mailing.setSecurityData(data);
+    }
+    if (this.music.setSecurityData) {
+      this.music.setSecurityData(data);
+    }
+    if (this.party.setSecurityData) {
+      this.party.setSecurityData(data);
+    }
   }
 
   /**
@@ -114,10 +147,10 @@ export function createApi<SecurityDataType extends unknown>(
 export const microservicesClient = createApi();
 
 // Export individual service clients for direct access if needed
-export const createBrandApi = (config?: ApiConfig) => new BrandApi(config);
-export const createDocumentsApi = (config?: ApiConfig) => new DocumentsApi(config);
-export const createGearApi = (config?: ApiConfig) => new GearApi(config);
-export const createIdentityApi = (config?: ApiConfig) => new IdentityApi(config);
-export const createMailingApi = (config?: ApiConfig) => new MailingApi(config);
-export const createMusicApi = (config?: ApiConfig) => new MusicApi(config);
-export const createPartyApi = (config?: ApiConfig) => new PartyApi(config);
+export const createBrandApi = <T = unknown>(config: ApiConfig<T> = {}) => new BrandApi(config);
+export const createDocumentsApi = <T = unknown>(config: ApiConfig<T> = {}) => new DocumentsApi(config);
+export const createGearApi = <T = unknown>(config: ApiConfig<T> = {}) => new GearApi(config);
+export const createIdentityApi = <T = unknown>(config: ApiConfig<T> = {}) => new IdentityApi(config);
+export const createMailingApi = <T = unknown>(config: ApiConfig<T> = {}) => new MailingApi(config);
+export const createMusicApi = <T = unknown>(config: ApiConfig<T> = {}) => new MusicApi(config);
+export const createPartyApi = <T = unknown>(config: ApiConfig<T> = {}) => new PartyApi(config);

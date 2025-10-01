@@ -1,34 +1,22 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
-import { LoginComponent } from './pages/identity/login';
-import { HomeComponent } from './pages/home';
-import { Layout } from './layout';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import './index.css';
 
-import { data } from './content/homePage';
-import { navigation } from './content/navigation';
-import { footer } from './content/footer';
 import { AuthProvider } from './providers/auth-provider';
-import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
+import { Layout } from './components/Layout/Layout';
+import { DynamicPage } from './components/DynamicPage';
 
 export default function App() {
   return (
     <HashRouter>
       <ServicesProvider>
         <AuthProvider>
-          <Routes>
-            <Route element={<Layout navigation={navigation} footer={footer} />}>
-              <Route path="users">
-                <Route path="login" element={<LoginComponent />} />
-                <Route
-                  path="forgot-password"
-                  element={<ForgotPasswordComponent />}
-                />
-              </Route>
-              <Route index element={<HomeComponent {...data} />} />
-            </Route>
-          </Routes>
+          <Layout>
+            <Routes>
+              <Route path="/*" element={<DynamicPage />} />
+            </Routes>
+          </Layout>
         </AuthProvider>
       </ServicesProvider>
     </HashRouter>

@@ -1,12 +1,14 @@
 import React from 'react';
 import { ServiceContext, Services } from '../context/service-context';
 import { UsersService } from '../services/users-service';
+import { ContentService } from '../services/content-service';
 
 export const ServicesProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const services: Services = {
     usersService: UsersService,
+    contentService: ContentService,
   };
 
   return (

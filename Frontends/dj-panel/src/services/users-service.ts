@@ -1,50 +1,31 @@
-import { SHA256 } from 'crypto-js';
-import {
-  BooleanResponse,
-  LoginResponseDTOResponse,
-  microservicesClient,
-} from '../models/api';
+import { identityService } from './api-services';
 
 export class UsersService {
-  public static async forgotPassword(email: string): Promise<BooleanResponse> {
-    return microservicesClient.identity.users
-      .apiV1UsersForgotPasswordUpdate({ email: email })
-      .then((response) => {
-        return response.data;
-      })
-      .catch((error) => {
-        return {
-          success: false,
-          data: false,
-          message: error.message,
-          errors: [error.message],
-        };
+  public static async login(credentials: { email: string; password: string }) {
+    try {
+      const response = await identityService.auth.apiV1AuthLoginPost({
+        email: credentials.email,
+        password: credentials.password,
       });
+
+      return {
+        user: response.data.user,
+        jwt: response.data.token,
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   }
 
-  public static async Login(
-    email: string,
-    password: string,
-  ): Promise<LoginResponseDTOResponse> {
-    const hashedPassword = SHA256(password);
-    const requestBody = {
-      email: email,
-      password: hashedPassword.toString(),
-    };
-    return microservicesClient.identity.users
-      .apiV1UsersLoginCreate(requestBody)
-      .then((response) => {
-        return response.data;
-      })
-      .catch((error) => {
-        return (
-          error.response?.data ?? {
-            success: false,
-            data: null,
-            message: error.message,
-            errors: [error.message],
-          }
-        );
+  public static async forgotPassword(data: { email: string }) {
+    try {
+      const response = await identityService.auth.apiV1AuthForgotPasswordPost({
+        email: data.email,
       });
+
+      return response.data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+    }
   }
 }

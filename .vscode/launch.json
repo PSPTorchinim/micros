@@ -41,7 +41,8 @@
         "REACT_APP_STRAPI_URL": "http://localhost:1337",
         "NODE_ENV": "development",
         "REACT_APP_API_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
-        "REACT_APP_API_JWT_TOKEN": "LocalDevelopmentJWTToken123456789012345678901234567890"
+        "REACT_APP_API_JWT_TOKEN": "LocalDevelopmentJWTToken123456789012345678901234567890",
+        "REACT_APP_STRAPI_TOKEN": "07da5e6c59c3d98db8c1508fd7a88d08b101a5cd494b39324066718da5b620d5b8798ff0f031a8d1c01926e7bb1129d0d6c9758349985f338ee8fbb756feb58aecf5e28a3dfc1754cd0936399d0a83de350d83bd0a0ea4d25e6ca3b2ae733ef8631bce81f75928e1e1856da28dbc1813a80694b2dd7f58478825be46c0bfd164"
       }
     },
     {
@@ -367,7 +368,8 @@
         "C#: EquipmentAPI Debug",
         "C#: DocumentsAPI Debug",
         "C#: CompanyAPI Debug",
-        "C#: DJHostGateway Debug"
+        "C#: DJHostGateway Debug",
+        "CMS: Strapi Debug"
       ],
       "stopAll": true,
       "presentation": {
