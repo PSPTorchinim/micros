@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_shared_navigation_items",
+  "info": {
+    "displayName": "Navigation Item"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "HREF": {
+      "type": "string"
+    },
+    "isExternal": {
+      "type": "boolean",
+      "default": false
+    },
+    "isButton": {
+      "type": "boolean",
+      "default": false
+    },
+    "Type": {
+      "type": "enumeration",
+      "enum": [
+        "Primary",
+        "Secondary"
+      ]
+    }
+  },
+  "config": {}
+}

@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_layout_footers",
+  "info": {
+    "displayName": "Footer"
+  },
+  "options": {},
+  "attributes": {
+    "RegularText": {
+      "type": "string"
+    },
+    "Sections": {
+      "type": "component",
+      "component": "shared.section",
+      "repeatable": true
+    },
+    "SocialMediaLinks": {
+      "type": "component",
+      "component": "shared.image-navigation-item",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

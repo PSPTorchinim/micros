@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_sections",
+  "info": {
+    "displayName": "Section"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Description": {
+      "type": "text"
+    },
+    "Links": {
+      "type": "component",
+      "component": "shared.navigation-item",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

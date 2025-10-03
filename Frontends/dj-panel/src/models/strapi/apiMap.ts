@@ -20,19 +20,19 @@ export interface Error {
   };
 }
 
-export interface ArticleRequest {
+export interface GlobalRequest {
   data: {
     Title?: string;
-    /** @example "string or id" */
-    Hero?: number | string;
-    Content?: any;
+    Description?: string;
+    Header?: LayoutHeaderComponent;
+    Footer?: LayoutFooterComponent;
     locale?: string;
     localizations?: (number | string)[];
   };
 }
 
-export interface ArticleListResponse {
-  data?: Article[];
+export interface GlobalListResponse {
+  data?: Global[];
   meta?: {
     pagination?: {
       page?: number;
@@ -45,11 +45,65 @@ export interface ArticleListResponse {
   };
 }
 
-export interface Article {
+export interface Global {
   id?: number;
   documentId?: string;
   Title?: string;
-  Hero?: {
+  Description?: string;
+  Header?: LayoutHeaderComponent;
+  Footer?: LayoutFooterComponent;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    Title?: string;
+    Description?: string;
+    Header?: LayoutHeaderComponent;
+    Footer?: LayoutFooterComponent;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface GlobalResponse {
+  data?: Global;
+  meta?: object;
+}
+
+export interface LayoutHeaderComponent {
+  id?: number;
+  Logo?: {
     id?: number;
     documentId?: string;
     name?: string;
@@ -74,174 +128,6 @@ export interface Article {
     folder?: {
       id?: number;
       documentId?: string;
-      name?: string;
-      pathId?: number;
-      parent?: {
-        id?: number;
-        documentId?: string;
-      };
-      children?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      files?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-          firstname?: string;
-          lastname?: string;
-          username?: string;
-          /** @format email */
-          email?: string;
-          resetPasswordToken?: string;
-          registrationToken?: string;
-          isActive?: boolean;
-          roles?: {
-            id?: number;
-            documentId?: string;
-            name?: string;
-            code?: string;
-            description?: string;
-            users?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            permissions?: {
-              id?: number;
-              documentId?: string;
-              action?: string;
-              actionParameters?: any;
-              subject?: string;
-              properties?: any;
-              conditions?: any;
-              role?: {
-                id?: number;
-                documentId?: string;
-              };
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          blocked?: boolean;
-          preferedLanguage?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          updatedBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          locale?: string;
-          localizations?: {
-            id?: number;
-            documentId?: string;
-          }[];
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      path?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
     };
     folderPath?: string;
     /** @format date-time */
@@ -264,1306 +150,33 @@ export interface Article {
       documentId?: string;
     }[];
   };
-  Content?: any;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-    Title?: string;
-    Hero?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    Content?: any;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
+  Heading?: string;
+  SecondaryText?: string;
 }
 
-export interface ArticleResponse {
-  data?: Article;
-  meta?: object;
-}
-
-export interface BasicTemplateRequest {
-  data: {
-    Name?: string;
-    /** @example "string or id" */
-    Hero?: number | string;
-    Type?: BasicTemplateRequestTypeEnum;
-    Content?: BaseNull &
-      (
-        | BaseNullComponentMapping<
-            "subject-groups.subject-group",
-            SubjectGroupsSubjectGroupComponent
-          >
-        | BaseNullComponentMapping<
-            "story-cards.story-cards",
-            StoryCardsStoryCardsComponent
-          >
-      );
-    Pages?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface BasicTemplateListResponse {
-  data?: BasicTemplate[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface BasicTemplate {
+export interface SharedNavigationItemComponent {
   id?: number;
-  documentId?: string;
-  Name?: string;
-  Hero?: {
-    id?: number;
-    documentId?: string;
-    name?: string;
-    alternativeText?: string;
-    caption?: string;
-    width?: number;
-    height?: number;
-    formats?: any;
-    hash?: string;
-    ext?: string;
-    mime?: string;
-    /** @format float */
-    size?: number;
-    url?: string;
-    previewUrl?: string;
-    provider?: string;
-    provider_metadata?: any;
-    related?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    folder?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      pathId?: number;
-      parent?: {
-        id?: number;
-        documentId?: string;
-      };
-      children?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      files?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-          firstname?: string;
-          lastname?: string;
-          username?: string;
-          /** @format email */
-          email?: string;
-          resetPasswordToken?: string;
-          registrationToken?: string;
-          isActive?: boolean;
-          roles?: {
-            id?: number;
-            documentId?: string;
-            name?: string;
-            code?: string;
-            description?: string;
-            users?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            permissions?: {
-              id?: number;
-              documentId?: string;
-              action?: string;
-              actionParameters?: any;
-              subject?: string;
-              properties?: any;
-              conditions?: any;
-              role?: {
-                id?: number;
-                documentId?: string;
-              };
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          blocked?: boolean;
-          preferedLanguage?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          updatedBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          locale?: string;
-          localizations?: {
-            id?: number;
-            documentId?: string;
-          }[];
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      path?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    folderPath?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  };
-  Type?: BasicTemplateTypeEnum;
-  Content?: AbstractNull &
-    (
-      | AbstractNullComponentMapping<
-          "subject-groups.subject-group",
-          SubjectGroupsSubjectGroupComponent
-        >
-      | AbstractNullComponentMapping<
-          "story-cards.story-cards",
-          StoryCardsStoryCardsComponent
-        >
-    );
-  Pages?: {
-    id?: number;
-    documentId?: string;
-    Name?: string;
-    URL?: string;
-    Subpages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    Pages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    Content?: {
-      id?: number;
-      documentId?: string;
-      Name?: string;
-      Hero?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      };
-      Type?: BasicTemplateTypeEnum1;
-      Content?: DiscriminatorNull &
-        (
-          | DiscriminatorNullComponentMapping<
-              "subject-groups.subject-group",
-              SubjectGroupsSubjectGroupComponent
-            >
-          | DiscriminatorNullComponentMapping<
-              "story-cards.story-cards",
-              StoryCardsStoryCardsComponent
-            >
-        );
-      Pages?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    IsInNavigation?: boolean;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-  }[];
+  Label?: string;
+  HREF?: string;
+  isExternal?: boolean;
+  isButton?: boolean;
+  Type?: SharedNavigationItemComponentTypeEnum;
 }
 
-export interface BasicTemplateResponse {
-  data?: BasicTemplate;
-  meta?: object;
-}
-
-export interface SubjectGroupsSubjectGroupComponent {
+export interface SharedSectionComponent {
   id?: number;
-  __component?: SubjectGroupsSubjectGroupComponentComponentEnum;
-}
-
-export interface StoryCardsStoryCardsComponent {
-  id?: number;
-  __component?: StoryCardsStoryCardsComponentComponentEnum;
   Title?: string;
-  Description?: any;
-  Cards?: {
-    id?: number;
-    documentId?: string;
-    Title?: string;
-    Description?: any;
-    Image?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
+  Description?: string;
+  Links?: SharedNavigationItemComponent[];
 }
 
-export interface FooterRequest {
-  data: {
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface FooterListResponse {
-  data?: Footer[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface Footer {
+export interface SharedImageNavigationItemComponent {
   id?: number;
-  documentId?: string;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-    firstname?: string;
-    lastname?: string;
-    username?: string;
-    /** @format email */
-    email?: string;
-    resetPasswordToken?: string;
-    registrationToken?: string;
-    isActive?: boolean;
-    roles?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      code?: string;
-      description?: string;
-      users?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      permissions?: {
-        id?: number;
-        documentId?: string;
-        action?: string;
-        actionParameters?: any;
-        subject?: string;
-        properties?: any;
-        conditions?: any;
-        role?: {
-          id?: number;
-          documentId?: string;
-        };
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    blocked?: boolean;
-    preferedLanguage?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-}
-
-export interface FooterResponse {
-  data?: Footer;
-  meta?: object;
-}
-
-export interface HeaderRequest {
-  data: {
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface HeaderListResponse {
-  data?: Header[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface Header {
-  id?: number;
-  documentId?: string;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-    firstname?: string;
-    lastname?: string;
-    username?: string;
-    /** @format email */
-    email?: string;
-    resetPasswordToken?: string;
-    registrationToken?: string;
-    isActive?: boolean;
-    roles?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      code?: string;
-      description?: string;
-      users?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      permissions?: {
-        id?: number;
-        documentId?: string;
-        action?: string;
-        actionParameters?: any;
-        subject?: string;
-        properties?: any;
-        conditions?: any;
-        role?: {
-          id?: number;
-          documentId?: string;
-        };
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    blocked?: boolean;
-    preferedLanguage?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-}
-
-export interface HeaderResponse {
-  data?: Header;
-  meta?: object;
-}
-
-export interface PageRequest {
-  data: {
-    Name: string;
-    URL: string;
-    Subpages?: (number | string)[];
-    Pages?: (number | string)[];
-    Content?: (number | string)[];
-    IsInNavigation?: boolean;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface PageListResponse {
-  data?: Page[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface Page {
-  id?: number;
-  documentId?: string;
-  Name: string;
-  URL: string;
-  Subpages?: {
-    id?: number;
-    documentId?: string;
-    Name?: string;
-    URL?: string;
-    Subpages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    Pages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    Content?: {
-      id?: number;
-      documentId?: string;
-      Name?: string;
-      Hero?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-          name?: string;
-          pathId?: number;
-          parent?: {
-            id?: number;
-            documentId?: string;
-          };
-          children?: {
-            id?: number;
-            documentId?: string;
-          }[];
-          files?: {
-            id?: number;
-            documentId?: string;
-            name?: string;
-            alternativeText?: string;
-            caption?: string;
-            width?: number;
-            height?: number;
-            formats?: any;
-            hash?: string;
-            ext?: string;
-            mime?: string;
-            /** @format float */
-            size?: number;
-            url?: string;
-            previewUrl?: string;
-            provider?: string;
-            provider_metadata?: any;
-            related?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            folder?: {
-              id?: number;
-              documentId?: string;
-            };
-            folderPath?: string;
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-              firstname?: string;
-              lastname?: string;
-              username?: string;
-              /** @format email */
-              email?: string;
-              resetPasswordToken?: string;
-              registrationToken?: string;
-              isActive?: boolean;
-              roles?: {
-                id?: number;
-                documentId?: string;
-                name?: string;
-                code?: string;
-                description?: string;
-                users?: {
-                  id?: number;
-                  documentId?: string;
-                }[];
-                permissions?: {
-                  id?: number;
-                  documentId?: string;
-                  action?: string;
-                  actionParameters?: any;
-                  subject?: string;
-                  properties?: any;
-                  conditions?: any;
-                  role?: {
-                    id?: number;
-                    documentId?: string;
-                  };
-                  /** @format date-time */
-                  createdAt?: string;
-                  /** @format date-time */
-                  updatedAt?: string;
-                  /** @format date-time */
-                  publishedAt?: string;
-                  createdBy?: {
-                    id?: number;
-                    documentId?: string;
-                  };
-                  updatedBy?: {
-                    id?: number;
-                    documentId?: string;
-                  };
-                  locale?: string;
-                  localizations?: {
-                    id?: number;
-                    documentId?: string;
-                  }[];
-                }[];
-                /** @format date-time */
-                createdAt?: string;
-                /** @format date-time */
-                updatedAt?: string;
-                /** @format date-time */
-                publishedAt?: string;
-                createdBy?: {
-                  id?: number;
-                  documentId?: string;
-                };
-                updatedBy?: {
-                  id?: number;
-                  documentId?: string;
-                };
-                locale?: string;
-                localizations?: {
-                  id?: number;
-                  documentId?: string;
-                }[];
-              }[];
-              blocked?: boolean;
-              preferedLanguage?: string;
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          path?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          updatedBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          locale?: string;
-          localizations?: {
-            id?: number;
-            documentId?: string;
-          }[];
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      };
-      Type?: PageTypeEnum;
-      Content?: InternalNull &
-        (
-          | InternalNullComponentMapping<
-              "subject-groups.subject-group",
-              SubjectGroupsSubjectGroupComponent
-            >
-          | InternalNullComponentMapping<
-              "story-cards.story-cards",
-              StoryCardsStoryCardsComponent
-            >
-        );
-      Pages?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    IsInNavigation?: boolean;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-  Pages?: {
-    id?: number;
-    documentId?: string;
-  }[];
-  Content?: {
-    id?: number;
-    documentId?: string;
-  }[];
-  IsInNavigation?: boolean;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-  }[];
-}
-
-export interface PageResponse {
-  data?: Page;
-  meta?: object;
-}
-
-export interface StoryCardRequest {
-  data: {
-    Title?: string;
-    Description?: any;
-    /** @example "string or id" */
-    Image?: number | string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface StoryCardListResponse {
-  data?: StoryCard[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface StoryCard {
-  id?: number;
-  documentId?: string;
-  Title?: string;
-  Description?: any;
+  Label?: string;
+  HREF?: string;
+  isExternal?: boolean;
+  isButton?: boolean;
+  Type?: SharedImageNavigationItemComponentTypeEnum;
   Image?: {
     id?: number;
     documentId?: string;
@@ -1589,174 +202,6 @@ export interface StoryCard {
     folder?: {
       id?: number;
       documentId?: string;
-      name?: string;
-      pathId?: number;
-      parent?: {
-        id?: number;
-        documentId?: string;
-      };
-      children?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      files?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-          firstname?: string;
-          lastname?: string;
-          username?: string;
-          /** @format email */
-          email?: string;
-          resetPasswordToken?: string;
-          registrationToken?: string;
-          isActive?: boolean;
-          roles?: {
-            id?: number;
-            documentId?: string;
-            name?: string;
-            code?: string;
-            description?: string;
-            users?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            permissions?: {
-              id?: number;
-              documentId?: string;
-              action?: string;
-              actionParameters?: any;
-              subject?: string;
-              properties?: any;
-              conditions?: any;
-              role?: {
-                id?: number;
-                documentId?: string;
-              };
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          blocked?: boolean;
-          preferedLanguage?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          updatedBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          locale?: string;
-          localizations?: {
-            id?: number;
-            documentId?: string;
-          }[];
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      path?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
     };
     folderPath?: string;
     /** @format date-time */
@@ -1779,113 +224,29 @@ export interface StoryCard {
       documentId?: string;
     }[];
   };
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-    Title?: string;
-    Description?: any;
-    Image?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
 }
 
-export interface StoryCardResponse {
-  data?: StoryCard;
-  meta?: object;
+export interface LayoutFooterComponent {
+  id?: number;
+  RegularText?: string;
+  Sections?: SharedSectionComponent[];
+  SocialMediaLinks?: SharedImageNavigationItemComponent[];
 }
 
-export interface SubjectItemRequest {
+export interface PageRequest {
   data: {
     Title?: string;
-    Description?: any;
-    /** @example "string or id" */
-    Hero?: number | string;
+    Description?: string;
+    Slug?: string;
+    Parents?: (number | string)[];
+    Subpages?: (number | string)[];
     locale?: string;
     localizations?: (number | string)[];
   };
 }
 
-export interface SubjectItemListResponse {
-  data?: SubjectItem[];
+export interface PageListResponse {
+  data?: Page[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1898,154 +259,65 @@ export interface SubjectItemListResponse {
   };
 }
 
-export interface SubjectItem {
+export interface Page {
   id?: number;
   documentId?: string;
   Title?: string;
-  Description?: any;
-  Hero?: {
+  Description?: string;
+  Slug?: string;
+  Parents?: {
     id?: number;
     documentId?: string;
-    name?: string;
-    alternativeText?: string;
-    caption?: string;
-    width?: number;
-    height?: number;
-    formats?: any;
-    hash?: string;
-    ext?: string;
-    mime?: string;
-    /** @format float */
-    size?: number;
-    url?: string;
-    previewUrl?: string;
-    provider?: string;
-    provider_metadata?: any;
-    related?: {
+    Title?: string;
+    Description?: string;
+    Slug?: string;
+    Parents?: {
       id?: number;
       documentId?: string;
     }[];
-    folder?: {
+    Subpages?: {
       id?: number;
       documentId?: string;
-      name?: string;
-      pathId?: number;
-      parent?: {
-        id?: number;
-        documentId?: string;
-      };
-      children?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      files?: {
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+      firstname?: string;
+      lastname?: string;
+      username?: string;
+      /** @format email */
+      email?: string;
+      resetPasswordToken?: string;
+      registrationToken?: string;
+      isActive?: boolean;
+      roles?: {
         id?: number;
         documentId?: string;
         name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
+        code?: string;
+        description?: string;
+        users?: {
           id?: number;
           documentId?: string;
         }[];
-        folder?: {
+        permissions?: {
           id?: number;
           documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-          firstname?: string;
-          lastname?: string;
-          username?: string;
-          /** @format email */
-          email?: string;
-          resetPasswordToken?: string;
-          registrationToken?: string;
-          isActive?: boolean;
-          roles?: {
+          action?: string;
+          actionParameters?: any;
+          subject?: string;
+          properties?: any;
+          conditions?: any;
+          role?: {
             id?: number;
             documentId?: string;
-            name?: string;
-            code?: string;
-            description?: string;
-            users?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            permissions?: {
-              id?: number;
-              documentId?: string;
-              action?: string;
-              actionParameters?: any;
-              subject?: string;
-              properties?: any;
-              conditions?: any;
-              role?: {
-                id?: number;
-                documentId?: string;
-              };
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          blocked?: boolean;
-          preferedLanguage?: string;
+          };
           /** @format date-time */
           createdAt?: string;
           /** @format date-time */
@@ -2065,6 +337,16 @@ export interface SubjectItem {
             id?: number;
             documentId?: string;
           }[];
+        }[];
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
         };
         updatedBy?: {
           id?: number;
@@ -2076,7 +358,8 @@ export interface SubjectItem {
           documentId?: string;
         }[];
       }[];
-      path?: string;
+      blocked?: boolean;
+      preferedLanguage?: string;
       /** @format date-time */
       createdAt?: string;
       /** @format date-time */
@@ -2097,17 +380,6 @@ export interface SubjectItem {
         documentId?: string;
       }[];
     };
-    folderPath?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
     updatedBy?: {
       id?: number;
       documentId?: string;
@@ -2117,7 +389,11 @@ export interface SubjectItem {
       id?: number;
       documentId?: string;
     }[];
-  };
+  }[];
+  Subpages?: {
+    id?: number;
+    documentId?: string;
+  }[];
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -2136,79 +412,11 @@ export interface SubjectItem {
   localizations?: {
     id?: number;
     documentId?: string;
-    Title?: string;
-    Description?: any;
-    Hero?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
   }[];
 }
 
-export interface SubjectItemResponse {
-  data?: SubjectItem;
+export interface PageResponse {
+  data?: Page;
   meta?: object;
 }
 
@@ -2296,65 +504,15 @@ export type UsersPermissionsPermissionsTree = Record<
   }
 >;
 
-export enum BasicTemplateRequestTypeEnum {
-  Basic = "Basic",
+export enum SharedNavigationItemComponentTypeEnum {
+  Primary = "Primary",
+  Secondary = "Secondary",
 }
 
-type BaseNull = (
-  | SubjectGroupsSubjectGroupComponent
-  | StoryCardsStoryCardsComponent
-)[];
-
-type BaseNullComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum BasicTemplateTypeEnum {
-  Basic = "Basic",
+export enum SharedImageNavigationItemComponentTypeEnum {
+  Primary = "Primary",
+  Secondary = "Secondary",
 }
-
-type AbstractNull = (
-  | SubjectGroupsSubjectGroupComponent
-  | StoryCardsStoryCardsComponent
-)[];
-
-type AbstractNullComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum BasicTemplateTypeEnum1 {
-  Basic = "Basic",
-}
-
-type DiscriminatorNull = (
-  | SubjectGroupsSubjectGroupComponent
-  | StoryCardsStoryCardsComponent
-)[];
-
-type DiscriminatorNullComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum SubjectGroupsSubjectGroupComponentComponentEnum {
-  SubjectGroupsSubjectGroup = "subject-groups.subject-group",
-}
-
-export enum StoryCardsStoryCardsComponentComponentEnum {
-  StoryCardsStoryCards = "story-cards.story-cards",
-}
-
-export enum PageTypeEnum {
-  Basic = "Basic",
-}
-
-type InternalNull = (
-  | SubjectGroupsSubjectGroupComponent
-  | StoryCardsStoryCardsComponent
-)[];
-
-type InternalNullComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
 
 export enum OkEnum {
   True = true,
@@ -2565,16 +723,16 @@ export class HttpClient<SecurityDataType = unknown> {
 export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
-  article = {
+  global = {
     /**
      * No description
      *
-     * @tags Article
-     * @name GetArticles
-     * @request GET:/articles
+     * @tags Global
+     * @name GetGlobal
+     * @request GET:/global
      * @secure
      */
-    getArticles: (
+    getGlobal: (
       query?: {
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
@@ -2599,8 +757,8 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<ArticleListResponse, Error>({
-        path: `/articles`,
+      this.request<GlobalResponse, Error>({
+        path: `/global`,
         method: "GET",
         query: query,
         secure: true,
@@ -2611,54 +769,14 @@ export class Api<
     /**
      * No description
      *
-     * @tags Article
-     * @name PostArticles
-     * @request POST:/articles
+     * @tags Global
+     * @name PutGlobal
+     * @request PUT:/global
      * @secure
      */
-    postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Article
-     * @name GetArticlesId
-     * @request GET:/articles/{id}
-     * @secure
-     */
-    getArticlesId: (id: number, params: RequestParams = {}) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Article
-     * @name PutArticlesId
-     * @request PUT:/articles/{id}
-     * @secure
-     */
-    putArticlesId: (
-      id: number,
-      data: ArticleRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
+    putGlobal: (data: GlobalRequest, params: RequestParams = {}) =>
+      this.request<GlobalResponse, Error>({
+        path: `/global`,
         method: "PUT",
         body: data,
         secure: true,
@@ -2670,294 +788,14 @@ export class Api<
     /**
      * No description
      *
-     * @tags Article
-     * @name DeleteArticlesId
-     * @request DELETE:/articles/{id}
+     * @tags Global
+     * @name DeleteGlobal
+     * @request DELETE:/global
      * @secure
      */
-    deleteArticlesId: (id: number, params: RequestParams = {}) =>
+    deleteGlobal: (params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/articles/${id}`,
-        method: "DELETE",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-  basicTemplate = {
-    /**
-     * No description
-     *
-     * @tags Basic-template
-     * @name GetBasicTemplates
-     * @request GET:/basic-templates
-     * @secure
-     */
-    getBasicTemplates: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
-        /** Page number (default: 0) */
-        "pagination[page]"?: number;
-        /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
-        /** Offset value (default: 0) */
-        "pagination[start]"?: number;
-        /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BasicTemplateListResponse, Error>({
-        path: `/basic-templates`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Basic-template
-     * @name PostBasicTemplates
-     * @request POST:/basic-templates
-     * @secure
-     */
-    postBasicTemplates: (
-      data: BasicTemplateRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<BasicTemplateResponse, Error>({
-        path: `/basic-templates`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Basic-template
-     * @name GetBasicTemplatesId
-     * @request GET:/basic-templates/{id}
-     * @secure
-     */
-    getBasicTemplatesId: (id: number, params: RequestParams = {}) =>
-      this.request<BasicTemplateResponse, Error>({
-        path: `/basic-templates/${id}`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Basic-template
-     * @name PutBasicTemplatesId
-     * @request PUT:/basic-templates/{id}
-     * @secure
-     */
-    putBasicTemplatesId: (
-      id: number,
-      data: BasicTemplateRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<BasicTemplateResponse, Error>({
-        path: `/basic-templates/${id}`,
-        method: "PUT",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Basic-template
-     * @name DeleteBasicTemplatesId
-     * @request DELETE:/basic-templates/{id}
-     * @secure
-     */
-    deleteBasicTemplatesId: (id: number, params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/basic-templates/${id}`,
-        method: "DELETE",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-  footer = {
-    /**
-     * No description
-     *
-     * @tags Footer
-     * @name GetFooter
-     * @request GET:/footer
-     * @secure
-     */
-    getFooter: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
-        /** Page number (default: 0) */
-        "pagination[page]"?: number;
-        /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
-        /** Offset value (default: 0) */
-        "pagination[start]"?: number;
-        /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<FooterResponse, Error>({
-        path: `/footer`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Footer
-     * @name PutFooter
-     * @request PUT:/footer
-     * @secure
-     */
-    putFooter: (data: FooterRequest, params: RequestParams = {}) =>
-      this.request<FooterResponse, Error>({
-        path: `/footer`,
-        method: "PUT",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Footer
-     * @name DeleteFooter
-     * @request DELETE:/footer
-     * @secure
-     */
-    deleteFooter: (params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/footer`,
-        method: "DELETE",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-  header = {
-    /**
-     * No description
-     *
-     * @tags Header
-     * @name GetHeader
-     * @request GET:/header
-     * @secure
-     */
-    getHeader: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
-        /** Page number (default: 0) */
-        "pagination[page]"?: number;
-        /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
-        /** Offset value (default: 0) */
-        "pagination[start]"?: number;
-        /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<HeaderResponse, Error>({
-        path: `/header`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Header
-     * @name PutHeader
-     * @request PUT:/header
-     * @secure
-     */
-    putHeader: (data: HeaderRequest, params: RequestParams = {}) =>
-      this.request<HeaderResponse, Error>({
-        path: `/header`,
-        method: "PUT",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Header
-     * @name DeleteHeader
-     * @request DELETE:/header
-     * @secure
-     */
-    deleteHeader: (params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/header`,
+        path: `/global`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -3073,244 +911,6 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
-        method: "DELETE",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-  storyCard = {
-    /**
-     * No description
-     *
-     * @tags Story-card
-     * @name GetStoryCards
-     * @request GET:/story-cards
-     * @secure
-     */
-    getStoryCards: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
-        /** Page number (default: 0) */
-        "pagination[page]"?: number;
-        /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
-        /** Offset value (default: 0) */
-        "pagination[start]"?: number;
-        /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<StoryCardListResponse, Error>({
-        path: `/story-cards`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Story-card
-     * @name PostStoryCards
-     * @request POST:/story-cards
-     * @secure
-     */
-    postStoryCards: (data: StoryCardRequest, params: RequestParams = {}) =>
-      this.request<StoryCardResponse, Error>({
-        path: `/story-cards`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Story-card
-     * @name GetStoryCardsId
-     * @request GET:/story-cards/{id}
-     * @secure
-     */
-    getStoryCardsId: (id: number, params: RequestParams = {}) =>
-      this.request<StoryCardResponse, Error>({
-        path: `/story-cards/${id}`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Story-card
-     * @name PutStoryCardsId
-     * @request PUT:/story-cards/{id}
-     * @secure
-     */
-    putStoryCardsId: (
-      id: number,
-      data: StoryCardRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<StoryCardResponse, Error>({
-        path: `/story-cards/${id}`,
-        method: "PUT",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Story-card
-     * @name DeleteStoryCardsId
-     * @request DELETE:/story-cards/{id}
-     * @secure
-     */
-    deleteStoryCardsId: (id: number, params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/story-cards/${id}`,
-        method: "DELETE",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-  subjectItem = {
-    /**
-     * No description
-     *
-     * @tags Subject-item
-     * @name GetSubjectItems
-     * @request GET:/subject-items
-     * @secure
-     */
-    getSubjectItems: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        "pagination[withCount]"?: boolean;
-        /** Page number (default: 0) */
-        "pagination[page]"?: number;
-        /** Page size (default: 25) */
-        "pagination[pageSize]"?: number;
-        /** Offset value (default: 0) */
-        "pagination[start]"?: number;
-        /** Number of entities to return (default: 25) */
-        "pagination[limit]"?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<SubjectItemListResponse, Error>({
-        path: `/subject-items`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Subject-item
-     * @name PostSubjectItems
-     * @request POST:/subject-items
-     * @secure
-     */
-    postSubjectItems: (data: SubjectItemRequest, params: RequestParams = {}) =>
-      this.request<SubjectItemResponse, Error>({
-        path: `/subject-items`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Subject-item
-     * @name GetSubjectItemsId
-     * @request GET:/subject-items/{id}
-     * @secure
-     */
-    getSubjectItemsId: (id: number, params: RequestParams = {}) =>
-      this.request<SubjectItemResponse, Error>({
-        path: `/subject-items/${id}`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Subject-item
-     * @name PutSubjectItemsId
-     * @request PUT:/subject-items/{id}
-     * @secure
-     */
-    putSubjectItemsId: (
-      id: number,
-      data: SubjectItemRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<SubjectItemResponse, Error>({
-        path: `/subject-items/${id}`,
-        method: "PUT",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Subject-item
-     * @name DeleteSubjectItemsId
-     * @request DELETE:/subject-items/{id}
-     * @secure
-     */
-    deleteSubjectItemsId: (id: number, params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/subject-items/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",

@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_layout_headers",
+  "info": {
+    "displayName": "Header"
+  },
+  "options": {},
+  "attributes": {
+    "Logo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "Heading": {
+      "type": "string"
+    },
+    "SecondaryText": {
+      "type": "text"
+    }
+  },
+  "config": {}
+}
