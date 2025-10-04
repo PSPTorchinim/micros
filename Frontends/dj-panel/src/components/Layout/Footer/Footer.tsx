@@ -4,14 +4,7 @@ import { ContentService } from '../../../services/content-service';
 
 interface FooterData {
   id?: number;
-  documentId?: string;
   copyright?: string;
-  companyInfo?: {
-    name?: string;
-    address?: string;
-    phone?: string;
-    email?: string;
-  };
   sections?: Array<{
     title: string;
     links: Array<{
@@ -52,7 +45,7 @@ export const Footer: React.FC = () => {
           copyright: `© ${new Date().getFullYear()} DJ Panel. All rights reserved.`,
           sections: [],
           socialLinks: [],
-          bottomLinks: []
+          bottomLinks: [],
         });
       } finally {
         setLoading(false);
@@ -62,19 +55,22 @@ export const Footer: React.FC = () => {
     loadFooterData();
   }, []);
 
-  const renderLink = (link: { text: string; url: string; external?: boolean; newTab?: boolean }, index: number) => {
+  const renderLink = (
+    link: { text: string; url: string; external?: boolean; newTab?: boolean },
+    index: number,
+  ) => {
     const commonProps = {
       key: index,
-      className: "footer-link"
+      className: 'footer-link',
     };
 
     if (link.external) {
       return (
-        <a 
+        <a
           {...commonProps}
-          href={link.url} 
-          target={link.newTab ? "_blank" : "_self"}
-          rel={link.newTab ? "noopener noreferrer" : undefined}
+          href={link.url}
+          target={link.newTab ? '_blank' : '_self'}
+          rel={link.newTab ? 'noopener noreferrer' : undefined}
         >
           {link.text}
         </a>
@@ -89,8 +85,14 @@ export const Footer: React.FC = () => {
   };
 
   const renderSocialIcon = (platform: string, customIcon?: string) => {
-    if (customIcon) return customIcon;
-    
+    if (customIcon) {
+      // Check if it's HTML (contains img tag)
+      if (customIcon.includes('<img')) {
+        return <span dangerouslySetInnerHTML={{ __html: customIcon }} />;
+      }
+      return customIcon;
+    }
+
     const icons: { [key: string]: string } = {
       facebook: '📘',
       twitter: '🐦',
@@ -100,7 +102,7 @@ export const Footer: React.FC = () => {
       tiktok: '🎵',
       spotify: '🎵',
       soundcloud: '🔊',
-      discord: '💬'
+      discord: '💬',
     };
     return icons[platform.toLowerCase()] || '🔗';
   };
@@ -130,34 +132,6 @@ export const Footer: React.FC = () => {
       <div className="footer-container">
         {/* Main Footer Content */}
         <div className="footer-main">
-          {/* Company Info Section */}
-          {footerData?.companyInfo && (
-            <div className="footer-section company-info">
-              <h3 className="footer-section-title">
-                {footerData.companyInfo.name || 'DJ Panel'}
-              </h3>
-              <div className="company-details">
-                {footerData.companyInfo.address && (
-                  <p className="company-address">{footerData.companyInfo.address}</p>
-                )}
-                {footerData.companyInfo.phone && (
-                  <p className="company-phone">
-                    <a href={`tel:${footerData.companyInfo.phone.replace(/\s/g, '')}`}>
-                      {footerData.companyInfo.phone}
-                    </a>
-                  </p>
-                )}
-                {footerData.companyInfo.email && (
-                  <p className="company-email">
-                    <a href={`mailto:${footerData.companyInfo.email}`}>
-                      {footerData.companyInfo.email}
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Dynamic Footer Sections */}
           {footerData?.sections?.map((section, index) => (
             <div key={index} className="footer-section">
@@ -202,7 +176,8 @@ export const Footer: React.FC = () => {
           <div className="footer-bottom-content">
             {/* Copyright */}
             <div className="footer-copyright">
-              {footerData?.copyright || `© ${new Date().getFullYear()} DJ Panel. All rights reserved.`}
+              {footerData?.copyright ||
+                `© ${new Date().getFullYear()} DJ Panel. All rights reserved.`}
             </div>
 
             {/* Bottom Links */}

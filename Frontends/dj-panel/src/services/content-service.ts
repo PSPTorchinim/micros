@@ -1,79 +1,53 @@
+import { Api, Global, Page } from '../models/strapi/apiMap';
 import { StrapiApi } from '../utils/strapi';
-import { Page, BasicTemplate, Article } from '../models/strapi/apiMap';
+
+// Create API instance
+const api = new Api({
+  baseURL: process.env.REACT_APP_STRAPI_URL || 'http://localhost:1337/api',
+  secure: false, // Set to true in production with proper auth
+});
 
 export class ContentService {
-  public static async getAllPages(): Promise<Page[]> {
+  // Get global data including header and footer
+  static async getGlobalData(): Promise<Global | null> {
     try {
-      const response = await StrapiApi.page.getPages({
-        filters: {
-          publishedAt: {
-            $notNull: true,
-          },
-        },
-        populate: '*',
-        'pagination[limit]': 100,
+      const response = await api.global.getGlobal({
+        populate: 'deep',
       });
-
-      return response.data.data || [];
+      return response.data.data || null;
     } catch (error) {
-      console.error('Failed to fetch all pages:', error);
-      return [];
-    }
-  }
-
-  public static async getPageByUrl(url: string): Promise<Page | null> {
-    try {
-      const response = await StrapiApi.page.getPages({
-        filters: {
-          URL: {
-            $eq: url,
-          },
-        },
-        populate: '*',
-      });
-
-      const pages = response.data.data || [];
-      return pages.length > 0 ? pages[0] : null;
-    } catch (error) {
-      console.error(`Failed to fetch page with URL ${url}:`, error);
+      console.error('Error fetching global data:', error);
       return null;
     }
   }
 
-  public static async getPageByPageId(pageId: string): Promise<Page | null> {
+  // Get header data from global
+  static async getHeaderData(): Promise<any> {
     try {
-      let response = await StrapiApi.page.getPages({
-        filters: {
-          Name: {
-            $eqi: pageId,
-          },
+      const globalData = await this.getGlobalData();
+      const headerComponent = globalData?.Header;
+
+      if (!headerComponent) {
+        return null;
+      }
+
+      return {
+        id: headerComponent.id,
+        logo: {
+          text: headerComponent.Heading || 'DJ Panel',
+          url: '/',
+          image: headerComponent.Logo
+            ? {
+                url: headerComponent.Logo.url,
+                alternativeText: headerComponent.Logo.alternativeText,
+              }
+            : null,
         },
-        populate: '*',
-      });
-
-      let pages = response.data.data || [];
-
-      return pages.length > 0 ? pages[0] : null;
+        heading: headerComponent.Heading,
+        secondaryText: headerComponent.SecondaryText,
+      };
     } catch (error) {
-      console.error(`Failed to fetch page with PageID ${pageId}:`, error);
-      return null;
-    }
-  }
-
-  public static async getBasicTemplate(
-    id: string | number | undefined,
-  ): Promise<BasicTemplate | null> {
-    if (!id) return null;
-
-    try {
-      const response = await StrapiApi.basicTemplate.getBasicTemplates({
-        filters: { documentId: { $eq: id } },
-        populate: '*',
-      });
-      return response.data.data?.at(0) || null;
-    } catch (error) {
-      console.error(`Failed to fetch basic template with ID ${id}:`, error);
-      return null;
+      console.error('Error fetching header data:', error);
     }
   }
 
@@ -84,12 +58,8 @@ export class ContentService {
           publishedAt: {
             $notNull: true,
           },
-          IsInNavigation: {
-            $eq: true,
-          },
-          Pages: { $null: true },
+          Parents: { $null: true },
         },
-        populate: '*',
         'pagination[limit]': 100,
       });
 
@@ -102,11 +72,11 @@ export class ContentService {
         if (depth > 5) return [];
 
         return pageList
-          .filter((page) => page.Name && page.URL && page.IsInNavigation)
+          .filter((page) => page.Title && page.Slug)
           .map((page) => {
             const navigationItem = {
-              text: page.Name,
-              url: page.URL,
+              text: page.Title,
+              url: page.Slug,
               children: [] as any[],
             };
 
@@ -114,13 +84,13 @@ export class ContentService {
               const validSubpages = page.Subpages.filter(
                 (subpage: any) =>
                   subpage.Name &&
-                  subpage.URL &&
+                  subpage.Slug &&
                   typeof subpage.Name === 'string' &&
-                  typeof subpage.URL === 'string',
+                  typeof subpage.Slug === 'string',
               ).map((subpage: any) => ({
                 ...subpage,
-                Name: subpage.Name ?? '',
-                URL: subpage.URL ?? '',
+                Title: subpage.Title ?? '',
+                Slug: subpage.Slug ?? '',
                 IsInNavigation: subpage.IsInNavigation ?? true,
               })) as Page[];
 
@@ -129,17 +99,17 @@ export class ContentService {
                 depth + 1,
               );
               navigationItem.children.push(...subpageChildren);
-            } else if (page.Pages && page.Pages.length > 0) {
-              const validPages = page.Pages.filter(
+            } else if (page.Subpages && page.Subpages.length > 0) {
+              const validPages = page.Subpages.filter(
                 (childPage: any) =>
-                  childPage.Name &&
-                  childPage.URL &&
-                  typeof childPage.Name === 'string' &&
-                  typeof childPage.URL === 'string',
+                  childPage.Title &&
+                  childPage.Slug &&
+                  typeof childPage.Title === 'string' &&
+                  typeof childPage.Slug === 'string',
               ).map((childPage: any) => ({
                 ...childPage,
-                Name: childPage.Name ?? '',
-                URL: childPage.URL ?? '',
+                Title: childPage.Title ?? '',
+                Slug: childPage.Slug ?? '',
                 IsInNavigation: childPage.IsInNavigation ?? true,
               })) as Page[];
 
@@ -151,7 +121,9 @@ export class ContentService {
           });
       };
 
-      const links = buildNavigationTree(pages).slice(0, 8);
+      const links = buildNavigationTree(
+        pages.sort((a, b) => (b.id || 0) - (a.id || 0)),
+      );
 
       return {
         links,
@@ -159,102 +131,28 @@ export class ContentService {
       };
     } catch (error) {
       console.error('Failed to fetch navigation data:', error);
-
-      return {
-        links: [{ text: 'Home', url: '/' }],
-        logo: { text: 'DJ Panel', url: '/' },
-      };
     }
   }
 
-  public static async getArticle(
-    id: string | number | undefined,
-  ): Promise<Article | null> {
-    if (!id) return null;
-
+  // Get page by URL/slug
+  static async getPageByUrl(url: string): Promise<Page | null> {
     try {
-      const response = await StrapiApi.article.getArticles({
-        filters: { id: { $eq: id } },
-        populate: '*',
-      });
-      return response.data.data?.at(0) || null;
-    } catch (error) {
-      console.error(`Failed to fetch article with ID ${id}:`, error);
-      return null;
-    }
-  }
+      const cleanUrl = url.replace(/^\/+|\/+$/g, '') || 'home';
 
-  public static async getArticleByName(
-    name: string | undefined,
-  ): Promise<Article | null> {
-    if (!name) return null;
-
-    try {
-      const response = await StrapiApi.article.getArticles({
-        filters: { title: { $eq: name } },
-        populate: '*',
-      });
-      return response.data.data?.at(0) || null;
-    } catch (error) {
-      console.error(`Failed to fetch article with Name ${name}:`, error);
-      return null;
-    }
-  }
-
-  public static async getAllArticles(): Promise<Article[]> {
-    try {
-      const response = await StrapiApi.article.getArticles({
+      const response = await api.page.getPages({
         filters: {
-          publishedAt: {
-            $notNull: true,
+          Slug: {
+            $eq: cleanUrl,
           },
         },
-        populate: '*',
-        'pagination[limit]': 100,
+        populate: 'deep',
       });
 
-      return response.data.data || [];
+      const pages = response.data.data || [];
+      return pages.length > 0 ? pages[0] : null;
     } catch (error) {
-      console.error('Failed to fetch all articles:', error);
-      return [];
-    }
-  }
-
-  public static async getFooterData(): Promise<any> {
-    try {
-      const response = await StrapiApi.footer.getFooter({
-        populate: '*',
-      });
-
-      const footerData = response.data.data;
-
-      if (!footerData) {
-        throw new Error('No footer data found');
-      }
-
-      return footerData;
-    } catch (error) {
-      console.error('Failed to fetch footer data:', error);
-      throw error;
-    }
-  }
-
-  public static async getHeaderData(): Promise<any> {
-    try {
-      const response = await StrapiApi.header.getHeader({
-        populate: '*',
-      });
-
-      const headerData = response.data.data;
-
-      if (!headerData) {
-        throw new Error('No header data found');
-      }
-
-      return headerData;
-    } catch (error) {
-      console.error('Failed to fetch header data:', error);
-      throw error;
+      console.error('Error fetching page by URL:', error);
+      return null;
     }
   }
 }

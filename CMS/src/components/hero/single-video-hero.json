@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_hero_single_video_heroes",
+  "info": {
+    "displayName": "Single Video Hero"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Description": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

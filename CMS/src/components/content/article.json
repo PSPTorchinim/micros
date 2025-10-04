@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_content_articles",
+  "info": {
+    "displayName": "Article"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Description": {
+      "type": "string"
+    },
+    "Content": {
+      "type": "blocks"
+    }
+  },
+  "config": {}
+}

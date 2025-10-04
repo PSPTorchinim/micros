@@ -240,6 +240,7 @@ export interface PageRequest {
     Slug?: string;
     Parents?: (number | string)[];
     Subpages?: (number | string)[];
+    Content?: BaseNull;
     locale?: string;
     localizations?: (number | string)[];
   };
@@ -279,6 +280,7 @@ export interface Page {
       id?: number;
       documentId?: string;
     }[];
+    Content?: AbstractNull;
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -394,6 +396,7 @@ export interface Page {
     id?: number;
     documentId?: string;
   }[];
+  Content?: DiscriminatorNull;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -418,6 +421,234 @@ export interface Page {
 export interface PageResponse {
   data?: Page;
   meta?: object;
+}
+
+export interface TemplateRequest {
+  data: {
+    Title?: string;
+    Description?: string;
+    Hero?: InternalNull &
+      (
+        | InternalNullComponentMapping<
+            "hero.single-video-hero",
+            HeroSingleVideoHeroComponent
+          >
+        | InternalNullComponentMapping<
+            "hero.single-image-hero",
+            HeroSingleImageHeroComponent
+          >
+      );
+    Content?: PolymorphNull &
+      PolymorphNullComponentMapping<"content.article", ContentArticleComponent>;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface TemplateListResponse {
+  data?: Template[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Template {
+  id?: number;
+  documentId?: string;
+  Title?: string;
+  Description?: string;
+  Hero?: DiscriminatorNull1 &
+    (
+      | DiscriminatorNull1ComponentMapping<
+          "hero.single-video-hero",
+          HeroSingleVideoHeroComponent
+        >
+      | DiscriminatorNull1ComponentMapping<
+          "hero.single-image-hero",
+          HeroSingleImageHeroComponent
+        >
+    );
+  Content?: AbstractNull1 &
+    AbstractNull1ComponentMapping<"content.article", ContentArticleComponent>;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    Title?: string;
+    Description?: string;
+    Hero?: InternalNull1 &
+      (
+        | InternalNull1ComponentMapping<
+            "hero.single-video-hero",
+            HeroSingleVideoHeroComponent
+          >
+        | InternalNull1ComponentMapping<
+            "hero.single-image-hero",
+            HeroSingleImageHeroComponent
+          >
+      );
+    Content?: DiscriminatorNull2 &
+      DiscriminatorNull2ComponentMapping<
+        "content.article",
+        ContentArticleComponent
+      >;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface TemplateResponse {
+  data?: Template;
+  meta?: object;
+}
+
+export interface HeroSingleVideoHeroComponent {
+  id?: number;
+  __component?: HeroSingleVideoHeroComponentComponentEnum;
+  Title?: string;
+  Description?: string;
+}
+
+export interface HeroSingleImageHeroComponent {
+  id?: number;
+  __component?: HeroSingleImageHeroComponentComponentEnum;
+}
+
+export interface ContentArticleComponent {
+  id?: number;
+  __component?: ContentArticleComponentComponentEnum;
+  Title?: string;
+  Description?: string;
+  Content?: any;
 }
 
 export interface UploadFile {
@@ -512,6 +743,69 @@ export enum SharedNavigationItemComponentTypeEnum {
 export enum SharedImageNavigationItemComponentTypeEnum {
   Primary = "Primary",
   Secondary = "Secondary",
+}
+
+type BaseNull = any[];
+
+type AbstractNull = any[];
+
+type DiscriminatorNull = any[];
+
+type InternalNull = (
+  | HeroSingleVideoHeroComponent
+  | HeroSingleImageHeroComponent
+)[];
+
+type InternalNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type PolymorphNull = ContentArticleComponent[];
+
+type PolymorphNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull1 = (
+  | HeroSingleVideoHeroComponent
+  | HeroSingleImageHeroComponent
+)[];
+
+type DiscriminatorNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type AbstractNull1 = ContentArticleComponent[];
+
+type AbstractNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type InternalNull1 = (
+  | HeroSingleVideoHeroComponent
+  | HeroSingleImageHeroComponent
+)[];
+
+type InternalNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull2 = ContentArticleComponent[];
+
+type DiscriminatorNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum HeroSingleVideoHeroComponentComponentEnum {
+  HeroSingleVideoHero = "hero.single-video-hero",
+}
+
+export enum HeroSingleImageHeroComponentComponentEnum {
+  HeroSingleImageHero = "hero.single-image-hero",
+}
+
+export enum ContentArticleComponentComponentEnum {
+  ContentArticle = "content.article",
 }
 
 export enum OkEnum {
@@ -911,6 +1205,125 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  template = {
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name GetTemplates
+     * @request GET:/templates
+     * @secure
+     */
+    getTemplates: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<TemplateListResponse, Error>({
+        path: `/templates`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name PostTemplates
+     * @request POST:/templates
+     * @secure
+     */
+    postTemplates: (data: TemplateRequest, params: RequestParams = {}) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name GetTemplatesId
+     * @request GET:/templates/{id}
+     * @secure
+     */
+    getTemplatesId: (id: number, params: RequestParams = {}) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name PutTemplatesId
+     * @request PUT:/templates/{id}
+     * @secure
+     */
+    putTemplatesId: (
+      id: number,
+      data: TemplateRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name DeleteTemplatesId
+     * @request DELETE:/templates/{id}
+     * @secure
+     */
+    deleteTemplatesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/templates/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",

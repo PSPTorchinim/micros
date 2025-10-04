@@ -1,5 +1,36 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface ContentArticle extends Struct.ComponentSchema {
+  collectionName: 'components_content_articles';
+  info: {
+    displayName: 'Article';
+  };
+  attributes: {
+    Content: Schema.Attribute.Blocks;
+    Description: Schema.Attribute.String;
+    Title: Schema.Attribute.String;
+  };
+}
+
+export interface HeroSingleImageHero extends Struct.ComponentSchema {
+  collectionName: 'components_hero_single_image_heroes';
+  info: {
+    displayName: 'Single Image Hero';
+  };
+  attributes: {};
+}
+
+export interface HeroSingleVideoHero extends Struct.ComponentSchema {
+  collectionName: 'components_hero_single_video_heroes';
+  info: {
+    displayName: 'Single Video Hero';
+  };
+  attributes: {
+    Description: Schema.Attribute.String;
+    Title: Schema.Attribute.String;
+  };
+}
+
 export interface LayoutFooter extends Struct.ComponentSchema {
   collectionName: 'components_layout_footers';
   info: {
@@ -71,6 +102,9 @@ export interface SharedSection extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'content.article': ContentArticle;
+      'hero.single-image-hero': HeroSingleImageHero;
+      'hero.single-video-hero': HeroSingleVideoHero;
       'layout.footer': LayoutFooter;
       'layout.header': LayoutHeader;
       'shared.image-navigation-item': SharedImageNavigationItem;

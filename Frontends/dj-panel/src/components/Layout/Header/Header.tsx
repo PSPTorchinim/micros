@@ -4,25 +4,26 @@ import { ContentService } from '../../../services/content-service';
 
 interface HeaderData {
   id?: number;
-  documentId?: string;
   logo?: {
     text?: string;
     url?: string;
     image?: {
       url?: string;
       alternativeText?: string;
-    };
+    } | null;
   };
+  heading?: string;
+  secondaryText?: string;
   navigation?: Array<{
     text: string;
     url: string;
     external?: boolean;
+    children?: Array<{
+      text: string;
+      url: string;
+      external?: boolean;
+    }>;
   }>;
-  ctaButton?: {
-    text: string;
-    url: string;
-    style?: 'primary' | 'secondary';
-  };
   searchEnabled?: boolean;
 }
 
@@ -115,6 +116,35 @@ export const Header: React.FC = () => {
                   {item.text}
                 </Link>
               )}
+
+              {/* Render dropdown for children */}
+              {item.children && item.children.length > 0 && (
+                <ul className="nav-dropdown">
+                  {item.children.map((child, childIndex) => (
+                    <li key={childIndex} className="nav-dropdown-item">
+                      {child.external ? (
+                        <a
+                          href={child.url}
+                          className="nav-dropdown-link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={closeMobileMenu}
+                        >
+                          {child.text}
+                        </a>
+                      ) : (
+                        <Link
+                          to={child.url}
+                          className="nav-dropdown-link"
+                          onClick={closeMobileMenu}
+                        >
+                          {child.text}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
@@ -122,19 +152,17 @@ export const Header: React.FC = () => {
     );
   };
 
-  const renderCTAButton = () => {
-    const cta = headerData?.ctaButton;
-    if (!cta) return null;
+  const renderHeaderContent = () => {
+    if (!headerData?.heading && !headerData?.secondaryText) return null;
 
     return (
-      <div className="header-cta">
-        <Link
-          to={cta.url}
-          className={`cta-button ${cta.style || 'primary'}`}
-          onClick={closeMobileMenu}
-        >
-          {cta.text}
-        </Link>
+      <div className="header-content">
+        {headerData.heading && (
+          <h1 className="header-heading">{headerData.heading}</h1>
+        )}
+        {headerData.secondaryText && (
+          <p className="header-secondary">{headerData.secondaryText}</p>
+        )}
       </div>
     );
   };
@@ -169,9 +197,6 @@ export const Header: React.FC = () => {
             </div>
           )}
 
-          {/* CTA Button */}
-          {renderCTAButton()}
-
           {/* Mobile Menu Toggle */}
           {headerData?.navigation?.length && (
             <button
@@ -188,6 +213,9 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Header Content Section */}
+      {renderHeaderContent()}
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
