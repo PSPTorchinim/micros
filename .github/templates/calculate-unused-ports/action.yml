@@ -1,95 +1,114 @@
 name: Calculate Unused Ports
-description: Calculate unused external or internal ports
+description: Calculate unused ports in a specified range, excluding already used ports
 inputs:
   start_port:
-    description: Starting port number
+    description: Starting port number (inclusive)
     required: true
   end_port:
-    description: Ending port number
+    description: Ending port number (inclusive)
     required: true
+  # New: accept ports from TrueNAS directly
   truenas_ports:
-    description: List of used TrueNAS ports (space-separated)
+    description: Space- or newline-separated list of TrueNAS ports to exclude
     required: false
     default: ""
+  # New: accept ports from Cloudflare tunnel directly
   tunnel_ports:
-    description: List of used Cloudflare tunnel ports (space-separated)
+    description: Space- or newline-separated list of Cloudflare tunnel ports to exclude
+    required: false
+    default: ""
+  # Keep for backward-compatibility (deprecated)
+  used_ports:
+    description: (Deprecated) Space-separated list of ports to exclude
     required: false
     default: ""
 outputs:
-  ports:
-    description: List of unused ports
-    value: ${{ steps.calculate_ports.outputs.unused_ports }}
+  unused_ports:
+    description: Space-separated list of unused ports in the range
+    value: ${{ steps.calculate.outputs.unused_ports }}
+  unused_count:
+    description: Number of unused ports found
+    value: ${{ steps.calculate.outputs.unused_count }}
 runs:
   using: composite
   steps:
-    - name: Calculate Unused Ports
-      id: calculate_ports
+    - name: Calculate unused ports
+      id: calculate
       shell: bash
       run: |
-        # Convert inputs to arrays, handling empty inputs
-        truenas_input="${{ inputs.truenas_ports }}"
-        tunnel_input="${{ inputs.tunnel_ports }}"
+        set -euo pipefail
 
-        echo "Debug: TrueNAS ports input: '$truenas_input'"
-        echo "Debug: Tunnel ports input: '$tunnel_input'"
+        # Inputs
+        start_port="${{ inputs.start_port }}"
+        end_port="${{ inputs.end_port }}"
+        used_ports_input="${{ inputs.used_ports }}"
+        truenas_ports_input="${{ inputs.truenas_ports }}"
+        tunnel_ports_input="${{ inputs.tunnel_ports }}"
 
-        # Create arrays from space-separated strings
-        if [[ -n "$truenas_input" && "$truenas_input" != "null" ]]; then
-          read -ra truenas_ports <<< "$truenas_input"
-        else
-          truenas_ports=()
+        # Validate port range
+        if [[ ! "$start_port" =~ ^[0-9]+$ ]] || [[ ! "$end_port" =~ ^[0-9]+$ ]]; then
+          echo "Error: Port numbers must be integers" >&2
+          exit 1
+        fi
+        if (( start_port > end_port )); then
+          echo "Error: Start port ($start_port) cannot be greater than end port ($end_port)" >&2
+          exit 1
+        fi
+        if (( start_port < 1 || start_port > 65535 || end_port < 1 || end_port > 65535 )); then
+          echo "Error: Port numbers must be between 1 and 65535" >&2
+          exit 1
         fi
 
-        if [[ -n "$tunnel_input" && "$tunnel_input" != "null" ]]; then
-          read -ra tunnel_ports <<< "$tunnel_input"
-        else
-          tunnel_ports=()
-        fi
+        echo "Calculating unused ports in range: $start_port-$end_port"
 
-        echo "Debug: TrueNAS ports array: ${truenas_ports[*]}"
-        echo "Debug: Tunnel ports array: ${tunnel_ports[*]}"
+        # Merge all provided sources of 'used ports'
+        combined_used="$(printf "%s\n%s\n%s\n" "$used_ports_input" "$truenas_ports_input" "$tunnel_ports_input")"
 
-        # Combine all used ports
-        used_ports=("${truenas_ports[@]}" "${tunnel_ports[@]}")
+        # Build lookup map
+        declare -A used_ports_map
+        if [[ -n "${combined_used//[$'\n' ]/}" ]]; then
+          used_ports_clean=$(echo "$combined_used" | tr '\n' ' ' | tr -s ' ' | sed 's/^ *//;s/ *$//')
+          echo "Used ports input (merged): $used_ports_clean"
 
-        # Remove duplicates and sort
-        if [ ${#used_ports[@]} -gt 0 ]; then
-          used_ports_sorted=($(printf "%s\n" "${used_ports[@]}" | sort -n | uniq))
-        else
-          used_ports_sorted=()
-        fi
-
-        echo "Debug: Combined used ports: ${used_ports_sorted[*]}"
-
-        start_port=${{ inputs.start_port }}
-        end_port=${{ inputs.end_port }}
-        unused_ports=()
-
-        echo "Debug: Checking port range $start_port to $end_port"
-
-        # Find unused ports in the range
-        for port in $(seq $start_port $end_port); do
-          # Check if port is in used_ports_sorted array
-          port_found=false
-          for used_port in "${used_ports_sorted[@]}"; do
-            if [[ "$port" == "$used_port" ]]; then
-              port_found=true
-              break
+          for port in $used_ports_clean; do
+            if [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 1 && port <= 65535 )); then
+              used_ports_map["$port"]=1
+            else
+              echo "Warning: Ignoring invalid port '$port'" >&2
             fi
           done
-          
-          if [[ "$port_found" == "false" ]]; then
-            unused_ports+=($port)
+
+          echo "Excluding ${#used_ports_map[@]} used ports"
+        else
+          echo "No used ports specified"
+        fi
+
+        # Calculate unused
+        unused_ports=()
+        total_range=$((end_port - start_port + 1))
+        echo "Checking $total_range ports..."
+
+        for (( port = start_port; port <= end_port; port++ )); do
+          if [[ -z "${used_ports_map[$port]:-}" ]]; then
+            unused_ports+=("$port")
           fi
         done
 
-        echo "Unused Ports Count: ${#unused_ports[@]}"
-        if [ ${#unused_ports[@]} -le 20 ]; then
-          echo "Unused Ports: ${unused_ports[*]}"
+        unused_count=${#unused_ports[@]}
+        echo "Found $unused_count unused ports out of $total_range total ports"
+
+        if (( unused_count > 0 )); then
+          unused_ports_str="${unused_ports[*]}"
+          echo "unused_ports=$unused_ports_str" >> "$GITHUB_OUTPUT"
+          if (( unused_count <= 20 )); then
+            echo "Unused ports: $unused_ports_str"
+          else
+            echo "First 10 unused ports: ${unused_ports[*]:0:10}"
+            echo "Last 10 unused ports: ${unused_ports[*]: -10}"
+          fi
         else
-          echo "Unused Ports (first 10): ${unused_ports[*]:0:10}"
-          echo "Unused Ports (last 10): ${unused_ports[*]: -10}"
+          echo "unused_ports=" >> "$GITHUB_OUTPUT"
+          echo "No unused ports found in range"
         fi
 
-        # Output the result
-        echo "unused_ports=${unused_ports[*]}" >> $GITHUB_OUTPUT
+        echo "unused_count=$unused_count" >> "$GITHUB_OUTPUT"

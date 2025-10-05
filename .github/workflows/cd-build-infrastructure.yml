@@ -17,8 +17,14 @@ jobs:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true # <-- IMPORTANT
           script: |
-            netstat -an | awk '{print $4}' | grep -Eo ':[0-9]+$' | cut -d: -f2 | sort -n | uniq
+            # TCP + UDP listening ports, print only the port number (one per line), sorted & unique
+            netstat -tuln 2>/dev/null \
+              | awk 'NR>2 {print $4}' \
+              | sed -E 's/.*:([0-9]+)$/\1/' \
+              | grep -E '^[0-9]+$' \
+              | sort -n | uniq
 
   get_cloudflare_tunnel_ports:
     name: Get Cloudflare Tunnel Ports
@@ -32,26 +38,26 @@ jobs:
           response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
             -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
             -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
-          echo $response
-          echo "response=$response" >> $GITHUB_OUTPUT
+          echo "$response"
+          echo "response=$response" >> "$GITHUB_OUTPUT"
 
       - name: Format Output
         id: format_output
         run: |
           ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
-          echo $ports
-          echo "ports=$ports" >> $GITHUB_OUTPUT
+          echo "$ports"
+          echo "ports=$ports" >> "$GITHUB_OUTPUT"
 
   calculate_unused_ports:
     name: Calculate Unused External and Internal Ports
     runs-on: ubuntu-latest
     needs: [get_truenas_ports, get_cloudflare_tunnel_ports]
     outputs:
-      external_ports: ${{ steps.calculate_external_ports.outputs.ports }}
-      internal_ports: ${{ steps.calculate_internal_ports.outputs.ports }}
+      external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
+      internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Calculate unused internal ports
         uses: ./.github/templates/calculate-unused-ports
@@ -70,31 +76,6 @@ jobs:
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
-
-  get_docker_compose_data:
-    name: Get docker compose data
-    runs-on: ubuntu-latest
-    needs: determine_environment
-    outputs:
-      docker_data: ${{ steps.get_docker_compose_data.outputs.docker_data }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Get docker compose data
-        id: get_docker_compose_data
-        shell: bash
-        run: |
-          COMPOSE_FILE="Docker/dj-panel-composer.yml"
-
-          if [ ! -f "$COMPOSE_FILE" ]; then
-            echo "❌ Docker Compose file not found: $COMPOSE_FILE"
-            exit 1
-          fi
-
-          docker_data=$(docker compose -f $COMPOSE_FILE config)
-          echo "docker_data=$docker_data" >> $GITHUB_OUTPUT
-          echo "✅ config: $docker_data"
 
   determine_environment:
     runs-on: ubuntu-latest
@@ -132,19 +113,47 @@ jobs:
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
-  generate_truenas_compose_file:
-    name: Generate TrueNAS Docker Compose File
+  generate_and_upload_truenas_compose_file:
+    name: Generate and Upload TrueNAS Docker Compose File
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
         calculate_unused_ports,
-        get_docker_compose_data,
         determine_target_branch,
         determine_docker_tag,
       ]
-    outputs:
-      compose_file: ${{ steps.generate_compose_file.outputs.compose_file }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
+
+      - name: Install yq (optional — script can self-install)
+        run: |
+          sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Generate New Compose File with Unused Ports and GHCR Images
+        id: generate_compose_file
+        shell: bash
+        env:
+          LOG_LEVEL: DEBUG
+        run: |
+          chmod +x .github/scripts/generate-compose-file.sh
+          external_map_json=$(.github/scripts/generate-compose-file.sh \
+            "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
+            "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
+            "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
+            "${{ github.repository_owner }}" \
+            "${{ github.event.repository.name }}" \
+            "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}")
+          echo "external_ports_map=$external_map_json" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure TrueNAS has proper catalogs for data and images for each service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            zfs list -H -o name Files/Apps/DJPanel >/dev/null 2>&1 || zfs create -p Files/Apps/DJPanel
+            zfs list -H -o name Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }} >/dev/null 2>&1 || zfs create -p Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}
