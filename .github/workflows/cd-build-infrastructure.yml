@@ -163,14 +163,14 @@ jobs:
               image_name=$(basename "$dockerfile_path" .Dockerfile)
               echo "ghcr.io/${repo_owner}/${repo_name}/infra/${image_name}:${docker_tag}"
             elif [[ "$dockerfile_path" == *"microservice.Dockerfile" ]]; then
-              # Microservices (services/identityapi, services/musicapi, etc.)
+              # Microservices -> services/{microservice_name}
               if [[ "$microservice_name" != "null" && "$microservice_name" != "" ]]; then
                 echo "ghcr.io/${repo_owner}/${repo_name}/services/${microservice_name,,}:${docker_tag}"
               else
                 echo "ghcr.io/${repo_owner}/${repo_name}/services/unknown:${docker_tag}"
               fi
             elif [[ "$dockerfile_path" == *"microfrontend.Dockerfile" ]]; then
-              # Frontends (frontends/dj-panel, etc.)
+              # Frontends -> frontends/{microfrontend_name}
               if [[ "$microfrontend_name" != "null" && "$microfrontend_name" != "" ]]; then
                 echo "ghcr.io/${repo_owner}/${repo_name}/frontends/${microfrontend_name}:${docker_tag}"
               else
@@ -240,6 +240,35 @@ jobs:
                 # Replace build with image
                 new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.external.\"$service\".build)" -)
                 new_compose_file=$(echo "$new_compose_file" | yq eval ".services.external.\"$service\".image = \"$ghcr_image\"" -)
+              else
+                # Handle services with build context but no explicit dockerfile
+                if echo "$service_config" | yq eval '.build' - | grep -q '\S'; then
+                  microservice_name=$(echo "$service_config" | yq eval '.build.args.MICROSERVICE_NAME' - 2>/dev/null || echo "null")
+                  microfrontend_name=$(echo "$service_config" | yq eval '.build.args.MICROFRONTEND_NAME' - 2>/dev/null || echo "null")
+                  
+                  # Determine dockerfile based on service characteristics
+                  if [[ "$microservice_name" != "null" && "$microservice_name" != "" ]]; then
+                    dockerfile_path="Docker/microservice.Dockerfile"
+                  elif [[ "$microfrontend_name" != "null" && "$microfrontend_name" != "" ]]; then
+                    dockerfile_path="Docker/microfrontend.Dockerfile"
+                  elif [[ "$service" == *"_fe" || "$service" == "host_fe" ]]; then
+                    dockerfile_path="Docker/microfrontend.Dockerfile"
+                    microfrontend_name="dj-panel"
+                  elif [[ "$service" == "apigateway" || "$service" == "strapi" ]]; then
+                    if [[ "$service" == "apigateway" ]]; then
+                      dockerfile_path="Docker/microservice.Dockerfile"
+                      microservice_name="DJHostGateway"
+                    else
+                      dockerfile_path="Docker/infra/strapi.Dockerfile"
+                    fi
+                  fi
+                  
+                  ghcr_image=$(get_ghcr_image "$dockerfile_path" "$microservice_name" "$microfrontend_name")
+                  
+                  # Replace build with image
+                  new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.external.\"$service\".build)" -)
+                  new_compose_file=$(echo "$new_compose_file" | yq eval ".services.external.\"$service\".image = \"$ghcr_image\"" -)
+                fi
               fi
               
               # Check if service has ports defined
@@ -268,43 +297,35 @@ jobs:
             for service in $backend_services; do
               service_config=$(echo "$compose_file" | yq eval ".services.backend.\"$service\"" -)
               
-              # Replace build context with GHCR image
-              dockerfile_path=$(echo "$service_config" | yq eval '.build.dockerfile' -)
-              if [[ "$dockerfile_path" != "null" ]]; then
-                microservice_name=$(echo "$service_config" | yq eval '.build.args.MICROSERVICE_NAME' - 2>/dev/null || echo "null")
-                
-                ghcr_image=$(get_ghcr_image "$dockerfile_path" "$microservice_name" "")
-                
-                # Replace build with image
-                new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.backend.\"$service\".build)" -)
-                new_compose_file=$(echo "$new_compose_file" | yq eval ".services.backend.\"$service\".image = \"$ghcr_image\"" -)
+              # Get microservice name from build args or infer from service name
+              microservice_name=$(echo "$service_config" | yq eval '.build.args.MICROSERVICE_NAME' - 2>/dev/null || echo "null")
+              
+              if [[ "$microservice_name" == "null" || "$microservice_name" == "" ]]; then
+                case "$service" in
+                  identity_be) microservice_name="identityapi" ;;
+                  music_be) microservice_name="musicapi" ;;
+                  gear_be) microservice_name="equipmentapi" ;;
+                  documents_be) microservice_name="documentsapi" ;;
+                  brand_be) microservice_name="companyapi" ;;
+                  mailing_be) microservice_name="mailingapi" ;;
+                  party_be) microservice_name="partyapi" ;;
+                  *) 
+                    # Convert service name from {name}_be to {name}api
+                    base_name=$(echo "$service" | sed 's/_be$//')
+                    microservice_name="${base_name}api"
+                    ;;
+                esac
               else
-                # Handle services without explicit dockerfile but with build context
-                if echo "$service_config" | yq eval '.build' - | grep -q '\S'; then
-                  # Default to microservice.Dockerfile for backend services
-                  microservice_name=$(echo "$service_config" | yq eval '.build.args.MICROSERVICE_NAME' - 2>/dev/null || echo "null")
-                  
-                  # If no microservice name, try to infer from service name
-                  if [[ "$microservice_name" == "null" || "$microservice_name" == "" ]]; then
-                    case "$service" in
-                      identity_be) microservice_name="IdentityAPI" ;;
-                      music_be) microservice_name="MusicAPI" ;;
-                      gear_be) microservice_name="EquipmentAPI" ;;
-                      documents_be) microservice_name="DocumentsAPI" ;;
-                      brand_be) microservice_name="CompanyAPI" ;;
-                      mailing_be) microservice_name="MailingAPI" ;;
-                      party_be) microservice_name="PartyAPI" ;;
-                      *) microservice_name=$(echo "$service" | sed 's/_be$//' | sed 's/./\U&/g')API ;;
-                    esac
-                  fi
-                  
-                  ghcr_image=$(get_ghcr_image "Docker/microservice.Dockerfile" "$microservice_name" "")
-                  
-                  # Replace build with image
-                  new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.backend.\"$service\".build)" -)
-                  new_compose_file=$(echo "$new_compose_file" | yq eval ".services.backend.\"$service\".image = \"$ghcr_image\"" -)
-                fi
+                # Convert to lowercase for consistency with GHCR naming
+                microservice_name=$(echo "$microservice_name" | tr '[:upper:]' '[:lower:]')
               fi
+              
+              # Generate GHCR image URL
+              ghcr_image="ghcr.io/${repo_owner}/${repo_name}/services/${microservice_name}:${docker_tag}"
+              
+              # Replace build with image and remove all build-related configs
+              new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.backend.\"$service\".build)" -)
+              new_compose_file=$(echo "$new_compose_file" | yq eval ".services.backend.\"$service\".image = \"$ghcr_image\"" -)
             done
           fi
 
@@ -326,9 +347,3 @@ jobs:
           echo "compose_file=$filename" >> $GITHUB_OUTPUT
           echo "Generated compose file: $filename"
           cat "$filename"
-
-      - name: Upload Generated Compose File
-        uses: actions/upload-artifact@v3
-        with:
-          name: generated-compose-file
-          path: dj-panel-composer-${{ needs.determine_docker_tag.outputs.docker_tag }}.yml
