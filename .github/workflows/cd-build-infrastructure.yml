@@ -300,9 +300,3 @@ jobs:
           echo "compose_file=$filename" >> $GITHUB_OUTPUT
           echo "Generated compose file: $filename"
           cat "$filename"
-
-      - name: Upload Generated Compose File
-        uses: actions/upload-artifact@v3
-        with:
-          name: generated-compose-file
-          path: dj-panel-composer-${{ needs.determine_docker_tag.outputs.docker_tag }}.yml
