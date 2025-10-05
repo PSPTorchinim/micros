@@ -41,3 +41,32 @@ jobs:
           ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
           echo $ports
           echo "ports=$ports" >> $GITHUB_OUTPUT
+
+  calculate_unused_ports:
+    name: Calculate Unused External and Internal Ports
+    runs-on: ubuntu-latest
+    needs: [get_truenas_ports, get_cloudflare_tunnel_ports]
+    outputs:
+      external_ports: ${{ steps.calculate_external_ports.outputs.ports }}
+      internal_ports: ${{ steps.calculate_internal_ports.outputs.ports }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Calculate unused internal ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_internal_ports
+        with:
+          start_port: 40000
+          end_port: 50000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+      - name: Calculate unused external ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_external_ports
+        with:
+          start_port: 50000
+          end_port: 60000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}

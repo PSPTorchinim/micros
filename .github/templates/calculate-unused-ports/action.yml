@@ -1,0 +1,43 @@
+name: Calculate Unused Ports
+description: Calculate unused external or internal ports
+inputs:
+  start_port:
+    description: Starting port number
+    required: true
+  end_port:
+    description: Ending port number
+    required: true
+  truenas_ports:
+    description: List of used TrueNAS ports
+    required: false
+    default: ""
+  tunnel_ports:
+    description: List of used Cloudflare tunnel ports
+    required: false
+    default: ""
+outputs:
+  ports:
+    description: List of unused ports
+    value: ${{ steps.calculate_ports.outputs.unused_ports }}
+runs:
+  using: composite
+  steps:
+    - name: Calculate Unused Internal Ports
+      id: calculate_ports
+      shell: bash
+      run: |
+        truenas_ports=(${{ inputs.truenas_ports }})
+        tunnel_ports=(${{ inputs.tunnel_ports }})
+        used_ports=("${truenas_ports[@]}" "${tunnel_ports[@]}")
+        used_ports_sorted=($(printf "%s\n" "${used_ports[@]}" | sort -n | uniq))
+        start_port=${{ inputs.start_port }}
+        end_port=${{ inputs.end_port }}
+        unused_ports=()
+        for port in $(seq $start_port $end_port); do
+          if [[ ! " ${used_ports_sorted[@]} " =~ " $port " ]]; then
+            unused_ports+=($port)
+          fi
+        done
+
+        echo "Unused Ports: ${unused_ports[@]}"
+        echo "unused_ports=${unused_ports[*]}" >> $GITHUB_OUTPUT
