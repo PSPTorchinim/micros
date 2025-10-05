@@ -71,17 +71,19 @@ jobs:
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
 
-  calculate_service_count:
+  get_docker_compose_data:
     name: Get docker compose data
     runs-on: ubuntu-latest
+    needs: determine_environment
     outputs:
-      docker_data: ${{ steps.calculate_service_count_simple.outputs.docker_data }}
+      docker_data: ${{ steps.get_docker_compose_data.outputs.docker_data }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Get docker compose data
-        id: calculate_service_count_simple
+        id: get_docker_compose_data
+        shell: bash
         run: |
           COMPOSE_FILE="Docker/dj-panel-composer.yml"
 
@@ -93,3 +95,56 @@ jobs:
           docker_data=$(docker compose -f $COMPOSE_FILE config)
           echo "docker_data=$docker_data" >> $GITHUB_OUTPUT
           echo "✅ config: $docker_data"
+
+  determine_environment:
+    runs-on: ubuntu-latest
+    name: Determine Environment
+    outputs:
+      current_env: ${{ steps.set_env.outputs.current_env }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+      - name: Set Environment
+        id: set_env
+        uses: ./.github/templates/determine-environment
+
+  determine_target_branch:
+    name: Determine Target Branch
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.branch_set.outputs.target_branch }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+      - name: Determine target branch based on branch
+        id: branch_set
+        uses: ./.github/templates/determine-target-branch
+
+  determine_docker_tag:
+    name: Determine Docker Tag
+    runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+      - name: Determine Docker tag based on branch
+        id: tag_set
+        uses: ./.github/templates/determine-docker-tag
+
+  generate_truenas_compose_file:
+    name: Generate TrueNAS Docker Compose File
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_environment,
+        calculate_unused_ports,
+        get_docker_compose_data,
+        determine_target_branch,
+        determine_docker_tag,
+      ]
+    outputs:
+      compose_file: ${{ steps.generate_compose_file.outputs.compose_file }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
