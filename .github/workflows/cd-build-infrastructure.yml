@@ -70,3 +70,26 @@ jobs:
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+  calculate_service_count:
+    name: Get docker compose data
+    runs-on: ubuntu-latest
+    outputs:
+      docker_data: ${{ steps.calculate_service_count_simple.outputs.docker_data }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Get docker compose data
+        id: calculate_service_count_simple
+        run: |
+          COMPOSE_FILE="Docker/dj-panel-composer.yml"
+
+          if [ ! -f "$COMPOSE_FILE" ]; then
+            echo "❌ Docker Compose file not found: $COMPOSE_FILE"
+            exit 1
+          fi
+
+          docker_data=$(docker compose -f $COMPOSE_FILE config)
+          echo "docker_data=$docker_data" >> $GITHUB_OUTPUT
+          echo "✅ config: $docker_data"
