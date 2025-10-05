@@ -124,7 +124,7 @@ jobs:
       - name: Read Docker Compose File
         id: read_compose
         run: |
-          compose_content=$(cat Docker/dj-panel-compose.yml)
+          compose_content=$(cat Docker/dj-panel-composer.yml)
           echo "compose_content<<EOF" >> $GITHUB_OUTPUT
           echo "$compose_content" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
