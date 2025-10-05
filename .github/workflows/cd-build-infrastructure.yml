@@ -71,31 +71,6 @@ jobs:
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
 
-  get_docker_compose_data:
-    name: Get docker compose data
-    runs-on: ubuntu-latest
-    needs: determine_environment
-    outputs:
-      docker_data: ${{ steps.get_docker_compose_data.outputs.docker_data }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Get docker compose data
-        id: get_docker_compose_data
-        shell: bash
-        run: |
-          COMPOSE_FILE="Docker/dj-panel-composer.yml"
-
-          if [ ! -f "$COMPOSE_FILE" ]; then
-            echo "❌ Docker Compose file not found: $COMPOSE_FILE"
-            exit 1
-          fi
-
-          docker_data=$(docker compose -f $COMPOSE_FILE config)
-          echo "docker_data=$docker_data" >> $GITHUB_OUTPUT
-          echo "✅ config: $docker_data"
-
   determine_environment:
     runs-on: ubuntu-latest
     name: Determine Environment
@@ -132,19 +107,122 @@ jobs:
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
-  generate_truenas_compose_file:
-    name: Generate TrueNAS Docker Compose File
+  generate_and_upload_truenas_compose_file:
+    name: Generate and Upload TrueNAS Docker Compose File
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
         calculate_unused_ports,
-        get_docker_compose_data,
         determine_target_branch,
         determine_docker_tag,
       ]
-    outputs:
-      compose_file: ${{ steps.generate_compose_file.outputs.compose_file }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Read Docker Compose File
+        id: read_compose
+        run: |
+          compose_content=$(cat Docker/dj-panel-compose.yml)
+          echo "compose_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$compose_content" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate New Compose File with Unused Ports
+        id: generate_compose_file
+        shell: bash
+        run: |
+          # Get unused ports arrays
+          internal_ports=(${{ needs.calculate_unused_ports.outputs.internal_ports }})
+          external_ports=(${{ needs.calculate_unused_ports.outputs.external_ports }})
+
+          # Read the original compose file
+          compose_file=$(cat Docker/dj-panel-composer.yml)
+
+          # Initialize port counters
+          internal_port_index=0
+          external_port_index=0
+
+          # Create new compose file with updated ports
+          new_compose_file="$compose_file"
+
+          # Process internal services (databases, infrastructure)
+          if echo "$compose_file" | yq eval '.services.internal' - | grep -q '\S'; then
+            internal_services=$(echo "$compose_file" | yq eval '.services.internal | keys | .[]' -)
+            
+            for service in $internal_services; do
+              service_config=$(echo "$compose_file" | yq eval ".services.internal.\"$service\"" -)
+              
+              # Check if service has ports defined
+              if echo "$service_config" | yq eval '.ports' - | grep -q '\-'; then
+                # Get the first port mapping
+                current_ports=$(echo "$service_config" | yq eval '.ports[0]' -)
+                
+                # Handle multiple port mappings for services like RabbitMQ
+                port_count=$(echo "$service_config" | yq eval '.ports | length' -)
+                
+                for ((i=0; i<port_count; i++)); do
+                  if [ $internal_port_index -lt ${#internal_ports[@]} ]; then
+                    current_mapping=$(echo "$service_config" | yq eval ".ports[$i]" -)
+                    internal_container_port=$(echo "$current_mapping" | cut -d':' -f2)
+                    new_port="${internal_ports[$internal_port_index]}"
+                    new_mapping="${new_port}:${internal_container_port}"
+                    
+                    # Update the compose file
+                    new_compose_file=$(echo "$new_compose_file" | yq eval ".services.internal.\"$service\".ports[$i] = \"$new_mapping\"" -)
+                    internal_port_index=$((internal_port_index + 1))
+                  else
+                    echo "Warning: Not enough internal ports available for service $service port $i"
+                    break
+                  fi
+                done
+              fi
+            done
+          fi
+
+          # Process external services (APIs, frontends)
+          if echo "$compose_file" | yq eval '.services.external' - | grep -q '\S'; then
+            external_services=$(echo "$compose_file" | yq eval '.services.external | keys | .[]' -)
+            
+            for service in $external_services; do
+              service_config=$(echo "$compose_file" | yq eval ".services.external.\"$service\"" -)
+              
+              # Check if service has ports defined
+              if echo "$service_config" | yq eval '.ports' - | grep -q '\-'; then
+                if [ $external_port_index -lt ${#external_ports[@]} ]; then
+                  current_ports=$(echo "$service_config" | yq eval '.ports[0]' -)
+                  internal_container_port=$(echo "$current_ports" | cut -d':' -f2)
+                  new_port="${external_ports[$external_port_index]}"
+                  new_mapping="${new_port}:${internal_container_port}"
+                  
+                  # Update the compose file
+                  new_compose_file=$(echo "$new_compose_file" | yq eval ".services.external.\"$service\".ports[0] = \"$new_mapping\"" -)
+                  external_port_index=$((external_port_index + 1))
+                else
+                  echo "Warning: Not enough external ports available for service $service"
+                  continue
+                fi
+              fi
+            done
+          fi
+
+          # Flatten the structure back to standard Docker Compose format
+          # Merge internal, external, and backend services into a single services section
+          flattened_compose=$(echo "$new_compose_file" | yq eval '
+            .services = (.services.internal // {}) + (.services.external // {}) + (.services.backend // {}) |
+            del(.services.internal) |
+            del(.services.external) |
+            del(.services.backend)
+          ' -)
+
+          # Generate filename with tag
+          docker_tag="${{ needs.determine_docker_tag.outputs.docker_tag }}"
+          filename="dj-panel-composer-${docker_tag}.yml"
+
+          # Save the new compose file
+          echo "$flattened_compose" > "$filename"
+
+          echo "compose_file=$filename" >> $GITHUB_OUTPUT
+          echo "Generated compose file: $filename"
+          cat "$filename"
