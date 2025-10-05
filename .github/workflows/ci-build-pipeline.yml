@@ -191,32 +191,32 @@ jobs:
         image:
           - {
               name: "mongodb",
-              dockerfile: "Docker/mongodb.Dockerfile",
+              dockerfile: "Docker/infra/mongodb.Dockerfile",
               tag: "mongodb",
             }
           - {
               name: "postgres",
-              dockerfile: "Docker/postgres.Dockerfile",
+              dockerfile: "Docker/infra/postgres.Dockerfile",
               tag: "postgres",
             }
           - {
               name: "redis",
-              dockerfile: "Docker/redis.Dockerfile",
+              dockerfile: "Docker/infra/redis.Dockerfile",
               tag: "redis",
             }
           - {
               name: "rabbitmq",
-              dockerfile: "Docker/rabbitmq.Dockerfile",
+              dockerfile: "Docker/infra/rabbitmq.Dockerfile",
               tag: "rabbitmq",
             }
           - {
               name: "sqlserver",
-              dockerfile: "Docker/sqlserver.Dockerfile",
+              dockerfile: "Docker/infra/sqlserver.Dockerfile",
               tag: "sqlserver",
             }
           - {
               name: "strapi",
-              dockerfile: "Docker/strapi.Dockerfile",
+              dockerfile: "Docker/infra/strapi.Dockerfile",
               tag: "strapi",
             }
     env:

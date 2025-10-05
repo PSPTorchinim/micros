@@ -5,7 +5,7 @@ services:
     mongodb_container:
       build:
         context: ../
-        dockerfile: Docker/mongodb.Dockerfile
+        dockerfile: Docker/infra/mongodb.Dockerfile
         args:
           DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
           DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
@@ -23,7 +23,7 @@ services:
     strapi_db:
       build:
         context: ../
-        dockerfile: Docker/postgres.Dockerfile
+        dockerfile: Docker/infra/postgres.Dockerfile
         args:
           DATABASE_NAME: ${CMS_DATABASE_NAME}
           DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
@@ -40,7 +40,7 @@ services:
     rabbitmq:
       build:
         context: ../
-        dockerfile: Docker/rabbitmq.Dockerfile
+        dockerfile: Docker/infra/rabbitmq.Dockerfile
         args:
           RABBITMQ_USER: ${RABBITMQ_USER}
           RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
@@ -59,7 +59,7 @@ services:
     redis:
       build:
         context: ../
-        dockerfile: Docker/redis.Dockerfile
+        dockerfile: Docker/infra/redis.Dockerfile
         args:
           REDIS_PASSWORD: ${REDIS_PASSWORD}
       restart: unless-stopped
@@ -75,7 +75,7 @@ services:
     sqlserver:
       build:
         context: ../
-        dockerfile: Docker/sqlserver.Dockerfile
+        dockerfile: Docker/infra/sqlserver.Dockerfile
         args:
           DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
       restart: unless-stopped
@@ -174,7 +174,7 @@ services:
     strapi:
       build:
         context: ../
-        dockerfile: Docker/strapi.Dockerfile
+        dockerfile: Docker/infra/strapi.Dockerfile
         args:
           CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
           CMS_NODE_ENV: ${CMS_NODE_ENV}

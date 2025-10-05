@@ -69,7 +69,17 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        file: ["microservice", "microfrontend"]
+        file:
+          [
+            "microservice",
+            "microfrontend",
+            "infra/mongodb",
+            "infra/postgres",
+            "infra/redis",
+            "infra/rabbitmq",
+            "infra/sqlserver",
+            "infra/strapi",
+          ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
