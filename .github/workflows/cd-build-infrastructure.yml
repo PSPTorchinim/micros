@@ -278,6 +278,32 @@ jobs:
                 # Replace build with image
                 new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.backend.\"$service\".build)" -)
                 new_compose_file=$(echo "$new_compose_file" | yq eval ".services.backend.\"$service\".image = \"$ghcr_image\"" -)
+              else
+                # Handle services without explicit dockerfile but with build context
+                if echo "$service_config" | yq eval '.build' - | grep -q '\S'; then
+                  # Default to microservice.Dockerfile for backend services
+                  microservice_name=$(echo "$service_config" | yq eval '.build.args.MICROSERVICE_NAME' - 2>/dev/null || echo "null")
+                  
+                  # If no microservice name, try to infer from service name
+                  if [[ "$microservice_name" == "null" || "$microservice_name" == "" ]]; then
+                    case "$service" in
+                      identity_be) microservice_name="IdentityAPI" ;;
+                      music_be) microservice_name="MusicAPI" ;;
+                      gear_be) microservice_name="EquipmentAPI" ;;
+                      documents_be) microservice_name="DocumentsAPI" ;;
+                      brand_be) microservice_name="CompanyAPI" ;;
+                      mailing_be) microservice_name="MailingAPI" ;;
+                      party_be) microservice_name="PartyAPI" ;;
+                      *) microservice_name=$(echo "$service" | sed 's/_be$//' | sed 's/./\U&/g')API ;;
+                    esac
+                  fi
+                  
+                  ghcr_image=$(get_ghcr_image "Docker/microservice.Dockerfile" "$microservice_name" "")
+                  
+                  # Replace build with image
+                  new_compose_file=$(echo "$new_compose_file" | yq eval "del(.services.backend.\"$service\".build)" -)
+                  new_compose_file=$(echo "$new_compose_file" | yq eval ".services.backend.\"$service\".image = \"$ghcr_image\"" -)
+                fi
               fi
             done
           fi
@@ -300,3 +326,9 @@ jobs:
           echo "compose_file=$filename" >> $GITHUB_OUTPUT
           echo "Generated compose file: $filename"
           cat "$filename"
+
+      - name: Upload Generated Compose File
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated-compose-file
+          path: dj-panel-composer-${{ needs.determine_docker_tag.outputs.docker_tag }}.yml
