@@ -121,6 +121,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
+      - name: Install yq (optional — script can self-install)
+        run: |
+          sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
       - name: Generate New Compose File with Unused Ports and GHCR Images
         id: generate_compose_file
         shell: bash
@@ -132,3 +137,13 @@ jobs:
             "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
             "${{ github.event.repository.name }}"
+
+      - name: Ensure TrueNAS has proper catalogs for data and images for each service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            zfs list -H -o name Files/Apps/DJPanel >/dev/null 2>&1 || zfs create -p Files/Apps/DJPanel
+            zfs list -H -o name Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }} >/dev/null 2>&1 || zfs create -p Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}

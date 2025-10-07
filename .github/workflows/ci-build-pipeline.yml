@@ -103,10 +103,16 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
+      - name: Convert service name to lowercase
+        id: lowercase_service
+        run: |
+          LOWERCASE_SERVICE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+          echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
+
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
           dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |

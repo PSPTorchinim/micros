@@ -46,9 +46,11 @@ services:
     restart: unless-stopped
     pull_policy: always
     ports:
-      - "5672:5672"
       - "15672:15672"
-      - "15692:15692"
+    expose:
+      - "5672"
+      - "15672"
+      - "15692"
     networks:
       - rabbitmq_net
       - public
