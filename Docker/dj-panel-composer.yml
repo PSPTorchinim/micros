@@ -558,37 +558,37 @@ services:
       - apigw_backends_net
 
 networks:
-mongo_net:
-  driver: bridge
-redis_net:
-  driver: bridge
-rabbitmq_net:
-  driver: bridge
-sql_net:
-  driver: bridge
-apigw_backends_net:
-  driver: bridge
-apigw_fe_net:
-  driver: bridge
-strapi:
-  driver: bridge
-strapi_fe_net:
-  driver: bridge
-public:
-  driver: bridge
+  mongo_net:
+    driver: bridge
+  redis_net:
+    driver: bridge
+  rabbitmq_net:
+    driver: bridge
+  sql_net:
+    driver: bridge
+  apigw_backends_net:
+    driver: bridge
+  apigw_fe_net:
+    driver: bridge
+  strapi:
+    driver: bridge
+  strapi_fe_net:
+    driver: bridge
+  public:
+    driver: bridge
 
 volumes:
-mongo_config:
-  driver: local
-mongo_data:
-  driver: local
-mssql_data:
-  driver: local
-pg_data:
-  driver: local
-rabbitmq_data:
-  driver: local
-redis_data:
-  driver: local
-strapi_app:
-  driver: local
+  mongo_config:
+    driver: local
+  mongo_data:
+    driver: local
+  mssql_data:
+    driver: local
+  pg_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  strapi_app:
+    driver: local
