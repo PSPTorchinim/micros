@@ -1,4 +1,4 @@
-FROM rabbitmq:latest
+FROM rabbitmq:4
 
 ARG RABBITMQ_USER
 ARG RABBITMQ_PASSWORD
