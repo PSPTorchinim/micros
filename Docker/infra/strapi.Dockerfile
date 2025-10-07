@@ -36,12 +36,11 @@ ENV ENCRYPTION_KEY=$CMS_ENCRYPTION_KEY
 
 # Install system dependencies required for Strapi
 RUN apk add --no-cache --virtual .build-deps \
-    python3 \
-    make \
-    g++ && \
-    apk add --no-cache \
-    libc6-compat \
-    vips-dev && \
+    python3=~3.11 \
+    make=~4.4 \
+    g++=~12.2 \
+    libc6-compat=~1.2 \
+    vips-dev=~8.14 && \
     apk del .build-deps
 
 # Copy package.json and package-lock.json (if available)
