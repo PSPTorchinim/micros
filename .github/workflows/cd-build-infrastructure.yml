@@ -32,15 +32,15 @@ jobs:
           response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
             -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
             -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
-          echo $response
-          echo "response=$response" >> $GITHUB_OUTPUT
+          echo "$response"
+          echo "response=$response" >> "$GITHUB_OUTPUT"
 
       - name: Format Output
         id: format_output
         run: |
           ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
-          echo $ports
-          echo "ports=$ports" >> $GITHUB_OUTPUT
+          echo "$ports"
+          echo "ports=$ports" >> "$GITHUB_OUTPUT"
 
   calculate_unused_ports:
     name: Calculate Unused External and Internal Ports
@@ -51,7 +51,7 @@ jobs:
       internal_ports: ${{ steps.calculate_internal_ports.outputs.ports }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Calculate unused internal ports
         uses: ./.github/templates/calculate-unused-ports
