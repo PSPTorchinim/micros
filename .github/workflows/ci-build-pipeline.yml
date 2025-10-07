@@ -176,7 +176,7 @@ jobs:
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
-            MICROFRONTEND_NAME=${{ matrix.service }}
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
             API_GATEWAY=${{ env.API_GATEWAY }}
             API_SECURE_KEY=${{ env.API_SECURE_KEY }}
             API_JWT_TOKEN=${{ env.API_JWT_TOKEN }}
