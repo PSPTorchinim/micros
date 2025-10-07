@@ -71,8 +71,8 @@ jobs:
       matrix:
         file:
           [
-            "microservice",
-            "microfrontend",
+            "services/dotnet",
+            "frontends/react",
             "infra/mongodb",
             "infra/postgres",
             "infra/redis",
@@ -95,63 +95,9 @@ jobs:
     environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
-      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
-      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
-      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
-      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
-      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
-      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
-      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
-      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
-      SQLSERVER_PASSWORD: ${{ secrets.SQLSERVER_PASSWORD }}
-      SQLSERVER_USER: ${{ vars.SQLSERVER_USER }}
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
-      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
-      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
-      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
-      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
-      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ vars.DATABASE_CATALOG }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
-      REACT_APP_API_GATEWAY: ${{ vars.REACT_APP_API_GATEWAY }}
-      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Create .env file for Docker Compose
-        run: |
-          # Write all current environment variables to Docker/.env dynamically.
-          # Exclude common GitHub runner/system variables to keep the file focused.
-          {
-            env | grep -Ev '^(GITHUB|RUNNER|ACTIONS_|CI$|PATH=|HOME=|PWD=|SHLVL=|_=$|OLDPWD=)'
-          } | sort > Docker/.env
-
-          echo ".env file created with $(wc -l < Docker/.env) entries."
-        shell: bash
 
       - name: Validate Docker Compose YAML
         run: |
