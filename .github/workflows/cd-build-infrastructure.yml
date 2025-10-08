@@ -340,3 +340,129 @@ jobs:
 
             echo "Summary: created=$CREATED, changed=$CHANGED, skipped=$SKIPPED, failed=$FAILED"
             [ "$FAILED" -eq 0 ]
+
+      - name: Ensure Images dataset & upload compose file (with mountpoint fixer)
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files
+          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          COMPOSE_NAME: ${{ steps.package_compose.outputs.compose_name }}
+          COMPOSE_B64: ${{ steps.package_compose.outputs.compose_b64 }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,COMPOSE_NAME,COMPOSE_B64
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -eu
+
+            findbin() {
+              command -v "$1" 2>/dev/null && return 0
+              for d in /sbin /usr/sbin /usr/local/sbin; do
+                [ -x "$d/$1" ] && { echo "$d/$1"; return 0; }
+              done
+              return 1
+            }
+            ZFS_BIN="$(findbin zfs || true)"
+            ZPOOL_BIN="$(findbin zpool || true)"
+
+            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+              runroot() { sudo "$@"; }
+            else
+              runroot() { "$@"; }
+            fi
+
+            POOL="${TRUENAS_POOL:-}"
+            [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ] && POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
+            [ -n "$POOL" ] || { echo "ERROR: set TRUENAS_POOL to a valid pool name."; exit 1; }
+            if [ -n "${ZPOOL_BIN:-}" ] && ! $ZPOOL_BIN list -H -o name | grep -x "$POOL" >/dev/null 2>&1; then
+              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')"; exit 1
+            fi
+            ENV_DIR="${CURRENT_ENV:-Development}"
+            echo "Using pool: $POOL, environment: $ENV_DIR"
+
+            # --- robust mountpoint setter (handles 'busy') ---
+            safe_set_mountpoint() {
+              ds="$1"; want_mp="$2"
+
+              # Normalize duplicate slashes
+              want_mp="$(printf '%s' "$want_mp" | sed -E 's#/+#/#g')"
+
+              # 1) Try direct set
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
+                return 0
+              fi
+
+              # 2) Force unmount then set
+              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
+                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                return 0
+              fi
+
+              # 3) Toggle canmount to clear busy holders
+              runroot "$ZFS_BIN" set canmount=off "$ds" 2>/dev/null || true
+              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds"; then
+                runroot "$ZFS_BIN" set canmount=on "$ds" 2>/dev/null || true
+                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                return 0
+              fi
+              return 1
+            }
+
+            ensure_dataset_recursive() {
+              # $1 = relative path under pool, e.g. "Apps/DJPanel/Development/Images"
+              rel="$1"
+              [ -n "$rel" ] || return 0
+
+              # Walk each level: Apps -> Apps/DJPanel -> ...
+              echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
+                [ -n "$part" ] || continue
+                if [ -z "${current_rel:-}" ]; then current_rel="$part"; else current_rel="$current_rel/$part"; fi
+
+                ds="$POOL/$current_rel"
+                mp="/mnt/$POOL/$current_rel"
+                mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
+
+                if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
+                  curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
+
+                  # Fix any accidental '/mnt/mnt/...' legacy paths or mismatches
+                  if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then
+                    echo "SET : $ds mountpoint $curmp -> $mp"
+                    if safe_set_mountpoint "$ds" "$mp"; then
+                      :
+                    else
+                      echo "ERR : failed to set mountpoint for $ds"; exit 1
+                    fi
+                  else
+                    echo "OK  : $ds exists"
+                  fi
+                else
+                  echo "MAKE: $ds (mountpoint=$mp)"
+                  runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"
+                  runroot mkdir -p "$mp"
+                  runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                fi
+              done
+              unset current_rel
+            }
+
+            # 1) Ensure the full chain to Images exists and is correct
+            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
+            ensure_dataset_recursive "$TARGET_REL"
+
+            # 2) Upload the compose file there
+            DST_DIR="/mnt/$POOL/$TARGET_REL"
+            DST_DIR="$(printf '%s' "$DST_DIR" | sed -E 's#/+#/#g')"
+            DST_NAME="${COMPOSE_NAME##*/}"
+            DST_PATH="$DST_DIR/$DST_NAME"
+
+            printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
+            chmod 664 "$DST_PATH" || true
+
+            echo "Uploaded compose to: $DST_PATH"
+            if command -v sha256sum >/dev/null 2>&1; then sha256sum "$DST_PATH"; elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$DST_PATH"; fi
