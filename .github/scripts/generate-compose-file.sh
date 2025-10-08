@@ -77,12 +77,18 @@ validate_inputs() {
   log_info "Input validation passed"
 }
 
-if [ $# -ne 6 ]; then
-  echo "Usage: $0 \"internal_ports\" \"external_ports\" \"docker_tag\" \"repo_owner\" \"repo_name\" \"data_base_dir\""
-  echo "Example: $0 \"40000-49999\" \"50008-60000\" \"dev-abc123\" \"owner\" \"repo\" \"Files/Apps/DJPanel/dev\""
+if [ $# -ne 7 ]; then
+  echo "Usage: $0 \"internal_ports\" \"external_ports\" \"docker_tag\" \"repo_owner\" \"repo_name\" \"data_base_dir\" \"output_file\""
+  echo "Example: $0 \"40000-49999\" \"50008-60000\" \"dev-abc123\" \"owner\" \"repo\" \"Files/Apps/DJPanel/dev\" \"dj-panel-composer-dev-abc123.yml\""
   exit 1
 fi
-INTERNAL_PORTS="$1"; EXTERNAL_PORTS="$2"; DOCKER_TAG="$3"; REPO_OWNER="$4"; REPO_NAME="$5"; DATA_BASE_DIR="$6"
+INTERNAL_PORTS="$1"
+EXTERNAL_PORTS="$2"
+DOCKER_TAG="$3"
+REPO_OWNER="$4"
+REPO_NAME="$5"
+DATA_BASE_DIR="$6"
+OUTPUT_FILE="$7"
 
 log_section "Script Initialization"
 log_info "Starting Docker Compose file generation"
@@ -338,7 +344,6 @@ if [[ "$LOG_LEVEL" == "DEBUG" ]]; then
 fi
 
 # ======================== Compose Generation ==========================
-OUTPUT_FILE="dj-panel-composer-${DOCKER_TAG}.yml"
 log_section "Compose File Generation"
 log_info "Output file: $OUTPUT_FILE"
 log_info "Reading source compose file: $SOURCE_COMPOSE"
