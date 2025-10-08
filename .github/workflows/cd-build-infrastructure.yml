@@ -2,21 +2,480 @@ name: Build TrueNAS Infrastructure
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types: [completed]
 
 jobs:
   get_truenas_ports:
+    name: Get TrueNAS Ports
     runs-on: ubuntu-latest
+    outputs:
+      ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
-      - name: Get TrueNAS Ports (SSH)
-        id: get_truenas_ports
+      - name: Get Netstat Listening Ports
+        id: get_netstat_ports
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true # <-- IMPORTANT
           script: |
-            echo "Running on host: $(hostname)"
-            echo "User: $(whoami)"
-            echo "Current date: $(date)"
-            # Example: list listening ports (Linux/TrueNAS SCALE)
-            ss -tulpn | grep LISTEN || netstat -an | grep LISTEN || true
+            # TCP + UDP listening ports, print only the port number (one per line), sorted & unique
+            netstat -tuln 2>/dev/null \
+              | awk 'NR>2 {print $4}' \
+              | sed -E 's/.*:([0-9]+)$/\1/' \
+              | grep -E '^[0-9]+$' \
+              | sort -n | uniq
+
+  get_cloudflare_tunnel_ports:
+    name: Get Cloudflare Tunnel Ports
+    runs-on: ubuntu-latest
+    outputs:
+      tunnel_ports: ${{ steps.format_output.outputs.ports }}
+    steps:
+      - name: Get Cloudflare DNS Records
+        id: get_tunnel_ports
+        run: |
+          response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
+            -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
+            -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
+          echo "$response"
+          echo "response=$response" >> "$GITHUB_OUTPUT"
+
+      - name: Format Output
+        id: format_output
+        run: |
+          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
+          echo "$ports"
+          echo "ports=$ports" >> "$GITHUB_OUTPUT"
+
+  calculate_unused_ports:
+    name: Calculate Unused External and Internal Ports
+    runs-on: ubuntu-latest
+    needs: [get_truenas_ports, get_cloudflare_tunnel_ports]
+    outputs:
+      external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
+      internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Calculate unused internal ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_internal_ports
+        with:
+          start_port: 40000
+          end_port: 50000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+      - name: Calculate unused external ports
+        uses: ./.github/templates/calculate-unused-ports
+        id: calculate_external_ports
+        with:
+          start_port: 50000
+          end_port: 60000
+          truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
+          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+
+  determine_environment:
+    runs-on: ubuntu-latest
+    name: Determine Environment
+    outputs:
+      current_env: ${{ steps.set_env.outputs.current_env }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Set Environment
+        id: set_env
+        uses: ./.github/templates/determine-environment
+
+  determine_target_branch:
+    name: Determine Target Branch
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.branch_set.outputs.target_branch }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Determine target branch based on branch
+        id: branch_set
+        uses: ./.github/templates/determine-target-branch
+
+  determine_docker_tag:
+    name: Determine Docker Tag
+    runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Determine Docker tag based on branch
+        id: tag_set
+        uses: ./.github/templates/determine-docker-tag
+
+  generate_and_upload_truenas_compose_file:
+    name: Generate and Upload TrueNAS Docker Compose File
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_environment,
+        calculate_unused_ports,
+        determine_target_branch,
+        determine_docker_tag,
+      ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install yq (optional — script can self-install)
+        run: |
+          sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Generate New Compose File with Unused Ports and GHCR Images
+        id: generate_compose_file
+        shell: bash
+        env:
+          LOG_LEVEL: DEBUG
+        run: |
+          set -euxo pipefail  # <- add -x here (and -u to catch unset vars)
+          chmod +x .github/scripts/generate-compose-file.sh
+
+          output_file="dj-panel-composer-${{ needs.determine_docker_tag.outputs.docker_tag }}.yml"
+          echo "DEBUG: output_file resolves to: $output_file"
+
+          external_map_json=$(.github/scripts/generate-compose-file.sh \
+            "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
+            "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
+            "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
+            "${{ github.repository_owner }}" \
+            "${{ github.event.repository.name }}" \
+            "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
+            "$output_file")
+
+          echo "external_ports_map=$external_map_json" >> "$GITHUB_OUTPUT"
+          echo "compose_file=$output_file" >> "$GITHUB_OUTPUT"
+
+      - name: Package compose file for transfer (base64)
+        id: package_compose
+        run: |
+          set -euo pipefail
+          COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
+          test -f "$COMPOSE_FILE" || { echo "Compose file not found: $COMPOSE_FILE" >&2; exit 1; }
+          # Single-line base64 for safe env transfer
+          B64=$(base64 -w0 "$COMPOSE_FILE")
+          echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
+          echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure TrueNAS has ZFS datasets for compose volumes (pure POSIX/zsh-safe, recursive)
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files # <-- your pool name (not a path)
+          COMPOSE_NAME: ${{ steps.package_compose.outputs.compose_name }}
+          COMPOSE_B64: ${{ steps.package_compose.outputs.compose_b64 }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,COMPOSE_NAME,COMPOSE_B64
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -eu
+
+            # --- find binaries even if not in PATH ---
+            findbin() {
+              command -v "$1" 2>/dev/null && return 0
+              for d in /sbin /usr/sbin /usr/local/sbin; do
+                if [ -x "$d/$1" ]; then echo "$d/$1"; return 0; fi
+              done
+              return 1
+            }
+            ZFS_BIN="$(findbin zfs || true)"
+            ZPOOL_BIN="$(findbin zpool || true)"
+            MOUNT_BIN="$(findbin mount || echo mount)"
+
+            # --- sudo wrapper (works in sh/zsh) ---
+            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+              runroot() { sudo "$@"; }
+            else
+              runroot() { "$@"; }
+            fi
+
+            # --- pool detection & validation ---
+            POOL="${TRUENAS_POOL:-}"
+            if [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ]; then
+              POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
+            fi
+            if [ -z "$POOL" ]; then
+              echo "ERROR: set TRUENAS_POOL to a valid zpool name." >&2
+              exit 1
+            fi
+            if [ -n "${ZPOOL_BIN:-}" ] && ! $ZPOOL_BIN list -H -o name | grep -x "$POOL" >/dev/null 2>&1; then
+              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')" >&2
+              exit 1
+            fi
+            echo "Using pool: $POOL"
+
+            # --- write compose to NAS ---
+            REMOTE_COMPOSE="/tmp/${COMPOSE_NAME##*/}"
+            printf '%s' "$COMPOSE_B64" | base64 -d > "$REMOTE_COMPOSE"
+            head -n 6 "$REMOTE_COMPOSE" || true
+
+            # --- extract host-side volume paths ---
+            extract_with_yq() {
+              yq '.services[]?.volumes[]? // empty' "$REMOTE_COMPOSE" 2>/dev/null \
+                | sed -E 's/^[[:space:]-]*//; s/[[:space:]]*$//' \
+                | awk -F: 'NF>=2 {print $1}'
+            }
+            extract_with_awk() {
+              awk '
+                /^[[:space:]]*services:/ { in_services=1; next }
+                in_services==1 {
+                  if ($0 ~ /^[[:space:]]*[A-Za-z0-9_.-]+:[[:space:]]*$/) { block=$0 }
+                  if ($0 ~ /^[[:space:]]*volumes:[[:space:]]*$/) { in_vol=1; next }
+                  if ($0 ~ /^[[:space:]]*[A-Za-z0-9_.-]+:[[:space:]]*$/ && $0 !~ /volumes:/) { in_vol=0 }
+                  if (in_vol==1 && $0 ~ /^[[:space:]]*-[[:space:]]*[^:#]+:[^:#]+/) {
+                    line=$0
+                    sub(/^[[:space:]]*-[[:space:]]*/, "", line)
+                    split(line, a, ":")
+                    print a[1]
+                  }
+                }
+              ' "$REMOTE_COMPOSE"
+            }
+
+            if command -v yq >/dev/null 2>&1; then
+              HOST_PATHS_RAW="$(extract_with_yq || true)"
+            else
+              HOST_PATHS_RAW="$(extract_with_awk || true)"
+            fi
+
+            # Clean & filter: strip quotes, require '/', unique
+            HOST_PATHS="$(printf '%s\n' "$HOST_PATHS_RAW" \
+              | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/' \
+              | grep '/' || true)"
+            HOST_PATHS="$(printf '%s\n' "$HOST_PATHS" | awk '!seen[$0]++')"
+
+            [ -n "${HOST_PATHS:-}" ] || { echo "No host volume paths found. Nothing to do."; exit 0; }
+
+            echo "Found host volume paths:"
+            printf '%s\n' "$HOST_PATHS" | sed 's/^/ - /'
+
+            CREATED=0; CHANGED=0; SKIPPED=0; FAILED=0
+
+            # Ensure each parent dataset exists with correct mountpoint
+            ensure_dataset_hierarchy() {
+              raw="$1"
+
+              # Normalize to absolute under /mnt/$POOL, deduping leading $POOL/
+              case "$raw" in
+                /*) host_path="$raw" ;;
+                "$POOL"/*) host_path="/mnt/$raw" ;;        # e.g. Files/Apps/... -> /mnt/Files/Apps/...
+                *) host_path="/mnt/$POOL/$raw" ;;
+              esac
+              host_path="$(printf '%s' "$host_path" | sed -E 's#/+#/#g')"
+
+              case "$host_path" in
+                "/mnt/$POOL"*) : ;;
+                *) echo "WARN: outside /mnt/$POOL -> $host_path"; SKIPPED=$((SKIPPED+1)); return 0 ;;
+              esac
+
+              rel="${host_path#/mnt/$POOL/}"
+              [ "$rel" = "$host_path" ] && rel=""
+
+              # Nothing to do at pool root
+              [ -z "$rel" ] && { echo "INFO: path is pool root; skip."; SKIPPED=$((SKIPPED+1)); return 0; }
+
+              # Split rel into components (portable: use awk to print each segment on its own line)
+              echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
+                [ -n "$part" ] || continue
+
+                if [ -z "${current_rel:-}" ]; then
+                  current_rel="$part"
+                else
+                  current_rel="$current_rel/$part"
+                fi
+
+                dataset="$POOL/$current_rel"
+                mp="/mnt/$POOL/$current_rel"
+
+                if [ -n "${ZFS_BIN:-}" ] && runroot "$ZFS_BIN" list -H "$dataset" >/dev/null 2>&1; then
+                  current_mp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$dataset" 2>/dev/null || echo -n)"
+                  if [ "$current_mp" != "$mp" ] && [ "$current_mp" != "legacy" ]; then
+                    echo "SET : $dataset mountpoint $current_mp -> $mp"
+                    runroot "$ZFS_BIN" set mountpoint="$mp" "$dataset" && CHANGED=$((CHANGED+1))
+                  else
+                    echo "OK  : $dataset exists"
+                    SKIPPED=$((SKIPPED+1))
+                  fi
+                else
+                  if [ -z "${ZFS_BIN:-}" ]; then
+                    echo "ERR : zfs not found in PATH; run as root or add /sbin." >&2
+                    FAILED=$((FAILED+1)); return 1
+                  fi
+                  echo "MAKE: $dataset (mountpoint=$mp)"
+                  if runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$dataset"; then
+                    runroot mkdir -p "$mp"
+                    if ! $MOUNT_BIN | grep " on $mp " >/dev/null 2>&1; then
+                      runroot "$ZFS_BIN" mount "$dataset" || true
+                    fi
+                    CREATED=$((CREATED+1))
+                  else
+                    echo "ERR : failed to create $dataset" >&2
+                    FAILED=$((FAILED+1)); return 1
+                  fi
+                fi
+              done
+
+              # reset builder var for next path
+              unset current_rel
+            }
+
+            # Iterate each host path
+            printf '%s\n' "$HOST_PATHS" | while IFS= read -r p; do
+              [ -n "$p" ] || continue
+              ensure_dataset_hierarchy "$p"
+            done
+
+            echo "Summary: created=$CREATED, changed=$CHANGED, skipped=$SKIPPED, failed=$FAILED"
+            [ "$FAILED" -eq 0 ]
+
+      - name: Ensure Images dataset & upload compose file (with mountpoint fixer)
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files
+          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          COMPOSE_NAME: ${{ steps.package_compose.outputs.compose_name }}
+          COMPOSE_B64: ${{ steps.package_compose.outputs.compose_b64 }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,COMPOSE_NAME,COMPOSE_B64
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -eu
+
+            findbin() {
+              command -v "$1" 2>/dev/null && return 0
+              for d in /sbin /usr/sbin /usr/local/sbin; do
+                [ -x "$d/$1" ] && { echo "$d/$1"; return 0; }
+              done
+              return 1
+            }
+            ZFS_BIN="$(findbin zfs || true)"
+            ZPOOL_BIN="$(findbin zpool || true)"
+
+            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+              runroot() { sudo "$@"; }
+            else
+              runroot() { "$@"; }
+            fi
+
+            POOL="${TRUENAS_POOL:-}"
+            [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ] && POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
+            [ -n "$POOL" ] || { echo "ERROR: set TRUENAS_POOL to a valid pool name."; exit 1; }
+            if [ -n "${ZPOOL_BIN:-}" ] && ! $ZPOOL_BIN list -H -o name | grep -x "$POOL" >/dev/null 2>&1; then
+              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')"; exit 1
+            fi
+            ENV_DIR="${CURRENT_ENV:-Development}"
+            echo "Using pool: $POOL, environment: $ENV_DIR"
+
+            # --- robust mountpoint setter (handles 'busy') ---
+            safe_set_mountpoint() {
+              ds="$1"; want_mp="$2"
+
+              # Normalize duplicate slashes
+              want_mp="$(printf '%s' "$want_mp" | sed -E 's#/+#/#g')"
+
+              # 1) Try direct set
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
+                return 0
+              fi
+
+              # 2) Force unmount then set
+              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
+                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                return 0
+              fi
+
+              # 3) Toggle canmount to clear busy holders
+              runroot "$ZFS_BIN" set canmount=off "$ds" 2>/dev/null || true
+              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
+              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds"; then
+                runroot "$ZFS_BIN" set canmount=on "$ds" 2>/dev/null || true
+                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                return 0
+              fi
+              return 1
+            }
+
+            ensure_dataset_recursive() {
+              # $1 = relative path under pool, e.g. "Apps/DJPanel/Development/Images"
+              rel="$1"
+              [ -n "$rel" ] || return 0
+
+              # Walk each level: Apps -> Apps/DJPanel -> ...
+              echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
+                [ -n "$part" ] || continue
+                if [ -z "${current_rel:-}" ]; then current_rel="$part"; else current_rel="$current_rel/$part"; fi
+
+                ds="$POOL/$current_rel"
+                mp="/mnt/$POOL/$current_rel"
+                mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
+
+                if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
+                  curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
+
+                  # Fix any accidental '/mnt/mnt/...' legacy paths or mismatches
+                  if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then
+                    echo "SET : $ds mountpoint $curmp -> $mp"
+                    if safe_set_mountpoint "$ds" "$mp"; then
+                      :
+                    else
+                      echo "ERR : failed to set mountpoint for $ds"; exit 1
+                    fi
+                  else
+                    echo "OK  : $ds exists"
+                  fi
+                else
+                  echo "MAKE: $ds (mountpoint=$mp)"
+                  runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"
+                  runroot mkdir -p "$mp"
+                  runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                fi
+              done
+              unset current_rel
+            }
+
+            # 1) Ensure the full chain to Images exists and is correct
+            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
+            ensure_dataset_recursive "$TARGET_REL"
+
+            # 2) Upload the compose file there
+            DST_DIR="/mnt/$POOL/$TARGET_REL"
+            DST_DIR="$(printf '%s' "$DST_DIR" | sed -E 's#/+#/#g')"
+            DST_NAME="${COMPOSE_NAME##*/}"
+            DST_PATH="$DST_DIR/$DST_NAME"
+
+            printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
+            chmod 664 "$DST_PATH" || true
+
+            echo "Uploaded compose to: $DST_PATH"
+            if command -v sha256sum >/dev/null 2>&1; then sha256sum "$DST_PATH"; elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$DST_PATH"; fi

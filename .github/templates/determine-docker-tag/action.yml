@@ -1,20 +1,21 @@
 name: Determine Docker Tag
-description: Determine the Docker tag for the service
+description: Determine the Docker tag for the service using commit hash
 outputs:
   docker_tag:
-    description: The Docker tag determined based on the branch
+    description: The Docker tag determined based on the branch and commit hash
     value: ${{ steps.tag_set.outputs.docker_tag }}
 runs:
   using: composite
   steps:
-    - name: Set docker tag based on branch
+    - name: Set docker tag based on branch and commit hash
       id: tag_set
       shell: bash
       run: |
+        # Get short commit hash (7 characters)
+        COMMIT_HASH=$(git rev-parse --short=7 HEAD)
+
         if [[ "${GITHUB_REF}" == *"/production" ]]; then
-          echo "docker_tag=production" >> "$GITHUB_OUTPUT"
-        elif [[ "${GITHUB_REF}" == refs/heads/releases/* ]]; then
-          echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=prod-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
         else
-          echo "docker_tag=develop" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=dev-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
         fi

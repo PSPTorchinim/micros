@@ -1,5 +1,5 @@
-# Use Node.js LTS version
-FROM node:18-alpine
+# Use Node.js LTS version with specific Alpine version
+FROM node:18-alpine3.18
 
 # Set working directory
 WORKDIR /app
@@ -35,12 +35,13 @@ ENV TRANSFER_TOKEN_SALT=$CMS_TRANSFER_TOKEN_SALT
 ENV ENCRYPTION_KEY=$CMS_ENCRYPTION_KEY
 
 # Install system dependencies required for Strapi
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    libc6-compat \
-    vips-dev
+RUN apk add --no-cache --virtual .build-deps \
+    python3=~3.11 \
+    make=~4.4 \
+    g++=~12.2 \
+    libc6-compat=~1.2 \
+    vips-dev=~8.14 && \
+    apk del .build-deps
 
 # Copy package.json and package-lock.json (if available)
 COPY CMS/package*.json ./
