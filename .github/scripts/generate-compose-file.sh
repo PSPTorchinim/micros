@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # Script to generate Docker Compose file with GHCR images based on existing compose file
 # Usage: ./generate-compose-file.sh "internal_ports" "external_ports" "docker_tag" "repo_owner" "repo_name"
@@ -46,7 +46,8 @@ log_message() {
     local level="$1"
     local message="$2"
     local color="${3:-$NC}"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
     # Console output with color
     echo -e "${color}[${timestamp}] [${level}] ${message}${NC}"
@@ -70,7 +71,8 @@ log_subsection() {
 # Performance timing
 start_time=$(date +%s)
 log_timer() {
-    local current_time=$(date +%s)
+    local current_time
+    current_time=$(date +%s)
     local elapsed=$((current_time - start_time))
     log_info "Total execution time: ${elapsed}s"
 }
@@ -195,29 +197,31 @@ fi
 # Counters for port assignment
 internal_counter=0
 external_counter=0
+# Holder for function "return" (avoids subshell; fixes counter bug)
+NEXT_PORT=""
 
-# Fixed port assignment functions
+# Fixed port assignment functions (set NEXT_PORT instead of echo; no subshells)
 get_next_internal_port() {
-    if [ $internal_counter -lt $internal_count ]; then
+    if (( internal_counter < internal_count )); then
         local port="${INTERNAL_PORT_ARRAY[$internal_counter]}"
         log_debug "Assigning internal port: $port (index: $internal_counter)"
         ((internal_counter++))
-        echo "$port"
+        NEXT_PORT="$port"
     else
         log_warn "No more internal ports available, using fallback: 40000"
-        echo "40000"
+        NEXT_PORT="40000"
     fi
 }
 
 get_next_external_port() {
-    if [ $external_counter -lt $external_count ]; then
+    if (( external_counter < external_count )); then
         local port="${EXTERNAL_PORT_ARRAY[$external_counter]}"
         log_debug "Assigning external port: $port (index: $external_counter)"
         ((external_counter++))
-        echo "$port"
+        NEXT_PORT="$port"
     else
         log_warn "No more external ports available, using fallback: 50000"
-        echo "50000"
+        NEXT_PORT="50000"
     fi
 }
 
@@ -254,8 +258,10 @@ dockerfile_to_image() {
     log_debug "  Microservice: $microservice_name"
     
     # Extract dockerfile directory and base name from the dockerfile path
-    local dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
-    local dockerfile_base=$(basename "$dockerfile" .Dockerfile)
+    local dockerfile_dir
+    dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
+    local dockerfile_base
+    dockerfile_base=$(basename "$dockerfile" .Dockerfile)
     
     log_debug "  Extracted dir: $dockerfile_dir"
     log_debug "  Extracted base: $dockerfile_base"
@@ -279,7 +285,8 @@ dockerfile_to_image() {
         fi
     elif [[ "$dockerfile" == Docker/frontends/* ]] || [[ "$dockerfile" == *react.Dockerfile ]]; then
         # Frontend services: ghcr.io/owner/repo/frontends/microfrontend:tag
-        local microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+        local microfrontend_name
+        microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
         if [ -n "$microfrontend_name" ] && [ "$microfrontend_name" != "null" ]; then
             image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/frontends/${microfrontend_name}:${DOCKER_TAG}"
             log_debug "  Type: Frontend service (using microfrontend name: $microfrontend_name)"
@@ -306,7 +313,8 @@ convert_ports() {
     log_debug "Converting ports for service: $service_name using $get_port_function"
     
     # Check if the service has ports defined in the source
-    local has_ports=$(yq eval ".services.${service_name} | has(\"ports\")" "$SOURCE_COMPOSE" 2>/dev/null)
+    local has_ports
+    has_ports=$(yq eval ".services.${service_name} | has(\"ports\")" "$SOURCE_COMPOSE" 2>/dev/null)
     
     if [[ "$has_ports" == "true" ]]; then
         log_debug "  Found ports configuration for $service_name"
@@ -315,15 +323,19 @@ convert_ports() {
         local port_count=0
         
         # Get all port mappings for this service
-        local port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
+        local port_mappings
+        port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
         
         while IFS= read -r port_mapping; do
             if [ -n "$port_mapping" ] && [ "$port_mapping" != "null" ]; then
-                # Extract the container port (after the colon)
-                local container_port=$(echo "$port_mapping" | sed 's/.*://' | tr -d '"')
+                # Extract the container port (robust to ip:host:container[/proto])
+                local container_port
+                container_port="$(sed -E 's@.*/@@; s@.*:@@; s@/tcp@@; s@/udp@@' <<<"$port_mapping" | tr -d '"')"
                 
-                # Get new port using the provided function
-                local new_port=$($get_port_function)
+                # Get new port using the provided function (no subshell!)
+                NEXT_PORT=""
+                $get_port_function
+                local new_port="$NEXT_PORT"
                 
                 port_output="${port_output}\n      - \"${new_port}:${container_port}\""
                 
@@ -332,7 +344,7 @@ convert_ports() {
             fi
         done <<< "$port_mappings"
         
-        if [ $port_count -gt 0 ]; then
+        if (( port_count > 0 )); then
             echo -e "$port_output"
             log_debug "  Processed $port_count port mappings for $service_name"
         fi
