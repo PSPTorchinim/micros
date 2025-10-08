@@ -9,6 +9,7 @@ on:
 jobs:
   get_truenas_ports:
     name: Get TrueNAS Ports
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
@@ -31,6 +32,7 @@ jobs:
 
   get_cloudflare_tunnel_ports:
     name: Get Cloudflare Tunnel Ports
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       tunnel_ports: ${{ steps.format_output.outputs.ports }}
@@ -85,6 +87,7 @@ jobs:
   determine_environment:
     runs-on: ubuntu-latest
     name: Determine Environment
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
@@ -98,6 +101,7 @@ jobs:
 
   determine_target_branch:
     name: Determine Target Branch
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       target_branch: ${{ steps.branch_set.outputs.target_branch }}
@@ -112,6 +116,7 @@ jobs:
 
   determine_docker_tag:
     name: Determine Docker Tag
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
