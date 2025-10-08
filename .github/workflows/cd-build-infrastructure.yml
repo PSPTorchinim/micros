@@ -2,6 +2,10 @@ name: Build TrueNAS Infrastructure
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types:
+      - completed
 
 jobs:
   get_truenas_ports:
