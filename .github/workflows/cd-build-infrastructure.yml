@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: ["Build Artifacts"]
-    types:
-      - completed
+    types: [completed]
 
 jobs:
   get_truenas_ports:
@@ -62,6 +61,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Calculate unused internal ports
         uses: ./.github/templates/calculate-unused-ports
@@ -87,8 +88,10 @@ jobs:
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
@@ -101,6 +104,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - name: Determine target branch based on branch
         id: branch_set
         uses: ./.github/templates/determine-target-branch
@@ -113,6 +118,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
@@ -130,6 +137,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install yq (optional — script can self-install)
         run: |
