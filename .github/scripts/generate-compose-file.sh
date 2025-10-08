@@ -5,10 +5,12 @@
 
 set -euo pipefail
 
-# Advanced logging configuration
-LOG_LEVEL="${LOG_LEVEL:-INFO}"
+# ======================== Advanced Logging Config ==========================
+LOG_LEVEL="${LOG_LEVEL:-INFO}"   # DEBUG|INFO|WARN|ERROR
 LOG_FILE="${LOG_FILE:-generate-compose-$(date +%Y%m%d_%H%M%S).log}"
 ENABLE_FILE_LOGGING="${ENABLE_FILE_LOGGING:-true}"
+# When true and LOG_LEVEL=DEBUG, prints bash xtrace with timestamps + function + line no.
+ENABLE_SHELL_XTRACE="${ENABLE_SHELL_XTRACE:-true}"
 
 # Color codes for console output
 readonly RED='\033[0;31m'
@@ -19,27 +21,22 @@ readonly PURPLE='\033[0;35m'
 readonly CYAN='\033[0;36m'
 readonly NC='\033[0m' # No Color
 
-# Logging functions
-log_debug() {
-    if [[ "$LOG_LEVEL" == "DEBUG" ]]; then
-        log_message "DEBUG" "$1" "$CYAN"
-    fi
-}
-
-log_info() {
-    if [[ "$LOG_LEVEL" =~ ^(DEBUG|INFO)$ ]]; then
-        log_message "INFO" "$1" "$GREEN"
-    fi
-}
-
-log_warn() {
-    if [[ "$LOG_LEVEL" =~ ^(DEBUG|INFO|WARN)$ ]]; then
-        log_message "WARN" "$1" "$YELLOW"
-    fi
-}
-
-log_error() {
-    log_message "ERROR" "$1" "$RED"
+# Adds caller location (function:line) to messages
+_log_location() {
+  local depth="${1:-1}"
+  local info
+  info=$(caller "$depth" 2>/dev/null || true)
+  # format: "LINE FUNC SOURCE"
+  if [[ -n "$info" ]]; then
+    # shellcheck disable=SC2206
+    local parts=($info)
+    local line="${parts[0]}"
+    local func="${parts[1]:-main}"
+    local file="${parts[2]:-$(basename "$0")}"
+    echo "$file:$func:$line"
+  else
+    echo "$(basename "$0"):main:?"
+  fi
 }
 
 log_message() {
@@ -48,24 +45,31 @@ log_message() {
     local color="${3:-$NC}"
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+    local loc
+    loc="$(_log_location 2)" # 2 frames up so logs point to the caller site
+
     # Console output with color
-    echo -e "${color}[${timestamp}] [${level}] ${message}${NC}"
-    
+    echo -e "${color}[${timestamp}] [${level}] [$loc] ${message}${NC}"
     # File logging (without color codes)
     if [[ "$ENABLE_FILE_LOGGING" == "true" ]]; then
-        echo "[${timestamp}] [${level}] ${message}" >> "$LOG_FILE"
+        echo "[${timestamp}] [${level}] [$loc] ${message}" >> "$LOG_FILE"
     fi
 }
 
-log_section() {
-    local section_name="$1"
-    log_info "==================== ${section_name} ===================="
-}
+log_debug() { [[ "$LOG_LEVEL" == "DEBUG" ]] && log_message "DEBUG" "$1" "$CYAN"; }
+log_info()  { [[ "$LOG_LEVEL" =~ ^(DEBUG|INFO)$ ]] && log_message "INFO"  "$1" "$GREEN"; }
+log_warn()  { [[ "$LOG_LEVEL" =~ ^(DEBUG|INFO|WARN)$ ]] && log_message "WARN"  "$1" "$YELLOW"; }
+log_error() { log_message "ERROR" "$1" "$RED"; }
 
-log_subsection() {
-    local subsection_name="$1"
-    log_info "---------- ${subsection_name} ----------"
+log_section()    { log_info "==================== $1 ===================="; }
+log_subsection() { log_info "---------- $1 ----------"; }
+
+# Optional: bash xtrace (very verbose). Only enable for deep debugging.
+_enable_shell_xtrace() {
+  if [[ "$LOG_LEVEL" == "DEBUG" && "$ENABLE_SHELL_XTRACE" == "true" ]]; then
+    export PS4='+ $(date "+%Y-%m-%d %H:%M:%S") [$(_log_location 1)] >> '
+    set -x
+  fi
 }
 
 # Performance timing
@@ -80,74 +84,51 @@ log_timer() {
 # Error handling function
 handle_error() {
     local line_number="$1"
+    local exit_code=$?
     log_error "Script failed at line $line_number"
-    log_error "Last command exit code: $?"
+    log_error "Last command exit code: $exit_code"
     log_timer
     exit 1
 }
-
 trap 'handle_error $LINENO' ERR
 
-# Input validation and logging
+# ======================== Input Handling ==========================
+
 validate_inputs() {
     log_section "Input Validation"
-    
-    if [[ -z "$INTERNAL_PORTS" ]]; then
-        log_error "Internal ports parameter is empty"
-        exit 1
-    fi
-    
-    if [[ -z "$EXTERNAL_PORTS" ]]; then
-        log_error "External ports parameter is empty"
-        exit 1
-    fi
-    
-    if [[ -z "$DOCKER_TAG" ]]; then
-        log_error "Docker tag parameter is empty"
-        exit 1
-    fi
-    
-    if [[ -z "$REPO_OWNER" ]]; then
-        log_error "Repository owner parameter is empty"
-        exit 1
-    fi
-    
-    if [[ -z "$REPO_NAME" ]]; then
-        log_error "Repository name parameter is empty"
-        exit 1
-    fi
-    
+    if [[ -z "$INTERNAL_PORTS" ]]; then log_error "Internal ports parameter is empty"; exit 1; fi
+    if [[ -z "$EXTERNAL_PORTS" ]]; then log_error "External ports parameter is empty"; exit 1; fi
+    if [[ -z "$DOCKER_TAG"     ]]; then log_error "Docker tag parameter is empty"; exit 1; fi
+    if [[ -z "$REPO_OWNER"     ]]; then log_error "Repository owner parameter is empty"; exit 1; fi
+    if [[ -z "$REPO_NAME"      ]]; then log_error "Repository name parameter is empty"; exit 1; fi
     log_info "Input validation passed"
 }
 
-# Check if we have the required number of arguments
 if [ $# -ne 5 ]; then
     echo "Usage: $0 \"internal_ports\" \"external_ports\" \"docker_tag\" \"repo_owner\" \"repo_name\""
     echo "Example: $0 \"40000-49999\" \"50008-60000\" \"dev-abc123\" \"owner\" \"repo\""
     exit 1
 fi
 
-# Input parameters
 INTERNAL_PORTS="$1"
 EXTERNAL_PORTS="$2"
 DOCKER_TAG="$3"
 REPO_OWNER="$4"
 REPO_NAME="$5"
 
-# Initialize logging
 log_section "Script Initialization"
 log_info "Starting Docker Compose file generation"
 log_info "Log level: $LOG_LEVEL"
 log_info "Log file: $LOG_FILE"
 log_info "File logging: $ENABLE_FILE_LOGGING"
 
-# Validate inputs
 validate_inputs
+_enable_shell_xtrace
 
-# Source compose file
+# ======================== Globals & Helpers ==========================
+
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
-# Check if source file exists
 log_subsection "Source File Validation"
 if [ ! -f "$SOURCE_COMPOSE" ]; then
     log_error "Source compose file $SOURCE_COMPOSE not found"
@@ -157,359 +138,338 @@ if [ ! -f "$SOURCE_COMPOSE" ]; then
 fi
 log_info "Source compose file found: $SOURCE_COMPOSE"
 
-# Convert port strings to arrays more efficiently
 log_subsection "Port Configuration"
-
-# Use a more memory-efficient approach for large port ranges
-# Convert space-separated string to array using read
+# Arrays built from space-separated lists
 read -ra INTERNAL_PORT_ARRAY <<< "$INTERNAL_PORTS"
 read -ra EXTERNAL_PORT_ARRAY <<< "$EXTERNAL_PORTS"
-
-# Log array sizes without printing all ports (which causes memory issues)
 internal_count=${#INTERNAL_PORT_ARRAY[@]}
 external_count=${#EXTERNAL_PORT_ARRAY[@]}
-
 log_info "Internal ports available: $internal_count ports"
 log_info "External ports available: $external_count ports"
 
-# Show just the first few and last few ports for debugging
 if [[ $internal_count -gt 10 ]]; then
     log_info "Internal ports range: ${INTERNAL_PORT_ARRAY[0]}-${INTERNAL_PORT_ARRAY[$((internal_count-1))]}"
 else
     log_info "Internal ports: ${INTERNAL_PORT_ARRAY[*]}"
 fi
-
 if [[ $external_count -gt 10 ]]; then
     log_info "External ports range: ${EXTERNAL_PORT_ARRAY[0]}-${EXTERNAL_PORT_ARRAY[$((external_count-1))]}"
 else
     log_info "External ports: ${EXTERNAL_PORT_ARRAY[*]}"
 fi
 
-# Validate port arrays
-if [[ $internal_count -eq 0 ]]; then
-    log_warn "No internal ports provided"
-fi
+if [[ $internal_count -eq 0 ]]; then log_warn "No internal ports provided"; fi
+if [[ $external_count -eq 0 ]]; then log_warn "No external ports provided"; fi
 
-if [[ $external_count -eq 0 ]]; then
-    log_warn "No external ports provided"
-fi
-
-# Counters for port assignment
+# Counters and "return" buffers
 internal_counter=0
 external_counter=0
-# Holder for function "return" (avoids subshell; fixes counter bug)
 NEXT_PORT=""
+CONVERTED_PORTS=""
 
-# Fixed port assignment functions (set NEXT_PORT instead of echo; no subshells)
+# Track used host ports to catch duplicates and where they were assigned
+declare -A USED_HOST_PORTS   # key: host_port, value: "service:container_port"
+track_port_use() {
+  local host="$1" service="$2" cport="$3"
+  if [[ -n "${USED_HOST_PORTS[$host]:-}" ]]; then
+    log_warn "Duplicate host port detected: $host (already used by ${USED_HOST_PORTS[$host]}; now requested by ${service}:${cport})"
+  else
+    USED_HOST_PORTS["$host"]="${service}:${cport}"
+  fi
+}
+
+log_debug "Initial counters: internal_counter=$internal_counter, external_counter=$external_counter"
+
+# ======================== Port Pickers with Deep Logging ==========================
+
 get_next_internal_port() {
+    log_debug "get_next_internal_port(): before: internal_counter=$internal_counter/$internal_count"
     if (( internal_counter < internal_count )); then
         local port="${INTERNAL_PORT_ARRAY[$internal_counter]}"
-        log_debug "Assigning internal port: $port (index: $internal_counter)"
+        log_debug "Assign internal port = $port (idx=$internal_counter)"
         ((internal_counter++))
         NEXT_PORT="$port"
     else
         log_warn "No more internal ports available, using fallback: 40000"
         NEXT_PORT="40000"
     fi
+    log_debug "get_next_internal_port(): after: internal_counter=$internal_counter, NEXT_PORT=$NEXT_PORT"
 }
 
 get_next_external_port() {
+    log_debug "get_next_external_port(): before: external_counter=$external_counter/$external_count"
     if (( external_counter < external_count )); then
         local port="${EXTERNAL_PORT_ARRAY[$external_counter]}"
-        log_debug "Assigning external port: $port (index: $external_counter)"
+        log_debug "Assign external port = $port (idx=$external_counter)"
         ((external_counter++))
         NEXT_PORT="$port"
     else
         log_warn "No more external ports available, using fallback: 50000"
         NEXT_PORT="50000"
     fi
+    log_debug "get_next_external_port(): after: external_counter=$external_counter, NEXT_PORT=$NEXT_PORT"
 }
 
-# Function to determine which port function to use based on service type
 get_port_function_for_service() {
     local service_name="$1"
     local dockerfile="$2"
-    
-    # Infrastructure services use internal ports (except strapi)
     if [[ "$dockerfile" == Docker/infra/* ]]; then
         if [[ "$service_name" == "strapi" ]]; then
+            log_debug "Port policy: $service_name (infra but Strapi) -> external ports"
             echo "get_next_external_port"
-            log_debug "  Service $service_name: Infrastructure service (Strapi) - using external ports"
         else
+            log_debug "Port policy: $service_name (infra) -> internal ports"
             echo "get_next_internal_port"
-            log_debug "  Service $service_name: Infrastructure service - using internal ports"
         fi
     else
-        # All other services (services, frontends, etc.) use external ports
+        log_debug "Port policy: $service_name (apps/frontend) -> external ports"
         echo "get_next_external_port"
-        log_debug "  Service $service_name: Application service - using external ports"
     fi
 }
 
-# Function to convert dockerfile path to GHCR image name
+# ======================== Image Name Resolver ==========================
+
 dockerfile_to_image() {
     local dockerfile="$1"
     local service_name="$2"
     local microservice_name="$3"
-    
-    log_debug "Converting dockerfile to image:"
-    log_debug "  Dockerfile: $dockerfile"
-    log_debug "  Service: $service_name"
-    log_debug "  Microservice: $microservice_name"
-    
-    # Extract dockerfile directory and base name from the dockerfile path
+    log_debug "dockerfile_to_image for $service_name dockerfile=$dockerfile microservice_name=$microservice_name"
+
     local dockerfile_dir
     dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
     local dockerfile_base
     dockerfile_base=$(basename "$dockerfile" .Dockerfile)
-    
-    log_debug "  Extracted dir: $dockerfile_dir"
-    log_debug "  Extracted base: $dockerfile_base"
-    
+
     local image_name=""
-    
-    # Build GHCR image name based on dockerfile structure
     if [[ "$dockerfile" == Docker/infra/* ]]; then
-        # Infrastructure services: ghcr.io/owner/repo/infra/service:tag
         image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/infra/${dockerfile_base}:${DOCKER_TAG}"
-        log_debug "  Type: Infrastructure service"
     elif [[ "$dockerfile" == Docker/services/* ]]; then
-        # Microservices: ghcr.io/owner/repo/services/microservice:tag
         if [ -n "$microservice_name" ] && [ "$microservice_name" != "null" ]; then
             image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/services/${microservice_name}:${DOCKER_TAG}"
-            log_debug "  Type: Microservice (using microservice name: $microservice_name)"
         else
-            # Fallback to dockerfile base name
             image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/services/${dockerfile_base}:${DOCKER_TAG}"
-            log_debug "  Type: Microservice (using dockerfile base name fallback)"
         fi
     elif [[ "$dockerfile" == Docker/frontends/* ]] || [[ "$dockerfile" == *react.Dockerfile ]]; then
-        # Frontend services: ghcr.io/owner/repo/frontends/microfrontend:tag
         local microfrontend_name
         microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
         if [ -n "$microfrontend_name" ] && [ "$microfrontend_name" != "null" ]; then
             image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/frontends/${microfrontend_name}:${DOCKER_TAG}"
-            log_debug "  Type: Frontend service (using microfrontend name: $microfrontend_name)"
         else
-            # Use service name as fallback for frontend
             image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/frontends/${service_name}:${DOCKER_TAG}"
-            log_debug "  Type: Frontend service (using service name fallback)"
         fi
     else
-        # Unknown dockerfile pattern - use generic structure
         image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/${dockerfile_dir}/${dockerfile_base}:${DOCKER_TAG}"
-        log_warn "  Type: Unknown pattern, using generic structure"
+        log_warn "Unknown dockerfile pattern for $service_name; using generic image path"
     fi
-    
-    log_debug "  Generated image: $image_name"
+    log_debug "Resolved image for $service_name -> $image_name"
     echo "$image_name"
 }
 
-# Function to convert ports with dynamic assignment
+# ======================== Port Conversion with Surgical Logging ==========================
+
+# Writes output YAML snippet to CONVERTED_PORTS (no echo; avoid subshells)
 convert_ports() {
     local service_name="$1"
-    local get_port_function="$2"  # Function name to call for getting new ports
-    
-    log_debug "Converting ports for service: $service_name using $get_port_function"
-    
-    # Check if the service has ports defined in the source
+    local get_port_function="$2"
+    CONVERTED_PORTS=""
+
+    log_debug "convert_ports(): service=$service_name using=$get_port_function (counters: int=${internal_counter}/${internal_count}, ext=${external_counter}/${external_count})"
+
     local has_ports
     has_ports=$(yq eval ".services.${service_name} | has(\"ports\")" "$SOURCE_COMPOSE" 2>/dev/null)
-    
-    if [[ "$has_ports" == "true" ]]; then
-        log_debug "  Found ports configuration for $service_name"
-        
-        local port_output="    ports:"
-        local port_count=0
-        
-        # Get all port mappings for this service
-        local port_mappings
-        port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
-        
-        while IFS= read -r port_mapping; do
-            if [ -n "$port_mapping" ] && [ "$port_mapping" != "null" ]; then
-                # Extract the container port (robust to ip:host:container[/proto])
-                local container_port
-                container_port="$(sed -E 's@.*/@@; s@.*:@@; s@/tcp@@; s@/udp@@' <<<"$port_mapping" | tr -d '"')"
-                
-                # Get new port using the provided function (no subshell!)
-                NEXT_PORT=""
-                $get_port_function
-                local new_port="$NEXT_PORT"
-                
-                port_output="${port_output}\n      - \"${new_port}:${container_port}\""
-                
-                log_debug "    Port mapping: $new_port:$container_port (original: $port_mapping)"
-                ((port_count++))
-            fi
-        done <<< "$port_mappings"
-        
-        if (( port_count > 0 )); then
-            echo -e "$port_output"
-            log_debug "  Processed $port_count port mappings for $service_name"
+
+    if [[ "$has_ports" != "true" ]]; then
+        log_debug "No 'ports' key for $service_name"
+        return 0
+    fi
+
+    local port_output="    ports:"
+    local port_count=0
+    local port_mappings
+    port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
+
+    # We log each line to pinpoint where parsing/assignment fails
+    while IFS= read -r port_mapping; do
+        log_debug "Raw port mapping line for $service_name: '$port_mapping'"
+        if [[ -z "$port_mapping" || "$port_mapping" == "null" ]]; then
+            log_warn "Empty/null port mapping encountered for $service_name; skipping"
+            continue
         fi
+
+        local container_port
+        container_port="$(sed -E 's@.*/@@; s@.*:@@; s@/tcp@@; s@/udp@@' <<<"$port_mapping" | tr -d '"')"
+        if [[ -z "$container_port" ]]; then
+            log_warn "Failed to parse container_port from '$port_mapping' for $service_name"
+            continue
+        fi
+        log_debug "Parsed container_port for $service_name: $container_port (from '$port_mapping')"
+
+        NEXT_PORT=""
+        $get_port_function
+        local new_port="$NEXT_PORT"
+
+        if [[ -z "$new_port" ]]; then
+            log_error "No host port returned for $service_name mapping '$port_mapping'"
+            continue
+        fi
+
+        log_info "Assigning $service_name host_port=$new_port -> container_port=$container_port (policy=$get_port_function)"
+        track_port_use "$new_port" "$service_name" "$container_port"
+
+        port_output="${port_output}\n      - \"${new_port}:${container_port}\""
+        ((port_count++))
+
+        # After each assignment, show live counters to catch reset bugs
+        log_debug "Post-assignment counters: internal=${internal_counter}/${internal_count}, external=${external_counter}/${external_count}"
+    done <<< "$port_mappings"
+
+    if (( port_count > 0 )); then
+        printf -v CONVERTED_PORTS "%b" "$port_output"
+        log_debug "convert_ports(): produced $port_count mappings for $service_name"
     else
-        log_debug "  No ports configuration found for $service_name"
+        log_warn "convert_ports(): no mappings produced for $service_name"
     fi
 }
 
-# Generate the new compose file
+# ======================== Compose Generation ==========================
+
 OUTPUT_FILE="dj-panel-composer-${DOCKER_TAG}.yml"
 
 log_section "Compose File Generation"
 log_info "Output file: $OUTPUT_FILE"
 log_info "Reading source compose file: $SOURCE_COMPOSE"
 
-# Start with compose file header
-echo "name: djpanel" > "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-echo "services:" >> "$OUTPUT_FILE"
+{
+  echo "name: djpanel"
+  echo ""
+  echo "services:"
+} > "$OUTPUT_FILE"
 
-# Get list of services
 log_subsection "Service Discovery"
 services=$(yq eval '.services | keys | .[]' "$SOURCE_COMPOSE")
 service_count=$(echo "$services" | wc -l)
 log_info "Found $service_count services to process"
 
-# Process each service
 log_subsection "Service Processing"
 processed_services=0
 
 while IFS= read -r service; do
-    if [[ -z "$service" ]]; then
-        continue
-    fi
-    
+    [[ -z "$service" ]] && continue
     processed_services=$((processed_services + 1))
     log_info "Processing service $processed_services/$service_count: $service"
-    
-    # Start service definition
+    log_debug "Service loop counters at start: internal=${internal_counter}/${internal_count}, external=${external_counter}/${external_count}"
+
     echo "  ${service}:" >> "$OUTPUT_FILE"
-    
-    # Get dockerfile path and microservice name with error handling
+
     dockerfile=$(yq eval ".services.${service}.build.dockerfile" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
     microservice_name=$(yq eval ".services.${service}.build.args.MICROSERVICE_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-    
-    log_debug "  Service details:"
-    log_debug "    Dockerfile: $dockerfile"
-    log_debug "    Microservice name: $microservice_name"
-    
-    # Convert to GHCR image
+    log_debug "Service $service dockerfile=$dockerfile microservice_name=$microservice_name"
+
     if [ "$dockerfile" != "null" ] && [ -n "$dockerfile" ]; then
         image=$(dockerfile_to_image "$dockerfile" "$service" "$microservice_name")
         echo "    image: $image" >> "$OUTPUT_FILE"
-        log_debug "    Added image: $image"
     else
-        log_warn "    No dockerfile found for service $service"
+        log_warn "No dockerfile found for $service; image not set"
     fi
-    
-    # Copy restart policy
+
     restart=$(yq eval ".services.${service}.restart" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-    if [ "$restart" != "null" ] && [ -n "$restart" ]; then
-        echo "    restart: $restart" >> "$OUTPUT_FILE"
-        log_debug "    Added restart policy: $restart"
-    fi
-    
-    # Copy pull policy
+    [[ "$restart" != "null" && -n "$restart" ]] && echo "    restart: $restart" >> "$OUTPUT_FILE"
+
     pull_policy=$(yq eval ".services.${service}.pull_policy" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-    if [ "$pull_policy" != "null" ] && [ -n "$pull_policy" ]; then
-        echo "    pull_policy: $pull_policy" >> "$OUTPUT_FILE"
-        log_debug "    Added pull policy: $pull_policy"
-    fi
-    
-    # Determine which port function to use based on service type
+    [[ "$pull_policy" != "null" && -n "$pull_policy" ]] && echo "    pull_policy: $pull_policy" >> "$OUTPUT_FILE"
+
     port_function=$(get_port_function_for_service "$service" "$dockerfile")
-    
-    # Convert ports with dynamic assignment using the appropriate port function
-    port_output=$(convert_ports "$service" "$port_function")
-    if [ -n "$port_output" ]; then
-        echo "$port_output" >> "$OUTPUT_FILE"
+    log_info "Service $service will use port allocator: $port_function"
+
+    convert_ports "$service" "$port_function"
+    if [ -n "$CONVERTED_PORTS" ]; then
+        echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
+    else
+        log_debug "Service $service has no ports section to write"
     fi
-    
-    # Copy expose configuration
+
     expose=$(yq eval ".services.${service}.expose[]?" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [ -n "$expose" ]; then
         echo "    expose:" >> "$OUTPUT_FILE"
-        log_debug "    Adding expose configuration"
         while IFS= read -r port; do
-            if [ -n "$port" ] && [ "$port" != "null" ]; then
-                echo "      - \"$port\"" >> "$OUTPUT_FILE"
-                log_debug "      Expose port: $port"
-            fi
+            [[ -z "$port" || "$port" == "null" ]] && continue
+            echo "      - \"$port\"" >> "$OUTPUT_FILE"
         done <<< "$expose"
     fi
-    
-    # Copy depends_on with better error handling
+
     depends_on=$(yq eval ".services.${service}.depends_on" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
     if [ "$depends_on" != "null" ] && [ "$depends_on" != "{}" ] && [ -n "$depends_on" ]; then
         echo "    depends_on:" >> "$OUTPUT_FILE"
         yq eval ".services.${service}.depends_on" "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/      /' >> "$OUTPUT_FILE"
-        log_debug "    Added depends_on configuration"
     fi
-    
-    # Copy networks
+
     networks=$(yq eval ".services.${service}.networks[]?" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [ -n "$networks" ]; then
         echo "    networks:" >> "$OUTPUT_FILE"
-        log_debug "    Adding networks configuration"
         while IFS= read -r network; do
-            if [ -n "$network" ]; then
-                echo "      - $network" >> "$OUTPUT_FILE"
-                log_debug "      Network: $network"
-            fi
+            [[ -z "$network" ]] && continue
+            echo "      - $network" >> "$OUTPUT_FILE"
         done <<< "$networks"
     fi
-    
-    # Copy volumes
+
     volumes=$(yq eval ".services.${service}.volumes[]?" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [ -n "$volumes" ]; then
         echo "    volumes:" >> "$OUTPUT_FILE"
-        log_debug "    Adding volumes configuration"
         while IFS= read -r volume; do
-            if [ -n "$volume" ]; then
-                echo "      - $volume" >> "$OUTPUT_FILE"
-                log_debug "      Volume: $volume"
-            fi
+            [[ -z "$volume" ]] && continue
+            echo "      - $volume" >> "$OUTPUT_FILE"
         done <<< "$volumes"
     fi
-    
-    # Add blank line after service
+
     echo "" >> "$OUTPUT_FILE"
-    log_debug "  Completed processing service: $service"
-    
+    log_debug "Completed $service with counters: internal=${internal_counter}/${internal_count}, external=${external_counter}/${external_count}"
+
 done <<< "$services"
 
-# Copy networks section
+# ======================== Footer Sections ==========================
+
 log_subsection "Adding Networks Configuration"
 networks_section=$(yq eval '.networks' "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
 if [ "$networks_section" != "null" ] && [ -n "$networks_section" ]; then
     echo "networks:" >> "$OUTPUT_FILE"
     yq eval '.networks' "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/  /' >> "$OUTPUT_FILE"
     echo "" >> "$OUTPUT_FILE"
-    log_debug "Added networks configuration"
 else
     log_debug "No networks configuration found"
 fi
 
-# Copy volumes section
 log_subsection "Adding Volumes Configuration"
 volumes_section=$(yq eval '.volumes' "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
 if [ "$volumes_section" != "null" ] && [ -n "$volumes_section" ]; then
     echo "volumes:" >> "$OUTPUT_FILE"
     yq eval '.volumes' "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/  /' >> "$OUTPUT_FILE"
-    log_debug "Added volumes configuration"
 else
     log_debug "No volumes configuration found"
 fi
 
-# Generate summary
+# ======================== Summary & Sanity Reports ==========================
+
 log_section "Generation Summary"
 log_info "Successfully generated Docker Compose file: $OUTPUT_FILE"
 log_info "Processed $processed_services services"
 log_info "External ports used: $external_counter/$external_count"
 log_info "Internal ports used: $internal_counter/$internal_count"
 
-# Get file size for reporting
+# Quick duplicate scan summary
+dup_count=0
+for k in "${!USED_HOST_PORTS[@]}"; do :; done  # touch to avoid 'unused' warning
+# If you want a list of first 20 assigned ports for quick visual diff:
+if [[ "$LOG_LEVEL" == "DEBUG" ]]; then
+  log_subsection "First 20 assigned host ports (any type)"
+  i=0
+  for p in "${!USED_HOST_PORTS[@]}"; do
+    log_debug "Host $p -> ${USED_HOST_PORTS[$p]}"
+    ((i++))
+    [[ $i -ge 20 ]] && break
+  done
+fi
+
+# File size
 if [ -f "$OUTPUT_FILE" ]; then
     file_size=$(wc -l < "$OUTPUT_FILE")
     log_info "Generated file size: $file_size lines"
@@ -524,16 +484,19 @@ if command -v yq &> /dev/null; then
     fi
 fi
 
-# Show final compose file content for debugging (only if DEBUG level)
+# Optionally show final file content (only in DEBUG to avoid huge logs)
 log_subsection "Generated Compose File Content"
-log_info "Final compose file contents:"
-log_info "----------------------------------------"
-while IFS= read -r line; do
-    log_info "$line"
-done < "$OUTPUT_FILE"
-log_info "----------------------------------------"
-log_info "End of compose file content"
+if [[ "$LOG_LEVEL" == "DEBUG" ]]; then
+  log_info "Final compose file contents (DEBUG mode):"
+  log_info "----------------------------------------"
+  while IFS= read -r line; do
+      log_info "$line"
+  done < "$OUTPUT_FILE"
+  log_info "----------------------------------------"
+else
+  log_info "Set LOG_LEVEL=DEBUG to print the generated compose file contents."
+fi
 
 log_timer
 log_info "Detailed logs written to: $LOG_FILE"
-log_info "Docker Compose file generation completed successfully"
+log_info "Docker Compose file generation completed"
