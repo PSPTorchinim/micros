@@ -196,18 +196,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 15
-    strategy:
-      matrix:
-        image:
-          - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
-          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
-          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
-          - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
-          - {
-              name: "sqlserver",
-              dockerfile: "Docker/infra/sqlserver.Dockerfile",
-            }
-          - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
@@ -225,6 +213,20 @@ jobs:
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
       DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+      CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
+    strategy:
+      matrix:
+        image:
+          - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
+          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
+          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
+          - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
+          - {
+              name: "sqlserver",
+              dockerfile: "Docker/infra/sqlserver.Dockerfile",
+            }
+          - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -235,3 +237,22 @@ jobs:
           tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: ${{ matrix.image.dockerfile }}
+          # Pass ALL possible args; Docker will ignore ones not declared via ARG
+          build-args: |
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
+            DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
+            DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
+            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
+            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
+            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
+            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
+            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
+            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
+            CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}

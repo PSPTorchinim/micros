@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script to generate Docker Compose file with GHCR images based on existing compose file
-# Usage: ./generate-compose-file.sh "internal_ports" "external_ports" "docker_tag" "repo_owner" "repo_name" "data_base_dir"
+# Usage: ./generate-compose-file.sh "internal_ports" "external_ports" "docker_tag" "repo_owner" "repo_name" "data_base_dir" "output_file"
 
 # --- Strict mode + inherit ERR in functions/subshells ---
 set -Eeuo pipefail   # -E is critical so the ERR trap works inside functions
@@ -66,6 +66,17 @@ handle_error() {
 trap 'handle_error "${BASH_LINENO[0]}" "${BASH_COMMAND}" "$?"' ERR
 
 # ======================== Input Handling ==========================
+# Normalize DATA_BASE_DIR to an absolute host path.
+normalize_base_dir() {
+  local p="$1"
+  # already absolute
+  if [[ "$p" == /* ]]; then
+    echo "$p"; return
+  fi
+  # looks like "Files/..." (pool-relative) or any relative path → assume /mnt/<that>
+  echo "/mnt/${p}"
+}
+
 validate_inputs() {
   log_section "Input Validation"
   [[ -z "${INTERNAL_PORTS}" ]] && { log_error "Internal ports parameter is empty"; exit 1; }
@@ -90,11 +101,14 @@ REPO_NAME="$5"
 DATA_BASE_DIR="$6"
 OUTPUT_FILE="$7"
 
+# Compute absolute base dir once and log it
+BASE_DATA_DIR="$(normalize_base_dir "$DATA_BASE_DIR")"
 log_section "Script Initialization"
 log_info "Starting Docker Compose file generation"
 log_info "Log level: $LOG_LEVEL"
 log_info "Log file: $LOG_FILE"
 log_info "File logging: $ENABLE_FILE_LOGGING"
+log_info "Base data directory (normalized): $BASE_DATA_DIR"
 
 validate_inputs
 _enable_shell_xtrace
@@ -161,7 +175,7 @@ get_next_internal_port() {
   log_debug "INT alloc BEFORE: idx=${internal_counter}/${internal_count}"
   if (( internal_counter < internal_count )); then
     local port="${INTERNAL_PORT_ARRAY[$internal_counter]}"
-    ((++internal_counter))               # pre-increment avoids exit status 1 when starting at 0
+    ((++internal_counter))
     NEXT_PORT="$port"
   else
     log_warn "INT alloc exhausted; fallback 40000"
@@ -174,7 +188,7 @@ get_next_external_port() {
   log_debug "EXT alloc BEFORE: idx=${external_counter}/${external_count}"
   if (( external_counter < external_count )); then
     local port="${EXTERNAL_PORT_ARRAY[$external_counter]}"
-    ((++external_counter))               # pre-increment avoids exit status 1 when starting at 0
+    ((++external_counter))
     NEXT_PORT="$port"
   else
     log_warn "EXT alloc exhausted; fallback 50000"
@@ -200,30 +214,46 @@ get_port_function_for_service() {
   fi
 }
 
+# Lowercase helper (portable)
+to_lc() {
+  echo "$1" | tr '[:upper:]' '[:lower:]'
+}
+
 dockerfile_to_image() {
   local dockerfile="$1" service_name="$2" microservice_name="$3"
   local dockerfile_dir; dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
   local dockerfile_base; dockerfile_base=$(basename "$dockerfile" .Dockerfile)
   local image_name
+
+  # Ensure owner/repo and all repo path segments are lowercase for a valid reference
+  local owner_lc repo_lc base_lc msvc_lc mfe_lc service_lc dir_lc
+  owner_lc="$(to_lc "${REPO_OWNER}")"
+  repo_lc="$(to_lc "${REPO_NAME}")"
+  base_lc="$(to_lc "${dockerfile_base}")"
+  dir_lc="$(to_lc "${dockerfile_dir}")"
+  service_lc="$(to_lc "${service_name}")"
+  msvc_lc="$(to_lc "${microservice_name}")"
+
   if [[ "$dockerfile" == Docker/infra/* ]]; then
-    image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/infra/${dockerfile_base}:${DOCKER_TAG}"
+    image_name="ghcr.io/${owner_lc}/${repo_lc}/infra/${base_lc}:${DOCKER_TAG}"
   elif [[ "$dockerfile" == Docker/services/* ]]; then
     if [[ -n "$microservice_name" && "$microservice_name" != "null" ]]; then
-      image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/services/${microservice_name}:${DOCKER_TAG}"
+      image_name="ghcr.io/${owner_lc}/${repo_lc}/services/${msvc_lc}:${DOCKER_TAG}"
     else
-      image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/services/${dockerfile_base}:${DOCKER_TAG}"
+      image_name="ghcr.io/${owner_lc}/${repo_lc}/services/${base_lc}:${DOCKER_TAG}"
     fi
   elif [[ "$dockerfile" == Docker/frontends/* || "$dockerfile" == *react.Dockerfile ]]; then
     local microfrontend_name
     microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then
-      image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/frontends/${microfrontend_name}:${DOCKER_TAG}"
+      mfe_lc="$(to_lc "${microfrontend_name}")"
+      image_name="ghcr.io/${owner_lc}/${repo_lc}/frontends/${mfe_lc}:${DOCKER_TAG}"
     else
-      image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/frontends/${service_name}:${DOCKER_TAG}"
+      image_name="ghcr.io/${owner_lc}/${repo_lc}/frontends/${service_lc}:${DOCKER_TAG}"
     fi
   else
     log_warn "Unknown dockerfile pattern for $service_name; generic path"
-    image_name="ghcr.io/${REPO_OWNER}/${REPO_NAME}/${dockerfile_dir}/${dockerfile_base}:${DOCKER_TAG}"
+    image_name="ghcr.io/${owner_lc}/${repo_lc}/${dir_lc}/${base_lc}:${DOCKER_TAG}"
   fi
   log_debug "Image[$service_name] -> $image_name"
   echo "$image_name"
@@ -240,7 +270,6 @@ should_rewrite_to_data_dir() {
   [[ "$src" == /* ]] && return 1   # absolute host bind: keep
   [[ "$src" == .* ]] && return 0   # relative path: rewrite
   [[ "$src" == *docker.sock* ]] && return 1
-  # If it contains a '/', treat as path (relative); else treat as named volume.
   if [[ "$src" == */* ]]; then
     return 0   # relative like ./data or some/path
   fi
@@ -254,12 +283,11 @@ rewrite_volume_line() {
   # Strip quotes
   line="${line%\"}"; line="${line#\"}"
 
-  # If no colon at all, it's a "target only" which is unusual; create a bind based on target
+  # If no colon at all, it's a "target only" → create a bind based on target
   if [[ "$line" != *:* ]]; then
     local tgt="$line"
-    local subdir
-    subdir=$(trim_slashes "$tgt")
-    local new_src="${DATA_BASE_DIR%/}/${service}/${subdir}"
+    local subdir; subdir=$(trim_slashes "$tgt")
+    local new_src="${BASE_DATA_DIR%/}/${service}/${subdir}"
     echo "${new_src}:${tgt}"
     return 0
   fi
@@ -267,22 +295,36 @@ rewrite_volume_line() {
   # Split into up to 3 fields: src : tgt [: mode]
   local src tgt mode
   IFS=':' read -r src tgt mode <<< "$line"
-
-  # Reassemble handling extra colons in mode (unlikely) — we only care about up to 3 fields
   [[ -z "$tgt" ]] && { echo "$line"; return 0; }
 
+  # --- Special case (TrueNAS/SCALE quirk): if target is /var/lib/postgresql/data,
+  #     bind to parent (/var/lib/postgresql) and rely on PGDATA to select subdir.
+  local tgt_effective="$tgt"
+  if [[ "$tgt" == "/var/lib/postgresql/data" ]]; then
+    tgt_effective="/var/lib/postgresql"
+  fi
+
   if should_rewrite_to_data_dir "$src"; then
-    local subdir
-    subdir=$(trim_slashes "$tgt")
-    local new_src="${DATA_BASE_DIR%/}/${service}/${subdir}"
+    local subdir; subdir=$(trim_slashes "$tgt_effective")
+    # optional nicety: collapse .../<service>/data when target ends with /data
+    if [[ "$tgt_effective" =~ /data$ ]]; then subdir="data"; fi
+    local new_src="${BASE_DATA_DIR%/}/${service}/${subdir}"
     if [[ -n "$mode" ]]; then
-      echo "${new_src}:${tgt}:${mode}"
+      echo "${new_src}:${tgt_effective}:${mode}"
     else
-      echo "${new_src}:${tgt}"
+      echo "${new_src}:${tgt_effective}"
     fi
   else
-    # Keep original bind (absolute paths / docker.sock / etc.)
-    echo "$line"
+    # Keep original bind (absolute paths / docker.sock / etc.), but apply postgres-target tweak if relevant
+    if [[ "$tgt" == "/var/lib/postgresql/data" ]]; then
+      if [[ -n "$mode" ]]; then
+        echo "${src}:${tgt_effective}:${mode}"
+      else
+        echo "${src}:${tgt_effective}"
+      fi
+    else
+      echo "$line"
+    fi
   fi
 }
 
@@ -303,14 +345,12 @@ convert_ports() {
   while IFS= read -r port_mapping; do
     log_debug "Raw mapping[$service_name]: '$port_mapping'"
     [[ -z "$port_mapping" || "$port_mapping" == "null" ]] && { log_warn "Empty mapping for $service_name"; continue; }
-
     # Extract container port (strip quotes, handle 0.0.0.0:HOST:CONTAINER[/proto])
     local container_port
     container_port="$(sed -E 's@.*/@@; s@.*:@@; s@/tcp@@; s@/udp@@' <<<"$port_mapping" | tr -d '"')"
     [[ -z "$container_port" ]] && { log_warn "Parse failure: '$port_mapping'"; continue; }
 
-    NEXT_PORT=""
-    $get_port_function
+    NEXT_PORT=""; $get_port_function
     local new_port="$NEXT_PORT"
     [[ -z "$new_port" ]] && { log_error "Allocator returned empty host port for $service_name"; continue; }
 
@@ -337,7 +377,6 @@ if [[ "$LOG_LEVEL" == "DEBUG" ]]; then
   NEXT_PORT=""; get_next_internal_port; log_debug "INT#2=$NEXT_PORT"
   NEXT_PORT=""; get_next_external_port; log_debug "EXT#1=$NEXT_PORT"
   NEXT_PORT=""; get_next_external_port; log_debug "EXT#2=$NEXT_PORT"
-  # roll back counters without tripping set -e on zero
   : $((internal_counter-=2))
   : $((external_counter-=2))
   log_debug "Counters reset after self-check: INT=$internal_counter, EXT=$external_counter"
@@ -393,7 +432,27 @@ while IFS= read -r service; do
     log_debug "$service has no ports to write"
   fi
 
-  # --- Volumes (rewrite named/relative sources to DATA_BASE_DIR/service/<target-subdir>) ---
+  # --- Ensure PGDATA if original intended /var/lib/postgresql/data (we rewrote target to parent)
+  pg_wanted=$(yq eval ".services.${service}.volumes[]? | select(test(\":/var/lib/postgresql/data(:(ro|rw))?$\"))" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  if [[ -n "$pg_wanted" ]]; then
+    # Copy original environment (if any) then ensure PGDATA is set
+    has_env=$(yq eval ".services.${service} | has(\"environment\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+    echo "    environment:" >> "$OUTPUT_FILE"
+    if [[ "$has_env" == "true" ]]; then
+      # Dump original env as key: value lines
+      yq eval ".services.${service}.environment" "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/      /' >> "$OUTPUT_FILE"
+    fi
+    # Only add PGDATA if not already set in original
+    pgdata_existing=$(yq -r ".services.${service}.environment.PGDATA // \"\"" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+    if [[ -z "$pgdata_existing" || "$pgdata_existing" == "null" ]]; then
+      echo "      PGDATA: /var/lib/postgresql/data" >> "$OUTPUT_FILE"
+      log_info "Injected PGDATA for ${service}"
+    else
+      log_debug "PGDATA already present for ${service} -> ${pgdata_existing}"
+    fi
+  fi
+
+  # --- Volumes (rewrite named/relative sources to BASE_DATA_DIR/service/<target-subdir>) ---
   volumes=$(yq eval ".services.${service}.volumes[]?" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
   if [[ -n "$volumes" ]]; then
     echo "    volumes:" >> "$OUTPUT_FILE"
@@ -409,10 +468,33 @@ while IFS= read -r service; do
     done <<< "$volumes"
   fi
 
-  depends_on=$(yq eval ".services.${service}.depends_on" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-  if [[ "$depends_on" != "null" && "$depends_on" != "{}" && -n "$depends_on" ]]; then
+  # --- depends_on → force 'condition: service_started' for each dependency
+  has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  if [[ "$has_depends_on" == "true" ]]; then
+    log_debug "Processing depends_on for $service"
     echo "    depends_on:" >> "$OUTPUT_FILE"
-    yq eval ".services.${service}.depends_on" "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/      /' >> "$OUTPUT_FILE"
+    
+    # Check if it's an array first (simpler check)
+    deps_array_check=$(yq eval ".services.${service}.depends_on | type" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    log_debug "Dependencies type for $service: $deps_array_check"
+    
+    if [[ "$deps_array_check" == "!!seq" ]] || [[ "$deps_array_check" == "array" ]]; then
+      # Handle array format: ["service1", "service2"] - convert to simple object format
+      log_debug "Processing array dependencies for $service"
+      while IFS= read -r dep; do
+        [[ -z "$dep" || "$dep" == "null" ]] && continue
+        log_debug "Adding array dependency: $service -> $dep"
+        echo "      ${dep}:" >> "$OUTPUT_FILE"
+        echo "        condition: service_started" >> "$OUTPUT_FILE"
+      done < <(yq eval ".services.${service}.depends_on[]" "$SOURCE_COMPOSE" 2>/dev/null)
+    else
+      # Handle object format (!!map or object): preserve original structure
+      log_debug "Processing object dependencies for $service (type: $deps_array_check)"
+      # Extract the entire depends_on object and format it with proper indentation
+      yq eval ".services.${service}.depends_on" "$SOURCE_COMPOSE" 2>/dev/null | sed 's/^/      /' >> "$OUTPUT_FILE"
+    fi
+  else
+    log_debug "No depends_on section for $service"
   fi
 
   echo "" >> "$OUTPUT_FILE"

@@ -15,7 +15,7 @@ runs:
         COMMIT_HASH=$(git rev-parse --short=7 HEAD)
 
         if [[ "${GITHUB_REF}" == *"/production" ]]; then
-          echo "docker_tag=prod-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=prod-latest" >> "$GITHUB_OUTPUT"
         else
-          echo "docker_tag=dev-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=dev-latest" >> "$GITHUB_OUTPUT"
         fi

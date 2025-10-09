@@ -28,6 +28,7 @@ services:
         DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
         DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
     restart: unless-stopped
+    pull_policy: always
     ports:
       - "5432:5432"
     networks:
@@ -150,7 +151,7 @@ services:
   host_fe:
     build:
       context: ../
-      dockerfile: Docker/react.Dockerfile
+      dockerfile: Docker/frontends/react.Dockerfile
       args:
         MICROFRONTEND_NAME: dj-panel
         API_GATEWAY: ${API_GATEWAY}

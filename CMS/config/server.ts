@@ -15,4 +15,11 @@ export default ({ env }) => ({
   },
   // Enable documentation serving
   serveAdminPanel: env.bool("SERVE_ADMIN_PANEL", true),
+  // Add cron for better error handling
+  cron: {
+    enabled: env.bool("CRON_ENABLED", false),
+  },
+  // Request timeout configuration
+  url: env("PUBLIC_URL"),
+  proxy: env.bool("IS_PROXIED", false),
 });

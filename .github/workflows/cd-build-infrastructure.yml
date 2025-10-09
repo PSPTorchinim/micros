@@ -2,9 +2,6 @@ name: Build TrueNAS Infrastructure
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Build Artifacts"]
-    types: [completed]
 
 jobs:
   get_truenas_ports:
@@ -62,7 +59,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Calculate unused internal ports
         uses: ./.github/templates/calculate-unused-ports
@@ -91,7 +88,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
@@ -105,7 +102,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
       - name: Determine target branch based on branch
         id: branch_set
         uses: ./.github/templates/determine-target-branch
@@ -119,7 +116,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
@@ -138,7 +135,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Install yq (optional — script can self-install)
         run: |
@@ -396,33 +393,19 @@ jobs:
             ENV_DIR="${CURRENT_ENV:-Development}"
             echo "Using pool: $POOL, environment: $ENV_DIR"
 
-            # --- robust mountpoint setter (handles 'busy') ---
+            # --- simple mountpoint setter (no unmount operations) ---
             safe_set_mountpoint() {
               ds="$1"; want_mp="$2"
 
               # Normalize duplicate slashes
               want_mp="$(printf '%s' "$want_mp" | sed -E 's#/+#/#g')"
 
-              # 1) Try direct set
+              # Try to set mountpoint directly
               if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
                 return 0
               fi
 
-              # 2) Force unmount then set
-              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
-              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
-                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
-                return 0
-              fi
-
-              # 3) Toggle canmount to clear busy holders
-              runroot "$ZFS_BIN" set canmount=off "$ds" 2>/dev/null || true
-              runroot "$ZFS_BIN" unmount -f "$ds" 2>/dev/null || true
-              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds"; then
-                runroot "$ZFS_BIN" set canmount=on "$ds" 2>/dev/null || true
-                runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
-                return 0
-              fi
+              echo "WARN: Could not set mountpoint for $ds to $want_mp (may be in use)"
               return 1
             }
 
@@ -443,22 +426,22 @@ jobs:
                 if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
                   curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
 
-                  # Fix any accidental '/mnt/mnt/...' legacy paths or mismatches
+                  # Only attempt to fix mountpoint if it's clearly wrong
                   if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then
                     echo "SET : $ds mountpoint $curmp -> $mp"
-                    if safe_set_mountpoint "$ds" "$mp"; then
-                      :
-                    else
-                      echo "ERR : failed to set mountpoint for $ds"; exit 1
-                    fi
+                    safe_set_mountpoint "$ds" "$mp" || echo "SKIP: Could not update mountpoint for $ds"
                   else
                     echo "OK  : $ds exists"
                   fi
                 else
                   echo "MAKE: $ds (mountpoint=$mp)"
-                  runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"
-                  runroot mkdir -p "$mp"
-                  runroot "$ZFS_BIN" mount -O "$ds" 2>/dev/null || true
+                  if runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"; then
+                    runroot mkdir -p "$mp"
+                    # Attempt to mount if needed, but don't fail if it doesn't work
+                    runroot "$ZFS_BIN" mount "$ds" 2>/dev/null || true
+                  else
+                    echo "ERR : failed to create $ds"; exit 1
+                  fi
                 fi
               done
               unset current_rel
