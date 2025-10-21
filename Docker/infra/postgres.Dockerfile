@@ -1,21 +1,19 @@
 FROM postgres:18
 
+# --- Build-time inputs baked into the image ---
 ARG DATABASE_NAME_POSTGRES
 ARG DATABASE_USERNAME_POSTGRES
 ARG DATABASE_PASSWORD_POSTGRES
 
+# --- Runtime env for the official entrypoint (persisted in the image) ---
 ENV POSTGRES_DB=$DATABASE_NAME_POSTGRES
 ENV POSTGRES_USER=$DATABASE_USERNAME_POSTGRES
 ENV POSTGRES_PASSWORD=$DATABASE_PASSWORD_POSTGRES
 
-# Create initialization script to ensure database exists
-RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/01-create-database.sh && \
-    echo "set -e" >> /docker-entrypoint-initdb.d/01-create-database.sh && \
-    echo "psql -v ON_ERROR_STOP=1 --username \"\$POSTGRES_USER\" --dbname \"\$POSTGRES_DB\" <<-EOSQL" >> /docker-entrypoint-initdb.d/01-create-database.sh && \
-    echo "    SELECT 'CREATE DATABASE $DATABASE_NAME_POSTGRES' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$DATABASE_NAME_POSTGRES')\\gexec" >> /docker-entrypoint-initdb.d/01-create-database.sh && \
-    echo "EOSQL" >> /docker-entrypoint-initdb.d/01-create-database.sh && \
-    chmod +x /docker-entrypoint-initdb.d/01-create-database.sh
-
-HEALTHCHECK --interval=10s --timeout=15s --retries=10 CMD pg_isready -h localhost -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER
+# A more patient healthcheck:
+# - give initdb + first start more time (ZFS/slow disk/TrueNAS)
+# - use explicit host, user and db; pg_isready doesn't need a password
+HEALTHCHECK --interval=10s --timeout=15s --start-period=90s --retries=12 \
+  CMD pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432 || exit 1
 
 EXPOSE 5432
