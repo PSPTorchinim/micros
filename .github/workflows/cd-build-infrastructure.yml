@@ -168,7 +168,6 @@ jobs:
 
             echo "Checking for existing compose files in: $COMPOSE_DIR"
 
-            # Check if directory exists
             if [ ! -d "$COMPOSE_DIR" ]; then
               echo "Directory does not exist, no existing instances"
               echo "existing_instances=[]"
@@ -176,20 +175,16 @@ jobs:
               exit 0
             fi
 
-            # Debug: Show what files are actually in the directory
             echo "Files in directory:"
             ls -la "$COMPOSE_DIR" || echo "Cannot list directory contents"
 
-            # Find existing dj-panel compose files
             existing_files=""
             instance_tags="{}"
             file_count=0
 
-            # Look for files matching pattern: dj-panel-composer-*.yml using find to avoid shell globbing issues
             while IFS= read -r -d '' file; do
               if [ -f "$file" ]; then
                 filename=$(basename "$file")
-                # Extract timestamp from filename: dj-panel-composer-{timestamp}.yml
                 if echo "$filename" | grep -q "^dj-panel-composer-.*\.yml$"; then
                   timestamp=$(echo "$filename" | sed 's/^dj-panel-composer-\(.*\)\.yml$/\1/')
                   file_count=$((file_count + 1))
@@ -198,18 +193,12 @@ jobs:
                   else
                     existing_files="$existing_files $timestamp"
                   fi
-                  
-                  # Determine which instance this represents based on modification time
-                  # We'll use this to track dev-1 vs dev-2
                   mod_time=$(stat -c %Y "$file" 2>/dev/null || echo "0")
-                  
-                  # Build JSON object for instance timestamps
                   if [ "$instance_tags" = "{}" ]; then
                     instance_tags="{\"$timestamp\":\"$mod_time\"}"
                   else
                     instance_tags=$(echo "$instance_tags" | sed "s/}$/,\"$timestamp\":\"$mod_time\"}/")
                   fi
-                  
                   echo "Found existing compose file: $filename (timestamp: $timestamp, mod_time: $mod_time)"
                 fi
               fi
@@ -217,7 +206,6 @@ jobs:
 
             echo "Found $file_count compose files matching pattern"
 
-            # Convert string to JSON - use POSIX-compatible approach
             existing_json="["
             first=true
             for timestamp in $existing_files; do
@@ -240,17 +228,14 @@ jobs:
       - name: Determine deployment and update targets
         id: determine_target
         run: |
-          # Parse outputs from SSH action stdout
           ssh_output='${{ steps.check_instances.outputs.stdout }}'
 
           echo "SSH Output:"
           echo "$ssh_output"
 
-          # Extract existing_instances and instance_tags from the output
           existing_instances=$(echo "$ssh_output" | grep "^existing_instances=" | cut -d= -f2-)
           instance_tags=$(echo "$ssh_output" | grep "^instance_tags=" | cut -d= -f2-)
 
-          # Default to empty if not found
           if [ -z "$existing_instances" ]; then
             existing_instances="[]"
           fi
@@ -261,71 +246,28 @@ jobs:
           echo "Processing existing instances: $existing_instances"
           echo "Instance tags: $instance_tags"
 
-          # Parse existing instances count
           instance_count=$(echo "$existing_instances" | jq 'length')
           echo "Found $instance_count existing instances"
 
-          # Function to compare timestamps (format: YYYYMMDD-HHMMSS)
-          compare_timestamps() {
-            local ts1="$1"
-            local ts2="$2"
-            
-            # Convert to comparable format (remove hyphens)
-            ts1_num=$(echo "$ts1" | tr -d '-')
-            ts2_num=$(echo "$ts2" | tr -d '-')
-            
-            # Return 1 if ts1 is newer, 0 if ts2 is newer or equal
-            if [ "$ts1_num" -gt "$ts2_num" ]; then
-              return 1
-            else
-              return 0
-            fi
-          }
-
           if [ "$instance_count" -eq 0 ]; then
-            # No existing instances, deploy to dev-1
             echo "deployment_target=dj-panel-dev-1" >> $GITHUB_OUTPUT
             echo "update_target=" >> $GITHUB_OUTPUT
             echo "oldest_tag=" >> $GITHUB_OUTPUT
             echo "No existing instances found, will deploy to dj-panel-dev-1"
           elif [ "$instance_count" -eq 1 ]; then
-            # One instance exists, deploy to dev-2
             existing_timestamp=$(echo "$existing_instances" | jq -r '.[0]')
             echo "deployment_target=dj-panel-dev-2" >> $GITHUB_OUTPUT
             echo "update_target=" >> $GITHUB_OUTPUT
             echo "oldest_tag=" >> $GITHUB_OUTPUT
             echo "One instance exists (timestamp: $existing_timestamp), will deploy to dj-panel-dev-2"
           else
-            # Two or more instances exist, find the oldest one to replace
-            oldest_timestamp=""
-            newest_timestamp=""
-            
-            # Get all timestamps and sort them
-            all_timestamps=$(echo "$existing_instances" | jq -r '.[]')
-            
-            # Find oldest and newest timestamps by comparing them
-            while IFS= read -r timestamp; do
-              if [ -z "$oldest_timestamp" ]; then
-                oldest_timestamp="$timestamp"
-                newest_timestamp="$timestamp"
-              else
-                # Compare current timestamp with oldest
-                if compare_timestamps "$oldest_timestamp" "$timestamp"; then
-                  # current timestamp is older than oldest_timestamp
-                  oldest_timestamp="$timestamp"
-                fi
-                
-                # Compare current timestamp with newest  
-                if compare_timestamps "$timestamp" "$newest_timestamp"; then
-                  # current timestamp is newer than newest_timestamp
-                  newest_timestamp="$timestamp"
-                fi
-              fi
-            done <<< "$all_timestamps"
-            
+            # Two or more instances exist — pick oldest for replacement, keep newest
+            oldest_timestamp=$(echo "$existing_instances" | jq -r 'min')
+            newest_timestamp=$(echo "$existing_instances" | jq -r 'max')
+
             if [ -n "$oldest_timestamp" ] && [ -n "$newest_timestamp" ]; then
               echo "deployment_target=oldest" >> $GITHUB_OUTPUT
-              echo "update_target=" >> $GITHUB_OUTPUT  # No automatic update - keep newest untouched
+              echo "update_target=" >> $GITHUB_OUTPUT
               echo "oldest_tag=$oldest_timestamp" >> $GITHUB_OUTPUT
               echo "Multiple instances exist, will replace oldest (timestamp: $oldest_timestamp), newest (timestamp: $newest_timestamp) stays untouched"
             else
@@ -336,7 +278,6 @@ jobs:
             fi
           fi
 
-          # Set the parsed values as outputs for other jobs to use
           echo "existing_instances=$existing_instances" >> $GITHUB_OUTPUT
           echo "instance_tags=$instance_tags" >> $GITHUB_OUTPUT
 
@@ -369,10 +310,9 @@ jobs:
         env:
           LOG_LEVEL: DEBUG
         run: |
-          set -euxo pipefail  # <- add -x here (and -u to catch unset vars)
+          set -euxo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
 
-          # Determine instance name based on deployment target
           deployment_target="${{ needs.check_existing_instances.outputs.deployment_target }}"
           instance_name=""
 
@@ -381,19 +321,13 @@ jobs:
           elif [[ "$deployment_target" == "dj-panel-dev-2" ]]; then
             instance_name="dj-panel-dev-2"
           elif [[ "$deployment_target" == "oldest" ]]; then
-            # Use a generic name when replacing the oldest instance
             instance_name="dj-panel-dev-replacement"
           else
-            instance_name="dj-panel-dev-1"  # Default fallback
+            instance_name="dj-panel-dev-1"
           fi
 
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           echo "DEBUG: output_file resolves to: $output_file"
-          echo "DEBUG: instance_name resolves to: $instance_name"
-          echo "DEBUG: deployment_target: $deployment_target"
-          echo "DEBUG: docker_tag for images: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
-          echo "DEBUG: compose_timestamp for file: ${{ needs.determine_compose_timestamp.outputs.compose_timestamp }}"
-
           echo "DEBUG: instance_name resolves to: $instance_name"
           echo "DEBUG: deployment_target: $deployment_target"
           echo "DEBUG: docker_tag for images: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
@@ -418,7 +352,6 @@ jobs:
           set -euo pipefail
           COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
           test -f "$COMPOSE_FILE" || { echo "Compose file not found: $COMPOSE_FILE" >&2; exit 1; }
-          # Single-line base64 for safe env transfer
           B64=$(base64 -w0 "$COMPOSE_FILE")
           echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
           echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
@@ -469,40 +402,27 @@ jobs:
             echo "Deployment target: $DEPLOYMENT_TARGET"
             echo "Instance name: $INSTANCE_NAME"
 
-            # --- simple mountpoint setter (no unmount operations) ---
             safe_set_mountpoint() {
               ds="$1"; want_mp="$2"
-
-              # Normalize duplicate slashes
               want_mp="$(printf '%s' "$want_mp" | sed -E 's#/+#/#g')"
-
-              # Try to set mountpoint directly
               if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
                 return 0
               fi
-
               echo "WARN: Could not set mountpoint for $ds to $want_mp (may be in use)"
               return 1
             }
 
             ensure_dataset_recursive() {
-              # $1 = relative path under pool, e.g. "Apps/DJPanel/Development/Images"
               rel="$1"
               [ -n "$rel" ] || return 0
-
-              # Walk each level: Apps -> Apps/DJPanel -> ...
               echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
                 [ -n "$part" ] || continue
                 if [ -z "${current_rel:-}" ]; then current_rel="$part"; else current_rel="$current_rel/$part"; fi
-
                 ds="$POOL/$current_rel"
                 mp="/mnt/$POOL/$current_rel"
                 mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
-
                 if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
                   curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
-
-                  # Only attempt to fix mountpoint if it's clearly wrong
                   if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then
                     echo "SET : $ds mountpoint $curmp -> $mp"
                     safe_set_mountpoint "$ds" "$mp" || echo "SKIP: Could not update mountpoint for $ds"
@@ -513,7 +433,6 @@ jobs:
                   echo "MAKE: $ds (mountpoint=$mp)"
                   if runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"; then
                     runroot mkdir -p "$mp"
-                    # Attempt to mount if needed, but don't fail if it doesn't work
                     runroot "$ZFS_BIN" mount "$ds" 2>/dev/null || true
                   else
                     echo "ERR : failed to create $ds"; exit 1
@@ -523,19 +442,15 @@ jobs:
               unset current_rel
             }
 
-            # 1) Ensure the full chain to Images exists and is correct
             TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
             ensure_dataset_recursive "$TARGET_REL"
 
-            # 2) Upload the compose file there
             DST_DIR="/mnt/$POOL/$TARGET_REL"
             DST_DIR="$(printf '%s' "$DST_DIR" | sed -E 's#/+#/#g')"
             DST_NAME="${COMPOSE_NAME##*/}"
             DST_PATH="$DST_DIR/$DST_NAME"
 
-            # Ensure the target directory exists
             runroot mkdir -p "$DST_DIR"
-
             printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
             chmod 664 "$DST_PATH" || true
 
@@ -574,7 +489,6 @@ jobs:
             if command -v midclt >/dev/null 2>&1; then
               echo "TrueNAS middleware available, checking existing apps..."
               
-              # Determine which apps to check based on deployment target
               if [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-1" ]]; then
                 APPS_TO_CHECK="dj-panel-dev-1"
               elif [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-2" ]]; then
@@ -587,9 +501,7 @@ jobs:
               
               for app_name in $APPS_TO_CHECK; do
                 echo "Checking if app $app_name exists..."
-                
                 app_exists=$(midclt call app.query | jq -r --arg name "$app_name" '.[] | select(.name == $name) | .name' | wc -l)
-                
                 if [ "$app_exists" -eq 0 ]; then
                   echo "App $app_name does not exist"
                   echo "Manual creation required using TrueNAS UI with Include template:"
@@ -605,7 +517,6 @@ jobs:
             else
               echo "midclt not available, cannot check apps automatically"
               echo "Please ensure the following TrueNAS apps exist:"
-              
               if [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-1" ]]; then
                 echo ""
                 echo "App Name: dj-panel-dev-1"
@@ -627,8 +538,19 @@ jobs:
               fi
             fi
 
+      - name: Decide if restart is required
+        id: restart_flag
+        run: |
+          instances='${{ needs.check_existing_instances.outputs.existing_instances }}'
+          count=$(echo "$instances" | jq 'length')
+          if [ "$count" -ge 2 ] || [ "${{ needs.check_existing_instances.outputs.deployment_target }}" = "oldest" ]; then
+            echo "restart=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "restart=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Restart TrueNAS App if updating existing instance
-        if: ${{ needs.check_existing_instances.outputs.deployment_target == 'oldest' }}
+        if: ${{ steps.restart_flag.outputs.restart == 'true' }}
         uses: appleboy/ssh-action@v1
         env:
           DEPLOYMENT_TARGET: ${{ needs.check_existing_instances.outputs.deployment_target }}
@@ -643,39 +565,26 @@ jobs:
             #!/bin/bash
             set -eu
 
-            echo "Attempting to restart TrueNAS App for updated instance"
+            echo "Attempting to restart TrueNAS App(s)"
             echo "Deployment target: $DEPLOYMENT_TARGET"
-            echo "Oldest timestamp being replaced: $OLDEST_TAG"
+            echo "Oldest timestamp (if applicable): $OLDEST_TAG"
 
-            # We need to determine which app name to restart based on a mapping strategy
-            # Since we can't easily determine which physical app corresponds to which timestamp,
-            # we'll try to find the app by looking for running containers with the old compose file
-
-            # First, let's check what apps are running
-            echo "Checking existing TrueNAS apps..."
-
-            # List all apps that might be our DJ Panel instances
             if command -v midclt >/dev/null 2>&1; then
               echo "Available apps:"
               midclt call app.query | jq -r '.[] | select(.name | test("dj-panel|djpanel")) | "\(.name): \(.state)"'
               
-              # Try to restart both potential instances since we can't easily determine which one has the old tag
-              # This is a safe operation as restarting will pick up the new compose file automatically
               for app_name in "dj-panel-dev-1" "dj-panel-dev-2"; do
-                echo "Attempting to restart app: $app_name"
                 app_exists=$(midclt call app.query | jq -r --arg name "$app_name" '.[] | select(.name == $name) | .name' | wc -l)
-                
                 if [ "$app_exists" -gt 0 ]; then
-                  echo "Found app $app_name, restarting..."
+                  echo "Restarting app: $app_name"
                   midclt call app.restart "$app_name" || echo "Failed to restart $app_name, it may not exist or be in wrong state"
-                  echo "Restart command sent for $app_name"
                 else
                   echo "App $app_name not found, skipping"
                 fi
               done
             else
               echo "midclt not available, cannot restart apps automatically"
-              echo "Please manually restart the TrueNAS app that uses the oldest timestamp: $OLDEST_TAG"
+              echo "Please manually restart the TrueNAS app that uses timestamp: $OLDEST_TAG"
             fi
 
       - name: Deployment Summary
