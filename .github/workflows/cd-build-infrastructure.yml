@@ -147,7 +147,7 @@ jobs:
         calculate_unused_ports,
         determine_target_branch,
         determine_docker_tag,
-        determine_compose_timestamp
+        determine_compose_timestamp,
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
@@ -318,6 +318,21 @@ jobs:
               echo "WARN: could not stop '$app' with known methods."
             fi
 
+            # wait for 10 minutes for app to stop
+            timeout=600
+            interval=10
+            elapsed=0
+            while midclt call app.query '[["name","=","'"$app"'"]]' \
+              | grep -q '"state": *"RUNNING"'; do
+              if (( elapsed >= timeout )); then
+                echo "ERROR: Timeout waiting for app '$app' to stop." >&2
+                exit 1
+              fi
+              echo "Waiting for app '$app' to stop... ($elapsed/$timeout seconds elapsed)"
+              sleep $interval
+              (( elapsed += interval ))
+            done
+
             echo "Starting app: $app"
             if midclt call app.start "$app" 2>/dev/null; then
               echo "Started via app.start"
@@ -337,7 +352,7 @@ jobs:
         determine_compose_timestamp,
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        update_include_and_restart
+        update_include_and_restart,
       ]
     steps:
       - name: Summary
