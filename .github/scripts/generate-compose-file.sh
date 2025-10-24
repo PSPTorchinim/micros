@@ -243,7 +243,7 @@ convert_ports() {
   fi
 }
 
-# ---- Copier for service keys (preserve volumes, networks, etc.) ----
+# ---- Copier for service keys (preserve volumes, environment, etc.) ----
 copy_service_key_if_present() {
   local service="$1" key="$2"
   local has; has=$(yq eval ".services.${service} | has(\"$key\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
@@ -295,8 +295,8 @@ while IFS= read -r service; do
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
-  # Preserve critical service blocks (including volumes!)
-  for key in environment volumes networks expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  # Preserve critical service blocks, but **intentionally skip networks**
+  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
 
@@ -334,9 +334,10 @@ while IFS= read -r service; do
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (networks/volumes) ==========================
-log_subsection "Copy top-level networks/volumes"
-for top in networks volumes; do
+# ======================== Top-level sections (volumes only; networks skipped) ==========================
+log_subsection "Copy top-level volumes (networks intentionally skipped)"
+log_info "Skipping top-level networks import by design"
+for top in volumes; do
   has=$(yq eval "has(\"$top\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
   if [[ "$has" == "true" ]]; then
     echo "$top:" >> "$OUTPUT_FILE"
