@@ -17,9 +17,8 @@ jobs:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          capture_stdout: true # <-- IMPORTANT
+          capture_stdout: true
           script: |
-            # TCP + UDP listening ports, print only the port number (one per line), sorted & unique
             netstat -tuln 2>/dev/null \
               | awk 'NR>2 {print $4}' \
               | sed -E 's/.*:([0-9]+)$/\1/' \
@@ -44,7 +43,10 @@ jobs:
       - name: Format Output
         id: format_output
         run: |
-          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' | jq -r '.result.config.ingress[].service' | grep -E '^https?://' | grep -oE ':[0-9]+' | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
+          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' \
+            | jq -r '.result.config.ingress[].service' \
+            | grep -E '^https?://' | grep -oE ':[0-9]+' \
+            | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
           echo "$ports"
           echo "ports=$ports" >> "$GITHUB_OUTPUT"
 
@@ -84,6 +86,7 @@ jobs:
     name: Determine Environment
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.slug.outputs.env_slug }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -92,6 +95,12 @@ jobs:
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+      - name: Compute env slug
+        id: slug
+        run: |
+          env_raw='${{ steps.set_env.outputs.current_env }}'
+          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
 
   determine_target_branch:
     name: Determine Target Branch
@@ -138,148 +147,74 @@ jobs:
         uses: ./.github/templates/determine-compose-timestamp
 
   check_existing_instances:
-    name: Check Existing TrueNAS Dev Instances
+    name: Check Existing TrueNAS Instances (via midclt)
     runs-on: ubuntu-latest
     needs: [determine_environment]
     outputs:
       existing_instances: ${{ steps.determine_target.outputs.existing_instances }}
-      instance_tags: ${{ steps.determine_target.outputs.instance_tags }}
       deployment_target: ${{ steps.determine_target.outputs.deployment_target }}
       update_target: ${{ steps.determine_target.outputs.update_target }}
-      oldest_tag: ${{ steps.determine_target.outputs.oldest_tag }}
+      instance_name_1: ${{ steps.determine_target.outputs.instance_name_1 }}
+      instance_name_2: ${{ steps.determine_target.outputs.instance_name_2 }}
     steps:
-      - name: Check existing compose files on TrueNAS
-        id: check_instances
+      - name: Query TrueNAS apps with midclt
+        id: midclt_query
         uses: appleboy/ssh-action@v1
         env:
-          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: CURRENT_ENV
+          envs: ENV_SLUG
           capture_stdout: true
           script: |
             #!/bin/bash
             set -eu
-
-            ENV_DIR="${CURRENT_ENV:-Development}"
-            COMPOSE_DIR="/mnt/Files/Apps/DJPanel/$ENV_DIR/Images"
-
-            echo "Checking for existing compose files in: $COMPOSE_DIR"
-
-            if [ ! -d "$COMPOSE_DIR" ]; then
-              echo "Directory does not exist, no existing instances"
-              echo "existing_instances=[]"
-              echo "instance_tags={}"
+            app1="dj-panel-${ENV_SLUG}-1"
+            app2="dj-panel-${ENV_SLUG}-2"
+            if ! command -v midclt >/dev/null 2>&1; then
+              echo "ERROR: midclt not available on target host"
+              echo "app1_name=$app1"
+              echo "app2_name=$app2"
+              echo "app1_exists=0"
+              echo "app2_exists=0"
               exit 0
             fi
-
-            echo "Files in directory:"
-            ls -la "$COMPOSE_DIR" || echo "Cannot list directory contents"
-
-            existing_files=""
-            instance_tags="{}"
-            file_count=0
-
-            while IFS= read -r -d '' file; do
-              if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                if echo "$filename" | grep -q "^dj-panel-composer-.*\.yml$"; then
-                  timestamp=$(echo "$filename" | sed 's/^dj-panel-composer-\(.*\)\.yml$/\1/')
-                  file_count=$((file_count + 1))
-                  if [ -z "$existing_files" ]; then
-                    existing_files="$timestamp"
-                  else
-                    existing_files="$existing_files $timestamp"
-                  fi
-                  mod_time=$(stat -c %Y "$file" 2>/dev/null || echo "0")
-                  if [ "$instance_tags" = "{}" ]; then
-                    instance_tags="{\"$timestamp\":\"$mod_time\"}"
-                  else
-                    instance_tags=$(echo "$instance_tags" | sed "s/}$/,\"$timestamp\":\"$mod_time\"}/")
-                  fi
-                  echo "Found existing compose file: $filename (timestamp: $timestamp, mod_time: $mod_time)"
-                fi
-              fi
-            done < <(find "$COMPOSE_DIR" -maxdepth 1 -name "dj-panel-composer-*.yml" -print0 2>/dev/null || true)
-
-            echo "Found $file_count compose files matching pattern"
-
-            existing_json="["
-            first=true
-            for timestamp in $existing_files; do
-              if [ "$first" = true ]; then
-                first=false
-              else
-                existing_json="$existing_json,"
-              fi
-              existing_json="$existing_json\"$timestamp\""
-            done
-            existing_json="$existing_json]"
-
-            echo "existing_instances=$existing_json"
-            echo "instance_tags=$instance_tags"
-
-            echo "Found $file_count existing instances"
-            echo "Existing instances: $existing_json"
-            echo "Instance timestamps with mod_times: $instance_tags"
+            all_names=$(midclt call app.query | jq -r '.[].name')
+            exists1=$(printf '%s\n' "$all_names" | grep -x "$app1" >/dev/null 2>&1 && echo 1 || echo 0)
+            exists2=$(printf '%s\n' "$all_names" | grep -x "$app2" >/dev/null 2>&1 && echo 1 || echo 0)
+            echo "app1_name=$app1"
+            echo "app1_exists=$exists1"
+            echo "app2_name=$app2"
+            echo "app2_exists=$exists2"
 
       - name: Determine deployment and update targets
         id: determine_target
         run: |
-          ssh_output='${{ steps.check_instances.outputs.stdout }}'
-
-          echo "SSH Output:"
-          echo "$ssh_output"
-
-          existing_instances=$(echo "$ssh_output" | grep "^existing_instances=" | cut -d= -f2-)
-          instance_tags=$(echo "$ssh_output" | grep "^instance_tags=" | cut -d= -f2-)
-
-          if [ -z "$existing_instances" ]; then
-            existing_instances="[]"
-          fi
-          if [ -z "$instance_tags" ]; then
-            instance_tags="{}"
-          fi
-
-          echo "Processing existing instances: $existing_instances"
-          echo "Instance tags: $instance_tags"
-
-          instance_count=$(echo "$existing_instances" | jq 'length')
-          echo "Found $instance_count existing instances"
-
-          if [ "$instance_count" -eq 0 ]; then
-            echo "deployment_target=dj-panel-dev-1" >> $GITHUB_OUTPUT
-            echo "update_target=" >> $GITHUB_OUTPUT
-            echo "oldest_tag=" >> $GITHUB_OUTPUT
-            echo "No existing instances found, will deploy to dj-panel-dev-1"
-          elif [ "$instance_count" -eq 1 ]; then
-            existing_timestamp=$(echo "$existing_instances" | jq -r '.[0]')
-            echo "deployment_target=dj-panel-dev-2" >> $GITHUB_OUTPUT
-            echo "update_target=" >> $GITHUB_OUTPUT
-            echo "oldest_tag=" >> $GITHUB_OUTPUT
-            echo "One instance exists (timestamp: $existing_timestamp), will deploy to dj-panel-dev-2"
+          set -euo pipefail
+          out='${{ steps.midclt_query.outputs.stdout }}'
+          app1=$(echo "$out" | awk -F= '/^app1_name=/{print $2}')
+          app2=$(echo "$out" | awk -F= '/^app2_name=/{print $2}')
+          e1=$(echo "$out" | awk -F= '/^app1_exists=/{print $2}')
+          e2=$(echo "$out" | awk -F= '/^app2_exists=/{print $2}')
+          existing_json="[]"
+          if [ "$e1" = "1" ]; then existing_json=$(echo "$existing_json" | jq --arg n "$app1" '. + [$n]'); fi
+          if [ "$e2" = "1" ]; then existing_json=$(echo "$existing_json" | jq --arg n "$app2" '. + [$n]'); fi
+          echo "existing_instances=$existing_json" >> "$GITHUB_OUTPUT"
+          echo "instance_name_1=$app1" >> "$GITHUB_OUTPUT"
+          echo "instance_name_2=$app2" >> "$GITHUB_OUTPUT"
+          count=$(echo "$existing_json" | jq 'length')
+          if [ "$count" -eq 0 ]; then
+            echo "deployment_target=$app1" >> "$GITHUB_OUTPUT"
+            echo "update_target=" >> "$GITHUB_OUTPUT"
+          elif [ "$count" -eq 1 ]; then
+            if [ "$e1" = "1" ]; then echo "deployment_target=$app2" >> "$GITHUB_OUTPUT"; else echo "deployment_target=$app1" >> "$GITHUB_OUTPUT"; fi
+            echo "update_target=" >> "$GITHUB_OUTPUT"
           else
-            # Two or more instances exist — pick oldest for replacement, keep newest
-            oldest_timestamp=$(echo "$existing_instances" | jq -r 'min')
-            newest_timestamp=$(echo "$existing_instances" | jq -r 'max')
-
-            if [ -n "$oldest_timestamp" ] && [ -n "$newest_timestamp" ]; then
-              echo "deployment_target=oldest" >> $GITHUB_OUTPUT
-              echo "update_target=" >> $GITHUB_OUTPUT
-              echo "oldest_tag=$oldest_timestamp" >> $GITHUB_OUTPUT
-              echo "Multiple instances exist, will replace oldest (timestamp: $oldest_timestamp), newest (timestamp: $newest_timestamp) stays untouched"
-            else
-              echo "deployment_target=dj-panel-dev-1" >> $GITHUB_OUTPUT
-              echo "update_target=" >> $GITHUB_OUTPUT
-              echo "oldest_tag=" >> $GITHUB_OUTPUT
-              echo "Could not determine instance ages, defaulting to dj-panel-dev-1"
-            fi
+            echo "deployment_target=oldest" >> "$GITHUB_OUTPUT"
+            echo "update_target=" >> "$GITHUB_OUTPUT"
           fi
-
-          echo "existing_instances=$existing_instances" >> $GITHUB_OUTPUT
-          echo "instance_tags=$instance_tags" >> $GITHUB_OUTPUT
 
   generate_and_upload_truenas_compose_file:
     name: Generate and Upload TrueNAS Docker Compose File
@@ -314,24 +249,17 @@ jobs:
           chmod +x .github/scripts/generate-compose-file.sh
 
           deployment_target="${{ needs.check_existing_instances.outputs.deployment_target }}"
-          instance_name=""
-
-          if [[ "$deployment_target" == "dj-panel-dev-1" ]]; then
-            instance_name="dj-panel-dev-1"
-          elif [[ "$deployment_target" == "dj-panel-dev-2" ]]; then
-            instance_name="dj-panel-dev-2"
-          elif [[ "$deployment_target" == "oldest" ]]; then
-            instance_name="dj-panel-dev-replacement"
+          if [[ "$deployment_target" == "oldest" ]]; then
+            instance_name="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-replacement"
           else
-            instance_name="dj-panel-dev-1"
+            instance_name="$deployment_target"
           fi
 
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-          echo "DEBUG: output_file resolves to: $output_file"
-          echo "DEBUG: instance_name resolves to: $instance_name"
+          echo "DEBUG: output_file: $output_file"
+          echo "DEBUG: instance_name: $instance_name"
           echo "DEBUG: deployment_target: $deployment_target"
-          echo "DEBUG: docker_tag for images: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
-          echo "DEBUG: compose_timestamp for file: ${{ needs.determine_compose_timestamp.outputs.compose_timestamp }}"
+          echo "DEBUG: docker_tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
 
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
@@ -357,6 +285,7 @@ jobs:
           echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
 
       - name: Ensure Images dataset & upload compose file (with mountpoint fixer)
+        id: upload_compose
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
@@ -374,169 +303,128 @@ jobs:
           script: |
             #!/bin/sh
             set -eu
-
-            findbin() {
-              command -v "$1" 2>/dev/null && return 0
-              for d in /sbin /usr/sbin /usr/local/sbin; do
-                [ -x "$d/$1" ] && { echo "$d/$1"; return 0; }
-              done
-              return 1
-            }
-            ZFS_BIN="$(findbin zfs || true)"
-            ZPOOL_BIN="$(findbin zpool || true)"
-
-            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
-              runroot() { sudo "$@"; }
-            else
-              runroot() { "$@"; }
-            fi
-
-            POOL="${TRUENAS_POOL:-}"
-            [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ] && POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
-            [ -n "$POOL" ] || { echo "ERROR: set TRUENAS_POOL to a valid pool name."; exit 1; }
+            findbin() { command -v "$1" 2>/dev/null && return 0; for d in /sbin /usr/sbin /usr/local/sbin; do [ -x "$d/$1" ] && { echo "$d/$1"; return 0; }; done; return 1; }
+            ZFS_BIN="$(findbin zfs || true)"; ZPOOL_BIN="$(findbin zpool || true)"
+            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then runroot() { sudo "$@"; }; else runroot() { "$@"; }; fi
+            POOL="${TRUENAS_POOL:-}"; [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ] && POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
+            [ -n "$POOL" ] || { echo "ERROR: set TRUENAS_POOL."; exit 1; }
             if [ -n "${ZPOOL_BIN:-}" ] && ! $ZPOOL_BIN list -H -o name | grep -x "$POOL" >/dev/null 2>&1; then
-              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')"; exit 1
-            fi
+              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')"; exit 1; fi
             ENV_DIR="${CURRENT_ENV:-Development}"
-            echo "Using pool: $POOL, environment: $ENV_DIR"
-            echo "Deployment target: $DEPLOYMENT_TARGET"
-            echo "Instance name: $INSTANCE_NAME"
-
-            safe_set_mountpoint() {
-              ds="$1"; want_mp="$2"
-              want_mp="$(printf '%s' "$want_mp" | sed -E 's#/+#/#g')"
-              if runroot "$ZFS_BIN" set mountpoint="$want_mp" "$ds" 2>/dev/null; then
-                return 0
-              fi
-              echo "WARN: Could not set mountpoint for $ds to $want_mp (may be in use)"
-              return 1
-            }
+            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
 
             ensure_dataset_recursive() {
-              rel="$1"
-              [ -n "$rel" ] || return 0
+              rel="$1"; [ -n "$rel" ] || return 0; unset current_rel
               echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
                 [ -n "$part" ] || continue
                 if [ -z "${current_rel:-}" ]; then current_rel="$part"; else current_rel="$current_rel/$part"; fi
-                ds="$POOL/$current_rel"
-                mp="/mnt/$POOL/$current_rel"
-                mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
+                ds="$POOL/$current_rel"; mp="/mnt/$POOL/$current_rel"; mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
                 if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
                   curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
-                  if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then
-                    echo "SET : $ds mountpoint $curmp -> $mp"
-                    safe_set_mountpoint "$ds" "$mp" || echo "SKIP: Could not update mountpoint for $ds"
-                  else
-                    echo "OK  : $ds exists"
-                  fi
+                  if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then runroot "$ZFS_BIN" set mountpoint="$mp" "$ds" 2>/dev/null || echo "SKIP: could not set mountpoint $ds"
+                  else echo "OK  : $ds exists"; fi
                 else
                   echo "MAKE: $ds (mountpoint=$mp)"
-                  if runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds"; then
-                    runroot mkdir -p "$mp"
-                    runroot "$ZFS_BIN" mount "$ds" 2>/dev/null || true
-                  else
-                    echo "ERR : failed to create $ds"; exit 1
-                  fi
+                  runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds" && runroot mkdir -p "$mp" && runroot "$ZFS_BIN" mount "$ds" 2>/dev/null || true
                 fi
               done
-              unset current_rel
             }
-
-            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
             ensure_dataset_recursive "$TARGET_REL"
 
             DST_DIR="/mnt/$POOL/$TARGET_REL"
             DST_DIR="$(printf '%s' "$DST_DIR" | sed -E 's#/+#/#g')"
             DST_NAME="${COMPOSE_NAME##*/}"
             DST_PATH="$DST_DIR/$DST_NAME"
-
             runroot mkdir -p "$DST_DIR"
             printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
             chmod 664 "$DST_PATH" || true
 
-            echo "Uploaded compose to: $DST_PATH"
-            echo "This represents instance: $INSTANCE_NAME"
-            if command -v sha256sum >/dev/null 2>&1; then 
-              sha256sum "$DST_PATH"
-            elif command -v shasum >/dev/null 2>&1; then 
-              shasum -a 256 "$DST_PATH"
-            fi
+            echo "compose_abs_path=$DST_PATH"
 
-      - name: Create TrueNAS Apps if they don't exist
+      # NEW: find each target app's compose file and include the newly uploaded one
+      - name: Update target app compose (include new file)
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
           CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
-          DOCKER_TAG: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          COMPOSE_FILE_NAME: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
           DEPLOYMENT_TARGET: ${{ needs.check_existing_instances.outputs.deployment_target }}
+          NEW_COMPOSE_NAME: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,DOCKER_TAG,COMPOSE_FILE_NAME,DEPLOYMENT_TARGET
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,DEPLOYMENT_TARGET,NEW_COMPOSE_NAME
           capture_stdout: true
           script: |
             #!/bin/bash
-            set -eu
+            set -euo pipefail
 
-            echo "Checking and creating TrueNAS Apps if needed"
-            echo "Environment: $CURRENT_ENV"
-            echo "Docker Tag: $DOCKER_TAG"
-            echo "Compose File: $COMPOSE_FILE_NAME"
-            echo "Deployment Target: $DEPLOYMENT_TARGET"
-
-            if command -v midclt >/dev/null 2>&1; then
-              echo "TrueNAS middleware available, checking existing apps..."
-              
-              if [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-1" ]]; then
-                APPS_TO_CHECK="dj-panel-dev-1"
-              elif [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-2" ]]; then
-                APPS_TO_CHECK="dj-panel-dev-2"
-              elif [[ "$DEPLOYMENT_TARGET" == "oldest" ]]; then
-                APPS_TO_CHECK="dj-panel-dev-1 dj-panel-dev-2"
-              else
-                APPS_TO_CHECK="dj-panel-dev-1"
-              fi
-              
-              for app_name in $APPS_TO_CHECK; do
-                echo "Checking if app $app_name exists..."
-                app_exists=$(midclt call app.query | jq -r --arg name "$app_name" '.[] | select(.name == $name) | .name' | wc -l)
-                if [ "$app_exists" -eq 0 ]; then
-                  echo "App $app_name does not exist"
-                  echo "Manual creation required using TrueNAS UI with Include template:"
-                  echo "App Name: $app_name"
-                  echo "Include Template:"
-                  echo "  include:"
-                  echo "    - /mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images/${COMPOSE_FILE_NAME}"
-                  echo ""
-                else
-                  echo "App $app_name already exists"
-                fi
-              done
+            # Resolve which app(s) to touch
+            app1="dj-panel-${ENV_SLUG}-1"
+            app2="dj-panel-${ENV_SLUG}-2"
+            if [[ "$DEPLOYMENT_TARGET" == "oldest" ]]; then
+              apps=("$app1" "$app2")
             else
-              echo "midclt not available, cannot check apps automatically"
-              echo "Please ensure the following TrueNAS apps exist:"
-              if [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-1" ]]; then
-                echo ""
-                echo "App Name: dj-panel-dev-1"
-                echo "Include Template:"
-                echo "  include:"
-                echo "    - /mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images/${COMPOSE_FILE_NAME}"
-              elif [[ "$DEPLOYMENT_TARGET" == "dj-panel-dev-2" ]]; then
-                echo ""
-                echo "App Name: dj-panel-dev-2" 
-                echo "Include Template:"
-                echo "  include:"
-                echo "    - /mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images/${COMPOSE_FILE_NAME}"
-              elif [[ "$DEPLOYMENT_TARGET" == "oldest" ]]; then
-                echo ""
-                echo "Ensure both apps exist:"
-                echo "1. App Name: dj-panel-dev-1"
-                echo "2. App Name: dj-panel-dev-2"
-                echo "Both should use Include templates pointing to their respective compose files"
-              fi
+              apps=("$DEPLOYMENT_TARGET")
             fi
+
+            # Absolute path of the newly uploaded compose file
+            NEW_COMPOSE_ABS="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images/${NEW_COMPOSE_NAME}"
+            echo "New compose file to include: $NEW_COMPOSE_ABS"
+
+            # Ensure yq on TrueNAS (SCALE). If missing, drop a local copy for this session.
+            yqbin="$(command -v yq || true)"
+            if [[ -z "$yqbin" ]]; then
+              echo "yq not found on TrueNAS; attempting to fetch a local copy..."
+              tmpyq="/tmp/yq"
+              curl -fsSL "https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64" -o "$tmpyq"
+              chmod +x "$tmpyq"
+              yqbin="$tmpyq"
+            fi
+
+            for app in "${apps[@]}"; do
+              echo "Processing app: $app"
+
+              # Pull the app object and try to discover its compose YAML path.
+              # We scan for any absolute YAML path in the object (robust across SCALE versions).
+              app_json="$(midclt call app.query | jq -r --arg n "$app" '.[] | select(.name==$n)')"
+              if [[ -z "$app_json" || "$app_json" == "null" ]]; then
+                echo "WARN: app $app not found by midclt. Skipping."
+                continue
+              fi
+
+              compose_path="$(echo "$app_json" \
+                | jq -r '.. | strings | select(test("^/mnt/.+\\.(ya?ml)$"))' \
+                | head -n1)"
+
+              if [[ -z "$compose_path" || "$compose_path" == "null" ]]; then
+                # Fallback: keep a per-app aggregator next to Images/ as a stable entrypoint
+                compose_path="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images/${app}.yml"
+                echo "No compose path found in app metadata; using fallback aggregator: $compose_path"
+                if [[ ! -f "$compose_path" ]]; then
+                  echo "# Autogenerated aggregator for $app" > "$compose_path"
+                fi
+              fi
+
+              echo "App compose YAML path: $compose_path"
+
+              # Create file if missing (harmless if it already exists)
+              if [[ ! -f "$compose_path" ]]; then
+                echo "Creating new compose aggregator at $compose_path"
+                mkdir -p "$(dirname "$compose_path")"
+                printf 'include: []\n' > "$compose_path"
+              fi
+
+              # Ensure the include list exists; append our new file; de-duplicate
+              "$yqbin" -i '
+                (.include //= []) |
+                .include += ["'"$NEW_COMPOSE_ABS"'"] |
+                .include |= (unique)
+              ' "$compose_path"
+
+              echo "Updated $compose_path to include $NEW_COMPOSE_ABS"
+            done
 
       - name: Decide if restart is required
         id: restart_flag
@@ -553,38 +441,32 @@ jobs:
         if: ${{ steps.restart_flag.outputs.restart == 'true' }}
         uses: appleboy/ssh-action@v1
         env:
-          DEPLOYMENT_TARGET: ${{ needs.check_existing_instances.outputs.deployment_target }}
-          OLDEST_TAG: ${{ needs.check_existing_instances.outputs.oldest_tag }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: DEPLOYMENT_TARGET,OLDEST_TAG
+          envs: ENV_SLUG
           capture_stdout: true
           script: |
             #!/bin/bash
             set -eu
+            app1="dj-panel-${ENV_SLUG}-1"
+            app2="dj-panel-${ENV_SLUG}-2"
 
-            echo "Attempting to restart TrueNAS App(s)"
-            echo "Deployment target: $DEPLOYMENT_TARGET"
-            echo "Oldest timestamp (if applicable): $OLDEST_TAG"
-
+            echo "Restarting TrueNAS apps for env: ${ENV_SLUG}"
             if command -v midclt >/dev/null 2>&1; then
-              echo "Available apps:"
-              midclt call app.query | jq -r '.[] | select(.name | test("dj-panel|djpanel")) | "\(.name): \(.state)"'
-              
-              for app_name in "dj-panel-dev-1" "dj-panel-dev-2"; do
+              for app_name in "$app1" "$app2"; do
                 app_exists=$(midclt call app.query | jq -r --arg name "$app_name" '.[] | select(.name == $name) | .name' | wc -l)
                 if [ "$app_exists" -gt 0 ]; then
                   echo "Restarting app: $app_name"
-                  midclt call app.restart "$app_name" || echo "Failed to restart $app_name, it may not exist or be in wrong state"
+                  midclt call app.restart "$app_name" || echo "Failed to restart $app_name"
                 else
                   echo "App $app_name not found, skipping"
                 fi
               done
             else
-              echo "midclt not available, cannot restart apps automatically"
-              echo "Please manually restart the TrueNAS app that uses timestamp: $OLDEST_TAG"
+              echo "midclt not available; manual restart may be required."
             fi
 
       - name: Deployment Summary
@@ -594,40 +476,11 @@ jobs:
           echo "Latest Tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
           echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
+          echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
           echo "Deployment Target: ${{ needs.check_existing_instances.outputs.deployment_target }}"
-          echo "Instance Name: ${{ steps.generate_compose_file.outputs.instance_name }}"
-
-          deployment_target="${{ needs.check_existing_instances.outputs.deployment_target }}"
-          update_target="${{ needs.check_existing_instances.outputs.update_target }}"
-          oldest_tag="${{ needs.check_existing_instances.outputs.oldest_tag }}"
-
+          echo "Chosen Instance Name: ${{ steps.generate_compose_file.outputs.instance_name }}"
           echo ""
-          echo "=== Manual TrueNAS Setup Instructions ==="
-
-          if [[ "$deployment_target" == "dj-panel-dev-1" ]] && [[ -z "$update_target" ]]; then
-            echo "1. App existence checked automatically"
-            echo "2. If app doesn't exist, create it in TrueNAS Apps using 'Install via YAML'"
-            echo "3. App name: 'dj-panel-dev-1'"
-            echo "4. Use Include template with: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-            echo "5. This is your first dev instance"
-          elif [[ "$deployment_target" == "dj-panel-dev-2" ]]; then
-            echo "1. App existence checked automatically"
-            echo "2. If app doesn't exist, create it in TrueNAS Apps using 'Install via YAML'"
-            echo "3. App name: 'dj-panel-dev-2'"
-            echo "4. Use Include template with: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-            echo "5. This is your second dev instance"
-          elif [[ "$deployment_target" == "oldest" ]]; then
-            echo "1. Compose file uploaded for oldest instance replacement:"
-            echo "   - File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-            echo "2. TrueNAS Apps have been automatically restarted to pick up the new compose file"
-            echo "3. The newest instance remains untouched and keeps its current version"
-            echo "4. Oldest instance timestamp that was replaced: $oldest_tag"
-            echo "5. This follows the alternating update pattern - oldest instance gets the new version"
-            echo ""
-            echo "Note: If automatic restart failed, manually restart the TrueNAS app that was using timestamp: $oldest_tag"
-          fi
-
+          echo "The app compose(s) were updated to include the new file and then restarted if both instances exist."
           echo ""
-          echo "=== File Locations ==="
-          echo "Compose file uploaded to: /mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images/"
-          echo "File name: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          echo "Compose dir: /mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images/"
+          echo "File name : ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
