@@ -90,11 +90,9 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
-
       - name: Compute env slug
         id: slug
         run: |
@@ -140,101 +138,8 @@ jobs:
       - id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
 
-  check_existing_instances:
-    name: Check Existing TrueNAS Instances (via midclt)
-    runs-on: ubuntu-latest
-    needs: [determine_environment]
-    outputs:
-      existing_instances: ${{ steps.determine_target.outputs.existing_instances }}
-      deployment_target: ${{ steps.determine_target.outputs.deployment_target }}
-      update_target: ${{ steps.determine_target.outputs.update_target }}
-      instance_name_1: ${{ steps.determine_target.outputs.instance_name_1 }}
-      instance_name_2: ${{ steps.determine_target.outputs.instance_name_2 }}
-    steps:
-      - name: Query TrueNAS apps with midclt
-        id: midclt_query
-        uses: appleboy/ssh-action@v1
-        env:
-          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          envs: ENV_SLUG
-          capture_stdout: true
-          script: |
-            #!/bin/bash
-            set -eu
-            app1="dj-panel-${ENV_SLUG}-1"
-            app2="dj-panel-${ENV_SLUG}-2"
-            if ! command -v midclt >/dev/null 2>&1; then
-              echo "ERROR: midclt not available on target host"
-              echo "app1_name=$app1"
-              echo "app2_name=$app2"
-              echo "app1_exists=0"
-              echo "app2_exists=0"
-              exit 0
-            fi
-            all_names=$(midclt call app.query | jq -r '.[].name' 2>/dev/null || true)
-            exists1=$(printf '%s\n' "$all_names" | grep -x "$app1" >/dev/null 2>&1 && echo 1 || echo 0)
-            exists2=$(printf '%s\n' "$all_names" | grep -x "$app2" >/dev/null 2>&1 && echo 1 || echo 0)
-            echo "app1_name=$app1"
-            echo "app1_exists=$exists1"
-            echo "app2_name=$app2"
-            echo "app2_exists=$exists2"
-
-      - name: Determine deployment and update targets
-        id: determine_target
-        run: |
-          set -euo pipefail
-          out='${{ steps.midclt_query.outputs.stdout }}'
-          app1=$(echo "$out" | awk -F= '/^app1_name=/{print $2}')
-          app2=$(echo "$out" | awk -F= '/^app2_name=/{print $2}')
-          e1=$(echo "$out" | awk -F= '/^app1_exists=/{print $2}')
-          e2=$(echo "$out" | awk -F= '/^app2_exists=/{print $2}')
-
-          # compact JSON array
-          existing_json='[]'
-          if [ "$e1" = "1" ]; then existing_json=$(printf '%s' "$existing_json" | jq -c --arg n "$app1" '. + [$n]'); fi
-          if [ "$e2" = "1" ]; then existing_json=$(printf '%s' "$existing_json" | jq -c --arg n "$app2" '. + [$n]'); fi
-
-          set_output() {
-            local name="$1"; shift
-            local value="$*"
-            if printf '%s' "$value" | grep -q $'\n'; then
-              local delim="EOF_$(openssl rand -hex 8)"
-              {
-                echo "${name}<<${delim}"
-                printf '%s\n' "$value"
-                echo "${delim}"
-              } >> "$GITHUB_OUTPUT"
-            else
-              echo "${name}=${value}" >> "$GITHUB_OUTPUT"
-            fi
-          }
-
-          set_output existing_instances "$existing_json"
-          set_output instance_name_1 "$app1"
-          set_output instance_name_2 "$app2"
-
-          count=$(echo "$existing_json" | jq 'length')
-          if [ "$count" -eq 0 ]; then
-            set_output deployment_target "$app1"
-            set_output update_target ""
-          elif [ "$count" -eq 1 ]; then
-            if [ "$e1" = "1" ]; then
-              set_output deployment_target "$app2"
-            else
-              set_output deployment_target "$app1"
-            fi
-            set_output update_target ""
-          else
-            set_output deployment_target "oldest"
-            set_output update_target ""
-          fi
-
   generate_and_upload_truenas_compose_file:
-    name: Generate and Upload TrueNAS Docker Compose File
+    name: Generate & Upload Compose
     runs-on: ubuntu-latest
     needs:
       [
@@ -242,8 +147,7 @@ jobs:
         calculate_unused_ports,
         determine_target_branch,
         determine_docker_tag,
-        determine_compose_timestamp,
-        check_existing_instances,
+        determine_compose_timestamp
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
@@ -257,20 +161,13 @@ jobs:
           sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Generate New Compose File with Unused Ports and GHCR Images
+      - name: Generate New Compose File
         id: generate_compose_file
         shell: bash
         env: { LOG_LEVEL: DEBUG }
         run: |
           set -euxo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
-
-          deployment_target="${{ needs.check_existing_instances.outputs.deployment_target }}"
-          if [[ "$deployment_target" == "oldest" ]]; then
-            instance_name="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-replacement"
-          else
-            instance_name="$deployment_target"
-          fi
 
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           external_map_json=$(.github/scripts/generate-compose-file.sh \
@@ -284,7 +181,6 @@ jobs:
 
           echo "external_ports_map=$external_map_json" >> "$GITHUB_OUTPUT"
           echo "compose_file=$output_file" >> "$GITHUB_OUTPUT"
-          echo "instance_name=$instance_name" >> "$GITHUB_OUTPUT"
 
       - name: Package compose file for transfer (base64)
         id: package_compose
@@ -296,7 +192,7 @@ jobs:
           echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
           echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure Images dataset & upload compose file (with mountpoint fixer)
+      - name: Upload compose to TrueNAS (ensure dataset)
         id: upload_compose
         uses: appleboy/ssh-action@v1
         env:
@@ -351,7 +247,6 @@ jobs:
             printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
             chmod 664 "$DST_PATH" || true
 
-            # IMPORTANT: single marker line for the runner to parse
             echo "COMPOSE_ABS=$DST_PATH"
 
       - name: Parse upload path and expose as output
@@ -363,20 +258,12 @@ jobs:
           test -n "$abs" || { echo "No COMPOSE_ABS marker found in SSH output"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-  update_include_and_pick_app:
-    name: Update include & select which app to update
+  update_include_and_restart:
+    name: Point app compose to newest file & restart
     runs-on: ubuntu-latest
-    needs:
-      [
-        determine_environment,
-        check_existing_instances,
-        generate_and_upload_truenas_compose_file,
-      ]
-    outputs:
-      updated_app: ${{ steps.parse_pick.outputs.updated_app }}
+    needs: [determine_environment, generate_and_upload_truenas_compose_file]
     steps:
-      - name: Update include and compute target app (remote)
-        id: pick_remote
+      - name: Update include on TrueNAS (single app) & restart
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
@@ -393,121 +280,52 @@ jobs:
             #!/bin/zsh
             set -euo pipefail
 
-            app1="dj-panel-${ENV_SLUG}-1"
-            app2="dj-panel-${ENV_SLUG}-2"
+            app="dj-panel-${ENV_SLUG}"
             BASE="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
-            agg1="${BASE}/${app1}.yml"
-            agg2="${BASE}/${app2}.yml"
+            fallback_agg="${BASE}/${app}.yml"
             new="$NEW_COMPOSE_ABS"
 
             print -r -- "New compose file: $new"
-            if [[ -z "$new" ]]; then
-              print -u2 -- "ERROR: NEW_COMPOSE_ABS is empty"
-              exit 1
-            fi
-
+            [[ -n "$new" ]] || { print -u2 -- "ERROR: NEW_COMPOSE_ABS is empty"; exit 1; }
             mkdir -p "$BASE"
-            # Create minimal include blocks if missing
-            [[ -s "$agg1" ]] || print -r -- "include:\n  - " > "$agg1"
-            [[ -s "$agg2" ]] || print -r -- "include:\n  - " > "$agg2"
 
-            last_include() {
-              awk '
-                BEGIN{ininc=0}
-                /^[[:space:]]*include:[[:space:]]*$/ {ininc=1; next}
-                {
-                  if(ininc && $0 ~ /^[[:space:]]*-[[:space:]]+/){
-                    line=$0; sub(/^[[:space:]]*-[[:space:]]+/,"",line); gsub(/^[[:space:]]+|[[:space:]]+$/,"",line)
-                    if (line!="") cur=line
-                  } else if(ininc && $0 ~ /^[[:space:]]*[A-Za-z0-9_-]+:[[:space:]]*$/){ ininc=0 }
-                }
-                END{if(cur!="") print cur}
-              ' "$1" 2>/dev/null || true
-            }
-
-            cur1="$(last_include "$agg1")"
-            cur2="$(last_include "$agg2")"
-            b1="${cur1:t}"   # zsh :t expansion = basename
-            b2="${cur2:t}"
-            bn="${new:t}"
-
-            # Decide which app is older (empty counts as older).
-            pick="$app1"
-            if [[ -n "$b1" && -n "$b2" ]]; then
-              if [[ "$b1" > "$b2" ]]; then
-                pick="$app2"
-              else
-                pick="$app1"
-              fi
-            elif [[ -z "$b1" && -n "$b2" ]]; then
-              pick="$app1"
-            elif [[ -n "$b1" && -z "$b2" ]]; then
-              pick="$app2"
+            # Discover compose path from midclt
+            comp_path=""
+            if command -v jq >/dev/null 2>&1; then
+              comp_path=$(midclt call app.query '[["name","=","'"$app"'"]]' \
+                | jq -r '.. | strings | select(test("^/mnt/.+\\.(ya?ml)$"))' | head -n1 || true)
             else
-              pick="$app1"
+              comp_path=$(midclt call app.query '[["name","=","'"$app"'"]]' \
+                | tr -d '\000-\010\013\014\016-\037\177' \
+                | grep -Eo '/mnt/[^"'"'"']+\.(ya?ml)' | head -n1 || true)
             fi
+            [[ -n "$comp_path" ]] || comp_path="$fallback_agg"
 
-            # Write ONLY the newest include into the chosen aggregator
-            target_agg="$agg1"
-            [[ "$pick" == "$app2" ]] && target_agg="$agg2"
-            print -r -- "include:\n  - $new" > "$target_agg"
-            print -r -- "UPDATED_APP=$pick"  # marker for the runner
+            # Ensure file exists; write REAL newlines via printf (fixes literal \n issue)
+            if [[ ! -s "$comp_path" ]]; then
+              printf 'include:\n  - \n' > "$comp_path"
+            fi
+            printf 'include:\n  - %s\n' "$new" > "$comp_path"
+            print -r -- "Updated compose include at: $comp_path"
 
-      - name: Parse updated app marker
-        id: parse_pick
-        run: |
-          set -euo pipefail
-          out='${{ steps.pick_remote.outputs.stdout }}'
-          echo "---- pick_remote stdout ----"
-          echo "$out"
-          updated=$(echo "$out" | awk -F= '/^UPDATED_APP=/{print $2}' | tail -n1)
-          test -n "$updated" || { echo "No UPDATED_APP marker found"; exit 1; }
-          echo "updated_app=$updated" >> "$GITHUB_OUTPUT"
-
-  restart_updated_app:
-    name: Stop/Start only the updated app on TrueNAS
-    runs-on: ubuntu-latest
-    needs: [update_include_and_pick_app]
-    if: ${{ needs.update_include_and_pick_app.outputs.updated_app != '' }}
-    steps:
-      - name: Stop & Start app (app.stop/start; fallback to chart.release.scale)
-        uses: appleboy/ssh-action@v1
-        env:
-          APP_NAME: ${{ needs.update_include_and_pick_app.outputs.updated_app }}
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          envs: APP_NAME
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            name="${APP_NAME}"
-
-            echo "Stopping app: $name"
-            if midclt call app.stop "$name" 2>/dev/null; then
+            # Stop/Start the app
+            echo "Stopping app: $app"
+            if midclt call app.stop "$app" 2>/dev/null; then
               echo "Stopped via app.stop"
+            elif midclt call chart.release.scale "$app" '{"replica_count":0}' 2>/dev/null; then
+              echo "Scaled to 0 replicas"
             else
-              echo "app.stop not available; trying chart.release.scale -> 0"
-              if midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null; then
-                echo "Scaled to 0 replicas"
-              else
-                echo "WARN: could not stop app '$name' with known methods."
-              fi
+              echo "WARN: could not stop '$app' with known methods."
             fi
 
-            echo "Starting app: $name"
-            if midclt call app.start "$name" 2>/dev/null; then
+            echo "Starting app: $app"
+            if midclt call app.start "$app" 2>/dev/null; then
               echo "Started via app.start"
+            elif midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
+              echo "Scaled to 1 replica"
             else
-              echo "app.start not available; trying chart.release.scale -> 1"
-              if midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null; then
-                echo "Scaled to 1 replica"
-              else
-                echo "ERROR: could not start app '$name' with known methods."
-                exit 1
-              fi
+              echo "ERROR: could not start '$app' with known methods."
+              exit 1
             fi
 
   deployment_summary:
@@ -518,10 +336,8 @@ jobs:
         determine_docker_tag,
         determine_compose_timestamp,
         determine_environment,
-        check_existing_instances,
         generate_and_upload_truenas_compose_file,
-        update_include_and_pick_app,
-        restart_updated_app,
+        update_include_and_restart
       ]
     steps:
       - name: Summary
@@ -532,5 +348,4 @@ jobs:
           echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
           echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
-          echo "Updated App: ${{ needs.update_include_and_pick_app.outputs.updated_app }}"
           echo "New compose absolute: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
