@@ -24,7 +24,7 @@ namespace Shared.Data.Exceptions
             catch (AppException ex)
             {
                 ExceptionHandler.LogException(ex, logger);
-                throw new AppException(ex.Message);
+                throw;
             }
             catch (Exception ex) when (ex is not AppException)
             {
@@ -42,7 +42,7 @@ namespace Shared.Data.Exceptions
             catch (AppException ex)
             {
                 ExceptionHandler.LogException(ex, logger);
-                throw new AppException(ex.Message);
+                throw;
             }
             catch (Exception ex) when (ex is not AppException)
             {

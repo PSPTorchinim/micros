@@ -1,0 +1,245 @@
+using Xunit;
+using Moq;
+using IdentityAPI.Services;
+using IdentityAPI.Repositories;
+using IdentityAPI.Data.DTO.User;
+using IdentityAPI.Entities;
+using Microsoft.Extensions.Logging;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Shared.Services.MessagesBroker.RabbitMQ;
+using System;
+using System.Threading.Tasks;
+using IdentityAPI.DTO.User;
+using Shared.Data.Exceptions;
+using System.Security.Claims;
+
+namespace IdentityAPI.Tests
+{
+    public class UsersServiceTests
+    {
+        private readonly Mock<IUsersRepository> _usersRepositoryMock = new();
+        private readonly Mock<IAuthService> _authServiceMock = new();
+        private readonly Mock<ILogger<IUsersService>> _loggerMock = new();
+        private readonly Mock<IMapper> _mapperMock = new();
+        private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
+        private readonly RabbitMQProducerService _rabbitMQProducerServiceMock = null!;
+        private readonly Mock<IServiceProvider> _serviceProviderMock = new();
+
+        private UsersService CreateService()
+        {
+            _serviceProviderMock.Setup(x => x.GetService(typeof(IUsersRepository))).Returns(_usersRepositoryMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(IAuthService))).Returns(_authServiceMock.Object);
+            return new UsersService(
+                _loggerMock.Object,
+                _mapperMock.Object,
+                _httpContextAccessorMock.Object,
+                _rabbitMQProducerServiceMock,
+                _serviceProviderMock.Object
+            );
+        }
+
+        [Fact]
+        public async Task Login_Throws_WhenUserNotFound()
+        {
+            // Arrange
+            var service = CreateService();
+            var loginDto = new LoginUserRequestDTO { Email = "notfound@example.com", Password = "pass" };
+            _usersRepositoryMock
+                .Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>()))
+                .ReturnsAsync(new List<User>());
+            // Act & Assert
+            await Assert.ThrowsAsync<AppException>(() => service.Login(loginDto));
+        }
+
+        [Fact]
+        public async Task Register_ReturnsTrue_WhenUserIsNew()
+        {
+            var service = CreateService();
+            var registerDto = new RegisterUserRequestDTO { Email = "new@example.com", Password = "pass", Username = "user" };
+            _usersRepositoryMock.Setup(r => r.Count(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(0);
+            _usersRepositoryMock.Setup(r => r.Add(It.IsAny<User>())).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            var result = await service.Register(registerDto);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            _authServiceMock
+                .Setup(a => a.RefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new LoginResponseDTO { AccessToken = "token", RefreshToken = "refresh" });
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User>());
+            // Mock ClaimsPrincipal with Id claim
+            var userId = Guid.NewGuid().ToString();
+            var claims = new List<Claim> { new Claim("Id", userId) };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            httpContext.Request.Headers["Authorization"] = "Bearer test_token";
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+            await Assert.ThrowsAsync<AppException>(() => service.RefreshToken());
+        }
+
+        [Fact]
+        public async Task BlockUser_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            var dto = new BlockUserDTO { UserId = Guid.NewGuid() };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User>());
+            await Assert.ThrowsAsync<AppException>(() => service.BlockUser(dto));
+        }
+
+        [Fact]
+        public async Task ChangePassword_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            var dto = new ChangePasswordRequestDTO { OldPassword = "old", NewPassword = "new" };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User>());
+            await Assert.ThrowsAsync<AppException>(() => service.ChangePassword(dto));
+        }
+
+        [Fact]
+        public async Task ForgotPassword_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            var dto = new ForgotPasswordRequestDTO { Email = "notfound@example.com" };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User>());
+            await Assert.ThrowsAsync<AppException>(() => service.ForgotPassword(dto));
+        }
+
+        [Fact]
+        public async Task ActivateAccount_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            var dto = new ActivateAccountRequestDTO { Email = "notfound@example.com", ActivationCode = "code" };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User>());
+            await Assert.ThrowsAsync<AppException>(() => service.ActivateAccount(dto));
+        }
+
+        [Fact]
+        public async Task GetLoggedUserData_Throws_WhenUserNotFound()
+        {
+            var service = CreateService();
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>())).ReturnsAsync(new List<User>());
+            // Mock ClaimsPrincipal with Id claim
+            var userId = Guid.NewGuid().ToString();
+            var claims = new List<Claim> { new Claim("Id", userId) };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            httpContext.Request.Headers["Authorization"] = "Bearer test_token";
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+            await Assert.ThrowsAsync<AppException>(() => service.GetLoggedUserData());
+        }
+        [Fact]
+        public async Task Register_ReturnsFalse_WhenEmailExists()
+        {
+            var service = CreateService();
+            var registerDto = new RegisterUserRequestDTO { Email = "exists@example.com", Password = "pass", Username = "user" };
+            _usersRepositoryMock.Setup(r => r.Count(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(1);
+            await Assert.ThrowsAsync<AppException>(() => service.Register(registerDto));
+        }
+
+        [Fact]
+        public async Task Login_ReturnsUser_WhenCredentialsAreCorrect()
+        {
+            var service = CreateService();
+            var password = new Password { Value = "pass", CreatedDate = DateTime.Now };
+            var user = new User { Email = "user@example.com", Passwords = new List<Password> { password }, Blocks = new List<Block>() };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>())).ReturnsAsync(new List<User> { user });
+            _authServiceMock.Setup(a => a.GenerateAccessToken(user)).Returns(new LoginResponseDTO { AccessToken = "token", RefreshToken = "refresh" });
+            _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            _mapperMock.Setup(m => m.Map<GetUserDTO>(user)).Returns(new GetUserDTO());
+            var loginDto = new LoginUserRequestDTO { Email = "user@example.com", Password = "pass" };
+            var result = await service.Login(loginDto);
+            Assert.NotNull(result);
+            Assert.Equal("token", result.AccessToken);
+        }
+
+        [Fact]
+        public async Task ForgotPassword_Succeeds_WhenUserExists()
+        {
+            var service = CreateService();
+            var user = new User { Email = "user@example.com", Passwords = new List<Password>(), Blocks = new List<Block>() };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
+            _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            var dto = new ForgotPasswordRequestDTO { Email = "user@example.com" };
+            var result = await service.ForgotPassword(dto);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task BlockUser_Succeeds_WhenUserExists()
+        {
+            var service = CreateService();
+            var user = new User { Id = Guid.NewGuid(), Blocks = new List<Block>(), Passwords = new List<Password>() };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
+            _mapperMock.Setup(m => m.Map<Block>(It.IsAny<BlockUserDTO>())).Returns(new Block());
+            _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            var dto = new BlockUserDTO { UserId = user.Id, Reason = "test", Pernament = false };
+            var result = await service.BlockUser(dto);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task ChangePassword_Succeeds_WhenUserExistsAndOldPasswordMatches()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid().ToString();
+            var user = new User { Id = Guid.Parse(userId), Passwords = new List<Password> { new Password { Value = "old", CreatedDate = DateTime.Now } }, Blocks = new List<Block>() };
+
+            // Mock ClaimsPrincipal with Id claim
+            var claims = new List<Claim> { new Claim("Id", userId) };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
+            _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            var dto = new ChangePasswordRequestDTO { OldPassword = "old", NewPassword = "new" };
+            var result = await service.ChangePassword(dto);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task ActivateAccount_Succeeds_WhenUserExistsAndCodeMatches()
+        {
+            var service = CreateService();
+            var user = new User { Email = "user@example.com", ActivationCode = "code", Blocks = new List<Block>(), Passwords = new List<Password>() };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
+            _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
+            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
+            var dto = new ActivateAccountRequestDTO { Email = "user@example.com", ActivationCode = "code" };
+            var result = await service.ActivateAccount(dto);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task GetLoggedUserData_Succeeds_WhenUserExists()
+        {
+            var service = CreateService();
+            var user = new User { Id = Guid.NewGuid(), Email = "user@example.com", Passwords = new List<Password>(), Blocks = new List<Block>(), RefreshToken = "refresh" };
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>())).ReturnsAsync(new List<User> { user });
+            _mapperMock.Setup(m => m.Map<GetUserDTO>(user)).Returns(new GetUserDTO());
+            // Mock ClaimsPrincipal with Id claim
+            var userId = user.Id.ToString();
+            var claims = new List<Claim> { new Claim("Id", userId) };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            httpContext.Request.Headers["Authorization"] = "Bearer test_token";
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+            var result = await service.GetLoggedUserData();
+            Assert.NotNull(result);
+            Assert.Equal("refresh", result.RefreshToken);
+        }
+    }
+}
