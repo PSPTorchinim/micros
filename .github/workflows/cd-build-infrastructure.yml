@@ -369,7 +369,7 @@ jobs:
             sleep 8
 
   update_cloudflare_tunnel:
-    name: Update Cloudflare Tunnel ingress for new ports
+    name: Update Cloudflare Tunnel ingress for new ports (service-based hostnames)
     runs-on: ubuntu-latest
     needs:
       [
@@ -383,35 +383,35 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq
 
-      - name: Build & apply tunnel config (Bearer auth)
+      - name: Build & apply tunnel config (service-based hostnames)
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TUNNEL_ID: ${{ secrets.CLOUDFLARE_TUNNEL_UUID }}
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-          BASE_DOMAIN: ${{ vars.CLOUDFLARE_BASE_DOMAIN }}
+          BASE_DOMAIN: ${{ vars.CLOUDFLARE_BASE_DOMAIN }} # e.g. djbeatblaster.com
           EXTERNAL_MAP: ${{ needs.generate_and_upload_truenas_compose_file.outputs.external_ports_map }}
         run: |
           set -euo pipefail
 
-          # --- Validate required inputs ---
-          for v in CLOUDFLARE_API_TOKEN ACCOUNT_ID TUNNEL_ID EXTERNAL_MAP; do
+          # --- Sanity checks
+          for v in CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY ACCOUNT_ID TUNNEL_ID EXTERNAL_MAP; do
             eval "val=\${$v:-}"
-            if [ -z "$val" ]; then
-              echo "Missing $v"
-              exit 1
-            fi
+            [ -n "$val" ] || { echo "Missing $v"; exit 1; }
           done
 
-          # Fetch current config (fallback to empty)
+          hdr=(-H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}")
+
+          # Current config (best-effort)
           cur_json="$(curl -sfS \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "${hdr[@]}" \
             "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations" \
             || echo '{"result":{"config":{"ingress":[]}}}')"
 
           cur_ingress="$(printf '%s' "$cur_json" | jq -c '.result.config.ingress // []' 2>/dev/null || echo '[]')"
 
-          # Determine BASE_DOMAIN if not provided
+          # Infer BASE_DOMAIN if not set
           if [ -z "${BASE_DOMAIN:-}" ]; then
             BASE_DOMAIN="$(echo "$cur_ingress" \
               | jq -r '[ .[]
@@ -420,33 +420,39 @@ jobs:
                           | (split(".") | .[-2:] | join("."))
                         ] | .[0] // empty')"
           fi
-          if [ -z "${BASE_DOMAIN:-}" ]; then
-            echo "ERROR: Could not determine BASE_DOMAIN. Set CLOUDFLARE_BASE_DOMAIN (e.g., example.com)."
-            exit 1
-          fi
+          [ -n "${BASE_DOMAIN:-}" ] || { echo "ERROR: Set CLOUDFLARE_BASE_DOMAIN (e.g., example.com)"; exit 1; }
 
-          # Minimize existing to the allowed keys (hostname/service); guard nulls
+          # Keep non dj-panel hostnames
           minimal_existing="$(echo "$cur_ingress" \
-            | jq -c '[ .[]
-                      | {hostname, service}
-                      | with_entries(select(.value != null))
-                    ]')"
+            | jq -c '[ .[] | {hostname, service} | with_entries(select(.value != null)) ]')"
 
-          # Drop any old rules for this env
-          env_pat="^dj-panel-${ENV_SLUG}-[0-9]+\\.${BASE_DOMAIN//./\\.}$"
-          kept="$(jq -c --arg p "$env_pat" '
-            [ .[] | select( ((.hostname // "") | test($p)) | not ) ]
+          # Filter out env-specific entries
+          port_pat="^dj-panel-${ENV_SLUG}-[0-9]+\\.${BASE_DOMAIN//./\\.}$"
+          svc_pat="^dj-panel-${ENV_SLUG}-[a-z0-9-]+\\.${BASE_DOMAIN//./\\.}$"
+          kept="$(jq -c --arg p "$port_pat" --arg s "$svc_pat" '
+            [ .[] | select( ((.hostname // "") | test($p) or test($s)) | not ) ]
           ' <<<"$minimal_existing")"
 
-          # Build new rules from EXTERNAL_MAP
+          # Build new service-based rules from EXTERNAL_MAP
+          # EXTERNAL_MAP looks like: {"50008":"apigateway:8080,...","50009":"host_fe:3000",...}
           new='[]'
           for port in $(echo "$EXTERNAL_MAP" | jq -r 'keys[]?'); do
-            host="dj-panel-${ENV_SLUG}-${port}.${BASE_DOMAIN}"
-            svc="http://127.0.0.1:${port}"
-            new="$(jq -c --arg h "$host" --arg s "$svc" '. + [{hostname:$h, service:$s}]' <<<"$new")"
+            raw="$(echo "$EXTERNAL_MAP" | jq -r --arg p "$port" '.[$p] // ""')"
+            first_pair="${raw%%,*}"                # "svc:ctrport"
+            svc="${first_pair%%:*}"                # "svc"
+            svc_lc="$(printf '%s' "$svc" | tr '[:upper:]' '[:lower:]')"
+            svc_slug="$(printf '%s' "$svc_lc" | tr '_' '-' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//')"
+            [ -n "$svc_slug" ] || svc_slug="svc-${port}"
+            host="dj-panel-${ENV_SLUG}-${svc_slug}.${BASE_DOMAIN}"
+            origin="http://127.0.0.1:${port}"
+            new="$(jq -c --arg h "$host" --arg s "$origin" '. + [{hostname:$h, service:$s}]' <<<"$new")"
           done
 
-          # Merge and ensure single trailing 404
+          # Ensure 'new' is a non-empty array
+          echo "$new" | jq -e 'type=="array" and length>0' >/dev/null \
+            || { echo "ERROR: No new dj-panel entries produced from EXTERNAL_MAP"; exit 1; }
+
+          # Merge: dedupe by hostname, append default 404
           merged="$(jq -c --argjson kept "$kept" --argjson new "$new" '
             reduce ($kept + $new)[] as $it ( {};
               .[($it.hostname // ("#nohost#" + (tostring)))] = $it
@@ -455,22 +461,31 @@ jobs:
             | . + [{ "service": "http_status:404" }]
           ' <<< '{}')"
 
-          # OPTIONAL: global originRequest defaults (safe according to API spec)
-          global_origin_req='{"disableChunkedEncoding":true}'
-          body="$(jq -c \
-            --argjson ingress "$merged" \
-            --argjson o "$global_origin_req" \
-            '{config:{ingress:$ingress, originRequest:$o}}'
-          )"
+          # Final sanity: merged must be a non-empty array
+          echo "$merged" | jq -e 'type=="array" and length>0' >/dev/null \
+            || { echo "ERROR: merged ingress is empty or not an array"; exit 1; }
 
-          echo "Proposed ingress (BASE_DOMAIN=${BASE_DOMAIN}):"
+          echo "Proposed ingress (service-based hostnames):"
           echo "$merged" | jq .
 
-          # PUT with Bearer token
+          # Global originRequest options (valid JSON object)
+          global_origin_req='{"disableChunkedEncoding":true}'
+
+          # Build body atomically with jq -n
+          jq -n \
+            --argjson ingress "$merged" \
+            --argjson o "$global_origin_req" \
+            '{config:{ingress:$ingress, originRequest:$o}}' > body.json
+
+          # Validate and show body size
+          jq . body.json >/dev/null
+          echo "Body size: $(wc -c < body.json) bytes"
+
+          # PUT with binary file
           resp="$(curl -sS -w '\n%{http_code}\n' -X PUT \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            --data "$body" \
+            "${hdr[@]}" \
+            --data-binary @body.json \
             "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations")"
 
           http_code="$(echo "$resp" | tail -n1)"
@@ -483,9 +498,7 @@ jobs:
             echo "ERROR: Cloudflare API returned HTTP $http_code"
             msg="$(echo "$resp_body" | jq -r '.errors?[0]?.message // empty' 2>/dev/null || true)"
             code="$(echo "$resp_body" | jq -r '.errors?[0]?.code // empty' 2>/dev/null || true)"
-            if [ -n "${msg:-}" ] || [ -n "${code:-}" ]; then
-              echo "Cloudflare error: code=${code:-?} message=${msg:-?}"
-            fi
+            [ -n "${code:-}" ] && echo "Cloudflare error: code=${code:-?} message=${msg:-?}"
             exit 1
           fi
 
