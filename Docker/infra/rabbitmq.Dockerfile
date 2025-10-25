@@ -14,13 +14,13 @@ USER root
 # Ensure data dir exists, is owned by rabbitmq, and create the fix-cookie shim in one RUN
 RUN mkdir -p /var/lib/rabbitmq \
   && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq \
-  && printf '#!/bin/sh\n'\
-  'COOKIE="/var/lib/rabbitmq/.erlang.cookie"\n'\
-  'if [ -f "$COOKIE" ]; then\n'\
-  '  chown rabbitmq:rabbitmq "$COOKIE" || true\n'\
-  '  chmod 400 "$COOKIE" || true\n'\
-  'fi\n'\
-  'exec "$@"\n' > /usr/local/bin/fix-cookie \
+  && printf "#!/bin/sh\n" \
+  "COOKIE=\"/var/lib/rabbitmq/.erlang.cookie\"\n" \
+  "if [ -f \"$COOKIE\" ]; then\n" \
+  "  chown rabbitmq:rabbitmq \"$COOKIE\" || true\n" \
+  "  chmod 400 \"$COOKIE\" || true\n" \
+  "fi\n" \
+  "exec \"$@\"\n" > /usr/local/bin/fix-cookie \
   && chmod +x /usr/local/bin/fix-cookie
 
 # Back to the non-root user used by the official image
