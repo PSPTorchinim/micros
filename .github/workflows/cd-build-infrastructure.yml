@@ -52,9 +52,76 @@ jobs:
       - id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
 
-  get_truenas_ports:
-    name: Get TrueNAS Ports (for allocation)
+  stop_app:
+    name: Stop TrueNAS app and ensure it is stopped
     runs-on: ubuntu-latest
+    needs: [determine_environment]
+    outputs:
+      stopped_app: ${{ steps.mark.outputs.stopped_app }}
+    steps:
+      - name: Stop app (use app.stop or scale->0), then wait for STOPPED
+        id: stopwait
+        uses: appleboy/ssh-action@v1
+        env:
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: ENV_SLUG
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            name="dj-panel-${ENV_SLUG}"
+            echo "Stopping app: $name"
+
+            # Try graceful stop; if not available, scale to 0
+            if midclt call app.stop "$name" 2>/dev/null; then
+              echo "Stopped via app.stop (request sent)"
+            else
+              echo "app.stop not available; trying chart.release.scale -> 0"
+              if midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null; then
+                echo "Scaled to 0 replicas (request sent)"
+              else
+                echo "WARN: stop/scale request failed; continuing to wait-check anyway."
+              fi
+            fi
+
+            # Sanitize JSON helper: strip control chars that can break grep
+            sanitize() { tr -d '\000-\010\013\014\016-\037\177'; }
+
+            # Wait until app state reports STOPPED (best-effort; 90s max)
+            i=0; max=45
+            while [ $i -lt $max ]; do
+              out="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null | sanitize || true)"
+              if printf '%s' "$out" | grep -q '"state"[[:space:]]*:[[:space:]]*"STOPPED"'; then
+                echo "CONFIRMED: app state is STOPPED"
+                break
+              fi
+              i=$((i+1))
+              sleep 2
+            done
+
+            if [ $i -ge $max ]; then
+              echo "WARN: app did not confirm STOPPED within timeout; proceeding anyway so ports scan reflects current state."
+            fi
+
+            echo "STOPPED_APP=$name"
+
+      - name: Mark output
+        id: mark
+        run: |
+          out='${{ steps.stopwait.outputs.stdout }}'
+          app=$(echo "$out" | awk -F= '/^STOPPED_APP=/{print $2}' | tail -n1)
+          test -n "$app" || app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+          echo "stopped_app=$app" >> "$GITHUB_OUTPUT"
+
+  get_truenas_ports:
+    name: Get TrueNAS Ports (after stop)
+    runs-on: ubuntu-latest
+    needs: [stop_app]
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
@@ -126,37 +193,6 @@ jobs:
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
 
-  stop_app:
-    name: Stop TrueNAS app before update
-    runs-on: ubuntu-latest
-    needs: [determine_environment]
-    steps:
-      - name: Stop app (use app.stop or scale->0)
-        uses: appleboy/ssh-action@v1
-        env:
-          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          envs: ENV_SLUG
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            name="dj-panel-${ENV_SLUG}"
-            echo "Stopping app: $name"
-            if midclt call app.stop "$name" 2>/dev/null; then
-              echo "Stopped via app.stop"
-              exit 0
-            fi
-            echo "app.stop not available; trying chart.release.scale -> 0"
-            if midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null; then
-              echo "Scaled to 0 replicas"
-              exit 0
-            fi
-            echo "WARN: could not stop app '$name' with known methods."
-
   generate_and_upload_compose:
     name: Generate & Upload new compose
     runs-on: ubuntu-latest
@@ -166,7 +202,6 @@ jobs:
         determine_docker_tag,
         determine_compose_timestamp,
         calculate_unused_ports,
-        stop_app,
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
@@ -265,7 +300,6 @@ jobs:
             base="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
             agg="${base}/dj-panel-${ENV_SLUG}.yml"
             mkdir -p "$base"
-            # Overwrite with a single include entry
             printf 'include:\n  - %s\n' "$NEW_COMPOSE_ABS" > "$agg"
             echo "Updated aggregator: $agg"
 
@@ -323,4 +357,4 @@ jobs:
           echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
           echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
           echo "New compose absolute: ${{ needs.generate_and_upload_compose.outputs.new_compose_abs }}"
-          echo "App was stopped -> updated -> started"
+          echo "App was STOPPED -> ports scanned -> compose updated -> STARTED"
