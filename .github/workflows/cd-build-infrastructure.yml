@@ -13,10 +13,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-
       - id: set_env
         uses: ./.github/templates/determine-environment
-
       - id: slug
         run: |
           set -euo pipefail
@@ -29,10 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [determine_environment]
     outputs:
-      app_name: ${{ steps.outs.outputs.app_name }}
+      app_name: ${{ steps.parse_app.outputs.app_name }}
     steps:
-      - name: Stop & wait for stop
-        id: outs
+      - name: Stop & wait for stop (remote)
+        id: stop_remote
         uses: appleboy/ssh-action@v1
         env:
           APP_NAME: dj-panel-${{ needs.determine_environment.outputs.env_slug }}
@@ -59,18 +57,35 @@ jobs:
               fi
             fi
 
-            # Wait loop (max ~5m)
+            get_state() {
+              midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null \
+                | tr -d '\n' \
+                | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+            }
+
             i=0
+            st=""
             while [ $i -lt 60 ]; do
-              state_json=$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null || echo "[]")
-              st=$(echo "$state_json" | jq -r '.[0].state // empty')
+              st="$(get_state || true)"
               [ "$st" = "STOPPED" ] && break
-              [ "$st" = "DEPLOYING" ] && sleep 5 || sleep 5
+              sleep 5
               i=$((i+1))
             done
             echo "App state after stop: ${st:-unknown}"
 
-            echo "app_name=$name" >> "$GITHUB_OUTPUT"
+            # Emit a marker for the runner to parse:
+            echo "APP_NAME=$name"
+
+      - name: Parse remote output
+        id: parse_app
+        run: |
+          set -euo pipefail
+          out='${{ steps.stop_remote.outputs.stdout }}'
+          echo "---- stop_remote stdout ----"
+          printf '%s\n' "$out"
+          app=$(echo "$out" | awk -F= '/^APP_NAME=/{print $2}' | tail -n1)
+          test -n "$app" || { echo "Failed to detect APP_NAME marker in SSH output"; exit 1; }
+          echo "app_name=$app" >> "$GITHUB_OUTPUT"
 
   get_truenas_ports_after_stop:
     name: Get TrueNAS Ports (post-stop)
@@ -140,7 +155,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-
       - name: Calculate unused internal ports
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_internal_ports
@@ -149,7 +163,6 @@ jobs:
           end_port: 50000
           truenas_ports: ${{ needs.get_truenas_ports_after_stop.outputs.ports }}
           tunnel_ports: ""
-
       - name: Calculate unused external ports
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_external_ports
@@ -171,6 +184,7 @@ jobs:
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
+      new_compose_abs_std: ${{ steps.parse_upload.outputs.new_compose_abs_std }}
       external_ports_map: ${{ steps.generate_compose_file.outputs.external_ports_map }}
     steps:
       - uses: actions/checkout@v5
@@ -214,19 +228,20 @@ jobs:
           echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
           echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
 
-      - name: Upload compose fragment to TrueNAS
+      - name: Upload compose fragment to TrueNAS (and make std-named copy)
         id: upload_compose
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
           CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
           COMPOSE_NAME: ${{ steps.package_compose.outputs.compose_name }}
           COMPOSE_B64: ${{ steps.package_compose.outputs.compose_b64 }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,COMPOSE_NAME,COMPOSE_B64
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,COMPOSE_NAME,COMPOSE_B64
           capture_stdout: true
           script: |
             #!/bin/sh
@@ -239,19 +254,32 @@ jobs:
             mkdir -p "$DST_DIR"
             printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
             chmod 664 "$DST_PATH" || true
-            echo "COMPOSE_ABS=$DST_PATH"
 
-      - name: Parse upload path (output)
+            # Derive timestamp from source filename (works for ...composer-YYYYMMDD-HHMMSS.yml)
+            TS=$(echo "$DST_NAME" | sed -n 's/.*-\([0-9]\{8\}-[0-9]\{6\}\)\.yml$/\1/p')
+            if [ -z "$TS" ]; then
+              # Fallback to current time if pattern unexpected
+              TS=$(date +%Y%m%d-%H%M%S)
+            fi
+            STD_NAME="dj-panel-${ENV_SLUG}-${TS}.yml"
+            STD_PATH="${DST_DIR}/${STD_NAME}"
+            cp -f "$DST_PATH" "$STD_PATH"
+
+            echo "COMPOSE_ABS=$DST_PATH"
+            echo "COMPOSE_ABS_STD=$STD_PATH"
+
+      - name: Parse upload paths (output)
         id: parse_upload
         run: |
           set -euo pipefail
           out='${{ steps.upload_compose.outputs.stdout }}'
           abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
-          test -n "$abs" || { echo "No COMPOSE_ABS marker found in SSH output"; exit 1; }
-          echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
+          abs_std=$(echo "$out" | awk -F= '/^COMPOSE_ABS_STD=/{print $2}' | tail -n1)
+          test -n "$abs" && echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
+          test -n "$abs_std" && echo "new_compose_abs_std=$abs_std" >> "$GITHUB_OUTPUT"
 
   update_aggregator_include:
-    name: Update single aggregator include
+    name: Update aggregator include (standardized file)
     runs-on: ubuntu-latest
     needs: [determine_environment, generate_and_upload_truenas_compose_file]
     outputs:
@@ -264,24 +292,23 @@ jobs:
           TRUENAS_POOL: Files
           CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-          NEW_COMPOSE_ABS: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}
+          NEW_COMPOSE_ABS_STD: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs_std }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS_STD
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
             BASE="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
             AGG="${BASE}/dj-panel-${ENV_SLUG}.yml"
-            NEW="${NEW_COMPOSE_ABS}"
+            NEW="${NEW_COMPOSE_ABS_STD}"
 
-            test -n "$NEW" || { echo "ERROR: NEW_COMPOSE_ABS empty"; exit 1; }
+            test -n "$NEW" || { echo "ERROR: NEW_COMPOSE_ABS_STD empty"; exit 1; }
             mkdir -p "$BASE"
 
-            # Write a clean include with the newest only (no literal '\n')
             {
               echo "include:"
               echo "  - ${NEW}"
@@ -331,11 +358,16 @@ jobs:
               fi
             fi
 
-            # Wait loop (max ~5m)
+            get_state() {
+              midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null \
+                | tr -d '\n' \
+                | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+            }
+
             i=0
+            st=""
             while [ $i -lt 60 ]; do
-              state_json=$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null || echo "[]")
-              st=$(echo "$state_json" | jq -r '.[0].state // empty')
+              st="$(get_state || true)"
               [ "$st" = "RUNNING" ] && break
               sleep 5
               i=$((i+1))
@@ -362,6 +394,7 @@ jobs:
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
         run: |
           set -euo pipefail
+          which jq >/dev/null 2>&1 || { sudo apt-get update -y && sudo apt-get install -y jq; }
 
           RAW="${EXTERNAL_MAP_JSON:-}"
           if [ -z "$RAW" ] || ! printf '%s' "$RAW" | jq -e . >/dev/null 2>&1; then
@@ -369,9 +402,6 @@ jobs:
             RAW="{}"
           fi
 
-          # Build generator-based items: {"50009":"host_fe:3000"} ->
-          #   hostname: dj-panel-{env}-host-fe.base
-          #   service : http://LAN_IP:50009
           GEN_ITEMS="$(printf '%s' "$RAW" | jq -c --arg env "$ENV_SLUG" --arg dom "$BASE_DOMAIN" --arg ip "$LAN_IP" '
             to_entries
             | map({
@@ -419,6 +449,65 @@ jobs:
           fi
           echo "Cloudflare Tunnel configuration updated successfully."
 
+  cleanup_old_fragments:
+    name: Keep only 3 newest env-tagged fragments
+    runs-on: ubuntu-latest
+    needs:
+      - determine_environment
+      - start_app
+      - update_cloudflare_tunnel
+      - generate_and_upload_truenas_compose_file
+    steps:
+      - name: Prune old dj-panel-{env}-{timestamp}.yml (keep 3)
+        uses: appleboy/ssh-action@v1
+        env:
+          TRUENAS_POOL: Files
+          CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
+          ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
+          LAST_STD: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs_std }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,LAST_STD
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            BASE="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
+            PATTERN="dj-panel-${ENV_SLUG}-*.yml"
+
+            # Show current set
+            echo "All matching fragments (before prune):"
+            ls -1 "${BASE}/${PATTERN}" 2>/dev/null || true
+
+            # Sort lexicographically (timestamps in name -> OK), keep top 3
+            # shellcheck disable=SC2010
+            NEWEST=$(ls -1 "${BASE}/${PATTERN}" 2>/dev/null | sort -r | head -n 3)
+            # Build a keep list
+            KEEP_TMP="$(mktemp)"
+            echo "$NEWEST" | sed '/^$/d' > "$KEEP_TMP"
+
+            # Delete any others
+            for f in "${BASE}"/${PATTERN}; do
+              [ -e "$f" ] || continue
+              if grep -Fxq "$f" "$KEEP_TMP"; then
+                echo "KEEP $f"
+              else
+                # Never delete the one we just included if names ever diverge
+                if [ -n "${LAST_STD:-}" ] && [ "$f" = "$LAST_STD" ]; then
+                  echo "KEEP (latest included) $f"
+                  continue
+                fi
+                echo "DELETE $f"
+                rm -f -- "$f" || true
+              fi
+            done
+            rm -f "$KEEP_TMP"
+
+            echo "Remaining fragments (after prune):"
+            ls -1 "${BASE}/${PATTERN}" 2>/dev/null || true
+
   deployment_summary:
     runs-on: ubuntu-latest
     needs:
@@ -429,6 +518,7 @@ jobs:
       - update_aggregator_include
       - start_app
       - update_cloudflare_tunnel
+      - cleanup_old_fragments
     steps:
       - name: Summary
         run: |
@@ -437,6 +527,8 @@ jobs:
           echo "Env Slug :  ${{ needs.determine_environment.outputs.env_slug }}"
           echo "Docker Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
           echo "Compose   : ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-          echo "New file  : ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+          echo "Uploaded  : ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+          echo "Std path  : ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs_std }}"
           echo "Updated App: ${{ needs.update_aggregator_include.outputs.updated_app }}"
           echo "Cloudflare tunnel updated."
+          echo "Old fragments pruned (kept last 3)."
