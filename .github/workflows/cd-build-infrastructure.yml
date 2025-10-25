@@ -304,11 +304,11 @@ jobs:
             echo "Updated aggregator: $agg"
 
   start_app:
-    name: Start TrueNAS app after update
+    name: Start TrueNAS app and verify it's running
     runs-on: ubuntu-latest
     needs: [determine_environment, update_include_file]
     steps:
-      - name: Start app (use app.start or scale->1)
+      - name: Start app (use app.start or scale->1) and wait for RUNNING
         uses: appleboy/ssh-action@v1
         env:
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
@@ -323,16 +323,43 @@ jobs:
             set -euo pipefail
             name="dj-panel-${ENV_SLUG}"
             echo "Starting app: $name"
+
+            started=0
             if midclt call app.start "$name" 2>/dev/null; then
               echo "Started via app.start"
-              exit 0
+              started=1
+            else
+              echo "app.start not available; trying chart.release.scale -> 1"
+              if midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null; then
+                echo "Scaled to 1 replica"
+                started=1
+              fi
             fi
-            echo "app.start not available; trying chart.release.scale -> 1"
-            if midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null; then
-              echo "Scaled to 1 replica"
-              exit 0
+
+            if [ "$started" -ne 1 ]; then
+              echo "ERROR: could not start app '$name' with known methods."
+              exit 1
             fi
-            echo "ERROR: could not start app '$name' with known methods."
+
+            # --- Verify it actually started ---
+            sanitize() { tr -d '\000-\010\013\014\016-\037\177'; }
+
+            echo "Waiting for app state to become RUNNING/DEPLOYED..."
+            i=0; max=150  # ~5 minutes at 2s per check
+            while [ $i -lt $max ]; do
+              out="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null | sanitize || true)"
+              # Match common state fields across SCALE versions: "state" or "status"
+              if printf '%s\n' "$out" | grep -Eq '"(state|status)"[[:space:]]*:[[:space:]]*"(RUNNING|DEPLOYED|ACTIVE)"'; then
+                echo "✅ App '$name' is UP."
+                exit 0
+              fi
+              i=$((i+1))
+              sleep 2
+            done
+
+            echo "ERROR: app '$name' did not reach RUNNING within timeout."
+            # Dump some context to help debug but don't fail silently
+            midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null || true
             exit 1
 
   deployment_summary:
