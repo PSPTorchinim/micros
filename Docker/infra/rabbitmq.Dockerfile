@@ -20,7 +20,7 @@ SHELL ["/bin/sh", "-c"]
 # Ensure data dir exists, is owned by rabbitmq, and create the fix-cookie shim in one RUN
 RUN mkdir -p /var/lib/rabbitmq \
   && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq \
-  && printf "#!/bin/sh\nCOOKIE=\"/var/lib/rabbitmq/.erlang.cookie\"\nif [ -f \"$COOKIE\" ]; then\n  chown rabbitmq:rabbitmq \"$COOKIE\" || true\n  chmod 400 \"$COOKIE\" || true\nfi\nexec \"$@\"\n" > /usr/local/bin/fix-cookie \
+  && printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chown rabbitmq:rabbitmq "$COOKIE" || true\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie \
   && chmod +x /usr/local/bin/fix-cookie
 
 # Back to the non-root user used by the official image
