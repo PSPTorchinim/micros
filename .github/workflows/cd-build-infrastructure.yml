@@ -15,21 +15,27 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - id: set_env
+      - name: Set Environment
+        id: set_env
         uses: ./.github/templates/determine-environment
 
-      - id: slug
+      - name: Compute env slug
+        id: slug
         run: |
+          set -euo pipefail
           env_raw='${{ steps.set_env.outputs.current_env }}'
           env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
           echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
 
   stop_app:
-    name: Stop TrueNAS app before port calc
+    name: Stop app on TrueNAS
     runs-on: ubuntu-latest
     needs: [determine_environment]
+    outputs:
+      app_name: ${{ steps.mark.outputs.app_name }}
     steps:
-      - name: Stop app on TrueNAS (app.stop → scale 0 fallback)
+      - name: Stop app and wait until not ACTIVE/DEPLOYING
+        id: stop
         uses: appleboy/ssh-action@v1
         env:
           APP_NAME: dj-panel-${{ needs.determine_environment.outputs.env_slug }}
@@ -48,13 +54,27 @@ jobs:
               echo "Stopped via app.stop"
             else
               echo "app.stop not available; trying chart.release.scale -> 0"
-              if midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null; then
-                echo "Scaled to 0 replicas"
-              else
-                echo "WARN: could not stop app '$name' with known methods."
-              fi
+              midclt call chart.release.scale "$name" '{"replica_count":0}' 2>/dev/null || true
             fi
-            sleep 8
+
+            # Wait using grep/sed (no jq dependency on TrueNAS host)
+            i=0; max=60
+            while [ $i -lt $max ]; do
+              state="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null \
+                | tr -d '\n' \
+                | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+              printf "state=%s (t=%ss)\n" "${state:-unknown}" "$i"
+              case "${state:-}" in
+                ACTIVE|DEPLOYING) sleep 3 ;;
+                *) break ;;
+              esac
+              i=$((i+3))
+            done
+            echo "STATE_AFTER_STOP=${state:-unknown}"
+
+      - name: Mark app name
+        id: mark
+        run: echo "app_name=dj-panel-${{ needs.determine_environment.outputs.env_slug }}" >> "$GITHUB_OUTPUT"
 
   get_truenas_ports:
     name: Get TrueNAS Ports (after stop)
@@ -78,35 +98,10 @@ jobs:
               | grep -E '^[0-9]+$' \
               | sort -n | uniq
 
-  get_cloudflare_tunnel_ports:
-    name: Get Cloudflare Tunnel Ports
-    runs-on: ubuntu-latest
-    outputs:
-      tunnel_ports: ${{ steps.format_output.outputs.ports }}
-    steps:
-      - name: Get Cloudflare Tunnel Config
-        id: get_tunnel_ports
-        run: |
-          response=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/cfd_tunnel/${{ secrets.CLOUDFLARE_TUNNEL_UUID }}/configurations \
-            -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
-            -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}")
-          echo "response<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$response" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Format Output
-        id: format_output
-        run: |
-          ports=$(echo '${{ steps.get_tunnel_ports.outputs.response }}' \
-            | jq -r '.result.config.ingress[].service' \
-            | grep -E '^https?://' | grep -oE ':[0-9]+' \
-            | cut -d: -f2 | sort -n | uniq | tr '\n' ' ')
-          echo "ports=$ports" >> "$GITHUB_OUTPUT"
-
   calculate_unused_ports:
-    name: Calculate Unused External and Internal Ports
+    name: Calculate Unused External and Internal Ports (TrueNAS only)
     runs-on: ubuntu-latest
-    needs: [get_truenas_ports, get_cloudflare_tunnel_ports]
+    needs: [get_truenas_ports]
     outputs:
       external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
       internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
@@ -122,7 +117,7 @@ jobs:
           start_port: 40000
           end_port: 50000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
-          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
+          tunnel_ports: "" # ignore Cloudflare
 
       - name: Calculate unused external ports
         uses: ./.github/templates/calculate-unused-ports
@@ -131,19 +126,7 @@ jobs:
           start_port: 50000
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
-          tunnel_ports: ${{ needs.get_cloudflare_tunnel_ports.outputs.tunnel_ports }}
-
-  determine_target_branch:
-    name: Determine Target Branch
-    runs-on: ubuntu-latest
-    outputs:
-      target_branch: ${{ steps.branch_set.outputs.target_branch }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-      - id: branch_set
-        uses: ./.github/templates/determine-target-branch
+          tunnel_ports: "" # ignore Cloudflare
 
   determine_docker_tag:
     name: Determine Docker Tag
@@ -171,20 +154,19 @@ jobs:
       - id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
 
-  generate_and_upload_truenas_compose_file:
-    name: Generate and Upload TrueNAS Docker Compose File
+  generate_and_upload_compose:
+    name: Generate & Upload Compose, point aggregator
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
         calculate_unused_ports,
-        determine_target_branch,
         determine_docker_tag,
         determine_compose_timestamp,
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
-      external_ports_map: ${{ steps.generate_compose_file.outputs.external_ports_map }}
+      external_ports_map: ${{ steps.gen.outputs.external_ports_map }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -195,14 +177,13 @@ jobs:
           sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Generate New Compose File with Unused Ports and GHCR Images
-        id: generate_compose_file
-        shell: bash
-        env: { LOG_LEVEL: DEBUG }
+      - name: Generate New Compose File
+        id: gen
+        env:
+          LOG_LEVEL: DEBUG
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
-
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
@@ -213,27 +194,33 @@ jobs:
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
 
-          echo "external_ports_map=$external_map_json" >> "$GITHUB_OUTPUT"
+          # multiline-safe output
+          delim="EOF_$RANDOM"
+          {
+            echo "external_ports_map<<$delim"
+            printf '%s\n' "$external_map_json"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
           echo "compose_file=$output_file" >> "$GITHUB_OUTPUT"
 
-      - name: Package compose file for transfer (base64)
-        id: package_compose
+      - name: Package compose file (base64)
+        id: package
         run: |
           set -euo pipefail
-          COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
-          test -f "$COMPOSE_FILE" || { echo "Compose file not found: $COMPOSE_FILE" >&2; exit 1; }
+          COMPOSE_FILE='${{ steps.gen.outputs.compose_file }}'
+          test -f "$COMPOSE_FILE" || { echo "Compose not found: $COMPOSE_FILE" >&2; exit 1; }
           B64=$(base64 -w0 "$COMPOSE_FILE")
           echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
           echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure Images dataset & upload compose file (with mountpoint fixer)
-        id: upload_compose
+      - name: Upload compose to TrueNAS Images dataset
+        id: upload
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
           CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
-          COMPOSE_NAME: ${{ steps.package_compose.outputs.compose_name }}
-          COMPOSE_B64: ${{ steps.package_compose.outputs.compose_b64 }}
+          COMPOSE_NAME: ${{ steps.package.outputs.compose_name }}
+          COMPOSE_B64: ${{ steps.package.outputs.compose_b64 }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
@@ -242,72 +229,33 @@ jobs:
           capture_stdout: true
           script: |
             #!/bin/sh
-            set -eu
-
-            findbin() { command -v "$1" 2>/dev/null && return 0; for d in /sbin /usr/sbin /usr/local/sbin; do [ -x "$d/$1" ] && { echo "$d/$1"; return 0; }; done; return 1; }
-            ZFS_BIN="$(findbin zfs || true)"; ZPOOL_BIN="$(findbin zpool || true)"
-            if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then runroot() { sudo "$@"; }; else runroot() { "$@"; }; fi
-
-            POOL="${TRUENAS_POOL:-}"
-            [ -z "$POOL" ] && [ -n "${ZPOOL_BIN:-}" ] && POOL="$($ZPOOL_BIN list -H -o name | head -n1 || true)"
-            [ -n "$POOL" ] || { echo "ERROR: set TRUENAS_POOL."; exit 1; }
-            if [ -n "${ZPOOL_BIN:-}" ] && ! $ZPOOL_BIN list -H -o name | grep -x "$POOL" >/dev/null 2>&1; then
-              echo "ERROR: pool '$POOL' not found. Available: $($ZPOOL_BIN list -H -o name | tr '\n' ' ')"; exit 1; fi
-
+            set -euo pipefail
+            runroot() { if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then sudo "$@"; else "$@"; fi; }
+            POOL="${TRUENAS_POOL:-Files}"
             ENV_DIR="${CURRENT_ENV:-Development}"
-            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
-
-            ensure_dataset_recursive() {
-              rel="$1"; [ -n "$rel" ] || return 0; unset current_rel
-              echo "$rel" | awk -F/ '{for(i=1;i<=NF;i++) print $i}' | while IFS= read -r part; do
-                [ -n "$part" ] || continue
-                if [ -z "${current_rel:-}" ]; then current_rel="$part"; else current_rel="$current_rel/$part"; fi
-                ds="$POOL/$current_rel"; mp="/mnt/$POOL/$current_rel"; mp="$(printf '%s' "$mp" | sed -E 's#/+#/#g')"
-                if runroot "$ZFS_BIN" list -H "$ds" >/dev/null 2>&1; then
-                  curmp="$(runroot "$ZFS_BIN" get -H -o value mountpoint "$ds" 2>/dev/null || echo -n)"
-                  if [ "$curmp" != "$mp" ] && [ "$curmp" != "legacy" ]; then runroot "$ZFS_BIN" set mountpoint="$mp" "$ds" 2>/dev/null || echo "SKIP: could not set mountpoint $ds"
-                  else echo "OK  : $ds exists"; fi
-                else
-                  echo "MAKE: $ds (mountpoint=$mp)"
-                  runroot "$ZFS_BIN" create -p -o mountpoint="$mp" "$ds" && runroot mkdir -p "$mp" && runroot "$ZFS_BIN" mount "$ds" 2>/dev/null || true
-                fi
-              done
-            }
-            ensure_dataset_recursive "$TARGET_REL"
-
-            DST_DIR="/mnt/$POOL/$TARGET_REL"
+            DST_DIR="/mnt/$POOL/Apps/DJPanel/${ENV_DIR}/Images"
+            runroot mkdir -p "$DST_DIR"
             DST_NAME="${COMPOSE_NAME##*/}"
             DST_PATH="$DST_DIR/$DST_NAME"
-            runroot mkdir -p "$DST_DIR"
             printf '%s' "$COMPOSE_B64" | base64 -d > "$DST_PATH"
             chmod 664 "$DST_PATH" || true
-
             echo "COMPOSE_ABS=$DST_PATH"
 
-      - name: Parse upload path and expose as output
+      - name: Parse upload path
         id: parse_upload
         run: |
           set -euo pipefail
-          out='${{ steps.upload_compose.outputs.stdout }}'
-          abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
-          test -n "$abs" || { echo "No COMPOSE_ABS marker found in SSH output"; exit 1; }
+          abs=$(echo '${{ steps.upload.outputs.stdout }}' | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
+          test -n "$abs" || { echo "No COMPOSE_ABS marker found"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-  update_aggregator:
-    name: Point dj-panel-{env} aggregator to the new compose
-    runs-on: ubuntu-latest
-    needs: [determine_environment, generate_and_upload_truenas_compose_file]
-    outputs:
-      updated_app: ${{ steps.parse_mark.outputs.updated_app }}
-    steps:
-      - name: Update include (remote)
-        id: update
+      - name: Point aggregator compose to newest only
         uses: appleboy/ssh-action@v1
         env:
           TRUENAS_POOL: Files
           CURRENT_ENV: ${{ needs.determine_environment.outputs.current_env }}
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-          NEW_COMPOSE_ABS: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}
+          NEW_COMPOSE_ABS: ${{ steps.parse_upload.outputs.new_compose_abs }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
@@ -317,33 +265,22 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
+            name="dj-panel-${ENV_SLUG}"
             base="/mnt/${TRUENAS_POOL}/Apps/DJPanel/${CURRENT_ENV}/Images"
-            agg="${base}/dj-panel-${ENV_SLUG}.yml"
-            new="$NEW_COMPOSE_ABS"
-            [ -n "$new" ] || { echo "ERROR: NEW_COMPOSE_ABS empty"; exit 1; }
+            agg="${base}/${name}.yml"
             mkdir -p "$base"
-            printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "UPDATED_APP=dj-panel-${ENV_SLUG}"
-
-      - name: Parse marker
-        id: parse_mark
-        run: |
-          set -euo pipefail
-          out='${{ steps.update.outputs.stdout }}'
-          updated=$(echo "$out" | awk -F= '/^UPDATED_APP=/{print $2}' | tail -n1)
-          test -n "$updated" || { echo "No UPDATED_APP marker"; exit 1; }
-          echo "updated_app=$updated" >> "$GITHUB_OUTPUT"
+            printf 'include:\n  - %s\n' "$NEW_COMPOSE_ABS" > "$agg"
+            echo "Updated $agg to include $NEW_COMPOSE_ABS"
 
   start_app:
-    name: Start TrueNAS app after update
+    name: Start app on TrueNAS
     runs-on: ubuntu-latest
-    needs: [update_aggregator]
-    if: ${{ needs.update_aggregator.outputs.updated_app != '' }}
+    needs: [determine_environment, generate_and_upload_compose]
     steps:
-      - name: Start app (app.start → scale 1 fallback)
+      - name: Start app and wait until ACTIVE
         uses: appleboy/ssh-action@v1
         env:
-          APP_NAME: ${{ needs.update_aggregator.outputs.updated_app }}
+          APP_NAME: dj-panel-${{ needs.determine_environment.outputs.env_slug }}
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
@@ -359,166 +296,115 @@ jobs:
               echo "Started via app.start"
             else
               echo "app.start not available; trying chart.release.scale -> 1"
-              if midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null; then
-                echo "Scaled to 1 replica"
-              else
-                echo "ERROR: could not start app '$name' with known methods."
-                exit 1
-              fi
+              midclt call chart.release.scale "$name" '{"replica_count":1}' 2>/dev/null || true
             fi
-            sleep 8
+
+            # Wait until ACTIVE (no jq; grep/sed)
+            i=0; max=120
+            while [ $i -lt $max ]; do
+              state="$(midclt call app.query '[["name","=","'"$name"'"]]' 2>/dev/null \
+                | tr -d '\n' \
+                | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+              printf "state=%s (t=%ss)\n" "${state:-unknown}" "$i"
+              [ "${state:-}" = "ACTIVE" ] && break
+              sleep 3
+              i=$((i+3))
+            done
+            echo "STATE_AFTER_START=${state:-unknown}"
 
   update_cloudflare_tunnel:
-    name: Update Cloudflare Tunnel ingress for new ports (service-based hostnames)
+    name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
-    needs:
-      [
-        determine_environment,
-        generate_and_upload_truenas_compose_file,
-        start_app,
-      ]
+    needs: [determine_environment, generate_and_upload_compose]
     steps:
-      - name: Install jq
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq
-
-      - name: Build & apply tunnel config (service-based hostnames)
+      - name: Build ingress JSON and PUT to Cloudflare
         env:
-          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TUNNEL_ID: ${{ secrets.CLOUDFLARE_TUNNEL_UUID }}
+          CF_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+          CF_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          EXTERNAL_MAP: ${{ needs.generate_and_upload_compose.outputs.external_ports_map }}
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
-          BASE_DOMAIN: ${{ vars.CLOUDFLARE_BASE_DOMAIN }} # e.g. djbeatblaster.com
-          EXTERNAL_MAP: ${{ needs.generate_and_upload_truenas_compose_file.outputs.external_ports_map }}
-          # Optional overrides; if unset we'll auto-detect from existing ingress, then default to 192.168.1.17
-          ORIGIN_IP: ${{ vars.CLOUDFLARE_ORIGIN_IP }}
-          TRUENAS_LAN_IP: ${{ vars.TRUENAS_LAN_IP }}
+          BASE_DOMAIN: ${{ vars.BASE_DOMAIN }}
+          TRUENAS_IP: ${{ vars.TRUENAS_IP }}
         run: |
           set -euo pipefail
 
-          # --- Sanity checks
-          for v in CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY ACCOUNT_ID TUNNEL_ID EXTERNAL_MAP; do
-            eval "val=\${$v:-}"
-            [ -n "$val" ] || { echo "Missing $v"; exit 1; }
-          done
+          : "${BASE_DOMAIN:=djbeatblaster.com}"
+          : "${TRUENAS_IP:=192.168.1.17}"
+          : "${ACCOUNT_ID:?Missing CLOUDFLARE_ACCOUNT_ID}"
+          : "${TUNNEL_ID:?Missing CLOUDFLARE_TUNNEL_UUID}"
+          : "${CF_EMAIL:?Missing CLOUDFLARE_EMAIL}"
+          : "${CF_KEY:?Missing CLOUDFLARE_API_KEY}"
 
-          hdr=(-H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}")
-
-          # Get current config (best-effort)
-          cur_json="$(curl -sfS \
-            "${hdr[@]}" \
-            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations" \
-            || echo '{"result":{"config":{"ingress":[]}}}')"
-          cur_ingress="$(printf '%s' "$cur_json" | jq -c '.result.config.ingress // []' 2>/dev/null || echo '[]')"
-
-          # Infer BASE_DOMAIN if not set
-          if [ -z "${BASE_DOMAIN:-}" ]; then
-            BASE_DOMAIN="$(echo "$cur_ingress" \
-              | jq -r '[ .[]
-                          | .hostname?
-                          | select(type=="string" and test("\\."))
-                          | (split(".") | .[-2:] | join("."))
-                        ] | .[0] // empty')"
+          # Expand (no single quotes!), default to {}
+          ext="${EXTERNAL_MAP:-{}}"
+          # Trim leading/trailing whitespace
+          ext="$(printf '%s' "$ext" | awk 'BEGIN{ORS="";} {print} END{print ""}')"
+          if [ -z "$ext" ] || ! echo "$ext" | jq -e . >/dev/null 2>&1; then
+            echo "WARN: EXTERNAL_MAP is empty/invalid, using {}"
+            ext="{}"
           fi
-          [ -n "${BASE_DOMAIN:-}" ] || { echo "ERROR: Set CLOUDFLARE_BASE_DOMAIN (e.g., example.com)"; exit 1; }
 
-          # ------- ORIGIN_IP selection: env override -> inferred -> default
-          ORIGIN_IP="${ORIGIN_IP:-${TRUENAS_LAN_IP:-}}"
-          if [ -z "$ORIGIN_IP" ]; then
-            # Pick the first RFC1918 IP from existing ingress services, if present
-            ORIGIN_IP="$(echo "$cur_ingress" \
-              | jq -r '[ .[]
-                          | .service? 
-                          | select(type=="string")
-                          | capture("^(?<proto>https?://)?(?<host>[0-9\\.]+)(?::\\d+)?$")? .host
-                        ]
-                        | map(select(test("^(10\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|192\\.168\\.)")))
-                        | .[0] // empty')"
-          fi
-          : "${ORIGIN_IP:=192.168.1.17}"   # final fallback
-          echo "Using ORIGIN_IP=$ORIGIN_IP"
+          echo "External map (normalized):"
+          echo "$ext" | jq .
 
-          # Keep non dj-panel hostnames
-          minimal_existing="$(echo "$cur_ingress" \
-            | jq -c '[ .[] | {hostname, service} | with_entries(select(.value != null)) ]')"
+          static_ingress=$(cat <<JSON
+          [
+            {"hostname":"truenas.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}"},
+            {"hostname":"cas.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50000"},
+            {"hostname":"home.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50001"},
+            {"hostname":"nextcloud.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50002"},
+            {"hostname":"grocy.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50003"},
+            {"hostname":"mqtt.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50004"},
+            {"hostname":"mealie.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50005"},
+            {"hostname":"esp.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50006"},
+            {"hostname":"n8n.${BASE_DOMAIN}","service":"http://${TRUENAS_IP}:50007"}
+          ]
+          JSON
+          )
 
-          # Filter out existing env-specific dj-panel entries
-          svc_pat="^dj-panel-${ENV_SLUG}-[a-z0-9-]+\\.${BASE_DOMAIN//./\\.}$"
-          kept="$(jq -c --arg s "$svc_pat" '
-            [ .[] | select( ((.hostname // "") | test($s)) | not ) ]
-          ' <<<"$minimal_existing")"
+          dj_ingress=$(jq -c --arg ip "$TRUENAS_IP" --arg env "$ENV_SLUG" --arg dom "$BASE_DOMAIN" '
+            (try (.) catch {}) as $m
+            | ($m|type=="object") as $ok
+            | if $ok then
+                ($m | to_entries
+                | map({
+                    hostname: ("dj-panel-\($env)-" + (.value | split(":")[0]) + "." + $dom),
+                    service: ("http://\($ip):" + .key)
+                  }))
+              else [] end
+          ' <<< "$ext")
 
-          # Build new service-based rules from EXTERNAL_MAP
-          # EXTERNAL_MAP like: {"50008":"apigateway:8080,...","50009":"host_fe:3000",...}
-          new='[]'
-          for port in $(echo "$EXTERNAL_MAP" | jq -r 'keys[]?'); do
-            raw="$(echo "$EXTERNAL_MAP" | jq -r --arg p "$port" '.[$p] // ""')"
-            first_pair="${raw%%,*}"
-            svc="${first_pair%%:*}"
-            svc_lc="$(printf '%s' "$svc" | tr '[:upper:]' '[:lower:]')"
-            svc_slug="$(printf '%s' "$svc_lc" | tr '_' '-' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//')"
-            [ -n "$svc_slug" ] || svc_slug="svc-${port}"
-            host="dj-panel-${ENV_SLUG}-${svc_slug}.${BASE_DOMAIN}"
-            origin="http://${ORIGIN_IP}:${port}"    # <-- use LAN IP instead of 127.0.0.1
-            new="$(jq -c --arg h "$host" --arg s "$origin" '. + [{hostname:$h, service:$s}]' <<<"$new")"
-          done
-
-          # Ensure 'new' is a non-empty array
-          echo "$new" | jq -e 'type=="array" and length>0' >/dev/null \
-            || { echo "ERROR: No new dj-panel entries produced from EXTERNAL_MAP"; exit 1; }
-
-          # Merge: dedupe by hostname, append default 404
-          merged="$(jq -c --argjson kept "$kept" --argjson new "$new" '
-            reduce ($kept + $new)[] as $it ( {};
-              .[($it.hostname // ("#nohost#" + (tostring)))] = $it
-            )
-            | [ .[] | select(.service != "http_status:404") ]
-            | . + [{ "service": "http_status:404" }]
-          ' <<< '{}')"
-
-          # Final sanity: merged must be a non-empty array
-          echo "$merged" | jq -e 'type=="array" and length>0' >/dev/null \
-            || { echo "ERROR: merged ingress is empty or not an array"; exit 1; }
+          combined=$(jq -c --argjson s "$static_ingress" --argjson d "${dj_ingress:-[]}" '
+            ($s + $d + [{"service":"http_status:404"}])
+          ' <<<'{}')
 
           echo "Proposed ingress (service-based hostnames):"
-          echo "$merged" | jq .
+          echo "$combined" | jq .
 
-          # Global originRequest options
-          global_origin_req='{"disableChunkedEncoding":true}'
+          body=$(jq -c --argjson ing "$combined" '{config: {ingress: $ing}}' <<<'{}')
+          echo "$body" > body.json
+          test -s body.json || { echo "ERROR: body.json is empty."; exit 1; }
 
-          # Build body atomically
-          jq -n \
-            --argjson ingress "$merged" \
-            --argjson o "$global_origin_req" \
-            '{config:{ingress:$ingress, originRequest:$o}}' > body.json
-
-          jq . body.json >/dev/null
-          echo "Body size: $(wc -c < body.json) bytes"
-
-          # PUT the config
-          resp="$(curl -sS -w '\n%{http_code}\n' -X PUT \
+          resp=$(curl -sS -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations" \
             -H "Content-Type: application/json" \
-            "${hdr[@]}" \
-            --data-binary @body.json \
-            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations")"
-
-          http_code="$(echo "$resp" | tail -n1)"
-          resp_body="$(echo "$resp" | sed '$d')"
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            --data @body.json)
 
           echo "Cloudflare response body:"
-          echo "$resp_body" | jq . || echo "$resp_body"
+          echo "$resp" | jq .
 
-          if [ "$http_code" != "200" ]; then
-            echo "ERROR: Cloudflare API returned HTTP $http_code"
-            msg="$(echo "$resp_body" | jq -r '.errors?[0]?.message // empty' 2>/dev/null || true)"
-            code="$(echo "$resp_body" | jq -r '.errors?[0]?.code // empty' 2>/dev/null || true)"
-            [ -n "${code:-}" ] && echo "Cloudflare error: code=${code:-?} message=${msg:-?}"
+          ok=$(echo "$resp" | jq -r '.success')
+          if [ "$ok" != "true" ]; then
+            code=$(echo "$resp" | jq -r '.errors[0].code // empty')
+            msg=$(echo "$resp" | jq -r '.errors[0].message // "Unknown error"')
+            echo "Cloudflare error: code=${code} message=${msg}" >&2
             exit 1
           fi
-
-          echo "✅ Cloudflare Tunnel ingress updated (ORIGIN_IP=$ORIGIN_IP)."
+          echo "Cloudflare Tunnel configuration updated successfully."
 
   deployment_summary:
     name: Deployment Summary
@@ -528,8 +414,10 @@ jobs:
         determine_docker_tag,
         determine_compose_timestamp,
         determine_environment,
-        generate_and_upload_truenas_compose_file,
-        update_aggregator,
+        stop_app,
+        get_truenas_ports,
+        calculate_unused_ports,
+        generate_and_upload_compose,
         start_app,
         update_cloudflare_tunnel,
       ]
@@ -542,5 +430,6 @@ jobs:
           echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
           echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
           echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
-          echo "Updated App: dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
-          echo "New compose absolute: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+          echo "App: dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+          echo "New compose absolute: ${{ needs.generate_and_upload_compose.outputs.new_compose_abs }}"
+          echo "External map: ${{ needs.generate_and_upload_compose.outputs.external_ports_map }}"
