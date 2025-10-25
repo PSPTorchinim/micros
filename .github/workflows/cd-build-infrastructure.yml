@@ -392,6 +392,9 @@ jobs:
           ENV_SLUG: ${{ needs.determine_environment.outputs.env_slug }}
           BASE_DOMAIN: ${{ vars.CLOUDFLARE_BASE_DOMAIN }} # e.g. djbeatblaster.com
           EXTERNAL_MAP: ${{ needs.generate_and_upload_truenas_compose_file.outputs.external_ports_map }}
+          # Optional overrides; if unset we'll auto-detect from existing ingress, then default to 192.168.1.17
+          ORIGIN_IP: ${{ vars.CLOUDFLARE_ORIGIN_IP }}
+          TRUENAS_LAN_IP: ${{ vars.TRUENAS_LAN_IP }}
         run: |
           set -euo pipefail
 
@@ -403,12 +406,11 @@ jobs:
 
           hdr=(-H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}")
 
-          # Current config (best-effort)
+          # Get current config (best-effort)
           cur_json="$(curl -sfS \
             "${hdr[@]}" \
             "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations" \
             || echo '{"result":{"config":{"ingress":[]}}}')"
-
           cur_ingress="$(printf '%s' "$cur_json" | jq -c '.result.config.ingress // []' 2>/dev/null || echo '[]')"
 
           # Infer BASE_DOMAIN if not set
@@ -422,29 +424,44 @@ jobs:
           fi
           [ -n "${BASE_DOMAIN:-}" ] || { echo "ERROR: Set CLOUDFLARE_BASE_DOMAIN (e.g., example.com)"; exit 1; }
 
+          # ------- ORIGIN_IP selection: env override -> inferred -> default
+          ORIGIN_IP="${ORIGIN_IP:-${TRUENAS_LAN_IP:-}}"
+          if [ -z "$ORIGIN_IP" ]; then
+            # Pick the first RFC1918 IP from existing ingress services, if present
+            ORIGIN_IP="$(echo "$cur_ingress" \
+              | jq -r '[ .[]
+                          | .service? 
+                          | select(type=="string")
+                          | capture("^(?<proto>https?://)?(?<host>[0-9\\.]+)(?::\\d+)?$")? .host
+                        ]
+                        | map(select(test("^(10\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|192\\.168\\.)")))
+                        | .[0] // empty')"
+          fi
+          : "${ORIGIN_IP:=192.168.1.17}"   # final fallback
+          echo "Using ORIGIN_IP=$ORIGIN_IP"
+
           # Keep non dj-panel hostnames
           minimal_existing="$(echo "$cur_ingress" \
             | jq -c '[ .[] | {hostname, service} | with_entries(select(.value != null)) ]')"
 
-          # Filter out env-specific entries
-          port_pat="^dj-panel-${ENV_SLUG}-[0-9]+\\.${BASE_DOMAIN//./\\.}$"
+          # Filter out existing env-specific dj-panel entries
           svc_pat="^dj-panel-${ENV_SLUG}-[a-z0-9-]+\\.${BASE_DOMAIN//./\\.}$"
-          kept="$(jq -c --arg p "$port_pat" --arg s "$svc_pat" '
-            [ .[] | select( ((.hostname // "") | test($p) or test($s)) | not ) ]
+          kept="$(jq -c --arg s "$svc_pat" '
+            [ .[] | select( ((.hostname // "") | test($s)) | not ) ]
           ' <<<"$minimal_existing")"
 
           # Build new service-based rules from EXTERNAL_MAP
-          # EXTERNAL_MAP looks like: {"50008":"apigateway:8080,...","50009":"host_fe:3000",...}
+          # EXTERNAL_MAP like: {"50008":"apigateway:8080,...","50009":"host_fe:3000",...}
           new='[]'
           for port in $(echo "$EXTERNAL_MAP" | jq -r 'keys[]?'); do
             raw="$(echo "$EXTERNAL_MAP" | jq -r --arg p "$port" '.[$p] // ""')"
-            first_pair="${raw%%,*}"                # "svc:ctrport"
-            svc="${first_pair%%:*}"                # "svc"
+            first_pair="${raw%%,*}"
+            svc="${first_pair%%:*}"
             svc_lc="$(printf '%s' "$svc" | tr '[:upper:]' '[:lower:]')"
             svc_slug="$(printf '%s' "$svc_lc" | tr '_' '-' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//')"
             [ -n "$svc_slug" ] || svc_slug="svc-${port}"
             host="dj-panel-${ENV_SLUG}-${svc_slug}.${BASE_DOMAIN}"
-            origin="http://127.0.0.1:${port}"
+            origin="http://${ORIGIN_IP}:${port}"    # <-- use LAN IP instead of 127.0.0.1
             new="$(jq -c --arg h "$host" --arg s "$origin" '. + [{hostname:$h, service:$s}]' <<<"$new")"
           done
 
@@ -468,20 +485,19 @@ jobs:
           echo "Proposed ingress (service-based hostnames):"
           echo "$merged" | jq .
 
-          # Global originRequest options (valid JSON object)
+          # Global originRequest options
           global_origin_req='{"disableChunkedEncoding":true}'
 
-          # Build body atomically with jq -n
+          # Build body atomically
           jq -n \
             --argjson ingress "$merged" \
             --argjson o "$global_origin_req" \
             '{config:{ingress:$ingress, originRequest:$o}}' > body.json
 
-          # Validate and show body size
           jq . body.json >/dev/null
           echo "Body size: $(wc -c < body.json) bytes"
 
-          # PUT with binary file
+          # PUT the config
           resp="$(curl -sS -w '\n%{http_code}\n' -X PUT \
             -H "Content-Type: application/json" \
             "${hdr[@]}" \
@@ -502,7 +518,7 @@ jobs:
             exit 1
           fi
 
-          echo "✅ Cloudflare Tunnel ingress updated."
+          echo "✅ Cloudflare Tunnel ingress updated (ORIGIN_IP=$ORIGIN_IP)."
 
   deployment_summary:
     name: Deployment Summary
