@@ -507,20 +507,146 @@ jobs:
           fi
           echo "Cloudflare Tunnel configuration updated successfully."
 
-  deployment_summary:
-    name: Deployment Summary
+  update_cloudflare_dns_records:
+    name: Ensure Cloudflare DNS CNAMEs for tunnel hostnames
     runs-on: ubuntu-latest
     needs:
       [
-        determine_docker_tag,
-        determine_compose_timestamp,
-        determine_environment,
-        calculate_unused_ports,
-        generate_and_upload_truenas_compose_file,
-        update_aggregator_and_start_app,
-        verify_app_started,
         update_cloudflare_tunnel,
+        determine_environment,
+        generate_and_upload_truenas_compose_file,
       ]
+    steps:
+      - name: Create/Update DNS CNAMEs for ingress hostnames (left-label names)
+        run: |
+          set -euo pipefail
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          TUNNEL_UUID="${{ secrets.CLOUDFLARE_TUNNEL_UUID }}"
+          ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP || '192.168.1.17' }}"
+          BASE_DOMAIN="${{ vars.BASE_DOMAIN || '' }}"
+
+          # Helper: take fqdn -> left label (strip trailing .BASE_DOMAIN)
+          left_label() {
+            fqdn="$1"; base="$2"
+            case "$fqdn" in
+              *".$base") echo "${fqdn%.$base}";;
+              *) echo "$fqdn";;
+            esac
+          }
+
+          # Derive BASE_DOMAIN if not provided
+          if [ -z "$BASE_DOMAIN" ]; then
+            echo "BASE_DOMAIN not provided; deriving…"
+            cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}")"
+            # Pick the most common base in ingress hostnames
+            BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
+              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
+              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
+            [ -n "$BASE_DOMAIN" ] || {
+              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1;
+            }
+            echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
+          else
+            echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
+          fi
+
+          # Zone id
+          ZONE_ID="$(curl -sS -G "https://api.cloudflare.com/client/v4/zones" \
+            --data-urlencode "name=${BASE_DOMAIN}" --data-urlencode "status=active" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" | jq -r '.result[0].id')"
+          [ -n "$ZONE_ID" ] && [ "$ZONE_ID" != "null" ] || { echo "ERROR: Zone not found for ${BASE_DOMAIN}"; exit 1; }
+
+          # External map from generator
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+          if ! echo "$EXTERNAL_MAP" | jq -e . >/dev/null 2>&1; then
+            echo "WARN: EXTERNAL_MAP invalid/empty; using {}"
+            EXTERNAL_MAP="{}"
+          fi
+
+          # Static FQDN hostnames (from LAN services you already expose)
+          STATIC_FQDNS=$(jq -c --arg ip "$HOST_LAN_IP" --arg base "$BASE_DOMAIN" -n '[
+            "truenas."+ $base,
+            "cas."+ $base,
+            "home."+ $base,
+            "nextcloud."+ $base,
+            "grocy."+ $base,
+            "mqtt."+ $base,
+            "mealie."+ $base,
+            "esp."+ $base,
+            "n8n."+ $base
+          ]')
+
+          # Dynamic FQDNs from generator map (service-based hostnames)
+          DYNAMIC_FQDNS=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" '
+            to_entries
+            | map("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base)
+          ')
+
+          ALL_FQDNS=$(jq -c --argjson a "$STATIC_FQDNS" --argjson b "$DYNAMIC_FQDNS" -n '$a + $b')
+          echo "Desired FQDNs:"
+          echo "$ALL_FQDNS" | jq .
+
+          # Convert to left-label names for DNS record "name" field
+          ALL_LABELS=$(echo "$ALL_FQDNS" | jq -c --arg base "$BASE_DOMAIN" '
+            map( sub("\\."+($base|gsub("\\."; "\\."))+"$"; "") )
+          ')
+          echo "DNS record names (left labels):"
+          echo "$ALL_LABELS" | jq .
+
+          TARGET="${TUNNEL_UUID}.cfargotunnel.com"
+
+          create_or_update() {
+            local label="$1"  # left label (e.g., dj-panel-development-apigateway)
+            # Look up existing CNAME by name within the zone
+            rec="$(curl -sS -G "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+              --data-urlencode "type=CNAME" \
+              --data-urlencode "name=${label}.${BASE_DOMAIN}" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}")"
+            rid="$(echo "$rec" | jq -r '.result[0].id // empty')"
+            if [ -n "$rid" ]; then
+              cur_content="$(echo "$rec" | jq -r '.result[0].content')"
+              cur_proxied="$(echo "$rec" | jq -r '.result[0].proxied')"
+              if [ "$cur_content" != "$TARGET" ] || [ "$cur_proxied" != "true" ]; then
+                echo "Updating ${label} -> ${TARGET} (proxied=true)"
+                curl -sS -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${rid}" \
+                  -H "Content-Type: application/json" \
+                  -H "X-Auth-Email: ${CF_EMAIL}" \
+                  -H "X-Auth-Key: ${CF_KEY}" \
+                  --data-binary "$(jq -c --arg name "$label" --arg content "$TARGET" -n '{type:"CNAME",name:$name,content:$content,ttl:1,proxied:true}')" \
+                  | jq -e '.success' >/dev/null || { echo "ERROR: update failed for $label"; exit 1; }
+              else
+                echo "OK (unchanged): ${label}"
+              fi
+            else
+              echo "Creating ${label} -> ${TARGET} (proxied=true)"
+              curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+                -H "Content-Type: application/json" \
+                -H "X-Auth-Email: ${CF_EMAIL}" \
+                -H "X-Auth-Key: ${CF_KEY}" \
+                --data-binary "$(jq -c --arg name "$label" --arg content "$TARGET" -n '{type:"CNAME",name:$name,content:$content,ttl:1,proxied:true}')" \
+                | jq -e '.success' >/dev/null || { echo "ERROR: create failed for $label"; exit 1; }
+            fi
+          }
+
+          # Iterate label list
+          for label in $(echo "$ALL_LABELS" | jq -r '.[]'); do
+            create_or_update "$label"
+          done
+
+          echo "DNS sync complete."
+
+  deployment_summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [update_cloudflare_dns_records]
     steps:
       - name: Summary
         run: |
