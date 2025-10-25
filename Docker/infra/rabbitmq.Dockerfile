@@ -10,18 +10,18 @@ ENV RABBITMQ_DEFAULT_PASS=$RABBITMQ_PASSWORD
 # Use root to set up data dir and a tiny runtime fix script
 USER root
 
-# Ensure data dir exists and is owned by rabbitmq (UID/GID 999 in the official image)
-RUN mkdir -p /var/lib/rabbitmq && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
 
-# Small shim: if a cookie already exists (e.g., from a mounted volume), fix owner/perms
-RUN printf '#!/bin/sh\n'\
-'COOKIE="/var/lib/rabbitmq/.erlang.cookie"\n'\
-'if [ -f "$COOKIE" ]; then\n'\
-'  chown rabbitmq:rabbitmq "$COOKIE" || true\n'\
-'  chmod 400 "$COOKIE" || true\n'\
-'fi\n'\
-'exec "$@"\n' > /usr/local/bin/fix-cookie && \
-    chmod +x /usr/local/bin/fix-cookie
+# Ensure data dir exists, is owned by rabbitmq, and create the fix-cookie shim in one RUN
+RUN mkdir -p /var/lib/rabbitmq \
+  && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq \
+  && printf '#!/bin/sh\n'\
+  'COOKIE="/var/lib/rabbitmq/.erlang.cookie"\n'\
+  'if [ -f "$COOKIE" ]; then\n'\
+  '  chown rabbitmq:rabbitmq "$COOKIE" || true\n'\
+  '  chmod 400 "$COOKIE" || true\n'\
+  'fi\n'\
+  'exec "$@"\n' > /usr/local/bin/fix-cookie \
+  && chmod +x /usr/local/bin/fix-cookie
 
 # Back to the non-root user used by the official image
 USER rabbitmq

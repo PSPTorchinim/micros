@@ -55,16 +55,13 @@ RUN apk add --no-cache --virtual .build-deps \
 # ---- Copy app code ----
 COPY CMS/ ./
 
-# ---- Build Strapi admin (needs only runtime deps now) ----
-RUN npm run build
 
-# ---- Make entrypoint script executable ----
-RUN chmod +x docker-entrypoint.sh
-
-# ---- Drop privileges ----
-RUN addgroup -g 1001 -S strapi \
- && adduser -S strapi -u 1001 \
- && chown -R strapi:strapi /app
+# ---- Build Strapi admin, make entrypoint executable, and drop privileges in one RUN ----
+RUN npm run build \
+  && chmod +x docker-entrypoint.sh \
+  && addgroup -g 1001 -S strapi \
+  && adduser -S strapi -u 1001 \
+  && chown -R strapi:strapi /app
 USER strapi
 
 # Health check – use custom health endpoint with longer grace period
