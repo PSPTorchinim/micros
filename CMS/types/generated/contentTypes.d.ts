@@ -489,11 +489,42 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     Slug: Schema.Attribute.String;
     subpages: Schema.Attribute.Relation<'manyToMany', 'api::page.page'>;
+    template: Schema.Attribute.Relation<'oneToOne', 'api::template.template'>;
     Title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Visible: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+  };
+}
+
+export interface ApiTemplateTemplate extends Struct.CollectionTypeSchema {
+  collectionName: 'templates';
+  info: {
+    displayName: 'Template';
+    pluralName: 'templates';
+    singularName: 'template';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::template.template'
+    > &
+      Schema.Attribute.Private;
+    Name: Schema.Attribute.String;
+    page: Schema.Attribute.Relation<'oneToOne', 'api::page.page'>;
+    publishedAt: Schema.Attribute.DateTime;
+    TemplateType: Schema.Attribute.Enumeration<['Standard']>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1009,6 +1040,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::configuration.configuration': ApiConfigurationConfiguration;
       'api::page.page': ApiPagePage;
+      'api::template.template': ApiTemplateTemplate;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
