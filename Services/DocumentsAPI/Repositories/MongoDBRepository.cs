@@ -4,7 +4,17 @@ using Shared.Data.Exceptions;
 
 namespace DocumentsAPI.Repositories
 {
-    public class MongoDBRepository<T>
+    public interface IMongoDBRepository<T>
+    {
+        Task<bool> Add(T entity);
+        Task<IEnumerable<T>> Get();
+        Task<IEnumerable<T>> Get(Func<T, bool> pred);
+        Task<int> Count();
+        Task<int> Count(Func<T, bool> pred);
+        Task<bool> Empty();
+    }
+
+    public class MongoDBRepository<T> : IMongoDBRepository<T>
     {
 
         public readonly IMongoCollection<T> Collection;

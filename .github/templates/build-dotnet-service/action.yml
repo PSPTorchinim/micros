@@ -42,5 +42,5 @@ runs:
       shell: bash
 
     - name: Run Unit Tests (if present)
-      run: dotnet test "Tests/${{ inputs.service }}.Tests" --no-build --collect:"XPlat Code Coverage"
+      run: dotnet test "Tests/${{ inputs.service }}.Tests" --collect:"XPlat Code Coverage"
       shell: bash

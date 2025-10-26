@@ -16,10 +16,10 @@ namespace DocumentsAPI.Services
 
     public class DocumentTemplatesService : BaseService<IDocumentTemplatesService>, IDocumentTemplatesService
     {
-        private readonly DocumentTemplatesRepository _documentTemplatesRepository;
+        private readonly IDocumentTemplatesRepository _documentTemplatesRepository;
         public DocumentTemplatesService(ILogger<IDocumentTemplatesService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, RabbitMQProducerService rabbitMQProducerService, IServiceProvider serviceProvider) : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
-            _documentTemplatesRepository = serviceProvider.GetRequiredService<DocumentTemplatesRepository>();
+            _documentTemplatesRepository = serviceProvider.GetRequiredService<IDocumentTemplatesRepository>();
         }
 
         public async Task<bool> Add(DocumentTemplate documentTemplate)
