@@ -8,7 +8,7 @@ namespace DocumentsAPI.Services
 {
     public interface IDocumentsService : IService
     {
-        Task<List<Document>> Get();
+        Task<List<Document>?> Get();
     }
 
     public class DocumentsService : BaseService<IDocumentsService>, IDocumentsService
@@ -19,9 +19,10 @@ namespace DocumentsAPI.Services
             _documentsRepository = serviceProvider.GetRequiredService<IDocumentsRepository>();
         }
 
-        public Task<List<Document>> Get()
+        public async Task<List<Document>?> Get()
         {
-            return null;
+            var result = await _documentsRepository.Get();
+            return result == null ? null : result.ToList();
         }
     }
 }
