@@ -64,5 +64,40 @@ namespace CompanyAPI.Tests
             // Assert
             Assert.False(result);
         }
+
+        [Fact]
+        public async Task Get_WhenRepositoryThrowsException_ThrowsDefaultError()
+        {
+            // Arrange
+            _brandsRepositoryMock.Setup(r => r.Get()).ThrowsAsync(new Exception("DB error"));
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<Exception>(() => _brandsService.Get());
+            Assert.Equal("DEFAULT_ERROR", ex.Message);
+        }
+
+        [Fact]
+        public async Task RegisterBrand_WhenExceptionThrown_ReturnsFalse()
+        {
+            // Arrange
+            var dto = new RegisterBrandDTO();
+            _brandsRepositoryMock.Setup(r => r.Add(It.IsAny<Brand>())).ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _brandsService.RegisterBrand(dto);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task RegisterBrand_WithNullDto_ReturnsFalse()
+        {
+            // Act
+            var result = await _brandsService.RegisterBrand(null!);
+
+            // Assert
+            Assert.False(result);
+        }
     }
 }
