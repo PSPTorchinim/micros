@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page } from '../models/strapi/apiMap';
+import { Page } from '../models/strapi/strapiMap';
 
 interface PageComponentProps {
   page: Page;

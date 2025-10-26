@@ -15,7 +15,6 @@ class StrapiAPI {
   async fetchRootPages(): Promise<Page[]> {
     // Fetch pages that are published and do not have Parents (capital P, plural)
     const response = await this.api.page.getPages({
-      populate: 'subpages',
       filters: {
         publishedAt: { $notNull: true },
         Parents: { id: { $null: true } },
@@ -32,9 +31,19 @@ class StrapiAPI {
   async fetchPageByName(name: string): Promise<Page | undefined> {
     const response = await this.api.page.getPages({
       filters: { Title: { $eq: name } },
-      populate: 'subpages',
     });
     return response.data?.data?.[0];
+  }
+
+  async fetchPagesByParentId(parentId: number | string): Promise<Page[]> {
+    // Fetch pages where Parents contains the given parentId
+    const response = await this.api.page.getPages({
+      filters: {
+        Parents: { id: { $eq: parentId } },
+        publishedAt: { $notNull: true },
+      },
+    });
+    return response.data?.data || [];
   }
 }
 
