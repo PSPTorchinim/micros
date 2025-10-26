@@ -378,7 +378,7 @@ jobs:
           esac
 
   update_cloudflare_tunnel:
-    name: Update Cloudflare Tunnel (service-based hostnames)
+    name: Update Cloudflare Tunnel (merge dynamic with current static)
     runs-on: ubuntu-latest
     needs:
       [
@@ -386,8 +386,10 @@ jobs:
         generate_and_upload_truenas_compose_file,
         verify_app_started,
       ]
+    outputs:
+      applied_ingress: ${{ steps.cf_update.outputs.applied_ingress }}
     steps:
-      - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN)
+      - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN & pull static from CF)
         id: cf_update
         run: |
           set -euo pipefail
@@ -399,45 +401,7 @@ jobs:
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
           HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP || '192.168.1.17' }}"
-
-          # Try to use vars.BASE_DOMAIN. If empty, auto-calc from tunnel config or zones.
           BASE_DOMAIN="${{ vars.BASE_DOMAIN || '' }}"
-
-          get_last_two_labels() {
-            # prints last two labels (naive, fine for normal SLD.TLD like example.com)
-            awk -F. '{ if (NF>=2) print $(NF-1)"."$NF }'
-          }
-
-          if [ -z "$BASE_DOMAIN" ]; then
-            echo "BASE_DOMAIN not provided; attempting to derive from Tunnel config…"
-            cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}")"
-
-            # Extract hostnames from current ingress (if any) and pick the most frequent base
-            derived="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' 2>/dev/null \
-              | get_last_two_labels \
-              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
-
-            if [ -n "${derived:-}" ]; then
-              BASE_DOMAIN="$derived"
-              echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
-            else
-              echo "No hostnames in tunnel; falling back to first active zone…"
-              zones="$(curl -sS -G "https://api.cloudflare.com/client/v4/zones" \
-                --data-urlencode "status=active" --data-urlencode "page=1" --data-urlencode "per_page=50" \
-                -H "X-Auth-Email: ${CF_EMAIL}" \
-                -H "X-Auth-Key: ${CF_KEY}")"
-              BASE_DOMAIN="$(echo "$zones" | jq -r '.result[]?.name' | head -n1)"
-              if [ -z "${BASE_DOMAIN:-}" ] || [ "${BASE_DOMAIN}" = "null" ]; then
-                echo "ERROR: Could not derive BASE_DOMAIN from zones."
-                exit 1
-              fi
-              echo "Derived BASE_DOMAIN from zones: $BASE_DOMAIN"
-            fi
-          else
-            echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
-          fi
 
           # External port -> "service:containerPort" map from generator
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
@@ -445,47 +409,65 @@ jobs:
             echo "WARN: EXTERNAL_MAP invalid/empty; using {}"
             EXTERNAL_MAP="{}"
           fi
-          echo "External map (normalized):"
-          echo "$EXTERNAL_MAP" | jq .
 
-          # Build dynamic ingress: dj-panel-{env}-{service}.{BASE_DOMAIN} -> http://$HOST_LAN_IP:$port
-          build_dynamic_ingress() {
-            echo "$EXTERNAL_MAP" | jq -r --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
-              to_entries
-              | map({
-                  hostname:
-                    ("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base),
-                  service:
-                    ("http://" + $ip + ":" + .key)
-                })
-            '
-          }
+          # Grab current CF tunnel configuration (to discover BASE_DOMAIN and reuse existing "static" records)
+          cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}")"
+          [ "$(echo "$cfg" | jq -r '.success')" = "true" ] || { echo "$cfg" | jq .; exit 1; }
 
-          DYN=$(build_dynamic_ingress)
-          if ! echo "$DYN" | jq -e type >/dev/null 2>&1; then
-            echo "WARN: dynamic ingress build failed; using empty array"
-            DYN="[]"
+          # Derive BASE_DOMAIN if not provided (pick most common base from current ingress)
+          if [ -z "$BASE_DOMAIN" ]; then
+            BASE_DOMAIN="$(echo "$cfg" \
+              | jq -r '.result.config.ingress[]?.hostname // empty' \
+              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
+              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
+            [ -n "$BASE_DOMAIN" ] || { echo "ERROR: Could not derive BASE_DOMAIN"; exit 1; }
+            echo "Derived BASE_DOMAIN: $BASE_DOMAIN"
+          else
+            echo "Using BASE_DOMAIN: $BASE_DOMAIN"
           fi
 
-          # Static entries you already have on the tunnel (edit to taste)
-          STATIC=$(jq -c --arg ip "$HOST_LAN_IP" --arg base "$BASE_DOMAIN" -n '[
-            {"hostname":("truenas."+$base),"service":("http://"+$ip)},
-            {"hostname":("cas."+$base),"service":("http://"+$ip+":50000")},
-            {"hostname":("home."+$base),"service":("http://"+$ip+":50001")},
-            {"hostname":("nextcloud."+$base),"service":("http://"+$ip+":50002")},
-            {"hostname":("grocy."+$base),"service":("http://"+$ip+":50003")},
-            {"hostname":("mqtt."+$base),"service":("http://"+$ip+":50004")},
-            {"hostname":("mealie."+$base),"service":("http://"+$ip+":50005")},
-            {"hostname":("esp."+$base),"service":("http://"+$ip+":50006")},
-            {"hostname":("n8n."+$base),"service":("http://"+$ip+":50007")}
-          ]')
+          # Extract current "static" ingress from CF (anything NOT starting with dj-panel-)
+          # Keep service as-is so you don't override hand-crafted LAN routes.
+          CURRENT_STATIC="$(echo "$cfg" | jq -c --arg env "$ENV_SLUG" '
+            .result.config.ingress
+            | map(select(.hostname? != null))
+            | map(select(.hostname | test("^dj-panel-" + $env + "-"; "i") | not))
+          ')"
+          echo "Current static entries from CF:"
+          echo "$CURRENT_STATIC" | jq .
 
-          # Merge static + dynamic + final 404
-          INGRESS=$(jq -c --argjson a "$STATIC" --argjson b "$DYN" -n '$a + $b + [{"service":"http_status:404"}]')
-          echo "Proposed ingress (service-based hostnames):"
-          echo "$INGRESS" | jq .
+          # Build dynamic entries from EXTERNAL_MAP: dj-panel-{env}-{service}.{base} -> http://$HOST_LAN_IP:$port
+          DYNAMIC="$(echo "$EXTERNAL_MAP" \
+            | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
+                to_entries
+                | map({
+                    hostname: ("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base),
+                    service:  ("http://" + $ip + ":" + .key)
+                  })
+              ')"
+          echo "Dynamic entries (to add/override):"
+          echo "$DYNAMIC" | jq .
 
-          BODY=$(jq -c --argjson ing "$INGRESS" -n '{config:{ingress:$ing, "warp-routing":{"enabled":true}}}')
+          # Merge: current static + dynamic, then de-dup by hostname (dynamic wins), then add final 404
+          MERGED=$(jq -c --argjson static "$CURRENT_STATIC" --argjson dyn "$DYNAMIC" -n '
+            # combine then reduce into a hostname->entry map (dynamic last so it wins)
+            ($static + $dyn)
+            | reduce .[] as $i ({}; .[$i.hostname] = $i)
+            | to_entries
+            | map(.value)
+            | . + [{"service":"http_status:404"}]
+          ')
+          echo "Proposed merged ingress:"
+          echo "$MERGED" | jq .
+
+          # Expose what we applied for the DNS sync job
+          echo "applied_ingress<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$MERGED" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          BODY=$(jq -c --argjson ing "$MERGED" -n '{config:{ingress:$ing, "warp-routing":{"enabled":true}}}')
           echo "$BODY" > body.json
 
           echo "PUT to Cloudflare Tunnel configuration…"
