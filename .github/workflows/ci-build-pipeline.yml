@@ -166,6 +166,10 @@ jobs:
       API_GATEWAY: ${{ vars.API_GATEWAY }}
       API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
       API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+      CMS_HOST: ${{ vars.CMS_HOST }}
+      CMS_PORT: ${{ vars.CMS_PORT }}
+      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
+      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -184,8 +188,12 @@ jobs:
           build-args: |
             MICROFRONTEND_NAME=${{ matrix.image.name }}
             API_GATEWAY=${{ env.API_GATEWAY }}
-            API_SECURE_KEY=${{ env.API_SECURE_KEY }}
-            API_JWT_TOKEN=${{ env.API_JWT_TOKEN }}
+            SECURE_KEY=${{ env.API_SECURE_KEY }}
+            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
+            CMS_HOST=${{ env.CMS_HOST }}
+            CMS_PORT=${{ env.CMS_PORT }}
+            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
+            CMS_API_PATH=${{ env.CMS_API_PATH }}
 
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
