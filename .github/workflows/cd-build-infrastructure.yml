@@ -2,6 +2,10 @@ name: Build TrueNAS Infrastructure
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types:
+      - completed
 
 jobs:
   determine_environment:
