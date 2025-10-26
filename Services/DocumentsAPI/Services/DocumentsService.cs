@@ -13,10 +13,10 @@ namespace DocumentsAPI.Services
 
     public class DocumentsService : BaseService<IDocumentsService>, IDocumentsService
     {
-        private readonly DocumentsRepository _documentsRepository;
+        private readonly IDocumentsRepository _documentsRepository;
         public DocumentsService(ILogger<IDocumentsService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, RabbitMQProducerService rabbitMQProducerService, IServiceProvider serviceProvider) : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
-            _documentsRepository = serviceProvider.GetRequiredService<DocumentsRepository>();
+            _documentsRepository = serviceProvider.GetRequiredService<IDocumentsRepository>();
         }
 
         public Task<List<Document>> Get()
