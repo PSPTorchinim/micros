@@ -6,8 +6,11 @@ import { PageComponent } from './PageComponent';
 
 function buildPath(page: Page, parentPath = ''): string {
   const slug = page.Slug || page.Title || page.id;
-  const path = `${parentPath}/${slug}`.replace(/\\/g, '/');
-  return path;
+  // Remove trailing slash from parentPath and leading slash from slug
+  const cleanParent = parentPath.replace(/\/+$/, '');
+  const cleanSlug = String(slug).replace(/^\/+/, '');
+  const path = `${cleanParent}/${cleanSlug}`.replace(/\\/g, '/');
+  return path.replace(/\/+/g, '/');
 }
 
 type NavigationItem = {
@@ -58,10 +61,13 @@ function buildRoutesAndNav(
         {childrenRoutes}
       </Route>,
     );
+    // Ensure no double slashes in nav url
+    let url = path.startsWith('/') ? path : '/' + path;
+    url = url.replace(/\/+/g, '/');
     nav.push({
       id: page.id ?? 0,
       text: page.Title || String(page.id),
-      url: path.includes('/') ? path : '/' + path,
+      url,
       ...(childrenNav.length ? { children: childrenNav } : {}),
       NavigationOrder: page.NavigationOrder ?? 0,
     });
