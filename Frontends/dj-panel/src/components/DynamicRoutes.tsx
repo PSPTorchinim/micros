@@ -46,7 +46,7 @@ function buildRoutesAndNav(
       routes.push(
         <Route key={path} path={path} element={<Outlet />}>
           {/* Index route for parent content */}
-          <Route index element={<PageComponent page={page} />} />
+          <Route index element={<PageComponent pageId={page.id} />} />
           {childrenRoutes}
         </Route>,
       );
@@ -56,7 +56,7 @@ function buildRoutesAndNav(
         <Route
           key={path}
           path={path}
-          element={<PageComponent page={page} />}
+          element={<PageComponent pageId={page.id} />}
         />,
       );
     }

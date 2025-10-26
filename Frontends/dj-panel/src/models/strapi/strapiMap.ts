@@ -194,6 +194,9 @@ export interface PageRequest {
     configuration?: number | string;
     Menu?: PageRequestMenuEnum;
     NavigationOrder?: number;
+    NavigationAction?: PageRequestNavigationActionEnum;
+    /** @example "string or id" */
+    template?: number | string;
     locale?: string;
     localizations?: (number | string)[];
   };
@@ -350,6 +353,36 @@ export interface Page {
     };
     Menu?: PageMenuEnum;
     NavigationOrder?: number;
+    NavigationAction?: PageNavigationActionEnum;
+    template?: {
+      id?: number;
+      documentId?: string;
+      Name?: string;
+      TemplateType?: PageTemplateTypeEnum;
+      page?: {
+        id?: number;
+        documentId?: string;
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -380,6 +413,11 @@ export interface Page {
   };
   Menu?: PageMenuEnum1;
   NavigationOrder?: number;
+  NavigationAction?: PageNavigationActionEnum1;
+  template?: {
+    id?: number;
+    documentId?: string;
+  };
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -403,6 +441,243 @@ export interface Page {
 
 export interface PageResponse {
   data?: Page;
+  meta?: object;
+}
+
+export interface TemplateRequest {
+  data: {
+    Name?: string;
+    TemplateType?: TemplateRequestTemplateTypeEnum;
+    /** @example "string or id" */
+    page?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface TemplateListResponse {
+  data?: Template[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Template {
+  id?: number;
+  documentId?: string;
+  Name?: string;
+  TemplateType?: TemplateTemplateTypeEnum;
+  page?: {
+    id?: number;
+    documentId?: string;
+    Title?: string;
+    Slug?: string;
+    Visible?: boolean;
+    subpages?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    Parents?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    configuration?: {
+      id?: number;
+      documentId?: string;
+      Title?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+        firstname?: string;
+        lastname?: string;
+        username?: string;
+        /** @format email */
+        email?: string;
+        resetPasswordToken?: string;
+        registrationToken?: string;
+        isActive?: boolean;
+        roles?: {
+          id?: number;
+          documentId?: string;
+          name?: string;
+          code?: string;
+          description?: string;
+          users?: {
+            id?: number;
+            documentId?: string;
+          }[];
+          permissions?: {
+            id?: number;
+            documentId?: string;
+            action?: string;
+            actionParameters?: any;
+            subject?: string;
+            properties?: any;
+            conditions?: any;
+            role?: {
+              id?: number;
+              documentId?: string;
+            };
+            /** @format date-time */
+            createdAt?: string;
+            /** @format date-time */
+            updatedAt?: string;
+            /** @format date-time */
+            publishedAt?: string;
+            createdBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            updatedBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            locale?: string;
+            localizations?: {
+              id?: number;
+              documentId?: string;
+            }[];
+          }[];
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        }[];
+        blocked?: boolean;
+        preferedLanguage?: string;
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    Menu?: TemplateMenuEnum;
+    NavigationOrder?: number;
+    NavigationAction?: TemplateNavigationActionEnum;
+    template?: {
+      id?: number;
+      documentId?: string;
+      Name?: string;
+      TemplateType?: TemplateTemplateTypeEnum1;
+      page?: {
+        id?: number;
+        documentId?: string;
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface TemplateResponse {
+  data?: Template;
   meta?: object;
 }
 
@@ -495,14 +770,55 @@ export enum PageRequestMenuEnum {
   Login = "Login",
 }
 
+export enum PageRequestNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
 export enum PageMenuEnum {
   Main = "Main",
   Login = "Login",
 }
 
+export enum PageNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum PageTemplateTypeEnum {
+  Standard = "Standard",
+}
+
 export enum PageMenuEnum1 {
   Main = "Main",
   Login = "Login",
+}
+
+export enum PageNavigationActionEnum1 {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum TemplateRequestTemplateTypeEnum {
+  Standard = "Standard",
+}
+
+export enum TemplateTemplateTypeEnum {
+  Standard = "Standard",
+}
+
+export enum TemplateMenuEnum {
+  Main = "Main",
+  Login = "Login",
+}
+
+export enum TemplateNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum TemplateTemplateTypeEnum1 {
+  Standard = "Standard",
 }
 
 export enum OkEnum {
@@ -945,6 +1261,125 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  template = {
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name GetTemplates
+     * @request GET:/templates
+     * @secure
+     */
+    getTemplates: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<TemplateListResponse, Error>({
+        path: `/templates`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name PostTemplates
+     * @request POST:/templates
+     * @secure
+     */
+    postTemplates: (data: TemplateRequest, params: RequestParams = {}) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name GetTemplatesId
+     * @request GET:/templates/{id}
+     * @secure
+     */
+    getTemplatesId: (id: number, params: RequestParams = {}) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name PutTemplatesId
+     * @request PUT:/templates/{id}
+     * @secure
+     */
+    putTemplatesId: (
+      id: number,
+      data: TemplateRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<TemplateResponse, Error>({
+        path: `/templates/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Template
+     * @name DeleteTemplatesId
+     * @request DELETE:/templates/{id}
+     * @secure
+     */
+    deleteTemplatesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/templates/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",

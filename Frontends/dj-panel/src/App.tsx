@@ -13,7 +13,7 @@ import { AuthProvider } from './providers/auth-provider';
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
 
-import { useDynamicRoutes } from './pages/DynamicRoutes';
+import { useDynamicRoutes } from './components/DynamicRoutes';
 
 export default function App() {
   const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
