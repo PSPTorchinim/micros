@@ -7,6 +7,10 @@ outputs:
   compose_file_name:
     description: The complete compose file name with timestamp
     value: ${{ steps.timestamp_set.outputs.compose_file_name }}
+inputs:
+  env_slug:
+    description: The environment slug to include in the compose file name
+    required: true
 runs:
   using: composite
   steps:
@@ -18,4 +22,4 @@ runs:
         TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
 
         echo "compose_timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
-        echo "compose_file_name=dj-panel-composer-$TIMESTAMP.yml" >> "$GITHUB_OUTPUT"
+        echo "compose_file_name=dj-panel-${{ inputs.env_slug }}-$TIMESTAMP.yml" >> "$GITHUB_OUTPUT"
