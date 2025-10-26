@@ -10,6 +10,8 @@ ENV POSTGRES_DB=$DATABASE_NAME_POSTGRES
 ENV POSTGRES_USER=$DATABASE_USERNAME_POSTGRES
 ENV POSTGRES_PASSWORD=$DATABASE_PASSWORD_POSTGRES
 
+ENV PGDATA=/var/lib/postgresql/data
+
 # A more patient healthcheck:
 # - give initdb + first start more time (ZFS/slow disk/TrueNAS)
 # - use explicit host, user and db; pg_isready doesn't need a password
