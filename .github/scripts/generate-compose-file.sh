@@ -285,11 +285,23 @@ while IFS= read -r service; do
     log_warn "No dockerfile for $service; image not set"
   fi
 
+
   restart=$(yq eval ".services.${service}.restart" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
   [[ "$restart" != "null" && -n "$restart" ]] && echo "    restart: $restart" >> "$OUTPUT_FILE"
 
-  pull_policy=$(yq eval ".services.${service}.pull_policy" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-  [[ "$pull_policy" != "null" && -n "$pull_policy" ]] && echo "    pull_policy: $pull_policy" >> "$OUTPUT_FILE"
+  # Always copy pull_policy if present (even if null or empty)
+  has_pull_policy=$(yq eval ".services.${service} | has(\"pull_policy\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  if [[ "$has_pull_policy" == "true" ]]; then
+    pull_policy=$(yq eval ".services.${service}.pull_policy" "$SOURCE_COMPOSE" 2>/dev/null)
+    echo "    pull_policy: $pull_policy" >> "$OUTPUT_FILE"
+  fi
+
+  # Always copy healthcheck if present
+  has_healthcheck=$(yq eval ".services.${service} | has(\"healthcheck\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  if [[ "$has_healthcheck" == "true" ]]; then
+    echo "    healthcheck:" >> "$OUTPUT_FILE"
+    yq eval ".services.${service}.healthcheck" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
+  fi
 
   port_function=$(get_port_function_for_service "$service" "$dockerfile")
   convert_ports "$service" "$port_function"
