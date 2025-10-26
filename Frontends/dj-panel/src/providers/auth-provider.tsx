@@ -6,11 +6,8 @@ import React, {
 } from 'react';
 import { AuthContext } from '../context/auth-context';
 import { useNavigate } from 'react-router-dom';
-import {
-  GetUserDTO,
-  microservicesClient,
-  LoginResponseDTO,
-} from '../models/api';
+import { microservicesClient } from '../models/api';
+import { GetUserDTO, LoginResponseDTO } from '../models/api/identity/apiMap';
 
 type AuthProviderProps = PropsWithChildren;
 
