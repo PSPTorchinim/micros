@@ -22,6 +22,7 @@ jobs:
       - name: Compute env slug
         id: slug
         run: |
+          set -euo pipefail
           env_raw='${{ steps.set_env.outputs.current_env }}'
           env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
           echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
@@ -77,7 +78,6 @@ jobs:
             APP="dj-panel-$(printf '%s' "${{ needs.determine_environment.outputs.env_slug }}")"
 
             echo "Stopping app: $APP"
-            # Try midclt app.stop, then scale->0
             if midclt call app.stop "$APP" 2>/dev/null; then
               echo "Stopped via app.stop"
             else
@@ -89,7 +89,6 @@ jobs:
               fi
             fi
 
-            # Wait for STOPPED-ish state
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
               j="$(midclt call app.query '[["name","=","'"$APP"'"]]' 2>/dev/null || echo '[]')"
@@ -170,7 +169,7 @@ jobs:
           start_port: 40000
           end_port: 50000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
-          tunnel_ports: "" # <-- Do not use Cloudflare ports
+          tunnel_ports: ""
 
       - name: Calculate unused external ports (50000-59999)
         uses: ./.github/templates/calculate-unused-ports
@@ -179,7 +178,7 @@ jobs:
           start_port: 50000
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
-          tunnel_ports: "" # <-- Do not use Cloudflare ports
+          tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
     name: Generate & Upload New Compose
@@ -202,6 +201,7 @@ jobs:
 
       - name: Install yq on runner
         run: |
+          set -euo pipefail
           sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
@@ -222,8 +222,10 @@ jobs:
             "${{ github.event.repository.name }}" \
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
-          echo "compose_file=$output_file" >> "$GITHUB_OUTPUT"
-          echo "external_ports_map=$external_map_json" >> "$GITHUB_OUTPUT"
+          {
+            echo "compose_file=$output_file"
+            echo "external_ports_map=$external_map_json"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Package compose for transfer (base64)
         id: package_compose
@@ -232,8 +234,10 @@ jobs:
           COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
           test -f "$COMPOSE_FILE" || { echo "Compose not found: $COMPOSE_FILE" >&2; exit 1; }
           B64=$(base64 -w0 "$COMPOSE_FILE")
-          echo "compose_name=$COMPOSE_FILE" >> "$GITHUB_OUTPUT"
-          echo "compose_b64=$B64" >> "$GITHUB_OUTPUT"
+          {
+            echo "compose_name=$COMPOSE_FILE"
+            echo "compose_b64=$B64"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Upload compose into TrueNAS dataset
         id: upload_compose
@@ -248,9 +252,9 @@ jobs:
             #!/bin/sh
             set -euo pipefail
             POOL="Files"
-            ENV_DIR="${{ needs.determine_environment.outputs.current_env }}"
-            COMPOSE_NAME="${{ steps.package_compose.outputs.compose_name }}"
-            COMPOSE_B64="${{ steps.package_compose.outputs.compose_b64 }}"
+            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
+            COMPOSE_NAME='${{ steps.package_compose.outputs.compose_name }}'
+            COMPOSE_B64='${{ steps.package_compose.outputs.compose_b64 }}'
             TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
             DST_DIR="/mnt/$POOL/$TARGET_REL"
             mkdir -p "$DST_DIR"
@@ -298,8 +302,9 @@ jobs:
             printf 'include:\n  - %s\n' "$new" > "$agg"
             echo "Updated aggregator -> $agg includes $new"
 
-            # Keep only 3 newest generated compose files
-            ls -1 "${base}/dj-panel-${env_slug}-"*.yml 2>/dev/null | sort -r | awk 'NR>3' | xargs -r rm -f || true
+            # Keep only 3 newest generated compose files for this env
+            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
+              | sort -r | awk 'NR>3' | xargs -r rm -f || true
 
             echo "Starting app: $app"
             if midclt call app.start "$app" 2>/dev/null; then
@@ -378,7 +383,7 @@ jobs:
           esac
 
   update_cloudflare_tunnel:
-    name: Update Cloudflare Tunnel (merge dynamic with current static)
+    name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
     needs:
       [
@@ -386,10 +391,8 @@ jobs:
         generate_and_upload_truenas_compose_file,
         verify_app_started,
       ]
-    outputs:
-      applied_ingress: ${{ steps.cf_update.outputs.applied_ingress }}
     steps:
-      - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN & pull static from CF)
+      - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN; preserve other envs)
         id: cf_update
         run: |
           set -euo pipefail
@@ -400,74 +403,64 @@ jobs:
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
-          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP || '192.168.1.17' }}"
-          BASE_DOMAIN="${{ vars.BASE_DOMAIN || '' }}"
 
-          # External port -> "service:containerPort" map from generator
+          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
+          HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
+
+          BASE_DOMAIN="${{ vars.BASE_DOMAIN }}"
+          BASE_DOMAIN="${BASE_DOMAIN:-}"
+
+          # Derive BASE_DOMAIN if empty
+          if [ -z "$BASE_DOMAIN" ]; then
+            echo "BASE_DOMAIN not provided; deriving…"
+            cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}")"
+            BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
+              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
+              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
+            if [ -z "$BASE_DOMAIN" ]; then
+              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1
+            fi
+            echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
+          else
+            echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
+          fi
+
+          # External port -> "service:containerPort" from generator
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
           if ! echo "$EXTERNAL_MAP" | jq -e . >/dev/null 2>&1; then
             echo "WARN: EXTERNAL_MAP invalid/empty; using {}"
             EXTERNAL_MAP="{}"
           fi
+          echo "External map (normalized):"
+          echo "$EXTERNAL_MAP" | jq .
 
-          # Grab current CF tunnel configuration (to discover BASE_DOMAIN and reuse existing "static" records)
-          cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
+          # Build env-scoped dynamic ingress
+          DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
+            to_entries
+            | map({
+                hostname: ("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base),
+                service: ("http://" + $ip + ":" + .key)
+              })
+          ')
+
+          # Fetch current config to preserve non-env hostnames
+          CURRENT="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}")"
-          [ "$(echo "$cfg" | jq -r '.success')" = "true" ] || { echo "$cfg" | jq .; exit 1; }
-
-          # Derive BASE_DOMAIN if not provided (pick most common base from current ingress)
-          if [ -z "$BASE_DOMAIN" ]; then
-            BASE_DOMAIN="$(echo "$cfg" \
-              | jq -r '.result.config.ingress[]?.hostname // empty' \
-              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
-              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
-            [ -n "$BASE_DOMAIN" ] || { echo "ERROR: Could not derive BASE_DOMAIN"; exit 1; }
-            echo "Derived BASE_DOMAIN: $BASE_DOMAIN"
-          else
-            echo "Using BASE_DOMAIN: $BASE_DOMAIN"
-          fi
-
-          # Extract current "static" ingress from CF (anything NOT starting with dj-panel-)
-          # Keep service as-is so you don't override hand-crafted LAN routes.
-          CURRENT_STATIC="$(echo "$cfg" | jq -c --arg env "$ENV_SLUG" '
+          KEEP=$(echo "$CURRENT" | jq -c --arg env "$ENV_SLUG" '
             .result.config.ingress
             | map(select(.hostname? != null))
             | map(select(.hostname | test("^dj-panel-" + $env + "-"; "i") | not))
-          ')"
-          echo "Current static entries from CF:"
-          echo "$CURRENT_STATIC" | jq .
-
-          # Build dynamic entries from EXTERNAL_MAP: dj-panel-{env}-{service}.{base} -> http://$HOST_LAN_IP:$port
-          DYNAMIC="$(echo "$EXTERNAL_MAP" \
-            | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
-                to_entries
-                | map({
-                    hostname: ("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base),
-                    service:  ("http://" + $ip + ":" + .key)
-                  })
-              ')"
-          echo "Dynamic entries (to add/override):"
-          echo "$DYNAMIC" | jq .
-
-          # Merge: current static + dynamic, then de-dup by hostname (dynamic wins), then add final 404
-          MERGED=$(jq -c --argjson static "$CURRENT_STATIC" --argjson dyn "$DYNAMIC" -n '
-            # combine then reduce into a hostname->entry map (dynamic last so it wins)
-            ($static + $dyn)
-            | reduce .[] as $i ({}; .[$i.hostname] = $i)
-            | to_entries
-            | map(.value)
-            | . + [{"service":"http_status:404"}]
           ')
-          echo "Proposed merged ingress:"
-          echo "$MERGED" | jq .
 
-          # Expose what we applied for the DNS sync job
-          echo "applied_ingress<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$MERGED" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          # Merge KEEP + DYN + 404
+          INGRESS=$(jq -c --argjson keep "$KEEP" --argjson dyn "$DYN" -n '$keep + $dyn + [{"service":"http_status:404"}]')
+          echo "Proposed ingress (service-based, preserving other envs):"
+          echo "$INGRESS" | jq .
 
-          BODY=$(jq -c --argjson ing "$MERGED" -n '{config:{ingress:$ing, "warp-routing":{"enabled":true}}}')
+          BODY=$(jq -c --argjson ing "$INGRESS" -n '{config:{ingress:$ing, "warp-routing":{"enabled":true}}}')
           echo "$BODY" > body.json
 
           echo "PUT to Cloudflare Tunnel configuration…"
@@ -499,7 +492,7 @@ jobs:
         generate_and_upload_truenas_compose_file,
       ]
     steps:
-      - name: Create/Update DNS CNAMEs for ingress hostnames (left-label names)
+      - name: Create/Update DNS CNAMEs for service FQDNs (env-scoped)
         run: |
           set -euo pipefail
 
@@ -508,17 +501,12 @@ jobs:
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           TUNNEL_UUID="${{ secrets.CLOUDFLARE_TUNNEL_UUID }}"
           ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
-          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP || '192.168.1.17' }}"
-          BASE_DOMAIN="${{ vars.BASE_DOMAIN || '' }}"
 
-          # Helper: take fqdn -> left label (strip trailing .BASE_DOMAIN)
-          left_label() {
-            fqdn="$1"; base="$2"
-            case "$fqdn" in
-              *".$base") echo "${fqdn%.$base}";;
-              *) echo "$fqdn";;
-            esac
-          }
+          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
+          HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
+
+          BASE_DOMAIN="${{ vars.BASE_DOMAIN }}"
+          BASE_DOMAIN="${BASE_DOMAIN:-}"
 
           # Derive BASE_DOMAIN if not provided
           if [ -z "$BASE_DOMAIN" ]; then
@@ -526,13 +514,12 @@ jobs:
             cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
               -H "X-Auth-Email: ${CF_EMAIL}" \
               -H "X-Auth-Key: ${CF_KEY}")"
-            # Pick the most common base in ingress hostnames
             BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
               | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
               | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
-            [ -n "$BASE_DOMAIN" ] || {
-              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1;
-            }
+            if [ -z "$BASE_DOMAIN" ]; then
+              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1
+            fi
             echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
           else
             echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
@@ -543,7 +530,10 @@ jobs:
             --data-urlencode "name=${BASE_DOMAIN}" --data-urlencode "status=active" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" | jq -r '.result[0].id')"
-          [ -n "$ZONE_ID" ] && [ "$ZONE_ID" != "null" ] || { echo "ERROR: Zone not found for ${BASE_DOMAIN}"; exit 1; }
+          if [ -z "$ZONE_ID" ] || [ "$ZONE_ID" = "null" ]; then
+            echo "ERROR: Zone not found for ${BASE_DOMAIN}"
+            exit 1
+          fi
 
           # External map from generator
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
@@ -552,31 +542,16 @@ jobs:
             EXTERNAL_MAP="{}"
           fi
 
-          # Static FQDN hostnames (from LAN services you already expose)
-          STATIC_FQDNS=$(jq -c --arg ip "$HOST_LAN_IP" --arg base "$BASE_DOMAIN" -n '[
-            "truenas."+ $base,
-            "cas."+ $base,
-            "home."+ $base,
-            "nextcloud."+ $base,
-            "grocy."+ $base,
-            "mqtt."+ $base,
-            "mealie."+ $base,
-            "esp."+ $base,
-            "n8n."+ $base
-          ]')
-
-          # Dynamic FQDNs from generator map (service-based hostnames)
+          # Build desired env-scoped FQDNs from EXTERNAL_MAP
           DYNAMIC_FQDNS=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" '
             to_entries
             | map("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base)
           ')
-
-          ALL_FQDNS=$(jq -c --argjson a "$STATIC_FQDNS" --argjson b "$DYNAMIC_FQDNS" -n '$a + $b')
-          echo "Desired FQDNs:"
-          echo "$ALL_FQDNS" | jq .
+          echo "Desired env FQDNs:"
+          echo "$DYNAMIC_FQDNS" | jq .
 
           # Convert to left-label names for DNS record "name" field
-          ALL_LABELS=$(echo "$ALL_FQDNS" | jq -c --arg base "$BASE_DOMAIN" '
+          ALL_LABELS=$(echo "$DYNAMIC_FQDNS" | jq -c --arg base "$BASE_DOMAIN" '
             map( sub("\\."+($base|gsub("\\."; "\\."))+"$"; "") )
           ')
           echo "DNS record names (left labels):"
@@ -585,8 +560,7 @@ jobs:
           TARGET="${TUNNEL_UUID}.cfargotunnel.com"
 
           create_or_update() {
-            local label="$1"  # left label (e.g., dj-panel-development-apigateway)
-            # Look up existing CNAME by name within the zone
+            label="$1"
             rec="$(curl -sS -G "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
               --data-urlencode "type=CNAME" \
               --data-urlencode "name=${label}.${BASE_DOMAIN}" \
@@ -598,40 +572,53 @@ jobs:
               cur_proxied="$(echo "$rec" | jq -r '.result[0].proxied')"
               if [ "$cur_content" != "$TARGET" ] || [ "$cur_proxied" != "true" ]; then
                 echo "Updating ${label} -> ${TARGET} (proxied=true)"
-                curl -sS -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${rid}" \
+                if ! curl -sS -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${rid}" \
                   -H "Content-Type: application/json" \
                   -H "X-Auth-Email: ${CF_EMAIL}" \
                   -H "X-Auth-Key: ${CF_KEY}" \
                   --data-binary "$(jq -c --arg name "$label" --arg content "$TARGET" -n '{type:"CNAME",name:$name,content:$content,ttl:1,proxied:true}')" \
-                  | jq -e '.success' >/dev/null || { echo "ERROR: update failed for $label"; exit 1; }
+                  | jq -e '.success' >/dev/null; then
+                  echo "ERROR: update failed for $label"; exit 1
+                fi
               else
                 echo "OK (unchanged): ${label}"
               fi
             else
               echo "Creating ${label} -> ${TARGET} (proxied=true)"
-              curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+              if ! curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
                 -H "Content-Type: application/json" \
                 -H "X-Auth-Email: ${CF_EMAIL}" \
                 -H "X-Auth-Key: ${CF_KEY}" \
                 --data-binary "$(jq -c --arg name "$label" --arg content "$TARGET" -n '{type:"CNAME",name:$name,content:$content,ttl:1,proxied:true}')" \
-                | jq -e '.success' >/dev/null || { echo "ERROR: create failed for $label"; exit 1; }
+                | jq -e '.success' >/dev/null; then
+                echo "ERROR: create failed for $label"; exit 1
+              fi
             fi
           }
 
-          # Iterate label list
           for label in $(echo "$ALL_LABELS" | jq -r '.[]'); do
             create_or_update "$label"
           done
 
-          echo "DNS sync complete."
+          echo "DNS sync (env-scoped) complete."
 
   deployment_summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [update_cloudflare_dns_records]
+    needs:
+      - determine_docker_tag
+      - determine_compose_timestamp
+      - determine_environment
+      - calculate_unused_ports
+      - generate_and_upload_truenas_compose_file
+      - update_aggregator_and_start_app
+      - verify_app_started
+      - update_cloudflare_tunnel
+      - update_cloudflare_dns_records
     steps:
       - name: Summary
         run: |
+          set -euo pipefail
           echo "=== TrueNAS DJ Panel Deployment Summary ==="
           echo "Docker Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
           echo "Latest Tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
