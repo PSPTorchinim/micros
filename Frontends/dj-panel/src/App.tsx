@@ -6,7 +6,6 @@ import { Layout } from './layout';
 import './index.css';
 
 import { data } from './content/homePage';
-import { navigation } from './content/navigation';
 import { footer } from './content/footer';
 import { AuthProvider } from './providers/auth-provider';
 
