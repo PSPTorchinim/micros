@@ -9,52 +9,33 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {
-    "i18n": {
-      "localized": true
-    }
-  },
+  "pluginOptions": {},
   "attributes": {
-    "PageID": {
-      "type": "uid",
-      "targetField": "Name",
-      "required": true
+    "Title": {
+      "type": "string"
     },
-    "Name": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true,
-      "unique": true
+    "Slug": {
+      "type": "string"
     },
-    "URL": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
+    "Visible": {
+      "type": "boolean"
     },
-    "hero_image": {
+    "Subpages": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::page.page",
+      "inversedBy": "Parent"
+    },
+    "Parent": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::page.page",
+      "mappedBy": "Subpages"
+    },
+    "configuration": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "api::hero-image.hero-image"
-    },
-    "subpages": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::page.page",
-      "inversedBy": "pages"
-    },
-    "pages": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::page.page",
-      "mappedBy": "subpages"
+      "target": "api::configuration.configuration"
     }
   }
 }
