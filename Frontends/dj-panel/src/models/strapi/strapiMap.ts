@@ -20,18 +20,16 @@ export interface Error {
   };
 }
 
-export interface ArticleRequest {
+export interface ConfigurationRequest {
   data: {
-    NameID: string;
-    Title: string;
-    Content?: any;
+    Title?: string;
     locale?: string;
     localizations?: (number | string)[];
   };
 }
 
-export interface ArticleListResponse {
-  data?: Article[];
+export interface ConfigurationListResponse {
+  data?: Configuration[];
   meta?: {
     pagination?: {
       page?: number;
@@ -44,12 +42,10 @@ export interface ArticleListResponse {
   };
 }
 
-export interface Article {
+export interface Configuration {
   id?: number;
   documentId?: string;
-  NameID: string;
-  Title: string;
-  Content?: any;
+  Title?: string;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -159,9 +155,7 @@ export interface Article {
   localizations?: {
     id?: number;
     documentId?: string;
-    NameID?: string;
     Title?: string;
-    Content?: any;
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -184,453 +178,22 @@ export interface Article {
   }[];
 }
 
-export interface ArticleResponse {
-  data?: Article;
-  meta?: object;
-}
-
-export interface HeroImageRequest {
-  data: {
-    Name?: string;
-    Type?: HeroImageRequestTypeEnum;
-    MediaSlider?: (number | string)[];
-    MediaSingle?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface HeroImageListResponse {
-  data?: HeroImage[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
-export interface HeroImage {
-  id?: number;
-  documentId?: string;
-  Name?: string;
-  Type?: HeroImageTypeEnum;
-  MediaSlider?: {
-    id?: number;
-    documentId?: string;
-    name?: string;
-    alternativeText?: string;
-    caption?: string;
-    width?: number;
-    height?: number;
-    formats?: any;
-    hash?: string;
-    ext?: string;
-    mime?: string;
-    /** @format float */
-    size?: number;
-    url?: string;
-    previewUrl?: string;
-    provider?: string;
-    provider_metadata?: any;
-    related?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    folder?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      pathId?: number;
-      parent?: {
-        id?: number;
-        documentId?: string;
-      };
-      children?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      files?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        alternativeText?: string;
-        caption?: string;
-        width?: number;
-        height?: number;
-        formats?: any;
-        hash?: string;
-        ext?: string;
-        mime?: string;
-        /** @format float */
-        size?: number;
-        url?: string;
-        previewUrl?: string;
-        provider?: string;
-        provider_metadata?: any;
-        related?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        folder?: {
-          id?: number;
-          documentId?: string;
-        };
-        folderPath?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
-          firstname?: string;
-          lastname?: string;
-          username?: string;
-          /** @format email */
-          email?: string;
-          resetPasswordToken?: string;
-          registrationToken?: string;
-          isActive?: boolean;
-          roles?: {
-            id?: number;
-            documentId?: string;
-            name?: string;
-            code?: string;
-            description?: string;
-            users?: {
-              id?: number;
-              documentId?: string;
-            }[];
-            permissions?: {
-              id?: number;
-              documentId?: string;
-              action?: string;
-              actionParameters?: any;
-              subject?: string;
-              properties?: any;
-              conditions?: any;
-              role?: {
-                id?: number;
-                documentId?: string;
-              };
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            /** @format date-time */
-            createdAt?: string;
-            /** @format date-time */
-            updatedAt?: string;
-            /** @format date-time */
-            publishedAt?: string;
-            createdBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            updatedBy?: {
-              id?: number;
-              documentId?: string;
-            };
-            locale?: string;
-            localizations?: {
-              id?: number;
-              documentId?: string;
-            }[];
-          }[];
-          blocked?: boolean;
-          preferedLanguage?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          updatedBy?: {
-            id?: number;
-            documentId?: string;
-          };
-          locale?: string;
-          localizations?: {
-            id?: number;
-            documentId?: string;
-          }[];
-        };
-        updatedBy?: {
-          id?: number;
-          documentId?: string;
-        };
-        locale?: string;
-        localizations?: {
-          id?: number;
-          documentId?: string;
-        }[];
-      }[];
-      path?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    };
-    folderPath?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-  MediaSingle?: {
-    id?: number;
-    documentId?: string;
-    name?: string;
-    alternativeText?: string;
-    caption?: string;
-    width?: number;
-    height?: number;
-    formats?: any;
-    hash?: string;
-    ext?: string;
-    mime?: string;
-    /** @format float */
-    size?: number;
-    url?: string;
-    previewUrl?: string;
-    provider?: string;
-    provider_metadata?: any;
-    related?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    folder?: {
-      id?: number;
-      documentId?: string;
-    };
-    folderPath?: string;
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
-  /** @format date-time */
-  publishedAt?: string;
-  createdBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  updatedBy?: {
-    id?: number;
-    documentId?: string;
-  };
-  locale?: string;
-  localizations?: {
-    id?: number;
-    documentId?: string;
-    Name?: string;
-    Type?: HeroImageTypeEnum1;
-    MediaSlider?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    MediaSingle?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-}
-
-export interface HeroImageResponse {
-  data?: HeroImage;
+export interface ConfigurationResponse {
+  data?: Configuration;
   meta?: object;
 }
 
 export interface PageRequest {
   data: {
-    PageID: string;
-    Name: string;
-    URL: string;
-    /** @example "string or id" */
-    hero_image?: number | string;
+    Title?: string;
+    Slug?: string;
+    Visible?: boolean;
     subpages?: (number | string)[];
-    pages?: (number | string)[];
+    Parents?: (number | string)[];
+    /** @example "string or id" */
+    configuration?: number | string;
+    Menu?: PageRequestMenuEnum;
+    NavigationOrder?: number;
     locale?: string;
     localizations?: (number | string)[];
   };
@@ -653,157 +216,66 @@ export interface PageListResponse {
 export interface Page {
   id?: number;
   documentId?: string;
-  PageID: string;
-  Name: string;
-  URL: string;
-  hero_image?: {
+  Title?: string;
+  Slug?: string;
+  Visible?: boolean;
+  subpages?: {
     id?: number;
     documentId?: string;
-    Name?: string;
-    Type?: PageTypeEnum;
-    MediaSlider?: {
+    Title?: string;
+    Slug?: string;
+    Visible?: boolean;
+    subpages?: {
       id?: number;
       documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
+    }[];
+    Parents?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    configuration?: {
+      id?: number;
+      documentId?: string;
+      Title?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
         id?: number;
         documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-        name?: string;
-        pathId?: number;
-        parent?: {
-          id?: number;
-          documentId?: string;
-        };
-        children?: {
-          id?: number;
-          documentId?: string;
-        }[];
-        files?: {
+        firstname?: string;
+        lastname?: string;
+        username?: string;
+        /** @format email */
+        email?: string;
+        resetPasswordToken?: string;
+        registrationToken?: string;
+        isActive?: boolean;
+        roles?: {
           id?: number;
           documentId?: string;
           name?: string;
-          alternativeText?: string;
-          caption?: string;
-          width?: number;
-          height?: number;
-          formats?: any;
-          hash?: string;
-          ext?: string;
-          mime?: string;
-          /** @format float */
-          size?: number;
-          url?: string;
-          previewUrl?: string;
-          provider?: string;
-          provider_metadata?: any;
-          related?: {
+          code?: string;
+          description?: string;
+          users?: {
             id?: number;
             documentId?: string;
           }[];
-          folder?: {
+          permissions?: {
             id?: number;
             documentId?: string;
-          };
-          folderPath?: string;
-          /** @format date-time */
-          createdAt?: string;
-          /** @format date-time */
-          updatedAt?: string;
-          /** @format date-time */
-          publishedAt?: string;
-          createdBy?: {
-            id?: number;
-            documentId?: string;
-            firstname?: string;
-            lastname?: string;
-            username?: string;
-            /** @format email */
-            email?: string;
-            resetPasswordToken?: string;
-            registrationToken?: string;
-            isActive?: boolean;
-            roles?: {
+            action?: string;
+            actionParameters?: any;
+            subject?: string;
+            properties?: any;
+            conditions?: any;
+            role?: {
               id?: number;
               documentId?: string;
-              name?: string;
-              code?: string;
-              description?: string;
-              users?: {
-                id?: number;
-                documentId?: string;
-              }[];
-              permissions?: {
-                id?: number;
-                documentId?: string;
-                action?: string;
-                actionParameters?: any;
-                subject?: string;
-                properties?: any;
-                conditions?: any;
-                role?: {
-                  id?: number;
-                  documentId?: string;
-                };
-                /** @format date-time */
-                createdAt?: string;
-                /** @format date-time */
-                updatedAt?: string;
-                /** @format date-time */
-                publishedAt?: string;
-                createdBy?: {
-                  id?: number;
-                  documentId?: string;
-                };
-                updatedBy?: {
-                  id?: number;
-                  documentId?: string;
-                };
-                locale?: string;
-                localizations?: {
-                  id?: number;
-                  documentId?: string;
-                }[];
-              }[];
-              /** @format date-time */
-              createdAt?: string;
-              /** @format date-time */
-              updatedAt?: string;
-              /** @format date-time */
-              publishedAt?: string;
-              createdBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              updatedBy?: {
-                id?: number;
-                documentId?: string;
-              };
-              locale?: string;
-              localizations?: {
-                id?: number;
-                documentId?: string;
-              }[];
-            }[];
-            blocked?: boolean;
-            preferedLanguage?: string;
+            };
             /** @format date-time */
             createdAt?: string;
             /** @format date-time */
@@ -823,6 +295,16 @@ export interface Page {
               id?: number;
               documentId?: string;
             }[];
+          }[];
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
           };
           updatedBy?: {
             id?: number;
@@ -834,7 +316,8 @@ export interface Page {
             documentId?: string;
           }[];
         }[];
-        path?: string;
+        blocked?: boolean;
+        preferedLanguage?: string;
         /** @format date-time */
         createdAt?: string;
         /** @format date-time */
@@ -855,17 +338,6 @@ export interface Page {
           documentId?: string;
         }[];
       };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
       updatedBy?: {
         id?: number;
         documentId?: string;
@@ -875,54 +347,9 @@ export interface Page {
         id?: number;
         documentId?: string;
       }[];
-    }[];
-    MediaSingle?: {
-      id?: number;
-      documentId?: string;
-      name?: string;
-      alternativeText?: string;
-      caption?: string;
-      width?: number;
-      height?: number;
-      formats?: any;
-      hash?: string;
-      ext?: string;
-      mime?: string;
-      /** @format float */
-      size?: number;
-      url?: string;
-      previewUrl?: string;
-      provider?: string;
-      provider_metadata?: any;
-      related?: {
-        id?: number;
-        documentId?: string;
-      }[];
-      folder?: {
-        id?: number;
-        documentId?: string;
-      };
-      folderPath?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      updatedBy?: {
-        id?: number;
-        documentId?: string;
-      };
-      locale?: string;
-      localizations?: {
-        id?: number;
-        documentId?: string;
-      }[];
-    }[];
+    };
+    Menu?: PageMenuEnum;
+    NavigationOrder?: number;
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -942,49 +369,17 @@ export interface Page {
       id?: number;
       documentId?: string;
     }[];
+  }[];
+  Parents?: {
+    id?: number;
+    documentId?: string;
+  }[];
+  configuration?: {
+    id?: number;
+    documentId?: string;
   };
-  subpages?: {
-    id?: number;
-    documentId?: string;
-    PageID?: string;
-    Name?: string;
-    URL?: string;
-    hero_image?: {
-      id?: number;
-      documentId?: string;
-    };
-    subpages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    pages?: {
-      id?: number;
-      documentId?: string;
-    }[];
-    /** @format date-time */
-    createdAt?: string;
-    /** @format date-time */
-    updatedAt?: string;
-    /** @format date-time */
-    publishedAt?: string;
-    createdBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    updatedBy?: {
-      id?: number;
-      documentId?: string;
-    };
-    locale?: string;
-    localizations?: {
-      id?: number;
-      documentId?: string;
-    }[];
-  }[];
-  pages?: {
-    id?: number;
-    documentId?: string;
-  }[];
+  Menu?: PageMenuEnum1;
+  NavigationOrder?: number;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -1095,28 +490,19 @@ export type UsersPermissionsPermissionsTree = Record<
   }
 >;
 
-export enum HeroImageRequestTypeEnum {
-  SingleImage = 'Single Image',
-  SliderImage = 'Slider Image',
-  SingleVideo = 'Single Video',
+export enum PageRequestMenuEnum {
+  Main = "Main",
+  Login = "Login",
 }
 
-export enum HeroImageTypeEnum {
-  SingleImage = 'Single Image',
-  SliderImage = 'Slider Image',
-  SingleVideo = 'Single Video',
+export enum PageMenuEnum {
+  Main = "Main",
+  Login = "Login",
 }
 
-export enum HeroImageTypeEnum1 {
-  SingleImage = 'Single Image',
-  SliderImage = 'Slider Image',
-  SingleVideo = 'Single Video',
-}
-
-export enum PageTypeEnum {
-  SingleImage = 'Single Image',
-  SliderImage = 'Slider Image',
-  SingleVideo = 'Single Video',
+export enum PageMenuEnum1 {
+  Main = "Main",
+  Login = "Login",
 }
 
 export enum OkEnum {
@@ -1145,13 +531,13 @@ import type {
   AxiosResponse,
   HeadersDefaults,
   ResponseType,
-} from 'axios';
-import axios from 'axios';
+} from "axios";
+import axios from "axios";
 
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
+  extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -1168,11 +554,11 @@ export interface FullRequestParams
 
 export type RequestParams = Omit<
   FullRequestParams,
-  'body' | 'method' | 'query' | 'path'
+  "body" | "method" | "query" | "path"
 >;
 
 export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
+  extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
   securityWorker?: (
     securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
@@ -1181,17 +567,17 @@ export interface ApiConfig<SecurityDataType = unknown>
 }
 
 export enum ContentType {
-  Json = 'application/json',
-  JsonApi = 'application/vnd.api+json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded',
-  Text = 'text/plain',
+  Json = "application/json",
+  JsonApi = "application/vnd.api+json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private secure?: boolean;
   private format?: ResponseType;
 
@@ -1203,7 +589,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || 'http://localhost:1337/api',
+      baseURL: axiosConfig.baseURL || "http://localhost:1337/api",
     });
     this.secure = secure;
     this.format = format;
@@ -1237,7 +623,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === 'object' && formItem !== null) {
+    if (typeof formItem === "object" && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -1275,7 +661,7 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === 'boolean' ? secure : this.secure) &&
+      ((typeof secure === "boolean" ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
@@ -1286,7 +672,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.FormData &&
       body &&
       body !== null &&
-      typeof body === 'object'
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
@@ -1295,7 +681,7 @@ export class HttpClient<SecurityDataType = unknown> {
       type === ContentType.Text &&
       body &&
       body !== null &&
-      typeof body !== 'string'
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -1304,7 +690,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { 'Content-Type': type } : {}),
+        ...(type ? { "Content-Type": type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -1328,29 +714,29 @@ export class HttpClient<SecurityDataType = unknown> {
 export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
-  article = {
+  configuration = {
     /**
      * No description
      *
-     * @tags Article
-     * @name GetArticles
-     * @request GET:/articles
+     * @tags Configuration
+     * @name GetConfigurations
+     * @request GET:/configurations
      * @secure
      */
-    getArticles: (
+    getConfigurations: (
       query?: {
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
         /** Return page/pageSize (default: true) */
-        'pagination[withCount]'?: boolean;
+        "pagination[withCount]"?: boolean;
         /** Page number (default: 0) */
-        'pagination[page]'?: number;
+        "pagination[page]"?: number;
         /** Page size (default: 25) */
-        'pagination[pageSize]'?: number;
+        "pagination[pageSize]"?: number;
         /** Offset value (default: 0) */
-        'pagination[start]'?: number;
+        "pagination[start]"?: number;
         /** Number of entities to return (default: 25) */
-        'pagination[limit]'?: number;
+        "pagination[limit]"?: number;
         /** Fields to return (ex: title,author) */
         fields?: string;
         /** Relations to return */
@@ -1362,207 +748,91 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<ArticleListResponse, Error>({
-        path: `/articles`,
-        method: 'GET',
+      this.request<ConfigurationListResponse, Error>({
+        path: `/configurations`,
+        method: "GET",
         query: query,
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
     /**
      * No description
      *
-     * @tags Article
-     * @name PostArticles
-     * @request POST:/articles
+     * @tags Configuration
+     * @name PostConfigurations
+     * @request POST:/configurations
      * @secure
      */
-    postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles`,
-        method: 'POST',
+    postConfigurations: (
+      data: ConfigurationRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ConfigurationResponse, Error>({
+        path: `/configurations`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
     /**
      * No description
      *
-     * @tags Article
-     * @name GetArticlesId
-     * @request GET:/articles/{id}
+     * @tags Configuration
+     * @name GetConfigurationsId
+     * @request GET:/configurations/{id}
      * @secure
      */
-    getArticlesId: (id: number, params: RequestParams = {}) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
-        method: 'GET',
+    getConfigurationsId: (id: number, params: RequestParams = {}) =>
+      this.request<ConfigurationResponse, Error>({
+        path: `/configurations/${id}`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
     /**
      * No description
      *
-     * @tags Article
-     * @name PutArticlesId
-     * @request PUT:/articles/{id}
+     * @tags Configuration
+     * @name PutConfigurationsId
+     * @request PUT:/configurations/{id}
      * @secure
      */
-    putArticlesId: (
+    putConfigurationsId: (
       id: number,
-      data: ArticleRequest,
+      data: ConfigurationRequest,
       params: RequestParams = {},
     ) =>
-      this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
-        method: 'PUT',
+      this.request<ConfigurationResponse, Error>({
+        path: `/configurations/${id}`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
     /**
      * No description
      *
-     * @tags Article
-     * @name DeleteArticlesId
-     * @request DELETE:/articles/{id}
+     * @tags Configuration
+     * @name DeleteConfigurationsId
+     * @request DELETE:/configurations/{id}
      * @secure
      */
-    deleteArticlesId: (id: number, params: RequestParams = {}) =>
+    deleteConfigurationsId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/articles/${id}`,
-        method: 'DELETE',
+        path: `/configurations/${id}`,
+        method: "DELETE",
         secure: true,
-        format: 'json',
-        ...params,
-      }),
-  };
-  heroImage = {
-    /**
-     * No description
-     *
-     * @tags Hero-image
-     * @name GetHeroImages
-     * @request GET:/hero-images
-     * @secure
-     */
-    getHeroImages: (
-      query?: {
-        /** Sort by attributes ascending (asc) or descending (desc) */
-        sort?: string;
-        /** Return page/pageSize (default: true) */
-        'pagination[withCount]'?: boolean;
-        /** Page number (default: 0) */
-        'pagination[page]'?: number;
-        /** Page size (default: 25) */
-        'pagination[pageSize]'?: number;
-        /** Offset value (default: 0) */
-        'pagination[start]'?: number;
-        /** Number of entities to return (default: 25) */
-        'pagination[limit]'?: number;
-        /** Fields to return (ex: title,author) */
-        fields?: string;
-        /** Relations to return */
-        populate?: string;
-        /** Filters to apply */
-        filters?: Record<string, any>;
-        /** Locale to apply */
-        locale?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<HeroImageListResponse, Error>({
-        path: `/hero-images`,
-        method: 'GET',
-        query: query,
-        secure: true,
-        format: 'json',
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Hero-image
-     * @name PostHeroImages
-     * @request POST:/hero-images
-     * @secure
-     */
-    postHeroImages: (data: HeroImageRequest, params: RequestParams = {}) =>
-      this.request<HeroImageResponse, Error>({
-        path: `/hero-images`,
-        method: 'POST',
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: 'json',
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Hero-image
-     * @name GetHeroImagesId
-     * @request GET:/hero-images/{id}
-     * @secure
-     */
-    getHeroImagesId: (id: number, params: RequestParams = {}) =>
-      this.request<HeroImageResponse, Error>({
-        path: `/hero-images/${id}`,
-        method: 'GET',
-        secure: true,
-        format: 'json',
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Hero-image
-     * @name PutHeroImagesId
-     * @request PUT:/hero-images/{id}
-     * @secure
-     */
-    putHeroImagesId: (
-      id: number,
-      data: HeroImageRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<HeroImageResponse, Error>({
-        path: `/hero-images/${id}`,
-        method: 'PUT',
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: 'json',
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Hero-image
-     * @name DeleteHeroImagesId
-     * @request DELETE:/hero-images/{id}
-     * @secure
-     */
-    deleteHeroImagesId: (id: number, params: RequestParams = {}) =>
-      this.request<number, Error>({
-        path: `/hero-images/${id}`,
-        method: 'DELETE',
-        secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
   };
@@ -1580,15 +850,15 @@ export class Api<
         /** Sort by attributes ascending (asc) or descending (desc) */
         sort?: string;
         /** Return page/pageSize (default: true) */
-        'pagination[withCount]'?: boolean;
+        "pagination[withCount]"?: boolean;
         /** Page number (default: 0) */
-        'pagination[page]'?: number;
+        "pagination[page]"?: number;
         /** Page size (default: 25) */
-        'pagination[pageSize]'?: number;
+        "pagination[pageSize]"?: number;
         /** Offset value (default: 0) */
-        'pagination[start]'?: number;
+        "pagination[start]"?: number;
         /** Number of entities to return (default: 25) */
-        'pagination[limit]'?: number;
+        "pagination[limit]"?: number;
         /** Fields to return (ex: title,author) */
         fields?: string;
         /** Relations to return */
@@ -1602,10 +872,10 @@ export class Api<
     ) =>
       this.request<PageListResponse, Error>({
         path: `/pages`,
-        method: 'GET',
+        method: "GET",
         query: query,
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1620,11 +890,11 @@ export class Api<
     postPages: (data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1639,9 +909,9 @@ export class Api<
     getPagesId: (id: number, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1656,11 +926,11 @@ export class Api<
     putPagesId: (id: number, data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
         path: `/pages/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1675,9 +945,9 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
   };
@@ -1706,11 +976,11 @@ export class Api<
     ) =>
       this.request<UploadFile[], any>({
         path: `/upload`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.FormData,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1741,12 +1011,12 @@ export class Api<
     ) =>
       this.request<UploadFile[], any>({
         path: `/upload?id=${id}`,
-        method: 'POST',
+        method: "POST",
         query: query,
         body: data,
         secure: true,
         type: ContentType.FormData,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1761,9 +1031,9 @@ export class Api<
     filesList: (params: RequestParams = {}) =>
       this.request<UploadFile[], any>({
         path: `/upload/files`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1778,9 +1048,9 @@ export class Api<
     filesDetail: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
         path: `/upload/files/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1795,9 +1065,9 @@ export class Api<
     filesDelete: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
         path: `/upload/files/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
   };
@@ -1814,7 +1084,7 @@ export class Api<
     connectDetail: (provider: string, params: RequestParams = {}) =>
       this.request<any, void | Error>({
         path: `/connect/${provider}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -1837,11 +1107,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1864,11 +1134,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/local/register`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1884,9 +1154,9 @@ export class Api<
     callbackList: (provider: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/${provider}/callback`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1912,11 +1182,11 @@ export class Api<
         Error
       >({
         path: `/auth/forgot-password`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1939,11 +1209,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/reset-password`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1966,11 +1236,11 @@ export class Api<
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
         path: `/auth/change-password`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -1992,7 +1262,7 @@ export class Api<
     ) =>
       this.request<any, void | Error>({
         path: `/auth/email-confirmation`,
-        method: 'GET',
+        method: "GET",
         query: query,
         secure: true,
         ...params,
@@ -2021,11 +1291,11 @@ export class Api<
         Error
       >({
         path: `/auth/send-email-confirmation`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
   };
@@ -2047,9 +1317,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/permissions`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2072,9 +1342,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2103,10 +1373,10 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2127,9 +1397,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2159,10 +1429,10 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${role}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2183,9 +1453,9 @@ export class Api<
         Error
       >({
         path: `/users-permissions/roles/${role}`,
-        method: 'DELETE',
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2201,9 +1471,9 @@ export class Api<
     usersList: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser[], Error>({
         path: `/users`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2231,11 +1501,11 @@ export class Api<
         Error
       >({
         path: `/users`,
-        method: 'POST',
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2251,9 +1521,9 @@ export class Api<
     usersDetail: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/${id}`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2282,11 +1552,11 @@ export class Api<
         Error
       >({
         path: `/users/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2302,9 +1572,9 @@ export class Api<
     usersDelete: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2320,9 +1590,9 @@ export class Api<
     getUsersPermissionsUsersRoles: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
         path: `/users/me`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -2338,9 +1608,9 @@ export class Api<
     countList: (params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/users/count`,
-        method: 'GET',
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
   };

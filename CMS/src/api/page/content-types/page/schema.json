@@ -9,52 +9,43 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {
-    "i18n": {
-      "localized": true
-    }
-  },
+  "pluginOptions": {},
   "attributes": {
-    "PageID": {
-      "type": "uid",
-      "targetField": "Name",
-      "required": true
+    "Title": {
+      "type": "string"
     },
-    "Name": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true,
-      "unique": true
+    "Slug": {
+      "type": "string"
     },
-    "URL": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
-    "hero_image": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::hero-image.hero-image"
+    "Visible": {
+      "type": "boolean"
     },
     "subpages": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::page.page",
-      "inversedBy": "pages"
+      "inversedBy": "Parents"
     },
-    "pages": {
+    "Parents": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::page.page",
       "mappedBy": "subpages"
+    },
+    "configuration": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::configuration.configuration"
+    },
+    "Menu": {
+      "type": "enumeration",
+      "enum": [
+        "Main",
+        "Login"
+      ]
+    },
+    "NavigationOrder": {
+      "type": "integer"
     }
   }
 }

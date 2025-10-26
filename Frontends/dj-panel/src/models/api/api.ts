@@ -9,20 +9,49 @@
  * ---------------------------------------------------------------
  */
 
-import { Api as BrandApi } from './brand/apiMap';
-export * from './brand/apiMap';
-import { Api as DocumentsApi } from './documents/apiMap';
-export * from './documents/apiMap';
-import { Api as GearApi } from './gear/apiMap';
-export * from './gear/apiMap';
-import { Api as IdentityApi } from './identity/apiMap';
-export * from './identity/apiMap';
-import { Api as MailingApi } from './mailing/apiMap';
-export * from './mailing/apiMap';
-import { Api as MusicApi } from './music/apiMap';
-export * from './music/apiMap';
-import { Api as PartyApi } from './party/apiMap';
-export * from './party/apiMap';
+import {
+  Api as BrandApi,
+  ContentType as BrandContentType,
+  HttpClient as BrandHttpClient,
+} from './brand/apiMap';
+import {
+  Api as DocumentsApi,
+  ContentType as DocumentsContentType,
+  HttpClient as DocumentsHttpClient,
+} from './documents/apiMap';
+import {
+  Api as GearApi,
+  ContentType as GearContentType,
+  HttpClient as GearHttpClient,
+} from './gear/apiMap';
+import {
+  Api as IdentityApi,
+  ContentType as IdentityContentType,
+  HttpClient as IdentityHttpClient,
+} from './identity/apiMap';
+import {
+  Api as MailingApi,
+  ContentType as MailingContentType,
+  HttpClient as MailingHttpClient,
+} from './mailing/apiMap';
+import {
+  Api as MusicApi,
+  ContentType as MusicContentType,
+  HttpClient as MusicHttpClient,
+} from './music/apiMap';
+import {
+  Api as PartyApi,
+  ContentType as PartyContentType,
+  HttpClient as PartyHttpClient,
+} from './party/apiMap';
+
+export { BrandApi, BrandContentType, BrandHttpClient };
+export { DocumentsApi, DocumentsContentType, DocumentsHttpClient };
+export { GearApi, GearContentType, GearHttpClient };
+export { IdentityApi, IdentityContentType, IdentityHttpClient };
+export { MailingApi, MailingContentType, MailingHttpClient };
+export { MusicApi, MusicContentType, MusicHttpClient };
+export { PartyApi, PartyContentType, PartyHttpClient };
 
 import { ApiConfig } from './brand/apiMap';
 

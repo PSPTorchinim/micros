@@ -9,7 +9,9 @@ export const DesktopMenu = (props: any) => {
 
   const hasPermission = (permissions: string[]) => {
     const userPermissions =
-      user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
+      user?.roles.flatMap((r: { permissions: any[] }) =>
+        r.permissions.map((p) => p.name),
+      ) || [];
     if (!permissions) return true;
     if (!userPermissions) return false;
     for (const permission of permissions) {
@@ -77,21 +79,25 @@ export const DesktopMenu = (props: any) => {
       });
   };
 
+  // If menu property is missing, treat all as main
+  const mainLinks = props.links?.filter
+    ? props.links.filter(
+        (element: any) =>
+          (element.Menu === 'main' || element.Menu === undefined) &&
+          element.url,
+      )
+    : props.links;
+  const loginLinks = props.links?.filter
+    ? props.links.filter(
+        (element: any) => element.Menu === 'login' && element.url,
+      )
+    : [];
+
   return (
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
-      <nav className="navbar-links">
-        {renderLinks(
-          props.links.filter(
-            (element: any) => element.menu === 'main' && element.url,
-          ),
-        )}
-      </nav>
+      <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
       <div className="navbar-buttons">
-        {renderLinks(
-          props.links.filter(
-            (element: any) => element.menu === 'login' && element.url,
-          ),
-        )}
+        {renderLinks(loginLinks)}
         {isAuthenticated() && (
           <Link
             to="#"

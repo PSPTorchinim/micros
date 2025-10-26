@@ -16,7 +16,7 @@
     }
   },
   "x-strapi-config": {
-    "path": "/documentation",
+    "path": "/swagger",
     "showGeneratedFiles": true,
     "pluginsForWhichToGenerateDoc": ["email", "upload", "users-permissions"]
   },

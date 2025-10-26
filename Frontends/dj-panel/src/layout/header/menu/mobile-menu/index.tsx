@@ -10,7 +10,9 @@ export const MobileMenu = (props: any) => {
 
   const hasPermission = (permissions: string[]) => {
     const userPermissions =
-      user?.roles.flatMap((r) => r.permissions.map((p) => p.name)) || [];
+      user?.roles.flatMap((r: { permissions: any[] }) =>
+        r.permissions.map((p) => p.name),
+      ) || [];
     if (!permissions) return true;
     if (!userPermissions) return false;
     for (const permission of permissions) {
@@ -36,16 +38,24 @@ export const MobileMenu = (props: any) => {
           (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
           (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
         ) {
+          const hasChildren =
+            Array.isArray(element.children) && element.children.length > 0;
           return (
             <div key={element.text} className="navbar-mobile-item">
               {element.url ? (
-                <Link to={element.url} className="thq-link thq-body-small">
+                <Link
+                  to={element.url}
+                  className="thq-link thq-body-small"
+                  onClick={() => {
+                    if (!hasChildren) setIsMenuOpen(false);
+                  }}
+                >
                   {element.text}
                 </Link>
               ) : (
                 <span className="thq-link thq-body-small">{element.text}</span>
               )}
-              {element.children && (
+              {hasChildren && (
                 <div className="navbar-mobile-dropdown">
                   {renderLinks(element.children)}
                 </div>
@@ -90,19 +100,31 @@ export const MobileMenu = (props: any) => {
               </svg>
             </div>
           </div>
+          {/* If menu property is missing, treat all as main. Sort by id. */}
           <nav className="navbar-mobile-links">
             {renderLinks(
-              props.links.filter(
-                (element: any) => element.menu == 'main' && element.url,
-              ),
+              props.links?.filter
+                ? props.links
+                    .filter(
+                      (element: any) =>
+                        (element.menu === 'main' ||
+                          element.menu === undefined) &&
+                        element.url,
+                    )
+                    .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
+                : props.links,
             )}
           </nav>
         </div>
         <div className="navbar-mobile-buttons">
           {renderLinks(
-            props.links.filter(
-              (element: any) => element.menu == 'login' && element.url,
-            ),
+            props.links?.filter
+              ? props.links
+                  .filter(
+                    (element: any) => element.menu === 'login' && element.url,
+                  )
+                  .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
+              : [],
           )}
           {isAuthenticated() && (
             <Link
