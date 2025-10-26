@@ -9,8 +9,10 @@ import { data } from './content/homePage';
 import { navigation } from './content/navigation';
 import { footer } from './content/footer';
 import { AuthProvider } from './providers/auth-provider';
+
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
+import { DynamicRoutes } from './pages/DynamicRoutes';
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
                 />
               </Route>
               <Route index element={<HomeComponent {...data} />} />
+              <DynamicRoutes />
             </Route>
           </Routes>
         </AuthProvider>
