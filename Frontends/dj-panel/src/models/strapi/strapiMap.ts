@@ -188,11 +188,12 @@ export interface PageRequest {
     Title?: string;
     Slug?: string;
     Visible?: boolean;
-    /** @example "string or id" */
-    Subpages?: number | string;
-    Parent?: (number | string)[];
+    subpages?: (number | string)[];
+    Parents?: (number | string)[];
     /** @example "string or id" */
     configuration?: number | string;
+    Menu?: PageRequestMenuEnum;
+    NavigationOrder?: number;
     locale?: string;
     localizations?: (number | string)[];
   };
@@ -218,17 +219,17 @@ export interface Page {
   Title?: string;
   Slug?: string;
   Visible?: boolean;
-  Subpages?: {
+  subpages?: {
     id?: number;
     documentId?: string;
     Title?: string;
     Slug?: string;
     Visible?: boolean;
-    Subpages?: {
+    subpages?: {
       id?: number;
       documentId?: string;
-    };
-    Parent?: {
+    }[];
+    Parents?: {
       id?: number;
       documentId?: string;
     }[];
@@ -347,6 +348,8 @@ export interface Page {
         documentId?: string;
       }[];
     };
+    Menu?: PageMenuEnum;
+    NavigationOrder?: number;
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -366,8 +369,8 @@ export interface Page {
       id?: number;
       documentId?: string;
     }[];
-  };
-  Parent?: {
+  }[];
+  Parents?: {
     id?: number;
     documentId?: string;
   }[];
@@ -375,6 +378,8 @@ export interface Page {
     id?: number;
     documentId?: string;
   };
+  Menu?: PageMenuEnum1;
+  NavigationOrder?: number;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -484,6 +489,21 @@ export type UsersPermissionsPermissionsTree = Record<
     >;
   }
 >;
+
+export enum PageRequestMenuEnum {
+  Main = "Main",
+  Login = "Login",
+}
+
+export enum PageMenuEnum {
+  Main = "Main",
+  Login = "Login",
+}
+
+export enum PageMenuEnum1 {
+  Main = "Main",
+  Login = "Login",
+}
 
 export enum OkEnum {
   True = true,

@@ -20,22 +20,32 @@
     "Visible": {
       "type": "boolean"
     },
-    "Subpages": {
+    "subpages": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::page.page",
-      "inversedBy": "Parent"
+      "inversedBy": "Parents"
     },
-    "Parent": {
+    "Parents": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::page.page",
-      "mappedBy": "Subpages"
+      "mappedBy": "subpages"
     },
     "configuration": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::configuration.configuration"
+    },
+    "Menu": {
+      "type": "enumeration",
+      "enum": [
+        "Main",
+        "Login"
+      ]
+    },
+    "NavigationOrder": {
+      "type": "integer"
     }
   }
 }

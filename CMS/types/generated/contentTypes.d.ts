@@ -423,10 +423,12 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::page.page'> &
       Schema.Attribute.Private;
-    Parent: Schema.Attribute.Relation<'oneToMany', 'api::page.page'>;
+    Menu: Schema.Attribute.Enumeration<['Main', 'Login']>;
+    NavigationOrder: Schema.Attribute.Integer;
+    Parents: Schema.Attribute.Relation<'manyToMany', 'api::page.page'>;
     publishedAt: Schema.Attribute.DateTime;
     Slug: Schema.Attribute.String;
-    Subpages: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    subpages: Schema.Attribute.Relation<'manyToMany', 'api::page.page'>;
     Title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

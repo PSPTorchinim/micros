@@ -12,15 +12,24 @@ import { AuthProvider } from './providers/auth-provider';
 
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
-import { DynamicRoutes } from './pages/DynamicRoutes';
+
+import { useDynamicRoutes } from './pages/DynamicRoutes';
 
 export default function App() {
+  const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
   return (
     <HashRouter>
       <ServicesProvider>
         <AuthProvider>
           <Routes>
-            <Route element={<Layout navigation={navigation} footer={footer} />}>
+            <Route
+              element={
+                <Layout
+                  navigation={{ links: dynamicNavigation }}
+                  footer={footer}
+                />
+              }
+            >
               <Route path="users">
                 <Route path="login" element={<LoginComponent />} />
                 <Route
@@ -29,7 +38,7 @@ export default function App() {
                 />
               </Route>
               <Route index element={<HomeComponent {...data} />} />
-              <DynamicRoutes />
+              {dynamicRoutes}
             </Route>
           </Routes>
         </AuthProvider>
