@@ -18,7 +18,8 @@
       "type": "string"
     },
     "Visible": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": true
     },
     "subpages": {
       "type": "relation",
@@ -39,6 +40,7 @@
     },
     "Menu": {
       "type": "enumeration",
+      "default": "Main",
       "enum": [
         "Main",
         "Login"
@@ -46,6 +48,20 @@
     },
     "NavigationOrder": {
       "type": "integer"
+    },
+    "NavigationAction": {
+      "type": "enumeration",
+      "default": "Link",
+      "enum": [
+        "Link",
+        "Action"
+      ]
+    },
+    "template": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::template.template",
+      "inversedBy": "page"
     }
   }
 }

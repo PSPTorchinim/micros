@@ -6,14 +6,13 @@ import { Layout } from './layout';
 import './index.css';
 
 import { data } from './content/homePage';
-import { navigation } from './content/navigation';
 import { footer } from './content/footer';
 import { AuthProvider } from './providers/auth-provider';
 
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
 
-import { useDynamicRoutes } from './pages/DynamicRoutes';
+import { useDynamicRoutes } from './components/DynamicRoutes';
 
 export default function App() {
   const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
@@ -37,7 +36,7 @@ export default function App() {
                   element={<ForgotPasswordComponent />}
                 />
               </Route>
-              <Route index element={<HomeComponent {...data} />} />
+              <Route path="home" element={<HomeComponent {...data} />} />
               {dynamicRoutes}
             </Route>
           </Routes>
