@@ -37,7 +37,7 @@ export default function App() {
                   element={<ForgotPasswordComponent />}
                 />
               </Route>
-              <Route index element={<HomeComponent {...data} />} />
+              <Route path="home" element={<HomeComponent {...data} />} />
               {dynamicRoutes}
             </Route>
           </Routes>
