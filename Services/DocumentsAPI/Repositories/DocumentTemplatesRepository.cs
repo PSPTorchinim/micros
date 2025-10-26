@@ -3,7 +3,11 @@ using MongoDB.Driver;
 
 namespace DocumentsAPI.Repositories
 {
-    public class DocumentTemplatesRepository : MongoDBRepository<DocumentTemplate>
+    public interface IDocumentTemplatesRepository:IMongoDBRepository<DocumentsAPI.Entities.DocumentTemplate>
+    {
+    }
+
+    public class DocumentTemplatesRepository : MongoDBRepository<DocumentsAPI.Entities.DocumentTemplate>, IDocumentTemplatesRepository
     {
         public DocumentTemplatesRepository(MongoClient client, ILogger<DocumentTemplatesRepository> logger) : base(client, logger, "DocumentTemplates")
         {
