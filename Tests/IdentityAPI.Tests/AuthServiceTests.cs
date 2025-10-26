@@ -1,38 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
-using IdentityAPI.DTO.User;
 using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using IdentityAPI.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Moq;
-using Shared.Services.App;
 using Shared.Services.MessagesBroker.RabbitMQ;
-using Xunit;
-using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
 
 namespace IdentityAPI.Tests
 {
     public class AuthServiceTests
     {
-        private readonly Mock<IConfiguration> _mockConfig = new();
         private readonly Mock<ILogger<IAuthService>> _mockLogger = new();
         private readonly Mock<IMapper> _mockMapper = new();
         private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor = new();
-        // Use a stub for RabbitMQProducerService since it lacks a parameterless constructor
-        private class StubRabbitMQProducerService : RabbitMQProducerService {
-            public StubRabbitMQProducerService() : base(new Mock<ILogger<RabbitMQProducerService>>().Object) { }
-        }
         private readonly Mock<IServiceProvider> _mockServiceProvider = new();
         private readonly Mock<IUsersRepository> _mockUsersRepo = new();
+        private readonly RabbitMQProducerService _rabbitMQProducerServiceMock = null!;
 
         private AuthService CreateService(string jwtKey = "supersecretkeysupersecretkeysupersecr")
         {
@@ -46,8 +32,7 @@ namespace IdentityAPI.Tests
             };
             var config = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
             _mockServiceProvider.Setup(x => x.GetService(typeof(IUsersRepository))).Returns(_mockUsersRepo.Object);
-            var stubRabbit = new StubRabbitMQProducerService();
-            return new AuthService(config, _mockLogger.Object, _mockMapper.Object, _mockHttpContextAccessor.Object, stubRabbit, _mockServiceProvider.Object);
+            return new AuthService(config, _mockLogger.Object, _mockMapper.Object, _mockHttpContextAccessor.Object, _rabbitMQProducerServiceMock, _mockServiceProvider.Object);
         }
 
         private User GetTestUser()
