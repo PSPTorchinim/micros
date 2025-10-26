@@ -1,4 +1,4 @@
-import { Api, Page } from '../models/strapi/strapiMap';
+import { Api, Page, Template } from '../models/strapi/strapiMap';
 
 class StrapiAPI {
   private api: Api<unknown>;
@@ -24,8 +24,13 @@ class StrapiAPI {
   }
 
   async fetchPageById(id: number | string): Promise<Page | undefined> {
-    const response = await this.api.page.getPagesId(Number(id));
-    return response.data?.data;
+    const response = await this.api.page
+      .getPages({
+        filters: { id: { $eq: id } },
+        populate: '*',
+      })
+      .then((res) => res.data?.data?.at(0) || undefined);
+    return response;
   }
 
   async fetchPageByName(name: string): Promise<Page | undefined> {
@@ -44,6 +49,15 @@ class StrapiAPI {
       },
     });
     return response.data?.data || [];
+  }
+
+  async fetchTemplate(
+    templateId: number | string,
+  ): Promise<Template | undefined> {
+    const response = await this.api.template.getTemplates({
+      filters: { id: { $eq: templateId } },
+    });
+    return response.data?.data?.[0];
   }
 }
 
