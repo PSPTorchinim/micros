@@ -27,7 +27,7 @@ try {
   console.log(`🔍 Attempting to fetch from: ${swaggerUrl}`);
 
   execSync(
-    `npx swagger-typescript-api generate -p "${swaggerUrl}" -o ${outputPath} -n apiMap.ts --module-name-first-tag --extract-enums --axios --disableStrictSSL`,
+    `npx swagger-typescript-api generate -p "${swaggerUrl}" -o ${outputPath} -n strapiMap.ts --module-name-first-tag --extract-enums --axios --disableStrictSSL`,
     {
       stdio: 'inherit',
       cwd: path.join(__dirname, '..'),
