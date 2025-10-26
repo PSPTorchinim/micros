@@ -9,7 +9,7 @@ services:
         DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
         DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "27017:27017"
     networks:
@@ -28,7 +28,7 @@ services:
         DATABASE_USERNAME_POSTGRES: ${CMS_DATABASE_USERNAME}
         DATABASE_PASSWORD_POSTGRES: ${CMS_DATABASE_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "5432:5432"
     networks:
@@ -45,7 +45,7 @@ services:
         RABBITMQ_USER: ${RABBITMQ_USER}
         RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "15672:15672"
     expose:
@@ -65,7 +65,7 @@ services:
       args:
         REDIS_PASSWORD: ${REDIS_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "6379:6379"
     networks:
@@ -81,7 +81,7 @@ services:
       args:
         DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "1433:1433"
     networks:
@@ -125,7 +125,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "3000:8080"
     depends_on:
@@ -158,7 +158,7 @@ services:
         SECURE_KEY: ${SECURE_KEY}
         JWT_TOKEN: ${JWT_KEY}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "3080:3000"
     networks:
@@ -191,7 +191,7 @@ services:
         CMS_TRANSFER_TOKEN_SALT: ${CMS_TRANSFER_TOKEN_SALT}
         CMS_ENCRYPTION_KEY: ${CMS_ENCRYPTION_KEY}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     ports:
       - "1337:1337"
     networks:
@@ -239,7 +239,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -290,7 +290,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -341,7 +341,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -392,7 +392,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -443,7 +443,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -494,7 +494,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
@@ -545,7 +545,7 @@ services:
         DJPANEL_USER_EMAIL: ${DJPANEL_USER_EMAIL}
         DJPANEL_USER_PASSWORD: ${DJPANEL_USER_PASSWORD}
     restart: unless-stopped
-    pull-policy: always
+    pull_policy: always
     expose:
       - "8080"
     depends_on:
