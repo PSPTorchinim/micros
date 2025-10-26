@@ -4,10 +4,10 @@ class StrapiAPI {
   private api: Api<unknown>;
 
   constructor() {
-    const protocol = process.env.REACT_APP_CMS_DATABASE_PROTOCOL || 'http';
-    const host = process.env.REACT_APP_CMS_DATABASE_HOST || 'localhost';
-    const port = process.env.REACT_APP_CMS_DATABASE_PORT || '1337';
-    const apiPath = process.env.REACT_APP_CMS_DATABASE_API_PATH || '/api';
+    const protocol = process.env.REACT_APP_CMS_PROTOCOL || 'http';
+    const host = process.env.REACT_APP_CMS_HOST || 'localhost';
+    const port = process.env.REACT_APP_CMS_PORT || '1337';
+    const apiPath = process.env.REACT_APP_CMS_API_PATH || '/api';
     const baseURL = `${protocol}://${host}:${port}${apiPath}`;
     this.api = new Api({ baseURL });
   }
