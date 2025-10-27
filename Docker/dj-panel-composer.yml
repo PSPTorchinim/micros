@@ -584,6 +584,7 @@ networks:
     driver: bridge
   public:
     driver: bridge
+    external: true
 
 volumes:
   mongo_config:

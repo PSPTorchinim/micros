@@ -312,44 +312,39 @@ while IFS= read -r service; do
     copy_service_key_if_present "$service" "$key"
   done
 
-  # Inject PGDATA iff service mounts /var/lib/postgresql/data and doesn't already define PGDATA
-  pg_wanted=$(yq eval ".services.${service}.volumes[]? | select(test(\":/var/lib/postgresql/data(:(ro|rw))?$\"))" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-  if [[ -n "$pg_wanted" ]]; then
-    has_env=$(yq eval ".services.${service} | has(\"environment\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-    if [[ "$has_env" != "true" ]] || [[ "$(yq -r ".services.${service}.environment.PGDATA // \"\"" "$SOURCE_COMPOSE")" == "" ]]; then
-      echo "    environment:" >> "$OUTPUT_FILE"
-      [[ "$has_env" == "true" ]] && yq eval ".services.${service}.environment" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
-      echo "      PGDATA: /var/lib/postgresql/data" >> "$OUTPUT_FILE"
-      log_info "Injected PGDATA for ${service}"
-    fi
-  fi
 
-  # depends_on (force all to map with condition: service_started)
+  # depends_on (preserve original structure and condition if present)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
   if [[ "$has_depends_on" == "true" ]]; then
     echo "    depends_on:" >> "$OUTPUT_FILE"
-    # Robustly extract dependency names regardless of type
     deps_type=$(yq eval ".services.${service}.depends_on | type" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-    deps_list=""
     if [[ "$deps_type" == "!!seq" || "$deps_type" == "array" ]]; then
+      # List of dependencies, just copy as-is (default to service_started)
       deps_list=$(yq eval ".services.${service}.depends_on[]" "$SOURCE_COMPOSE" 2>/dev/null || true)
+      while IFS= read -r dep; do
+        [[ -z "$dep" || "$dep" == "null" ]] && continue
+        echo "      ${dep}:" >> "$OUTPUT_FILE"
+        echo "        condition: service_started" >> "$OUTPUT_FILE"
+      done <<< "$deps_list"
     elif [[ "$deps_type" == "!!map" || "$deps_type" == "map" ]]; then
-      deps_list=$(yq eval ".services.${service}.depends_on | keys | .[]" "$SOURCE_COMPOSE" 2>/dev/null || true)
+      # Map of dependencies, preserve each condition if present
+      dep_keys=$(yq eval ".services.${service}.depends_on | keys | .[]" "$SOURCE_COMPOSE" 2>/dev/null || true)
+      for dep in $dep_keys; do
+        [[ -z "$dep" || "$dep" == "null" ]] && continue
+        cond=$(yq eval ".services.${service}.depends_on.${dep}.condition" "$SOURCE_COMPOSE" 2>/dev/null || echo "service_started")
+        echo "      ${dep}:" >> "$OUTPUT_FILE"
+        echo "        condition: ${cond}" >> "$OUTPUT_FILE"
+      done
     fi
-    while IFS= read -r dep; do
-      [[ -z "$dep" || "$dep" == "null" ]] && continue
-      echo "      ${dep}:" >> "$OUTPUT_FILE"
-      echo "        condition: service_started" >> "$OUTPUT_FILE"
-    done <<< "$deps_list"
   fi
 
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (volumes only; networks skipped) ==========================
-log_subsection "Copy top-level volumes (networks intentionally skipped)"
-log_info "Skipping top-level networks import by design"
-for top in volumes; do
+
+# ======================== Top-level sections (volumes and networks) ==========================
+log_subsection "Copy top-level volumes and networks"
+for top in volumes networks; do
   has=$(yq eval "has(\"$top\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
   if [[ "$has" == "true" ]]; then
     echo "$top:" >> "$OUTPUT_FILE"
