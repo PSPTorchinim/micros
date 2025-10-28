@@ -25,6 +25,14 @@
       "relation": "oneToOne",
       "target": "api::page.page",
       "mappedBy": "template"
+    },
+    "Content": {
+      "type": "dynamiczone",
+      "components": [
+        "articles.article",
+        "image-sliders.image-slider",
+        "steps-containers.steps-container"
+      ]
     }
   }
 }
