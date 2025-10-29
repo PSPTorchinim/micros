@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_image_sliders_slides",
+  "info": {
+    "displayName": "Slide"
+  },
+  "options": {},
+  "attributes": {
+    "Image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "Caption": {
+      "type": "string"
+    },
+    "Header": {
+      "type": "string"
+    },
+    "CTA": {
+      "type": "component",
+      "component": "ctas.cta",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

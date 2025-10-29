@@ -23,8 +23,16 @@
     "page": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "api::page.page",
-      "mappedBy": "template"
+      "target": "api::page.page"
+    },
+    "Content": {
+      "type": "dynamiczone",
+      "components": [
+        "image-sliders.image-slider",
+        "articles.article-block",
+        "steps-containers.steps-container",
+        "ctas.cta"
+      ]
     }
   }
 }

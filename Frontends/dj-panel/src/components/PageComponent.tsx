@@ -14,42 +14,32 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
   );
 
   useEffect(() => {
-    const fetchPage = async () => {
+    (async () => {
       if (!pageId) {
         setPage(null);
+        setTemplate(null);
         return;
       }
-      const fetchedPage = await strapiAPI.fetchPageById(pageId);
+      // Use DEEP call so template.Content + nested CTAs/Articles are populated
+      const fetchedPage = await strapiAPI.fetchPageByIdDeep(pageId);
       setPage(fetchedPage || null);
-    };
-    fetchPage();
+
+      // Template is already populated via deep fetch; still keep as separate state for clarity
+      const tpl = (fetchedPage as any)?.template ?? null;
+      setTemplate(tpl);
+    })();
   }, [pageId]);
 
-  useEffect(() => {
-    const fetchTemplate = async () => {
-      console.log('Fetching template for page:', page);
-      if (page && page.template && page.template.id !== undefined) {
-        const fetchedTemplate = await strapiAPI.fetchTemplate(page.template.id);
-        console.log('Fetched template:', fetchedTemplate);
-        setTemplate(fetchedTemplate || null);
-      } else {
-        setTemplate(null);
-      }
-    };
-    fetchTemplate();
-  }, [page]);
+  if (page === null || template === null) {
+    return <p>Page not found.</p>;
+  }
+  if (page === undefined || template === undefined) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div>
-      {page != undefined && template != undefined ? (
-        <>
-          <RenderTemplate template={template} page={page} />
-        </>
-      ) : page === null || template === null ? (
-        <p>Page not found.</p>
-      ) : (
-        <p>Loading...</p>
-      )}
+      <RenderTemplate template={template as any} page={page as any} />
     </div>
   );
 };

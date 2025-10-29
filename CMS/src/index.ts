@@ -1,24 +1,23 @@
-// import type { Core } from '@strapi/strapi';
-
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {
+  register() {
     console.log("Strapi register phase started");
   },
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {
+  async bootstrap({ strapi }) {
+    try {
+      const setPublicFindPermissions = await import(
+        "./extensions/bootstrap/set-public-find-permissions"
+      );
+      if (setPublicFindPermissions?.default) {
+        await setPublicFindPermissions.default({ strapi });
+      } else {
+        strapi.log.warn("set-public-find-permissions not found/exported.");
+      }
+    } catch (e: any) {
+      strapi.log.warn(
+        "Failed to set public find/findOne permissions: " + (e?.message ?? e)
+      );
+    }
     console.log("Strapi bootstrap phase completed - application ready");
   },
 };
