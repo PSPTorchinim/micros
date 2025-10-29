@@ -29,7 +29,6 @@
     "Content": {
       "type": "dynamiczone",
       "components": [
-        "articles.article",
         "image-sliders.image-slider",
         "steps-containers.steps-container"
       ]
