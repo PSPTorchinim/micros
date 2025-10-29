@@ -367,7 +367,7 @@ jobs:
 
             i=0
             st=""
-            while [ $i -lt 60 ]; do
+            while [ $i -gt 120 ]; do
               st="$(get_state || true)"
               [ -n "$st" ] || st="unknown"
               echo "Poll #$((i+1)): state=$st"
