@@ -9,7 +9,12 @@
       "type": "string"
     },
     "Description": {
-      "type": "text"
+      "type": "string"
+    },
+    "CTA": {
+      "type": "component",
+      "component": "ctas.cta",
+      "repeatable": true
     }
   },
   "config": {}

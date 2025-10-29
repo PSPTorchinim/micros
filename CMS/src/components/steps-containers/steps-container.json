@@ -9,9 +9,9 @@
       "type": "string"
     },
     "Description": {
-      "type": "text"
+      "type": "string"
     },
-    "Inverted": {
+    "InvertedStyle": {
       "type": "boolean"
     },
     "Steps": {

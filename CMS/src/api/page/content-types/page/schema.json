@@ -56,12 +56,6 @@
         "Link",
         "Action"
       ]
-    },
-    "template": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::template.template",
-      "inversedBy": "page"
     }
   }
 }
