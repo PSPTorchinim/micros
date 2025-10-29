@@ -13,6 +13,18 @@
   "attributes": {
     "Title": {
       "type": "string"
+    },
+    "pages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::page.page",
+      "mappedBy": "configuration"
+    },
+    "footer": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::footer.footer",
+      "mappedBy": "configuration"
     }
   }
 }

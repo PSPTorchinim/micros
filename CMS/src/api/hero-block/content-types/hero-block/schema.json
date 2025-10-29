@@ -1,0 +1,18 @@
+{
+  "collectionName": "hero_blocks",
+  "info": {
+    "singularName": "hero-block",
+    "pluralName": "hero-blocks",
+    "displayName": "Hero Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "heading": { "type": "string" },
+    "content": { "type": "string" },
+    "actions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cta.cta"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "article_blocks",
+  "info": {
+    "singularName": "article-block",
+    "pluralName": "article-blocks",
+    "displayName": "Article Block"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "Title": { "type": "string" },
+    "items": {
+      "type": "dynamiczone",
+      "components": [
+        "image-slider-ref.image-slider-ref",
+        "article-block-ref.article-block-ref",
+        "steps-container-ref.steps-container-ref",
+        "cta-ref.cta-ref",
+        "contact-info-ref.contact-info-ref",
+        "contact-section-ref.contact-section-ref",
+        "feature-section-ref.feature-section-ref",
+        "feature-tab-ref.feature-tab-ref",
+        "hero-block-ref.hero-block-ref"
+      ]
+    }
+  }
+}

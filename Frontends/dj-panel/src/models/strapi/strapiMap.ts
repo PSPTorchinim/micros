@@ -20,16 +20,20 @@ export interface Error {
   };
 }
 
-export interface ConfigurationRequest {
+export interface ArticleRequest {
   data: {
-    Title?: string;
+    Title: string;
+    Slug: string;
+    Summary?: string;
+    coverUrl?: string;
+    Body?: string;
     locale?: string;
     localizations?: (number | string)[];
   };
 }
 
-export interface ConfigurationListResponse {
-  data?: Configuration[];
+export interface ArticleListResponse {
+  data?: Article[];
   meta?: {
     pagination?: {
       page?: number;
@@ -42,10 +46,14 @@ export interface ConfigurationListResponse {
   };
 }
 
-export interface Configuration {
+export interface Article {
   id?: number;
   documentId?: string;
-  Title?: string;
+  Title: string;
+  Slug: string;
+  Summary?: string;
+  coverUrl?: string;
+  Body?: string;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -156,6 +164,10 @@ export interface Configuration {
     id?: number;
     documentId?: string;
     Title?: string;
+    Slug?: string;
+    Summary?: string;
+    coverUrl?: string;
+    Body?: string;
     /** @format date-time */
     createdAt?: string;
     /** @format date-time */
@@ -178,9 +190,375 @@ export interface Configuration {
   }[];
 }
 
+export interface ArticleResponse {
+  data?: Article;
+  meta?: object;
+}
+
+export interface ConfigurationRequest {
+  data: {
+    Title?: string;
+    pages?: (number | string)[];
+    /** @example "string or id" */
+    footer?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ConfigurationListResponse {
+  data?: Configuration[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Configuration {
+  id?: number;
+  documentId?: string;
+  Title?: string;
+  pages?: {
+    id?: number;
+    documentId?: string;
+    Title?: string;
+    Slug?: string;
+    Visible?: boolean;
+    subpages?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    Parents?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    configuration?: {
+      id?: number;
+      documentId?: string;
+      Title?: string;
+      pages?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      footer?: {
+        id?: number;
+        documentId?: string;
+        copyright?: string;
+        columns?: FooterLinkColumnComponent[];
+        socialLinks?: FooterSocialLinkComponent[];
+        configuration?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+          firstname?: string;
+          lastname?: string;
+          username?: string;
+          /** @format email */
+          email?: string;
+          resetPasswordToken?: string;
+          registrationToken?: string;
+          isActive?: boolean;
+          roles?: {
+            id?: number;
+            documentId?: string;
+            name?: string;
+            code?: string;
+            description?: string;
+            users?: {
+              id?: number;
+              documentId?: string;
+            }[];
+            permissions?: {
+              id?: number;
+              documentId?: string;
+              action?: string;
+              actionParameters?: any;
+              subject?: string;
+              properties?: any;
+              conditions?: any;
+              role?: {
+                id?: number;
+                documentId?: string;
+              };
+              /** @format date-time */
+              createdAt?: string;
+              /** @format date-time */
+              updatedAt?: string;
+              /** @format date-time */
+              publishedAt?: string;
+              createdBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              updatedBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              locale?: string;
+              localizations?: {
+                id?: number;
+                documentId?: string;
+              }[];
+            }[];
+            /** @format date-time */
+            createdAt?: string;
+            /** @format date-time */
+            updatedAt?: string;
+            /** @format date-time */
+            publishedAt?: string;
+            createdBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            updatedBy?: {
+              id?: number;
+              documentId?: string;
+            };
+            locale?: string;
+            localizations?: {
+              id?: number;
+              documentId?: string;
+            }[];
+          }[];
+          blocked?: boolean;
+          preferedLanguage?: string;
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    Menu?: ConfigurationMenuEnum;
+    NavigationOrder?: number;
+    NavigationAction?: ConfigurationNavigationActionEnum;
+    template?: {
+      id?: number;
+      documentId?: string;
+      Name?: string;
+      TemplateType?: ConfigurationTemplateTypeEnum;
+      page?: {
+        id?: number;
+        documentId?: string;
+      };
+      Content?: BaseNull &
+        (
+          | BaseNullComponentMapping<
+              "image-sliders.image-slider",
+              ImageSlidersImageSliderComponent
+            >
+          | BaseNullComponentMapping<
+              "articles.article-block",
+              ArticlesArticleBlockComponent
+            >
+          | BaseNullComponentMapping<
+              "steps-containers.steps-container",
+              StepsContainersStepsContainerComponent
+            >
+          | BaseNullComponentMapping<"ctas.cta", CtasCtaComponent>
+        );
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  footer?: {
+    id?: number;
+    documentId?: string;
+  };
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
 export interface ConfigurationResponse {
   data?: Configuration;
   meta?: object;
+}
+
+export interface FooterLinkComponent {
+  id?: number;
+  label?: string;
+  url?: string;
+  newTab?: boolean;
+}
+
+export interface FooterLinkColumnComponent {
+  id?: number;
+  title?: string;
+  links?: FooterLinkComponent[];
+}
+
+export interface FooterSocialLinkComponent {
+  id?: number;
+  platform?: string;
+  url?: string;
+  icon?: string;
+  detail?: string;
+}
+
+export interface ImageSlidersSlideComponent {
+  id?: number;
+  imageUrl?: string;
+  alt?: string;
+  caption?: string;
+  link?: string;
+}
+
+export interface ImageSlidersImageSliderComponent {
+  id?: number;
+  __component?: ImageSlidersImageSliderComponentComponentEnum;
+  Title?: string;
+  reversed?: boolean;
+  AutoPlay?: boolean;
+  IntervalMs?: number;
+  Slides?: ImageSlidersSlideComponent[];
+}
+
+export interface ArticlesArticleBlockComponent {
+  id?: number;
+  __component?: ArticlesArticleBlockComponentComponentEnum;
+  Title?: string;
+  items?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface CtasCtaComponent {
+  id?: number;
+  __component?: CtasCtaComponentComponentEnum;
+  Label?: string;
+  url?: string;
+  article?: {
+    id?: number;
+    documentId?: string;
+  };
+  OpenInNewTab?: boolean;
+}
+
+export interface StepsContainersStepComponent {
+  id?: number;
+  title?: string;
+  description?: string;
+}
+
+export interface StepsContainersStepsContainerComponent {
+  id?: number;
+  __component?: StepsContainersStepsContainerComponentComponentEnum;
+  heading?: string;
+  content?: string;
+  action?: CtasCtaComponent;
+  steps?: StepsContainersStepComponent[];
 }
 
 export interface PageRequest {
@@ -240,45 +618,79 @@ export interface Page {
       id?: number;
       documentId?: string;
       Title?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
+      pages?: {
         id?: number;
         documentId?: string;
-        firstname?: string;
-        lastname?: string;
-        username?: string;
-        /** @format email */
-        email?: string;
-        resetPasswordToken?: string;
-        registrationToken?: string;
-        isActive?: boolean;
-        roles?: {
+      }[];
+      footer?: {
+        id?: number;
+        documentId?: string;
+        copyright?: string;
+        columns?: FooterLinkColumnComponent[];
+        socialLinks?: FooterSocialLinkComponent[];
+        configuration?: {
           id?: number;
           documentId?: string;
-          name?: string;
-          code?: string;
-          description?: string;
-          users?: {
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+          firstname?: string;
+          lastname?: string;
+          username?: string;
+          /** @format email */
+          email?: string;
+          resetPasswordToken?: string;
+          registrationToken?: string;
+          isActive?: boolean;
+          roles?: {
             id?: number;
             documentId?: string;
-          }[];
-          permissions?: {
-            id?: number;
-            documentId?: string;
-            action?: string;
-            actionParameters?: any;
-            subject?: string;
-            properties?: any;
-            conditions?: any;
-            role?: {
+            name?: string;
+            code?: string;
+            description?: string;
+            users?: {
               id?: number;
               documentId?: string;
-            };
+            }[];
+            permissions?: {
+              id?: number;
+              documentId?: string;
+              action?: string;
+              actionParameters?: any;
+              subject?: string;
+              properties?: any;
+              conditions?: any;
+              role?: {
+                id?: number;
+                documentId?: string;
+              };
+              /** @format date-time */
+              createdAt?: string;
+              /** @format date-time */
+              updatedAt?: string;
+              /** @format date-time */
+              publishedAt?: string;
+              createdBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              updatedBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              locale?: string;
+              localizations?: {
+                id?: number;
+                documentId?: string;
+              }[];
+            }[];
             /** @format date-time */
             createdAt?: string;
             /** @format date-time */
@@ -299,6 +711,8 @@ export interface Page {
               documentId?: string;
             }[];
           }[];
+          blocked?: boolean;
+          preferedLanguage?: string;
           /** @format date-time */
           createdAt?: string;
           /** @format date-time */
@@ -318,18 +732,6 @@ export interface Page {
             id?: number;
             documentId?: string;
           }[];
-        }[];
-        blocked?: boolean;
-        preferedLanguage?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
         };
         updatedBy?: {
           id?: number;
@@ -340,6 +742,16 @@ export interface Page {
           id?: number;
           documentId?: string;
         }[];
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
       };
       updatedBy?: {
         id?: number;
@@ -363,6 +775,22 @@ export interface Page {
         id?: number;
         documentId?: string;
       };
+      Content?: AbstractNull &
+        (
+          | AbstractNullComponentMapping<
+              "image-sliders.image-slider",
+              ImageSlidersImageSliderComponent
+            >
+          | AbstractNullComponentMapping<
+              "articles.article-block",
+              ArticlesArticleBlockComponent
+            >
+          | AbstractNullComponentMapping<
+              "steps-containers.steps-container",
+              StepsContainersStepsContainerComponent
+            >
+          | AbstractNullComponentMapping<"ctas.cta", CtasCtaComponent>
+        );
       /** @format date-time */
       createdAt?: string;
       /** @format date-time */
@@ -450,6 +878,22 @@ export interface TemplateRequest {
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
+    Content?: DiscriminatorNull &
+      (
+        | DiscriminatorNullComponentMapping<
+            "image-sliders.image-slider",
+            ImageSlidersImageSliderComponent
+          >
+        | DiscriminatorNullComponentMapping<
+            "articles.article-block",
+            ArticlesArticleBlockComponent
+          >
+        | DiscriminatorNullComponentMapping<
+            "steps-containers.steps-container",
+            StepsContainersStepsContainerComponent
+          >
+        | DiscriminatorNullComponentMapping<"ctas.cta", CtasCtaComponent>
+      );
     locale?: string;
     localizations?: (number | string)[];
   };
@@ -492,45 +936,79 @@ export interface Template {
       id?: number;
       documentId?: string;
       Title?: string;
-      /** @format date-time */
-      createdAt?: string;
-      /** @format date-time */
-      updatedAt?: string;
-      /** @format date-time */
-      publishedAt?: string;
-      createdBy?: {
+      pages?: {
         id?: number;
         documentId?: string;
-        firstname?: string;
-        lastname?: string;
-        username?: string;
-        /** @format email */
-        email?: string;
-        resetPasswordToken?: string;
-        registrationToken?: string;
-        isActive?: boolean;
-        roles?: {
+      }[];
+      footer?: {
+        id?: number;
+        documentId?: string;
+        copyright?: string;
+        columns?: FooterLinkColumnComponent[];
+        socialLinks?: FooterSocialLinkComponent[];
+        configuration?: {
           id?: number;
           documentId?: string;
-          name?: string;
-          code?: string;
-          description?: string;
-          users?: {
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+          firstname?: string;
+          lastname?: string;
+          username?: string;
+          /** @format email */
+          email?: string;
+          resetPasswordToken?: string;
+          registrationToken?: string;
+          isActive?: boolean;
+          roles?: {
             id?: number;
             documentId?: string;
-          }[];
-          permissions?: {
-            id?: number;
-            documentId?: string;
-            action?: string;
-            actionParameters?: any;
-            subject?: string;
-            properties?: any;
-            conditions?: any;
-            role?: {
+            name?: string;
+            code?: string;
+            description?: string;
+            users?: {
               id?: number;
               documentId?: string;
-            };
+            }[];
+            permissions?: {
+              id?: number;
+              documentId?: string;
+              action?: string;
+              actionParameters?: any;
+              subject?: string;
+              properties?: any;
+              conditions?: any;
+              role?: {
+                id?: number;
+                documentId?: string;
+              };
+              /** @format date-time */
+              createdAt?: string;
+              /** @format date-time */
+              updatedAt?: string;
+              /** @format date-time */
+              publishedAt?: string;
+              createdBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              updatedBy?: {
+                id?: number;
+                documentId?: string;
+              };
+              locale?: string;
+              localizations?: {
+                id?: number;
+                documentId?: string;
+              }[];
+            }[];
             /** @format date-time */
             createdAt?: string;
             /** @format date-time */
@@ -551,6 +1029,8 @@ export interface Template {
               documentId?: string;
             }[];
           }[];
+          blocked?: boolean;
+          preferedLanguage?: string;
           /** @format date-time */
           createdAt?: string;
           /** @format date-time */
@@ -570,18 +1050,6 @@ export interface Template {
             id?: number;
             documentId?: string;
           }[];
-        }[];
-        blocked?: boolean;
-        preferedLanguage?: string;
-        /** @format date-time */
-        createdAt?: string;
-        /** @format date-time */
-        updatedAt?: string;
-        /** @format date-time */
-        publishedAt?: string;
-        createdBy?: {
-          id?: number;
-          documentId?: string;
         };
         updatedBy?: {
           id?: number;
@@ -592,6 +1060,16 @@ export interface Template {
           id?: number;
           documentId?: string;
         }[];
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
       };
       updatedBy?: {
         id?: number;
@@ -615,6 +1093,22 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
+      Content?: InternalNull &
+        (
+          | InternalNullComponentMapping<
+              "image-sliders.image-slider",
+              ImageSlidersImageSliderComponent
+            >
+          | InternalNullComponentMapping<
+              "articles.article-block",
+              ArticlesArticleBlockComponent
+            >
+          | InternalNullComponentMapping<
+              "steps-containers.steps-container",
+              StepsContainersStepsContainerComponent
+            >
+          | InternalNullComponentMapping<"ctas.cta", CtasCtaComponent>
+        );
       /** @format date-time */
       createdAt?: string;
       /** @format date-time */
@@ -655,6 +1149,22 @@ export interface Template {
       documentId?: string;
     }[];
   };
+  Content?: PolymorphNull &
+    (
+      | PolymorphNullComponentMapping<
+          "image-sliders.image-slider",
+          ImageSlidersImageSliderComponent
+        >
+      | PolymorphNullComponentMapping<
+          "articles.article-block",
+          ArticlesArticleBlockComponent
+        >
+      | PolymorphNullComponentMapping<
+          "steps-containers.steps-container",
+          StepsContainersStepsContainerComponent
+        >
+      | PolymorphNullComponentMapping<"ctas.cta", CtasCtaComponent>
+    );
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -765,6 +1275,47 @@ export type UsersPermissionsPermissionsTree = Record<
   }
 >;
 
+export enum ConfigurationMenuEnum {
+  Main = "Main",
+  Login = "Login",
+}
+
+export enum ConfigurationNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum ConfigurationTemplateTypeEnum {
+  Standard = "Standard",
+}
+
+type BaseNull = (
+  | ImageSlidersImageSliderComponent
+  | ArticlesArticleBlockComponent
+  | StepsContainersStepsContainerComponent
+  | CtasCtaComponent
+)[];
+
+type BaseNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum ImageSlidersImageSliderComponentComponentEnum {
+  ImageSlidersImageSlider = "image-sliders.image-slider",
+}
+
+export enum ArticlesArticleBlockComponentComponentEnum {
+  ArticlesArticleBlock = "articles.article-block",
+}
+
+export enum CtasCtaComponentComponentEnum {
+  CtasCta = "ctas.cta",
+}
+
+export enum StepsContainersStepsContainerComponentComponentEnum {
+  StepsContainersStepsContainer = "steps-containers.steps-container",
+}
+
 export enum PageRequestMenuEnum {
   Main = "Main",
   Login = "Login",
@@ -789,6 +1340,17 @@ export enum PageTemplateTypeEnum {
   Standard = "Standard",
 }
 
+type AbstractNull = (
+  | ImageSlidersImageSliderComponent
+  | ArticlesArticleBlockComponent
+  | StepsContainersStepsContainerComponent
+  | CtasCtaComponent
+)[];
+
+type AbstractNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
 export enum PageMenuEnum1 {
   Main = "Main",
   Login = "Login",
@@ -802,6 +1364,17 @@ export enum PageNavigationActionEnum1 {
 export enum TemplateRequestTemplateTypeEnum {
   Standard = "Standard",
 }
+
+type DiscriminatorNull = (
+  | ImageSlidersImageSliderComponent
+  | ArticlesArticleBlockComponent
+  | StepsContainersStepsContainerComponent
+  | CtasCtaComponent
+)[];
+
+type DiscriminatorNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
 
 export enum TemplateTemplateTypeEnum {
   Standard = "Standard",
@@ -820,6 +1393,28 @@ export enum TemplateNavigationActionEnum {
 export enum TemplateTemplateTypeEnum1 {
   Standard = "Standard",
 }
+
+type InternalNull = (
+  | ImageSlidersImageSliderComponent
+  | ArticlesArticleBlockComponent
+  | StepsContainersStepsContainerComponent
+  | CtasCtaComponent
+)[];
+
+type InternalNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type PolymorphNull = (
+  | ImageSlidersImageSliderComponent
+  | ArticlesArticleBlockComponent
+  | StepsContainersStepsContainerComponent
+  | CtasCtaComponent
+)[];
+
+type PolymorphNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
 
 export enum OkEnum {
   True = true,
@@ -1030,6 +1625,125 @@ export class HttpClient<SecurityDataType = unknown> {
 export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
+  article = {
+    /**
+     * No description
+     *
+     * @tags Article
+     * @name GetArticles
+     * @request GET:/articles
+     * @secure
+     */
+    getArticles: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ArticleListResponse, Error>({
+        path: `/articles`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article
+     * @name PostArticles
+     * @request POST:/articles
+     * @secure
+     */
+    postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
+      this.request<ArticleResponse, Error>({
+        path: `/articles`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article
+     * @name GetArticlesId
+     * @request GET:/articles/{id}
+     * @secure
+     */
+    getArticlesId: (id: number, params: RequestParams = {}) =>
+      this.request<ArticleResponse, Error>({
+        path: `/articles/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article
+     * @name PutArticlesId
+     * @request PUT:/articles/{id}
+     * @secure
+     */
+    putArticlesId: (
+      id: number,
+      data: ArticleRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ArticleResponse, Error>({
+        path: `/articles/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article
+     * @name DeleteArticlesId
+     * @request DELETE:/articles/{id}
+     * @secure
+     */
+    deleteArticlesId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/articles/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   configuration = {
     /**
      * No description

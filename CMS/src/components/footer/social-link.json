@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_footer_social_links",
+  "info": {
+    "displayName": "Social Link",
+    "description": "A social media link for the footer"
+  },
+  "attributes": {
+    "platform": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "icon": {
+      "type": "string",
+      "required": false
+    },
+    "detail": {
+      "type": "string",
+      "required": false
+    }
+  }
+}

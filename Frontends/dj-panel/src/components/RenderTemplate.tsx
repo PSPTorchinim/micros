@@ -1,29 +1,29 @@
 import React from 'react';
-import { Page, Template } from '../models/strapi/strapiMap';
+import { Template } from '../models/strapi/strapiMap';
 import {
+  HeroBlock,
   ImageSliderBlock,
   StepsContainerBlock,
   ArticleBlock,
   CTABlock,
 } from './content-blocks';
 
-export const RenderTemplate: React.FC<{ template: Template; page: Page }> = ({
+export const RenderTemplate: React.FC<{ template: Template }> = ({
   template,
-  page,
 }) => {
   const content: any[] = (template as any)?.Content || [];
 
   return (
     <div>
-      <h1>{(page as any)?.Title}</h1>
-      {(template as any)?.Name && <div>Template: {(template as any).Name}</div>}
-
       <div style={{ marginTop: 16 }}>
         {content.map((block: any, i: number) => {
           const type = block?.__component;
           if (!type) return null;
 
           switch (type) {
+            case 'hero.hero-block':
+              return <HeroBlock key={i} block={block} />;
+
             case 'image-sliders.image-slider':
               return <ImageSliderBlock key={i} block={block} />;
 

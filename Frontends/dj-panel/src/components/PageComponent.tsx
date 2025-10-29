@@ -22,10 +22,11 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
       }
       // Use DEEP call so template.Content + nested CTAs/Articles are populated
       const fetchedPage = await strapiAPI.fetchPageByIdDeep(pageId);
+      console.log('Fetched page:', fetchedPage);
       setPage(fetchedPage || null);
 
       // Template is already populated via deep fetch; still keep as separate state for clarity
-      const tpl = (fetchedPage as any)?.template ?? null;
+      const tpl = fetchedPage?.template ?? null;
       setTemplate(tpl);
     })();
   }, [pageId]);
@@ -39,7 +40,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
 
   return (
     <div>
-      <RenderTemplate template={template as any} page={page as any} />
+      <RenderTemplate template={template} />
     </div>
   );
 };

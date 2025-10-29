@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_article_block_refs",
+  "info": { "displayName": "ArticleBlockRef" },
+  "attributes": {
+    "block": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::article-block.article-block"
+    }
+  }
+}

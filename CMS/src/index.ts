@@ -5,19 +5,18 @@ export default {
 
   async bootstrap({ strapi }) {
     try {
-      const setPublicFindPermissions = await import(
-        "./extensions/bootstrap/set-public-find-permissions"
-      );
-      if (setPublicFindPermissions?.default) {
-        await setPublicFindPermissions.default({ strapi });
+      const mod = await import("./extensions/bootstrap/run-bootstrap");
+      if (mod?.default) {
+        await mod.default({ strapi });
       } else {
-        strapi.log.warn("set-public-find-permissions not found/exported.");
+        strapi.log.warn("[BOOT] run-bootstrap not exported as default.");
       }
     } catch (e: any) {
       strapi.log.warn(
-        "Failed to set public find/findOne permissions: " + (e?.message ?? e)
+        "[BOOT] Failed to run bootstrap tasks: " + (e?.message ?? e)
       );
     }
+
     console.log("Strapi bootstrap phase completed - application ready");
   },
 };
