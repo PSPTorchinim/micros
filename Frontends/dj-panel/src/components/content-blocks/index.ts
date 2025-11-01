@@ -3,3 +3,7 @@ export { StepsContainerBlock } from './StepsContainerBlock';
 export { ArticleBlock } from './ArticleBlock';
 export { CTABlock } from './CTABlock';
 export { HeroBlock } from './HeroBlock';
+export { FeatureBlock } from './FeatureBlock';
+export { ContactBlock } from './ContactBlock';
+export { FeatureTabBlock } from './FeatureTabBlock';
+export { ContactInfoBlock } from './ContactInfoBlock';

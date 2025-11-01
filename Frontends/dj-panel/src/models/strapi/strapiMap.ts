@@ -195,6 +195,211 @@ export interface ArticleResponse {
   meta?: object;
 }
 
+export interface ArticleBlockRequest {
+  data: {
+    Title?: string;
+    items?: BaseNull &
+      (
+        | BaseNullComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | BaseNullComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | BaseNullComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | BaseNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+        | BaseNullComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | BaseNullComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | BaseNullComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | BaseNullComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | BaseNullComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ArticleBlockListResponse {
+  data?: ArticleBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ArticleBlock {
+  id?: number;
+  documentId?: string;
+  Title?: string;
+  items?: AbstractNull &
+    (
+      | AbstractNullComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
+        >
+      | AbstractNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | AbstractNullComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | AbstractNullComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
+    );
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface ArticleBlockResponse {
+  data?: ArticleBlock;
+  meta?: object;
+}
+
+export interface ImageSliderRefImageSliderRefComponent {
+  id?: number;
+  __component?: ImageSliderRefImageSliderRefComponentComponentEnum;
+  slider?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ArticleBlockRefArticleBlockRefComponent {
+  id?: number;
+  __component?: ArticleBlockRefArticleBlockRefComponentComponentEnum;
+  block?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface StepsContainerRefStepsContainerRefComponent {
+  id?: number;
+  __component?: StepsContainerRefStepsContainerRefComponentComponentEnum;
+  container?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface CtaRefCtaRefComponent {
+  id?: number;
+  __component?: CtaRefCtaRefComponentComponentEnum;
+  cta?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ContactInfoRefContactInfoRefComponent {
+  id?: number;
+  __component?: ContactInfoRefContactInfoRefComponentComponentEnum;
+  contact_info?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ContactSectionRefContactSectionRefComponent {
+  id?: number;
+  __component?: ContactSectionRefContactSectionRefComponentComponentEnum;
+  contact_section?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface FeatureSectionRefFeatureSectionRefComponent {
+  id?: number;
+  __component?: FeatureSectionRefFeatureSectionRefComponentComponentEnum;
+  feature_section?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface FeatureTabRefFeatureTabRefComponent {
+  id?: number;
+  __component?: FeatureTabRefFeatureTabRefComponentComponentEnum;
+  feature_tab?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface HeroBlockRefHeroBlockRefComponent {
+  id?: number;
+  __component?: HeroBlockRefHeroBlockRefComponentComponentEnum;
+  hero_block?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
 export interface ConfigurationRequest {
   data: {
     Title?: string;
@@ -399,21 +604,44 @@ export interface Configuration {
         id?: number;
         documentId?: string;
       };
-      Content?: BaseNull &
+      Content?: DiscriminatorNull &
         (
-          | BaseNullComponentMapping<
-              "image-sliders.image-slider",
-              ImageSlidersImageSliderComponent
+          | DiscriminatorNullComponentMapping<
+              "image-slider-ref.image-slider-ref",
+              ImageSliderRefImageSliderRefComponent
             >
-          | BaseNullComponentMapping<
-              "articles.article-block",
-              ArticlesArticleBlockComponent
+          | DiscriminatorNullComponentMapping<
+              "article-block-ref.article-block-ref",
+              ArticleBlockRefArticleBlockRefComponent
             >
-          | BaseNullComponentMapping<
-              "steps-containers.steps-container",
-              StepsContainersStepsContainerComponent
+          | DiscriminatorNullComponentMapping<
+              "steps-container-ref.steps-container-ref",
+              StepsContainerRefStepsContainerRefComponent
             >
-          | BaseNullComponentMapping<"ctas.cta", CtasCtaComponent>
+          | DiscriminatorNullComponentMapping<
+              "cta-ref.cta-ref",
+              CtaRefCtaRefComponent
+            >
+          | DiscriminatorNullComponentMapping<
+              "contact-info-ref.contact-info-ref",
+              ContactInfoRefContactInfoRefComponent
+            >
+          | DiscriminatorNullComponentMapping<
+              "contact-section-ref.contact-section-ref",
+              ContactSectionRefContactSectionRefComponent
+            >
+          | DiscriminatorNullComponentMapping<
+              "feature-section-ref.feature-section-ref",
+              FeatureSectionRefFeatureSectionRefComponent
+            >
+          | DiscriminatorNullComponentMapping<
+              "feature-tab-ref.feature-tab-ref",
+              FeatureTabRefFeatureTabRefComponent
+            >
+          | DiscriminatorNullComponentMapping<
+              "hero-block-ref.hero-block-ref",
+              HeroBlockRefHeroBlockRefComponent
+            >
         );
       /** @format date-time */
       createdAt?: string;
@@ -506,59 +734,1346 @@ export interface FooterSocialLinkComponent {
   detail?: string;
 }
 
-export interface ImageSlidersSlideComponent {
-  id?: number;
-  imageUrl?: string;
-  alt?: string;
-  caption?: string;
-  link?: string;
+export interface ContactInfoRequest {
+  data: {
+    title?: string;
+    content?: string;
+    detail?: string;
+    iconName?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
 }
 
-export interface ImageSlidersImageSliderComponent {
-  id?: number;
-  __component?: ImageSlidersImageSliderComponentComponentEnum;
-  Title?: string;
-  reversed?: boolean;
-  AutoPlay?: boolean;
-  IntervalMs?: number;
-  Slides?: ImageSlidersSlideComponent[];
+export interface ContactInfoListResponse {
+  data?: ContactInfo[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
 }
 
-export interface ArticlesArticleBlockComponent {
+export interface ContactInfo {
   id?: number;
-  __component?: ArticlesArticleBlockComponentComponentEnum;
-  Title?: string;
-  items?: {
+  documentId?: string;
+  title?: string;
+  content?: string;
+  detail?: string;
+  iconName?: string;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    content?: string;
+    detail?: string;
+    iconName?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface ContactInfoResponse {
+  data?: ContactInfo;
+  meta?: object;
+}
+
+export interface ContactSectionRequest {
+  data: {
+    introText?: string;
+    heading?: string;
+    description?: string;
+    contactInfo?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ContactSectionListResponse {
+  data?: ContactSection[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ContactSection {
+  id?: number;
+  documentId?: string;
+  introText?: string;
+  heading?: string;
+  description?: string;
+  contactInfo?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    content?: string;
+    detail?: string;
+    iconName?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+      firstname?: string;
+      lastname?: string;
+      username?: string;
+      /** @format email */
+      email?: string;
+      resetPasswordToken?: string;
+      registrationToken?: string;
+      isActive?: boolean;
+      roles?: {
+        id?: number;
+        documentId?: string;
+        name?: string;
+        code?: string;
+        description?: string;
+        users?: {
+          id?: number;
+          documentId?: string;
+        }[];
+        permissions?: {
+          id?: number;
+          documentId?: string;
+          action?: string;
+          actionParameters?: any;
+          subject?: string;
+          properties?: any;
+          conditions?: any;
+          role?: {
+            id?: number;
+            documentId?: string;
+          };
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        }[];
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      blocked?: boolean;
+      preferedLanguage?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    introText?: string;
+    heading?: string;
+    description?: string;
+    contactInfo?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface ContactSectionResponse {
+  data?: ContactSection;
+  meta?: object;
+}
+
+export interface CtaRequest {
+  data: {
+    Label?: string;
+    url?: string;
+    OpenInNewTab?: boolean;
+    article?: InternalNull &
+      (
+        | InternalNullComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | InternalNullComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | InternalNullComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | InternalNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+        | InternalNullComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | InternalNullComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | InternalNullComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | InternalNullComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | InternalNullComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface CtaListResponse {
+  data?: Cta[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Cta {
+  id?: number;
+  documentId?: string;
+  Label?: string;
+  url?: string;
+  OpenInNewTab?: boolean;
+  article?: PolymorphNull &
+    (
+      | PolymorphNullComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
+        >
+      | PolymorphNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | PolymorphNullComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | PolymorphNullComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
+    );
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
     id?: number;
     documentId?: string;
   }[];
 }
 
-export interface CtasCtaComponent {
+export interface CtaResponse {
+  data?: Cta;
+  meta?: object;
+}
+
+export interface FeatureSectionRequest {
+  data: {
+    reversed?: boolean;
+    tabs?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FeatureSectionListResponse {
+  data?: FeatureSection[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface FeatureSection {
   id?: number;
-  __component?: CtasCtaComponentComponentEnum;
-  Label?: string;
-  url?: string;
-  article?: {
+  documentId?: string;
+  reversed?: boolean;
+  tabs?: {
+    id?: number;
+    documentId?: string;
+    imgAlt?: string;
+    imgSrc?: string;
+    title?: string;
+    description?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+      firstname?: string;
+      lastname?: string;
+      username?: string;
+      /** @format email */
+      email?: string;
+      resetPasswordToken?: string;
+      registrationToken?: string;
+      isActive?: boolean;
+      roles?: {
+        id?: number;
+        documentId?: string;
+        name?: string;
+        code?: string;
+        description?: string;
+        users?: {
+          id?: number;
+          documentId?: string;
+        }[];
+        permissions?: {
+          id?: number;
+          documentId?: string;
+          action?: string;
+          actionParameters?: any;
+          subject?: string;
+          properties?: any;
+          conditions?: any;
+          role?: {
+            id?: number;
+            documentId?: string;
+          };
+          /** @format date-time */
+          createdAt?: string;
+          /** @format date-time */
+          updatedAt?: string;
+          /** @format date-time */
+          publishedAt?: string;
+          createdBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          updatedBy?: {
+            id?: number;
+            documentId?: string;
+          };
+          locale?: string;
+          localizations?: {
+            id?: number;
+            documentId?: string;
+          }[];
+        }[];
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      blocked?: boolean;
+      preferedLanguage?: string;
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
     id?: number;
     documentId?: string;
   };
-  OpenInNewTab?: boolean;
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    reversed?: boolean;
+    tabs?: {
+      id?: number;
+      documentId?: string;
+    }[];
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
 }
 
-export interface StepsContainersStepComponent {
+export interface FeatureSectionResponse {
+  data?: FeatureSection;
+  meta?: object;
+}
+
+export interface FeatureTabRequest {
+  data: {
+    imgAlt?: string;
+    imgSrc?: string;
+    title?: string;
+    description?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FeatureTabListResponse {
+  data?: FeatureTab[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface FeatureTab {
   id?: number;
+  documentId?: string;
+  imgAlt?: string;
+  imgSrc?: string;
   title?: string;
   description?: string;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    imgAlt?: string;
+    imgSrc?: string;
+    title?: string;
+    description?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
 }
 
-export interface StepsContainersStepsContainerComponent {
+export interface FeatureTabResponse {
+  data?: FeatureTab;
+  meta?: object;
+}
+
+export interface FooterRequest {
+  data: {
+    copyright?: string;
+    columns?: FooterLinkColumnComponent[];
+    socialLinks?: FooterSocialLinkComponent[];
+    /** @example "string or id" */
+    configuration?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FooterListResponse {
+  data?: Footer[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface Footer {
   id?: number;
-  __component?: StepsContainersStepsContainerComponentComponentEnum;
+  documentId?: string;
+  copyright?: string;
+  columns?: FooterLinkColumnComponent[];
+  socialLinks?: FooterSocialLinkComponent[];
+  configuration?: {
+    id?: number;
+    documentId?: string;
+    Title?: string;
+    pages?: {
+      id?: number;
+      documentId?: string;
+      Title?: string;
+      Slug?: string;
+      Visible?: boolean;
+      subpages?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      Parents?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      configuration?: {
+        id?: number;
+        documentId?: string;
+      };
+      Menu?: FooterMenuEnum;
+      NavigationOrder?: number;
+      NavigationAction?: FooterNavigationActionEnum;
+      template?: {
+        id?: number;
+        documentId?: string;
+        Name?: string;
+        TemplateType?: FooterTemplateTypeEnum;
+        page?: {
+          id?: number;
+          documentId?: string;
+        };
+        Content?: InternalNull1 &
+          (
+            | InternalNull1ComponentMapping<
+                "image-slider-ref.image-slider-ref",
+                ImageSliderRefImageSliderRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "article-block-ref.article-block-ref",
+                ArticleBlockRefArticleBlockRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "steps-container-ref.steps-container-ref",
+                StepsContainerRefStepsContainerRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "cta-ref.cta-ref",
+                CtaRefCtaRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "contact-info-ref.contact-info-ref",
+                ContactInfoRefContactInfoRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "contact-section-ref.contact-section-ref",
+                ContactSectionRefContactSectionRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "feature-section-ref.feature-section-ref",
+                FeatureSectionRefFeatureSectionRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "feature-tab-ref.feature-tab-ref",
+                FeatureTabRefFeatureTabRefComponent
+              >
+            | InternalNull1ComponentMapping<
+                "hero-block-ref.hero-block-ref",
+                HeroBlockRefHeroBlockRefComponent
+              >
+          );
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    footer?: {
+      id?: number;
+      documentId?: string;
+      copyright?: string;
+      columns?: FooterLinkColumnComponent[];
+      socialLinks?: FooterSocialLinkComponent[];
+      configuration?: {
+        id?: number;
+        documentId?: string;
+      };
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    };
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface FooterResponse {
+  data?: Footer;
+  meta?: object;
+}
+
+export interface HeroBlockRequest {
+  data: {
+    heading?: string;
+    content?: string;
+    actions?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface HeroBlockListResponse {
+  data?: HeroBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface HeroBlock {
+  id?: number;
+  documentId?: string;
   heading?: string;
   content?: string;
-  action?: CtasCtaComponent;
-  steps?: StepsContainersStepComponent[];
+  actions?: {
+    id?: number;
+    documentId?: string;
+    Label?: string;
+    url?: string;
+    OpenInNewTab?: boolean;
+    article?: DiscriminatorNull1 &
+      (
+        | DiscriminatorNull1ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | DiscriminatorNull1ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface HeroBlockResponse {
+  data?: HeroBlock;
+  meta?: object;
+}
+
+export interface ImageSliderRequest {
+  data: {
+    Title?: string;
+    reversed?: boolean;
+    AutoPlay?: boolean;
+    IntervalMs?: number;
+    Slides?: DiscriminatorNull2 &
+      (
+        | DiscriminatorNull2ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | DiscriminatorNull2ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ImageSliderListResponse {
+  data?: ImageSlider[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ImageSlider {
+  id?: number;
+  documentId?: string;
+  Title?: string;
+  reversed?: boolean;
+  AutoPlay?: boolean;
+  IntervalMs?: number;
+  Slides?: InternalNull2 &
+    (
+      | InternalNull2ComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
+        >
+      | InternalNull2ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull2ComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | InternalNull2ComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
+    );
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface ImageSliderResponse {
+  data?: ImageSlider;
+  meta?: object;
 }
 
 export interface PageRequest {
@@ -775,21 +2290,44 @@ export interface Page {
         id?: number;
         documentId?: string;
       };
-      Content?: AbstractNull &
+      Content?: PolymorphNull1 &
         (
-          | AbstractNullComponentMapping<
-              "image-sliders.image-slider",
-              ImageSlidersImageSliderComponent
+          | PolymorphNull1ComponentMapping<
+              "image-slider-ref.image-slider-ref",
+              ImageSliderRefImageSliderRefComponent
             >
-          | AbstractNullComponentMapping<
-              "articles.article-block",
-              ArticlesArticleBlockComponent
+          | PolymorphNull1ComponentMapping<
+              "article-block-ref.article-block-ref",
+              ArticleBlockRefArticleBlockRefComponent
             >
-          | AbstractNullComponentMapping<
-              "steps-containers.steps-container",
-              StepsContainersStepsContainerComponent
+          | PolymorphNull1ComponentMapping<
+              "steps-container-ref.steps-container-ref",
+              StepsContainerRefStepsContainerRefComponent
             >
-          | AbstractNullComponentMapping<"ctas.cta", CtasCtaComponent>
+          | PolymorphNull1ComponentMapping<
+              "cta-ref.cta-ref",
+              CtaRefCtaRefComponent
+            >
+          | PolymorphNull1ComponentMapping<
+              "contact-info-ref.contact-info-ref",
+              ContactInfoRefContactInfoRefComponent
+            >
+          | PolymorphNull1ComponentMapping<
+              "contact-section-ref.contact-section-ref",
+              ContactSectionRefContactSectionRefComponent
+            >
+          | PolymorphNull1ComponentMapping<
+              "feature-section-ref.feature-section-ref",
+              FeatureSectionRefFeatureSectionRefComponent
+            >
+          | PolymorphNull1ComponentMapping<
+              "feature-tab-ref.feature-tab-ref",
+              FeatureTabRefFeatureTabRefComponent
+            >
+          | PolymorphNull1ComponentMapping<
+              "hero-block-ref.hero-block-ref",
+              HeroBlockRefHeroBlockRefComponent
+            >
         );
       /** @format date-time */
       createdAt?: string;
@@ -872,27 +2410,260 @@ export interface PageResponse {
   meta?: object;
 }
 
+export interface StepsContainerRequest {
+  data: {
+    heading?: string;
+    content?: string;
+    action?: DiscriminatorNull3 &
+      (
+        | DiscriminatorNull3ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | DiscriminatorNull3ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    steps?: InternalNull3 &
+      (
+        | InternalNull3ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | InternalNull3ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface StepsContainerListResponse {
+  data?: StepsContainer[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface StepsContainer {
+  id?: number;
+  documentId?: string;
+  heading?: string;
+  content?: string;
+  action?: DiscriminatorNull4 &
+    (
+      | DiscriminatorNull4ComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "cta-ref.cta-ref",
+          CtaRefCtaRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | DiscriminatorNull4ComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
+    );
+  steps?: DiscriminatorNull5 &
+    (
+      | DiscriminatorNull5ComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "cta-ref.cta-ref",
+          CtaRefCtaRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | DiscriminatorNull5ComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
+    );
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+  }[];
+}
+
+export interface StepsContainerResponse {
+  data?: StepsContainer;
+  meta?: object;
+}
+
 export interface TemplateRequest {
   data: {
     Name?: string;
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
-    Content?: DiscriminatorNull &
+    Content?: InternalNull4 &
       (
-        | DiscriminatorNullComponentMapping<
-            "image-sliders.image-slider",
-            ImageSlidersImageSliderComponent
+        | InternalNull4ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNullComponentMapping<
-            "articles.article-block",
-            ArticlesArticleBlockComponent
+        | InternalNull4ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNullComponentMapping<
-            "steps-containers.steps-container",
-            StepsContainersStepsContainerComponent
+        | InternalNull4ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNullComponentMapping<"ctas.cta", CtasCtaComponent>
+        | InternalNull4ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | InternalNull4ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | InternalNull4ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | InternalNull4ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | InternalNull4ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | InternalNull4ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
       );
     locale?: string;
     localizations?: (number | string)[];
@@ -1093,21 +2864,44 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: InternalNull &
+      Content?: PolymorphNull2 &
         (
-          | InternalNullComponentMapping<
-              "image-sliders.image-slider",
-              ImageSlidersImageSliderComponent
+          | PolymorphNull2ComponentMapping<
+              "image-slider-ref.image-slider-ref",
+              ImageSliderRefImageSliderRefComponent
             >
-          | InternalNullComponentMapping<
-              "articles.article-block",
-              ArticlesArticleBlockComponent
+          | PolymorphNull2ComponentMapping<
+              "article-block-ref.article-block-ref",
+              ArticleBlockRefArticleBlockRefComponent
             >
-          | InternalNullComponentMapping<
-              "steps-containers.steps-container",
-              StepsContainersStepsContainerComponent
+          | PolymorphNull2ComponentMapping<
+              "steps-container-ref.steps-container-ref",
+              StepsContainerRefStepsContainerRefComponent
             >
-          | InternalNullComponentMapping<"ctas.cta", CtasCtaComponent>
+          | PolymorphNull2ComponentMapping<
+              "cta-ref.cta-ref",
+              CtaRefCtaRefComponent
+            >
+          | PolymorphNull2ComponentMapping<
+              "contact-info-ref.contact-info-ref",
+              ContactInfoRefContactInfoRefComponent
+            >
+          | PolymorphNull2ComponentMapping<
+              "contact-section-ref.contact-section-ref",
+              ContactSectionRefContactSectionRefComponent
+            >
+          | PolymorphNull2ComponentMapping<
+              "feature-section-ref.feature-section-ref",
+              FeatureSectionRefFeatureSectionRefComponent
+            >
+          | PolymorphNull2ComponentMapping<
+              "feature-tab-ref.feature-tab-ref",
+              FeatureTabRefFeatureTabRefComponent
+            >
+          | PolymorphNull2ComponentMapping<
+              "hero-block-ref.hero-block-ref",
+              HeroBlockRefHeroBlockRefComponent
+            >
         );
       /** @format date-time */
       createdAt?: string;
@@ -1149,21 +2943,41 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: PolymorphNull &
+  Content?: PolymorphNull3 &
     (
-      | PolymorphNullComponentMapping<
-          "image-sliders.image-slider",
-          ImageSlidersImageSliderComponent
+      | PolymorphNull3ComponentMapping<
+          "image-slider-ref.image-slider-ref",
+          ImageSliderRefImageSliderRefComponent
         >
-      | PolymorphNullComponentMapping<
-          "articles.article-block",
-          ArticlesArticleBlockComponent
+      | PolymorphNull3ComponentMapping<
+          "article-block-ref.article-block-ref",
+          ArticleBlockRefArticleBlockRefComponent
         >
-      | PolymorphNullComponentMapping<
-          "steps-containers.steps-container",
-          StepsContainersStepsContainerComponent
+      | PolymorphNull3ComponentMapping<
+          "steps-container-ref.steps-container-ref",
+          StepsContainerRefStepsContainerRefComponent
         >
-      | PolymorphNullComponentMapping<"ctas.cta", CtasCtaComponent>
+      | PolymorphNull3ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | PolymorphNull3ComponentMapping<
+          "contact-info-ref.contact-info-ref",
+          ContactInfoRefContactInfoRefComponent
+        >
+      | PolymorphNull3ComponentMapping<
+          "contact-section-ref.contact-section-ref",
+          ContactSectionRefContactSectionRefComponent
+        >
+      | PolymorphNull3ComponentMapping<
+          "feature-section-ref.feature-section-ref",
+          FeatureSectionRefFeatureSectionRefComponent
+        >
+      | PolymorphNull3ComponentMapping<
+          "feature-tab-ref.feature-tab-ref",
+          FeatureTabRefFeatureTabRefComponent
+        >
+      | PolymorphNull3ComponentMapping<
+          "hero-block-ref.hero-block-ref",
+          HeroBlockRefHeroBlockRefComponent
+        >
     );
   /** @format date-time */
   createdAt?: string;
@@ -1275,6 +3089,74 @@ export type UsersPermissionsPermissionsTree = Record<
   }
 >;
 
+type BaseNull = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type BaseNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type AbstractNull = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type AbstractNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum ImageSliderRefImageSliderRefComponentComponentEnum {
+  ImageSliderRefImageSliderRef = "image-slider-ref.image-slider-ref",
+}
+
+export enum ArticleBlockRefArticleBlockRefComponentComponentEnum {
+  ArticleBlockRefArticleBlockRef = "article-block-ref.article-block-ref",
+}
+
+export enum StepsContainerRefStepsContainerRefComponentComponentEnum {
+  StepsContainerRefStepsContainerRef = "steps-container-ref.steps-container-ref",
+}
+
+export enum CtaRefCtaRefComponentComponentEnum {
+  CtaRefCtaRef = "cta-ref.cta-ref",
+}
+
+export enum ContactInfoRefContactInfoRefComponentComponentEnum {
+  ContactInfoRefContactInfoRef = "contact-info-ref.contact-info-ref",
+}
+
+export enum ContactSectionRefContactSectionRefComponentComponentEnum {
+  ContactSectionRefContactSectionRef = "contact-section-ref.contact-section-ref",
+}
+
+export enum FeatureSectionRefFeatureSectionRefComponentComponentEnum {
+  FeatureSectionRefFeatureSectionRef = "feature-section-ref.feature-section-ref",
+}
+
+export enum FeatureTabRefFeatureTabRefComponentComponentEnum {
+  FeatureTabRefFeatureTabRef = "feature-tab-ref.feature-tab-ref",
+}
+
+export enum HeroBlockRefHeroBlockRefComponentComponentEnum {
+  HeroBlockRefHeroBlockRef = "hero-block-ref.hero-block-ref",
+}
+
 export enum ConfigurationMenuEnum {
   Main = "Main",
   Login = "Login",
@@ -1289,32 +3171,131 @@ export enum ConfigurationTemplateTypeEnum {
   Standard = "Standard",
 }
 
-type BaseNull = (
-  | ImageSlidersImageSliderComponent
-  | ArticlesArticleBlockComponent
-  | StepsContainersStepsContainerComponent
-  | CtasCtaComponent
+type DiscriminatorNull = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type BaseNullComponentMapping<Key, Type> = {
+type DiscriminatorNullComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-export enum ImageSlidersImageSliderComponentComponentEnum {
-  ImageSlidersImageSlider = "image-sliders.image-slider",
+type InternalNull = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type PolymorphNull = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type PolymorphNullComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum FooterMenuEnum {
+  Main = "Main",
+  Login = "Login",
 }
 
-export enum ArticlesArticleBlockComponentComponentEnum {
-  ArticlesArticleBlock = "articles.article-block",
+export enum FooterNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
 }
 
-export enum CtasCtaComponentComponentEnum {
-  CtasCta = "ctas.cta",
+export enum FooterTemplateTypeEnum {
+  Standard = "Standard",
 }
 
-export enum StepsContainersStepsContainerComponentComponentEnum {
-  StepsContainersStepsContainer = "steps-containers.steps-container",
-}
+type InternalNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type InternalNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
 
 export enum PageRequestMenuEnum {
   Main = "Main",
@@ -1340,14 +3321,19 @@ export enum PageTemplateTypeEnum {
   Standard = "Standard",
 }
 
-type AbstractNull = (
-  | ImageSlidersImageSliderComponent
-  | ArticlesArticleBlockComponent
-  | StepsContainersStepsContainerComponent
-  | CtasCtaComponent
+type PolymorphNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type AbstractNullComponentMapping<Key, Type> = {
+type PolymorphNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -1361,18 +3347,87 @@ export enum PageNavigationActionEnum1 {
   Action = "Action",
 }
 
+type DiscriminatorNull3 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull3ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type InternalNull3 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull3ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull4 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull4ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull5 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull5ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
 export enum TemplateRequestTemplateTypeEnum {
   Standard = "Standard",
 }
 
-type DiscriminatorNull = (
-  | ImageSlidersImageSliderComponent
-  | ArticlesArticleBlockComponent
-  | StepsContainersStepsContainerComponent
-  | CtasCtaComponent
+type InternalNull4 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type DiscriminatorNullComponentMapping<Key, Type> = {
+type InternalNull4ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -1394,25 +3449,35 @@ export enum TemplateTemplateTypeEnum1 {
   Standard = "Standard",
 }
 
-type InternalNull = (
-  | ImageSlidersImageSliderComponent
-  | ArticlesArticleBlockComponent
-  | StepsContainersStepsContainerComponent
-  | CtasCtaComponent
+type PolymorphNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type InternalNullComponentMapping<Key, Type> = {
+type PolymorphNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type PolymorphNull = (
-  | ImageSlidersImageSliderComponent
-  | ArticlesArticleBlockComponent
-  | StepsContainersStepsContainerComponent
-  | CtasCtaComponent
+type PolymorphNull3 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNullComponentMapping<Key, Type> = {
+type PolymorphNull3ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -1744,6 +3809,128 @@ export class Api<
         ...params,
       }),
   };
+  articleBlock = {
+    /**
+     * No description
+     *
+     * @tags Article-block
+     * @name GetArticleBlocks
+     * @request GET:/article-blocks
+     * @secure
+     */
+    getArticleBlocks: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ArticleBlockListResponse, Error>({
+        path: `/article-blocks`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article-block
+     * @name PostArticleBlocks
+     * @request POST:/article-blocks
+     * @secure
+     */
+    postArticleBlocks: (
+      data: ArticleBlockRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ArticleBlockResponse, Error>({
+        path: `/article-blocks`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article-block
+     * @name GetArticleBlocksId
+     * @request GET:/article-blocks/{id}
+     * @secure
+     */
+    getArticleBlocksId: (id: number, params: RequestParams = {}) =>
+      this.request<ArticleBlockResponse, Error>({
+        path: `/article-blocks/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article-block
+     * @name PutArticleBlocksId
+     * @request PUT:/article-blocks/{id}
+     * @secure
+     */
+    putArticleBlocksId: (
+      id: number,
+      data: ArticleBlockRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ArticleBlockResponse, Error>({
+        path: `/article-blocks/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Article-block
+     * @name DeleteArticleBlocksId
+     * @request DELETE:/article-blocks/{id}
+     * @secure
+     */
+    deleteArticleBlocksId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/article-blocks/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   configuration = {
     /**
      * No description
@@ -1866,6 +4053,920 @@ export class Api<
         ...params,
       }),
   };
+  contactInfo = {
+    /**
+     * No description
+     *
+     * @tags Contact-info
+     * @name GetContactInfos
+     * @request GET:/contact-infos
+     * @secure
+     */
+    getContactInfos: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ContactInfoListResponse, Error>({
+        path: `/contact-infos`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-info
+     * @name PostContactInfos
+     * @request POST:/contact-infos
+     * @secure
+     */
+    postContactInfos: (data: ContactInfoRequest, params: RequestParams = {}) =>
+      this.request<ContactInfoResponse, Error>({
+        path: `/contact-infos`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-info
+     * @name GetContactInfosId
+     * @request GET:/contact-infos/{id}
+     * @secure
+     */
+    getContactInfosId: (id: number, params: RequestParams = {}) =>
+      this.request<ContactInfoResponse, Error>({
+        path: `/contact-infos/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-info
+     * @name PutContactInfosId
+     * @request PUT:/contact-infos/{id}
+     * @secure
+     */
+    putContactInfosId: (
+      id: number,
+      data: ContactInfoRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ContactInfoResponse, Error>({
+        path: `/contact-infos/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-info
+     * @name DeleteContactInfosId
+     * @request DELETE:/contact-infos/{id}
+     * @secure
+     */
+    deleteContactInfosId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/contact-infos/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  contactSection = {
+    /**
+     * No description
+     *
+     * @tags Contact-section
+     * @name GetContactSections
+     * @request GET:/contact-sections
+     * @secure
+     */
+    getContactSections: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ContactSectionListResponse, Error>({
+        path: `/contact-sections`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-section
+     * @name PostContactSections
+     * @request POST:/contact-sections
+     * @secure
+     */
+    postContactSections: (
+      data: ContactSectionRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ContactSectionResponse, Error>({
+        path: `/contact-sections`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-section
+     * @name GetContactSectionsId
+     * @request GET:/contact-sections/{id}
+     * @secure
+     */
+    getContactSectionsId: (id: number, params: RequestParams = {}) =>
+      this.request<ContactSectionResponse, Error>({
+        path: `/contact-sections/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-section
+     * @name PutContactSectionsId
+     * @request PUT:/contact-sections/{id}
+     * @secure
+     */
+    putContactSectionsId: (
+      id: number,
+      data: ContactSectionRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ContactSectionResponse, Error>({
+        path: `/contact-sections/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Contact-section
+     * @name DeleteContactSectionsId
+     * @request DELETE:/contact-sections/{id}
+     * @secure
+     */
+    deleteContactSectionsId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/contact-sections/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  cta = {
+    /**
+     * No description
+     *
+     * @tags Cta
+     * @name GetCtas
+     * @request GET:/ctas
+     * @secure
+     */
+    getCtas: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CtaListResponse, Error>({
+        path: `/ctas`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Cta
+     * @name PostCtas
+     * @request POST:/ctas
+     * @secure
+     */
+    postCtas: (data: CtaRequest, params: RequestParams = {}) =>
+      this.request<CtaResponse, Error>({
+        path: `/ctas`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Cta
+     * @name GetCtasId
+     * @request GET:/ctas/{id}
+     * @secure
+     */
+    getCtasId: (id: number, params: RequestParams = {}) =>
+      this.request<CtaResponse, Error>({
+        path: `/ctas/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Cta
+     * @name PutCtasId
+     * @request PUT:/ctas/{id}
+     * @secure
+     */
+    putCtasId: (id: number, data: CtaRequest, params: RequestParams = {}) =>
+      this.request<CtaResponse, Error>({
+        path: `/ctas/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Cta
+     * @name DeleteCtasId
+     * @request DELETE:/ctas/{id}
+     * @secure
+     */
+    deleteCtasId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/ctas/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  featureSection = {
+    /**
+     * No description
+     *
+     * @tags Feature-section
+     * @name GetFeatureSections
+     * @request GET:/feature-sections
+     * @secure
+     */
+    getFeatureSections: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<FeatureSectionListResponse, Error>({
+        path: `/feature-sections`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-section
+     * @name PostFeatureSections
+     * @request POST:/feature-sections
+     * @secure
+     */
+    postFeatureSections: (
+      data: FeatureSectionRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<FeatureSectionResponse, Error>({
+        path: `/feature-sections`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-section
+     * @name GetFeatureSectionsId
+     * @request GET:/feature-sections/{id}
+     * @secure
+     */
+    getFeatureSectionsId: (id: number, params: RequestParams = {}) =>
+      this.request<FeatureSectionResponse, Error>({
+        path: `/feature-sections/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-section
+     * @name PutFeatureSectionsId
+     * @request PUT:/feature-sections/{id}
+     * @secure
+     */
+    putFeatureSectionsId: (
+      id: number,
+      data: FeatureSectionRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<FeatureSectionResponse, Error>({
+        path: `/feature-sections/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-section
+     * @name DeleteFeatureSectionsId
+     * @request DELETE:/feature-sections/{id}
+     * @secure
+     */
+    deleteFeatureSectionsId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/feature-sections/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  featureTab = {
+    /**
+     * No description
+     *
+     * @tags Feature-tab
+     * @name GetFeatureTabs
+     * @request GET:/feature-tabs
+     * @secure
+     */
+    getFeatureTabs: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<FeatureTabListResponse, Error>({
+        path: `/feature-tabs`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-tab
+     * @name PostFeatureTabs
+     * @request POST:/feature-tabs
+     * @secure
+     */
+    postFeatureTabs: (data: FeatureTabRequest, params: RequestParams = {}) =>
+      this.request<FeatureTabResponse, Error>({
+        path: `/feature-tabs`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-tab
+     * @name GetFeatureTabsId
+     * @request GET:/feature-tabs/{id}
+     * @secure
+     */
+    getFeatureTabsId: (id: number, params: RequestParams = {}) =>
+      this.request<FeatureTabResponse, Error>({
+        path: `/feature-tabs/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-tab
+     * @name PutFeatureTabsId
+     * @request PUT:/feature-tabs/{id}
+     * @secure
+     */
+    putFeatureTabsId: (
+      id: number,
+      data: FeatureTabRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<FeatureTabResponse, Error>({
+        path: `/feature-tabs/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Feature-tab
+     * @name DeleteFeatureTabsId
+     * @request DELETE:/feature-tabs/{id}
+     * @secure
+     */
+    deleteFeatureTabsId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/feature-tabs/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  footer = {
+    /**
+     * No description
+     *
+     * @tags Footer
+     * @name GetFooter
+     * @request GET:/footer
+     * @secure
+     */
+    getFooter: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<FooterResponse, Error>({
+        path: `/footer`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Footer
+     * @name PutFooter
+     * @request PUT:/footer
+     * @secure
+     */
+    putFooter: (data: FooterRequest, params: RequestParams = {}) =>
+      this.request<FooterResponse, Error>({
+        path: `/footer`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Footer
+     * @name DeleteFooter
+     * @request DELETE:/footer
+     * @secure
+     */
+    deleteFooter: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/footer`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  heroBlock = {
+    /**
+     * No description
+     *
+     * @tags Hero-block
+     * @name GetHeroBlocks
+     * @request GET:/hero-blocks
+     * @secure
+     */
+    getHeroBlocks: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<HeroBlockListResponse, Error>({
+        path: `/hero-blocks`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Hero-block
+     * @name PostHeroBlocks
+     * @request POST:/hero-blocks
+     * @secure
+     */
+    postHeroBlocks: (data: HeroBlockRequest, params: RequestParams = {}) =>
+      this.request<HeroBlockResponse, Error>({
+        path: `/hero-blocks`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Hero-block
+     * @name GetHeroBlocksId
+     * @request GET:/hero-blocks/{id}
+     * @secure
+     */
+    getHeroBlocksId: (id: number, params: RequestParams = {}) =>
+      this.request<HeroBlockResponse, Error>({
+        path: `/hero-blocks/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Hero-block
+     * @name PutHeroBlocksId
+     * @request PUT:/hero-blocks/{id}
+     * @secure
+     */
+    putHeroBlocksId: (
+      id: number,
+      data: HeroBlockRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<HeroBlockResponse, Error>({
+        path: `/hero-blocks/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Hero-block
+     * @name DeleteHeroBlocksId
+     * @request DELETE:/hero-blocks/{id}
+     * @secure
+     */
+    deleteHeroBlocksId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/hero-blocks/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  imageSlider = {
+    /**
+     * No description
+     *
+     * @tags Image-slider
+     * @name GetImageSliders
+     * @request GET:/image-sliders
+     * @secure
+     */
+    getImageSliders: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ImageSliderListResponse, Error>({
+        path: `/image-sliders`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Image-slider
+     * @name PostImageSliders
+     * @request POST:/image-sliders
+     * @secure
+     */
+    postImageSliders: (data: ImageSliderRequest, params: RequestParams = {}) =>
+      this.request<ImageSliderResponse, Error>({
+        path: `/image-sliders`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Image-slider
+     * @name GetImageSlidersId
+     * @request GET:/image-sliders/{id}
+     * @secure
+     */
+    getImageSlidersId: (id: number, params: RequestParams = {}) =>
+      this.request<ImageSliderResponse, Error>({
+        path: `/image-sliders/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Image-slider
+     * @name PutImageSlidersId
+     * @request PUT:/image-sliders/{id}
+     * @secure
+     */
+    putImageSlidersId: (
+      id: number,
+      data: ImageSliderRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ImageSliderResponse, Error>({
+        path: `/image-sliders/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Image-slider
+     * @name DeleteImageSlidersId
+     * @request DELETE:/image-sliders/{id}
+     * @secure
+     */
+    deleteImageSlidersId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/image-sliders/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   page = {
     /**
      * No description
@@ -1975,6 +5076,128 @@ export class Api<
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/pages/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  stepsContainer = {
+    /**
+     * No description
+     *
+     * @tags Steps-container
+     * @name GetStepsContainers
+     * @request GET:/steps-containers
+     * @secure
+     */
+    getStepsContainers: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<StepsContainerListResponse, Error>({
+        path: `/steps-containers`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Steps-container
+     * @name PostStepsContainers
+     * @request POST:/steps-containers
+     * @secure
+     */
+    postStepsContainers: (
+      data: StepsContainerRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<StepsContainerResponse, Error>({
+        path: `/steps-containers`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Steps-container
+     * @name GetStepsContainersId
+     * @request GET:/steps-containers/{id}
+     * @secure
+     */
+    getStepsContainersId: (id: number, params: RequestParams = {}) =>
+      this.request<StepsContainerResponse, Error>({
+        path: `/steps-containers/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Steps-container
+     * @name PutStepsContainersId
+     * @request PUT:/steps-containers/{id}
+     * @secure
+     */
+    putStepsContainersId: (
+      id: number,
+      data: StepsContainerRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<StepsContainerResponse, Error>({
+        path: `/steps-containers/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Steps-container
+     * @name DeleteStepsContainersId
+     * @request DELETE:/steps-containers/{id}
+     * @secure
+     */
+    deleteStepsContainersId: (id: number, params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/steps-containers/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",

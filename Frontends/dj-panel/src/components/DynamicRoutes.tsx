@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Page } from '../models/strapi/strapiMap';
-import { strapiAPI } from '../services/strapiPages';
+import { strapiAPI } from '../services/strapi-api';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
 
@@ -28,7 +28,15 @@ function buildRoutesAndNav(
   let nav: NavigationItem[] = [];
 
   pages.forEach((page) => {
-    const path = '/' + buildPath(page, parentPath).replace(/^\/+/g, '');
+    const isRoot = !parentPath;
+    const rawPath = buildPath(page, parentPath).replace(/^\/+/g, '');
+    // Special handling for home/root page
+    const isHomePage = isRoot && (page as any)?.Slug === '/';
+    const path = isHomePage
+      ? ''
+      : isRoot
+        ? rawPath.replace(/^\/+/g, '')
+        : rawPath.replace(/^\//, '');
     let childrenRoutes: React.ReactElement[] = [];
     let childrenNav: NavigationItem[] = [];
 
@@ -45,22 +53,34 @@ function buildRoutesAndNav(
       childrenNav = result.nav;
 
       routes.push(
-        <Route key={path} path={path} element={<Outlet />}>
-          <Route index element={<PageComponent pageId={(page as any).id} />} />
+        <Route key={path || 'index'} path={path} element={<Outlet />}>
+          <Route index element={<PageComponent pageId={page.documentId} />} />
           {childrenRoutes}
         </Route>,
       );
     } else {
-      routes.push(
-        <Route
-          key={path}
-          path={path}
-          element={<PageComponent pageId={(page as any).id} />}
-        />,
-      );
+      // If this is the home page, use index route
+      if (isHomePage) {
+        routes.push(
+          <Route
+            key="index"
+            index
+            element={<PageComponent pageId={page.documentId} />}
+          />,
+        );
+      } else {
+        routes.push(
+          <Route
+            key={path}
+            path={path}
+            element={<PageComponent pageId={page.documentId} />}
+          />,
+        );
+      }
     }
 
-    const url = path.replace(/\/+/, '/');
+    // For navigation URLs, always use leading slash
+    const url = '/' + rawPath.replace(/^\/+/g, '');
     nav.push({
       id: (page as any).id ?? 0,
       text: (page as any).Title || String((page as any).id),
@@ -82,22 +102,43 @@ export function useDynamicRoutes() {
 
   async function fetchAllChildren(page: Page): Promise<Page> {
     if (!(page as any).id) return page;
-    const children = await strapiAPI.fetchPagesByParentId((page as any).id);
+    const children = await strapiAPI.getPagesByParentId((page as any).id);
     if (!children || children.length === 0) return page;
 
-    const subpagesWithChildren = await Promise.all(
-      children.map(async (child: Page) => await fetchAllChildren(child)),
-    );
-    return { ...(page as any), subpages: subpagesWithChildren } as any;
+    if (Array.isArray(children)) {
+      const subpagesWithChildren = await Promise.all(
+        children.map(async (child: Page) => await fetchAllChildren(child)),
+      );
+      return { ...(page as any), subpages: subpagesWithChildren } as any;
+    }
+    return page;
   }
 
   useEffect(() => {
     (async () => {
-      const rootPages = await strapiAPI.fetchRootPages();
+      const rootPages = (await strapiAPI.getRootPages()) || [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
-      const { routes, nav } = buildRoutesAndNav(pagesWithChildren);
+      let { routes, nav } = buildRoutesAndNav(pagesWithChildren);
+
+      if (
+        !routes.some(
+          (r) =>
+            r &&
+            r.type &&
+            r.props &&
+            typeof r.props === 'object' &&
+            r.props !== null &&
+            'index' in r.props &&
+            r.props.index,
+        )
+      ) {
+        routes = [
+          <Route key="fallback-index" index element={<div>Loading...</div>} />,
+          ...routes,
+        ];
+      }
       setRoutes(routes);
       setNavigation(nav);
     })();

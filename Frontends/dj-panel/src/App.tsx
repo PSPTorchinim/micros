@@ -18,6 +18,7 @@ export default function App() {
         <AuthProvider>
           <Routes>
             <Route
+              path="/"
               element={<Layout navigation={{ links: dynamicNavigation }} />}
             >
               <Route path="users">
