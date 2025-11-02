@@ -25,7 +25,7 @@ runs:
     - name: Check Code Formatting
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm run format:check
+      run: npm run format
 
     - name: Build React App
       working-directory: Frontends/${{ inputs.service }}

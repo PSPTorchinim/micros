@@ -1,20 +1,22 @@
-// import type { Core } from '@strapi/strapi';
-
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register() {
+    console.log("Strapi register phase started");
+  },
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }) {
+    try {
+      const mod = await import("./extensions/bootstrap/run-bootstrap");
+      if (mod?.default) {
+        await mod.default({ strapi });
+      } else {
+        strapi.log.warn("[BOOT] run-bootstrap not exported as default.");
+      }
+    } catch (e: any) {
+      strapi.log.warn(
+        "[BOOT] Failed to run bootstrap tasks: " + (e?.message ?? e)
+      );
+    }
+
+    console.log("Strapi bootstrap phase completed - application ready");
+  },
 };

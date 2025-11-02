@@ -11,7 +11,7 @@ namespace IdentityAPI.Services
     public interface IPermissionsService : IService
     {
         Task<List<GetPermissionsDTO>> GetPermissions();
-        Task<GetPermissionDTO> GetPermission(Guid id);
+        Task<GetPermissionDTO?> GetPermission(Guid id);
         Task<bool> AddPermission(AddPermissionDTO request);
         Task<bool> EditPermission(Guid id, EditPermissionDTO request);
         Task<bool> DeletePermission(Guid id);
@@ -58,7 +58,7 @@ namespace IdentityAPI.Services
             }, _logger);
         }
 
-        public async Task<GetPermissionDTO> GetPermission(Guid id)
+    public async Task<GetPermissionDTO?> GetPermission(Guid id)
         {
             _logger.LogInformation("Getting permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>

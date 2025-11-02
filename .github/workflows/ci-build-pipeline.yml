@@ -83,14 +83,14 @@ jobs:
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
       SECURE_KEY: ${{ secrets.SECURE_KEY }}
       JWT_KEY: ${{ secrets.JWT_KEY }}
-      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
-      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
-      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
-      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
-      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
-      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      IDENTITY_BE_ADDRESS: ${{ vars.IDENTITY_BE_ADDRESS }}
+      MUSIC_BE_ADDRESS: ${{ vars.MUSIC_BE_ADDRESS }}
+      GEAR_BE_ADDRESS: ${{ vars.GEAR_BE_ADDRESS }}
+      DOCUMENTS_BE_ADDRESS: ${{ vars.DOCUMENTS_BE_ADDRESS }}
+      BRAND_BE_ADDRESS: ${{ vars.BRAND_BE_ADDRESS }}
+      PARTY_BE_ADDRESS: ${{ vars.PARTY_BE_ADDRESS }}
+      MAILING_BE_ADDRESS: ${{ vars.MAILING_BE_ADDRESS }}
       DATABASE_CATALOG: ${{ matrix.service }}
       DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
       DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
@@ -103,11 +103,17 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
+      - name: Convert service name to lowercase
+        id: lowercase_service
+        run: |
+          LOWERCASE_SERVICE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+          echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
+
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          dockerfile: Docker/microservice.Dockerfile
+          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
@@ -128,14 +134,14 @@ jobs:
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
             SECURE_KEY=${{ env.SECURE_KEY }}
             JWT_KEY=${{ env.JWT_KEY }}
-            ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
-            ASPNETCORE_IDENTITY_BE_ADDRESS=${{ env.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-            ASPNETCORE_MUSIC_BE_ADDRESS=${{ env.ASPNETCORE_MUSIC_BE_ADDRESS }}
-            ASPNETCORE_GEAR_BE_ADDRESS=${{ env.ASPNETCORE_GEAR_BE_ADDRESS }}
-            ASPNETCORE_DOCUMENTS_BE_ADDRESS=${{ env.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-            ASPNETCORE_BRAND_BE_ADDRESS=${{ env.ASPNETCORE_BRAND_BE_ADDRESS }}
-            ASPNETCORE_PARTY_BE_ADDRESS=${{ env.ASPNETCORE_PARTY_BE_ADDRESS }}
-            ASPNETCORE_MAILING_BE_ADDRESS=${{ env.ASPNETCORE_MAILING_BE_ADDRESS }}
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            IDENTITY_BE_ADDRESS=${{ env.IDENTITY_BE_ADDRESS }}
+            MUSIC_BE_ADDRESS=${{ env.MUSIC_BE_ADDRESS }}
+            GEAR_BE_ADDRESS=${{ env.GEAR_BE_ADDRESS }}
+            DOCUMENTS_BE_ADDRESS=${{ env.DOCUMENTS_BE_ADDRESS }}
+            BRAND_BE_ADDRESS=${{ env.BRAND_BE_ADDRESS }}
+            PARTY_BE_ADDRESS=${{ env.PARTY_BE_ADDRESS }}
+            MAILING_BE_ADDRESS=${{ env.MAILING_BE_ADDRESS }}
             DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
             DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
             DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
@@ -151,11 +157,19 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        service: ["dj-panel"]
+        image:
+          - {
+              name: "dj-panel",
+              dockerfile: "Docker/frontends/react.Dockerfile",
+            }
     env:
-      REACT_APP_API_GATEWAY: ${{ vars.REACT_APP_API_GATEWAY }}
-      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+      API_GATEWAY: ${{ vars.API_GATEWAY }}
+      API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+      CMS_HOST: ${{ vars.CMS_HOST }}
+      CMS_PORT: ${{ vars.CMS_PORT }}
+      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
+      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -163,19 +177,23 @@ jobs:
       - name: Build React Service
         uses: ./.github/templates/build-react-service
         with:
-          service: ${{ matrix.service }}
+          service: ${{ matrix.image.name }}
 
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.service }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
-          dockerfile: Docker/microfrontend.Dockerfile
+          tag: ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
-            MICROFRONTEND_NAME=${{ matrix.service }}
-            REACT_APP_API_GATEWAY=${{ env.REACT_APP_API_GATEWAY }}
-            REACT_APP_API_SECURE_KEY=${{ env.REACT_APP_API_SECURE_KEY }}
-            REACT_APP_API_JWT_TOKEN=${{ env.REACT_APP_API_JWT_TOKEN }}
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
+            API_GATEWAY=${{ env.API_GATEWAY }}
+            SECURE_KEY=${{ env.API_SECURE_KEY }}
+            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
+            CMS_HOST=${{ env.CMS_HOST }}
+            CMS_PORT=${{ env.CMS_PORT }}
+            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
+            CMS_API_PATH=${{ env.CMS_API_PATH }}
 
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
@@ -186,39 +204,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 15
-    strategy:
-      matrix:
-        image:
-          - {
-              name: "mongodb",
-              dockerfile: "Docker/mongodb.Dockerfile",
-              tag: "mongodb",
-            }
-          - {
-              name: "postgres",
-              dockerfile: "Docker/postgres.Dockerfile",
-              tag: "postgres",
-            }
-          - {
-              name: "redis",
-              dockerfile: "Docker/redis.Dockerfile",
-              tag: "redis",
-            }
-          - {
-              name: "rabbitmq",
-              dockerfile: "Docker/rabbitmq.Dockerfile",
-              tag: "rabbitmq",
-            }
-          - {
-              name: "sqlserver",
-              dockerfile: "Docker/sqlserver.Dockerfile",
-              tag: "sqlserver",
-            }
-          - {
-              name: "strapi",
-              dockerfile: "Docker/strapi.Dockerfile",
-              tag: "strapi",
-            }
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
@@ -236,6 +221,20 @@ jobs:
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
       DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+      CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
+    strategy:
+      matrix:
+        image:
+          - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
+          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
+          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
+          - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
+          - {
+              name: "sqlserver",
+              dockerfile: "Docker/infra/sqlserver.Dockerfile",
+            }
+          - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -243,6 +242,25 @@ jobs:
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}-latest
+          tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: ${{ matrix.image.dockerfile }}
+          # Pass ALL possible args; Docker will ignore ones not declared via ARG
+          build-args: |
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
+            DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
+            DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
+            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
+            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
+            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
+            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
+            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
+            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
+            CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}

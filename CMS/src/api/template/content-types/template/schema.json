@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "templates",
+  "info": {
+    "singularName": "template",
+    "pluralName": "templates",
+    "displayName": "Template"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Name": {
+      "type": "string"
+    },
+    "TemplateType": {
+      "type": "enumeration",
+      "enum": ["Standard"]
+    },
+    "page": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::page.page",
+      "mappedBy": "template"
+    },
+    "Content": {
+      "type": "dynamiczone",
+      "components": [
+        "image-slider-ref.image-slider-ref",
+        "article-block-ref.article-block-ref",
+        "steps-container-ref.steps-container-ref",
+        "cta-ref.cta-ref",
+        "contact-info-ref.contact-info-ref",
+        "contact-section-ref.contact-section-ref",
+        "feature-section-ref.feature-section-ref",
+        "feature-tab-ref.feature-tab-ref",
+        "hero-block-ref.hero-block-ref"
+      ]
+    }
+  }
+}

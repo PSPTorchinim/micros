@@ -9,7 +9,24 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "develop"],
       "skipFiles": ["<node_internals>/**"],
-      "preLaunchTask": "build-strapi"
+      "preLaunchTask": "build-strapi",
+      "env": {
+        "NODE_ENV": "development",
+        "DATABASE_CLIENT": "postgres",
+        "DATABASE_HOST": "localhost",
+        "DATABASE_PORT": "5432",
+        "DATABASE_NAME": "djbeatblaster_cms",
+        "DATABASE_USERNAME": "postgres",
+        "DATABASE_PASSWORD": "postgres",
+        "HOST": "0.0.0.0",
+        "PORT": "1337",
+        "APP_KEYS": "LocalDevelopmentAppKey1,LocalDevelopmentAppKey2,LocalDevelopmentAppKey3,LocalDevelopmentAppKey4",
+        "JWT_SECRET": "LocalDevelopmentJWTSecret123456789012345678901234567890",
+        "ADMIN_JWT_SECRET": "LocalDevelopmentAdminJWTSecret123456789012345678901234567890",
+        "API_TOKEN_SALT": "LocalDevelopmentAPITokenSalt123456789012345678901234567890",
+        "TRANSFER_TOKEN_SALT": "LocalDevelopmentTransferTokenSalt123456789012345678901234567890",
+        "ENCRYPTION_KEY": "LocalDevelopmentEncryptionKey123456789012345678901234567890"
+      }
     },
     {
       "name": "DJ Panel: React Debug",
@@ -19,7 +36,16 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "skipFiles": ["<node_internals>/**"],
-      "preLaunchTask": "build-dj-panel"
+      "preLaunchTask": "build-dj-panel",
+      "env": {
+        "REACT_APP_CMS_PROTOCOL": "http",
+        "REACT_APP_CMS_HOST": "localhost",
+        "REACT_APP_CMS_PORT": "1337",
+        "REACT_APP_CMS_API_PATH": "/api",
+        "REACT_APP_API_GATEWAY": "http://localhost:5000",
+        "REACT_APP_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+        "REACT_APP_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890"
+      }
     },
     {
       "name": "C#: PartyAPI Debug",

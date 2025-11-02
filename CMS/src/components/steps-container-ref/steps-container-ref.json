@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_steps_container_refs",
+  "info": { "displayName": "StepsContainerRef" },
+  "attributes": {
+    "container": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::steps-container.steps-container"
+    }
+  }
+}

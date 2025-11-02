@@ -4,7 +4,17 @@ using Shared.Data.Exceptions;
 
 namespace DocumentsAPI.Repositories
 {
-    public class MongoDBRepository<T>
+    public interface IMongoDBRepository<T>
+    {
+        Task<bool> Add(T entity);
+        Task<IEnumerable<T>> Get();
+        Task<IEnumerable<T>> Get(Func<T, bool> pred);
+        Task<int> Count();
+        Task<int> Count(Func<T, bool> pred);
+        Task<bool> Empty();
+    }
+
+    public class MongoDBRepository<T> : IMongoDBRepository<T>
     {
 
         public readonly IMongoCollection<T> Collection;
@@ -62,8 +72,30 @@ namespace DocumentsAPI.Repositories
         {
             return await ExceptionHandler.Handle(async () =>
             {
-                var x = await Count();
-                return x == 0;
+                try
+                {
+                    // Try to ping the database to verify connection before counting
+                    var pingResult = await Collection.Database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1));
+                    _logger.LogDebug("MongoDB ping successful");
+                    
+                    var count = await Count();
+                    return count == 0;
+                }
+                catch (Exception ex) when (ex.GetType().Name.Contains("MongoAuthenticationException"))
+                {
+                    _logger.LogError(ex, "MongoDB authentication failed. Check username, password, and authSource.");
+                    throw;
+                }
+                catch (Exception ex) when (ex.GetType().Name.Contains("MongoConnectionException"))
+                {
+                    _logger.LogError(ex, "MongoDB connection failed. Check host, port, and network connectivity.");
+                    throw;
+                }
+                catch (Exception ex) when (ex.GetType().Name.Contains("MongoException"))
+                {
+                    _logger.LogError(ex, "MongoDB operation failed: {Message}", ex.Message);
+                    throw;
+                }
             }, _logger);
         }
     }

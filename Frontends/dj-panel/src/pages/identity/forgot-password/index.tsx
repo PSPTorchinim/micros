@@ -5,22 +5,24 @@ import { useNavigate } from 'react-router-dom';
 
 export const ForgotPasswordComponent = () => {
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('Password reset link sent to:', email);
     UsersService.forgotPassword(email)
       .then((response) => {
-        console.log('Password reset link sent:', response);
+        if (response.success) {
+          setEmail('');
+          navigate('/users/login');
+        } else {
+          setError(response.message || 'Failed to send password reset link.');
+        }
       })
-      .catch((error) => {
-        console.error('Error sending password reset link:', error);
+      .catch(() => {
+        setError('Failed to send password reset link. Please try again later.');
       });
-
-    setEmail('');
-    navigate('/users/login');
   };
 
   return (
@@ -48,6 +50,7 @@ export const ForgotPasswordComponent = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+          {error && <p>{error}</p>}
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"

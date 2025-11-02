@@ -1,0 +1,3 @@
+# Ignore generated and API models from formatting
+src/models/strapi/
+src/models/api/

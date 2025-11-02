@@ -26,7 +26,7 @@ export default {
       // Enable automatic schema generation
       serveDocumentation: true,
       // Set the documentation path
-      path: "/documentation",
+      path: "/swagger",
       // Enable JSON schema export
       generateApi: true,
       // Auto-generate documentation from content types

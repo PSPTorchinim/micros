@@ -49,7 +49,7 @@ namespace IdentityAPI.Services
                 if (usersByEmail.Count() != 1)
                 {
                     _logger.LogWarning("Login failed: user not found or multiple users for email {Email}", loginUser.Email);
-                    return null;
+                    throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
                 var matchingUser =
@@ -139,6 +139,11 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Getting token and user id from context");
                 var token = GetTokenAsync();
                 var userId = GetClaim("Id");
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogError("RefreshToken failed: corrupted token (missing user id claim)");
+                    throw new AppException(ExceptionCodes.CorruptedToken);
+                }
                 _logger.LogDebug("Refreshing token for user id: {UserId}", userId);
                 var newToken = await _authService.RefreshTokenAsync(token, userId);
                 if (newToken == null)
@@ -182,7 +187,7 @@ namespace IdentityAPI.Services
                 }
 
                 _logger.LogDebug("Appending block to user: {UserId}", request.UserId);
-                user.Blocks.Append(_mapper.Map<Block>(request));
+                user.Blocks.Add(_mapper.Map<Block>(request));
 
                 var result = await _usersRepository.Update(user);
                 await _usersRepository.Save();
@@ -239,7 +244,7 @@ namespace IdentityAPI.Services
                 {
                     _logger.LogDebug("Adding new password for user id {UserId}", id);
                     var newPassword = new Password() { CreatedDate = DateTime.Now, Value = request.NewPassword };
-                    user.Passwords.Append(newPassword);
+                    user.Passwords.Add(newPassword);
                 }
                 var result = await _usersRepository.Update(user);
                 await _usersRepository.Save();
@@ -296,7 +301,8 @@ namespace IdentityAPI.Services
                     _logger.LogWarning("ActivateAccount failed: user not found for email {Email}", request.Email);
                     throw new AppException(ExceptionCodes.UserNotFound);
                 }
-                if (user.ActivationCode.ToLower().Equals(request.ActivationCode.ToLower()))
+
+                if (!user.ActivationCode.ToLower().Equals(request.ActivationCode.ToLower()))
                 {
                     _logger.LogWarning("ActivateAccount failed: wrong activation code for email {Email}", request.Email);
                     throw new AppException(ExceptionCodes.WrongActivationCode);
@@ -322,6 +328,11 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Getting token and user id from context");
                 var token = GetTokenAsync();
                 var userId = GetClaim("Id");
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogError("GetLoggedUserData failed: corrupted token (missing user id claim)");
+                    throw new AppException(ExceptionCodes.CorruptedToken);
+                }
                 _logger.LogDebug("Fetching user with roles and permissions for id: {UserId}", userId);
                 var spec = new UserWithRolesAndPermissions(u => u.Id.ToString() == userId);
                 var user = (await _usersRepository.Get(spec)).FirstOrDefault();

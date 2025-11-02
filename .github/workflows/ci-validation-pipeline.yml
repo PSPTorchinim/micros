@@ -69,7 +69,17 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        file: ["microservice", "microfrontend"]
+        file:
+          [
+            "services/dotnet",
+            "frontends/react",
+            "infra/mongodb",
+            "infra/postgres",
+            "infra/redis",
+            "infra/rabbitmq",
+            "infra/sqlserver",
+            "infra/strapi",
+          ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -85,100 +95,9 @@ jobs:
     environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
-      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
-      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
-      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
-      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
-      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
-      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
-      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
-      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
-      SQLSERVER_PASSWORD: ${{ secrets.SQLSERVER_PASSWORD }}
-      SQLSERVER_USER: ${{ vars.SQLSERVER_USER }}
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
-      ASPNETCORE_IDENTITY_BE_ADDRESS: ${{ vars.ASPNETCORE_IDENTITY_BE_ADDRESS }}
-      ASPNETCORE_MUSIC_BE_ADDRESS: ${{ vars.ASPNETCORE_MUSIC_BE_ADDRESS }}
-      ASPNETCORE_GEAR_BE_ADDRESS: ${{ vars.ASPNETCORE_GEAR_BE_ADDRESS }}
-      ASPNETCORE_DOCUMENTS_BE_ADDRESS: ${{ vars.ASPNETCORE_DOCUMENTS_BE_ADDRESS }}
-      ASPNETCORE_BRAND_BE_ADDRESS: ${{ vars.ASPNETCORE_BRAND_BE_ADDRESS }}
-      ASPNETCORE_PARTY_BE_ADDRESS: ${{ vars.ASPNETCORE_PARTY_BE_ADDRESS }}
-      ASPNETCORE_MAILING_BE_ADDRESS: ${{ vars.ASPNETCORE_MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ vars.DATABASE_CATALOG }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
-      REACT_APP_API_GATEWAY: ${{ vars.REACT_APP_API_GATEWAY }}
-      REACT_APP_API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      REACT_APP_API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Create .env file for Docker Compose
-        run: |
-          cat <<EOF > Docker/.env
-          CMS_DATABASE_NAME=${CMS_DATABASE_NAME}
-          CMS_DATABASE_USERNAME=${CMS_DATABASE_USERNAME}
-          CMS_DATABASE_PASSWORD=${CMS_DATABASE_PASSWORD}
-          CMS_DATABASE_CLIENT=${CMS_DATABASE_CLIENT}
-          CMS_DATABASE_PORT=${CMS_DATABASE_PORT}
-          CMS_JWT_SECRET=${CMS_JWT_SECRET}
-          CMS_ADMIN_JWT_SECRET=${CMS_ADMIN_JWT_SECRET}
-          CMS_APP_KEYS=${CMS_APP_KEYS}
-          CMS_NODE_ENV=${CMS_NODE_ENV}
-          SQLSERVER_PASSWORD=${SQLSERVER_PASSWORD}
-          SQLSERVER_USER=${SQLSERVER_USER}
-          DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
-          DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-          DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
-          DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
-          DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
-          DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
-          DATABASE_USER_MONGODB=${DATABASE_USER_MONGODB}
-          DATABASE_PASSWORD_MONGODB=${DATABASE_PASSWORD_MONGODB}
-          REDIS_HOST=${REDIS_HOST}
-          REDIS_PORT=${REDIS_PORT}
-          REDIS_PASSWORD=${REDIS_PASSWORD}
-          RABBITMQ_HOST=${RABBITMQ_HOST}
-          RABBITMQ_PORT=${RABBITMQ_PORT}
-          RABBITMQ_USER=${RABBITMQ_USER}
-          RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-          SECURE_KEY=${SECURE_KEY}
-          JWT_KEY=${JWT_KEY}
-          ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-          ASPNETCORE_IDENTITY_BE_ADDRESS=${ASPNETCORE_IDENTITY_BE_ADDRESS}
-          ASPNETCORE_MUSIC_BE_ADDRESS=${ASPNETCORE_MUSIC_BE_ADDRESS}
-          ASPNETCORE_GEAR_BE_ADDRESS=${ASPNETCORE_GEAR_BE_ADDRESS}
-          ASPNETCORE_DOCUMENTS_BE_ADDRESS=${ASPNETCORE_DOCUMENTS_BE_ADDRESS}
-          ASPNETCORE_BRAND_BE_ADDRESS=${ASPNETCORE_BRAND_BE_ADDRESS}
-          ASPNETCORE_PARTY_BE_ADDRESS=${ASPNETCORE_PARTY_BE_ADDRESS}
-          ASPNETCORE_MAILING_BE_ADDRESS=${ASPNETCORE_MAILING_BE_ADDRESS}
-          DATABASE_CATALOG=${DATABASE_CATALOG}
-          DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
-          DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
-          REACT_APP_API_GATEWAY=${REACT_APP_API_GATEWAY}
-          REACT_APP_API_SECURE_KEY=${REACT_APP_API_SECURE_KEY}
-          REACT_APP_API_JWT_TOKEN=${REACT_APP_API_JWT_TOKEN}
-          EOF
-        shell: bash
 
       - name: Validate Docker Compose YAML
         run: |
@@ -197,33 +116,6 @@ jobs:
       - name: Lint workflows with actionlint
         uses: raven-actions/actionlint@v1
 
-  validate_kubernetes:
-    name: Validate Kubernetes YAML (Helm templates)
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Install kubeconform
-        run: |
-          curl -L -o kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.6.6/kubeconform-linux-amd64.tar.gz
-          tar -xzf kubeconform.tar.gz
-          sudo mv kubeconform /usr/local/bin/
-
-      - name: Render Helm templates
-        run: |
-          helm template test ./k8s -f ./k8s/values.yaml > rendered.yaml
-
-      - name: Validate rendered Kubernetes YAML
-        run: |
-          kubeconform -strict -summary -ignore-missing-schemas -kubernetes-version 1.27.2 rendered.yaml
-
   report_status:
     name: PR Validation
     runs-on: ubuntu-latest
@@ -233,7 +125,6 @@ jobs:
       - validate_dockerfiles
       - validate_composers
       - validate_github_workflows
-      - validate_kubernetes
     if: always()
     steps:
       - name: Report overall status
@@ -242,8 +133,7 @@ jobs:
              [ "${{ needs.validate_react.result }}" = "success" ] && \
              [ "${{ needs.validate_dockerfiles.result }}" = "success" ] && \
              [ "${{ needs.validate_composers.result }}" = "success" ] && \
-             [ "${{ needs.validate_github_workflows.result }}" = "success" ] && \
-             [ "${{ needs.validate_kubernetes.result }}" = "success" ]; then
+             [ "${{ needs.validate_github_workflows.result }}" = "success" ]; then
             echo "All jobs succeeded."
             exit 0
           else

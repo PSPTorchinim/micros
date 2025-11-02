@@ -1,9 +1,9 @@
 import { SHA256 } from 'crypto-js';
+import { microservicesClient } from '../models/api';
 import {
   BooleanResponse,
   LoginResponseDTOResponse,
-  microservicesClient,
-} from '../models/api';
+} from '../models/api/identity/apiMap';
 
 export class UsersService {
   public static async forgotPassword(email: string): Promise<BooleanResponse> {

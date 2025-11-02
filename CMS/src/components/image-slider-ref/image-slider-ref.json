@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_image_slider_refs",
+  "info": { "displayName": "ImageSliderRef" },
+  "attributes": {
+    "slider": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::image-slider.image-slider"
+    }
+  }
+}
