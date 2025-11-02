@@ -56,10 +56,49 @@ jobs:
         with:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
 
+  setup_truenas_directories:
+    name: Setup TrueNAS directory structure (first-time)
+    runs-on: ubuntu-latest
+    needs: [determine_environment]
+    steps:
+      - name: Create directory structure on TrueNAS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔧 TrueNAS Directory Setup"
+            echo "=========================================="
+            
+            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+            
+            echo "Setting up directories for environment: ${ENV}"
+            
+            # Create main directories
+            mkdir -p "${BASE_DIR}/Images"
+            mkdir -p "${BASE_DIR}/Images/backups"
+            
+            echo "✅ Created: ${BASE_DIR}/Images"
+            echo "✅ Created: ${BASE_DIR}/Images/backups"
+            
+            # Set permissions
+            chmod -R 755 "${BASE_DIR}"
+            
+            echo "✅ Set permissions on ${BASE_DIR}"
+            echo "=========================================="
+            echo "✅ TrueNAS directory setup complete!"
+            echo "=========================================="
+
   backup_current_state:
     name: Backup current deployment for rollback
     runs-on: ubuntu-latest
-    needs: [determine_environment]
+    needs: [determine_environment, setup_truenas_directories]
     outputs:
       backup_created: ${{ steps.backup.outputs.backup_created }}
     steps:
@@ -389,30 +428,6 @@ jobs:
           echo ""
           echo "👉 Approve this step to complete the deployment"
           echo "❌ Reject to investigate further (app is already updated)"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update aggregator file only (no app start)
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
-            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-
-            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
-            mkdir -p "$base"
-            printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "Updated aggregator -> $agg includes $new"
-            # Keep only 3 newest generated compose files for this env
-            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
-              | sort -r | awk 'NR>3' | xargs -r rm -f || true
 
   verify_app_started:
     name: Verify deployment health
