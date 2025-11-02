@@ -4,6 +4,7 @@ import { LoginComponent } from './pages/identity/login';
 import { Layout } from './layout';
 import './index.css';
 import { AuthProvider } from './providers/auth-provider';
+import { ThemeProvider } from './context/theme-context';
 
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
 import { ServicesProvider } from './providers/services-provider';
@@ -14,25 +15,27 @@ export default function App() {
   const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
   return (
     <HashRouter>
-      <ServicesProvider>
-        <AuthProvider>
-          <Routes>
-            <Route
-              path="/"
-              element={<Layout navigation={{ links: dynamicNavigation }} />}
-            >
-              <Route path="users">
-                <Route path="login" element={<LoginComponent />} />
-                <Route
-                  path="forgot-password"
-                  element={<ForgotPasswordComponent />}
-                />
+      <ThemeProvider>
+        <ServicesProvider>
+          <AuthProvider>
+            <Routes>
+              <Route
+                path="/"
+                element={<Layout navigation={{ links: dynamicNavigation }} />}
+              >
+                <Route path="users">
+                  <Route path="login" element={<LoginComponent />} />
+                  <Route
+                    path="forgot-password"
+                    element={<ForgotPasswordComponent />}
+                  />
+                </Route>
+                {dynamicRoutes}
               </Route>
-              {dynamicRoutes}
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </ServicesProvider>
+            </Routes>
+          </AuthProvider>
+        </ServicesProvider>
+      </ThemeProvider>
     </HashRouter>
   );
 }

@@ -8,6 +8,8 @@
   flex-shrink: 0;
   flex-direction: column;
   justify-content: center;
+  background-color: var(--dl-color-theme-surface);
+  border-top: 1px solid var(--dl-color-theme-border);
 }
 
 .footer-max-width {
@@ -79,8 +81,8 @@
 }
 
 .footer-content2 {
-  fill: var(--dl-color-theme-neutral-dark);
-  color: var(--dl-color-theme-neutral-dark);
+  fill: var(--dl-color-theme-text-primary);
+  color: var(--dl-color-theme-text-primary);
   height: auto;
   font-size: 12px;
   align-self: stretch;

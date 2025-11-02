@@ -3,24 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../hooks/use-auth';
 import { useServices } from '../../../hooks/use-services';
+import { LoginForm } from '../../../components/molecules/LoginForm';
 
 export const LoginComponent = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { setUser, setToken, setRefreshToken } = useAuth();
   const { usersService } = useServices();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (email: string, password: string) => {
     try {
       const response = await usersService.Login(email, password);
       if (response.success) {
         if (setUser) {
-          setUser(response.data?.user ?? null); // Check if setUser is defined
-          setToken(response.data?.accessToken ?? null); // Check if setToken is defined
-          setRefreshToken(response.data?.refreshToken ?? null); // Check if setToken is defined
+          setUser(response.data?.user ?? null);
+          setToken(response.data?.accessToken ?? null);
+          setRefreshToken(response.data?.refreshToken ?? null);
           //persist user in localStorage
           localStorage.setItem(
             'user',
@@ -36,7 +34,7 @@ export const LoginComponent = () => {
           );
         }
         if (setToken) {
-          setToken(response.data?.accessToken ?? null); // Check if setToken is defined
+          setToken(response.data?.accessToken ?? null);
         }
         navigate('/dashboard');
       } else {
@@ -49,35 +47,7 @@ export const LoginComponent = () => {
 
   return (
     <div className="content-container">
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        {error && <p>{error}</p>}
-        <button type="submit">Login</button>
-        <p className="mt-4 text-sm text-center">
-          Forgot your password?{' '}
-          <a href="/users/forgot-password" className="hover:underline">
-            Reset Password
-          </a>
-        </p>
-      </form>
+      <LoginForm onSubmit={handleSubmit} error={error} />
     </div>
   );
 };

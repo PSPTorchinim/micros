@@ -1,65 +1,61 @@
-:root {
-  --dl-size-size-large: 144px;
-  --dl-size-size-small: 48px;
-  --dl-size-size-medium: 96px;
-  --dl-size-size-xlarge: 192px;
-  --dl-size-size-xsmall: 16px;
-  --dl-space-space-unit: 16px;
-  --dl-size-size-xxlarge: 288px;
-  --dl-size-size-maxwidth: 1400px;
-  --dl-color-theme-accent1: #ccc7d6;
-  --dl-color-theme-accent2: #aea7bf;
-  --dl-radius-radius-round: 50%;
-  --dl-color-theme-primary1: #ed2a4f;
-  --dl-color-theme-primary2: #698a93;
-  --dl-space-space-halfunit: 8px;
-  --dl-space-space-sixunits: 96px;
-  --dl-space-space-twounits: 32px;
-  --dl-radius-radius-radius2: 2px;
-  --dl-radius-radius-radius4: 4px;
-  --dl-radius-radius-radius8: 8px;
-  --dl-space-space-fiveunits: 80px;
-  --dl-space-space-fourunits: 64px;
-  --dl-color-theme-secondary1: #e6ebe0;
-  --dl-color-theme-secondary2: #d9ded3;
-  --dl-space-space-threeunits: 48px;
-  --dl-color-theme-neutral-dark: #000000;
-  --dl-radius-radius-cardradius: 0;
-  --dl-color-theme-neutral-light: #ffffff;
-  --dl-radius-radius-imageradius: 0;
-  --dl-radius-radius-inputradius: 0;
-  --dl-radius-radius-buttonradius: 0;
-  --dl-space-space-oneandhalfunits: 24px;
+@import './styles/theme.css';
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--dl-color-theme-background);
+  color: var(--dl-color-theme-text-primary);
+  line-height: 1.6;
+}
+
+.layout-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--dl-color-theme-background);
+}
+
+.layout-main {
+  flex: 1;
+  background-color: var(--dl-color-theme-background);
 }
 
 .button {
-  color: var(--dl-color-theme-neutral-dark);
+  color: var(--dl-color-theme-text-primary);
   display: inline-block;
   padding: 0.5rem 1rem;
-  border-color: var(--dl-color-theme-neutral-dark);
+  border-color: var(--dl-color-theme-border);
   border-width: 1px;
   border-radius: 4px;
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
 }
 
 .input {
-  color: var(--dl-color-theme-neutral-dark);
+  color: var(--dl-color-theme-text-primary);
   cursor: auto;
   padding: 0.5rem 1rem;
-  border-color: var(--dl-color-theme-neutral-dark);
+  border-color: var(--dl-color-theme-border);
   border-width: 1px;
   border-radius: 4px;
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
 }
 
 .textarea {
-  color: var(--dl-color-theme-neutral-dark);
+  color: var(--dl-color-theme-text-primary);
   cursor: auto;
   padding: 0.5rem;
-  border-color: var(--dl-color-theme-neutral-dark);
+  border-color: var(--dl-color-theme-border);
   border-width: 1px;
   border-radius: 4px;
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
 }
 
 .list {
@@ -81,16 +77,16 @@
 }
 
 .thq-input {
-  color: var(--dl-color-theme-neutral-dark);
+  color: var(--dl-color-theme-text-primary);
   cursor: auto;
   outline: none;
   padding: 0.5rem 1rem;
   align-self: stretch;
   text-align: center;
-  border-color: var(--dl-color-theme-neutral-dark);
+  border-color: var(--dl-color-theme-border);
   border-width: 1px;
   border-radius: var(--dl-radius-radius-inputradius);
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
 }
 
 .thq-input:focus {
@@ -184,6 +180,7 @@
   font-family: STIX Two Text;
   font-weight: 700;
   line-height: 1.5;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .thq-heading-2 {
@@ -191,6 +188,7 @@
   font-family: STIX Two Text;
   font-weight: 600;
   line-height: 1.5;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .thq-heading-3 {
@@ -198,18 +196,21 @@
   font-family: STIX Two Text;
   font-weight: 600;
   line-height: 1.5;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .thq-body-large {
   font-size: 18px;
   font-family: Noto Sans;
   line-height: 1.5;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .thq-body-small {
   font-size: 16px;
   font-family: Noto Sans;
   line-height: 1.5;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .thq-team-image-round {
@@ -305,7 +306,7 @@
 }
 
 .thq-box-shadow {
-  box-shadow: 0px 0px 5px -2px var(--dl-color-theme-neutral-dark);
+  box-shadow: 0px 0px 5px -2px var(--dl-color-theme-shadow);
 }
 
 .thq-grid-3 {
@@ -349,7 +350,7 @@
 .thq-divider-horizontal {
   width: 100%;
   height: 1px;
-  background-color: var(--dl-color-theme-neutral-dark);
+  background-color: var(--dl-color-theme-border);
 }
 
 .thq-icon-small {
@@ -385,7 +386,7 @@
   background: linear-gradient(
     to right,
     var(--dl-color-theme-primary1) 50%,
-    var(--dl-color-theme-neutral-dark) 50%
+    var(--dl-color-theme-text-primary) 50%
   );
   transition: background-position 300ms ease;
   font-weight: 600;
