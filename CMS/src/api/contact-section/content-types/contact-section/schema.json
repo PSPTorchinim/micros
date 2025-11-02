@@ -1,0 +1,19 @@
+{
+  "collectionName": "contact_sections",
+  "info": {
+    "singularName": "contact-section",
+    "pluralName": "contact-sections",
+    "displayName": "Contact Section"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "introText": { "type": "string" },
+    "heading": { "type": "string" },
+    "description": { "type": "string" },
+    "contactInfo": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::contact-info.contact-info"
+    }
+  }
+}

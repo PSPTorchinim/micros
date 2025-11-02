@@ -1,0 +1,30 @@
+.steps-container-block {
+  padding: 2rem 1rem;
+  background: #f5f7fa;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
+}
+.steps-container-block__steps {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.steps-container-block__step {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 1.5rem;
+  min-width: 180px;
+  max-width: 260px;
+  text-align: center;
+}
+.steps-container-block__step-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.steps-container-block__step-desc {
+  color: #555;
+  font-size: 1rem;
+}

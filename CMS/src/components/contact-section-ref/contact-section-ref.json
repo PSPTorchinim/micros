@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_contact_section_ref_contact_section_refs",
+  "info": { "displayName": "ContactSectionRef" },
+  "attributes": {
+    "contact_section": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::contact-section.contact-section"
+    }
+  }
+}

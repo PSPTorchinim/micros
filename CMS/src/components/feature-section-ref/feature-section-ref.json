@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_feature_section_ref_feature_section_refs",
+  "info": { "displayName": "FeatureSectionRef" },
+  "attributes": {
+    "feature_section": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::feature-section.feature-section"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "collectionName": "feature_tabs",
+  "info": {
+    "singularName": "feature-tab",
+    "pluralName": "feature-tabs",
+    "displayName": "Feature Tab"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "imgAlt": { "type": "string" },
+    "imgSrc": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_cta_refs",
+  "info": { "displayName": "CTARef" },
+  "attributes": {
+    "cta": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::cta.cta"
+    }
+  }
+}

@@ -35,8 +35,9 @@
     },
     "configuration": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::configuration.configuration"
+      "relation": "manyToOne",
+      "target": "api::configuration.configuration",
+      "inversedBy": "pages"
     },
     "Menu": {
       "type": "enumeration",
@@ -56,6 +57,12 @@
         "Link",
         "Action"
       ]
+    },
+    "template": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::template.template",
+      "inversedBy": "page"
     }
   }
 }
