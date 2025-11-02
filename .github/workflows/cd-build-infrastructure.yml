@@ -56,18 +56,15 @@ jobs:
         with:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
 
-  check_current_deployment:
-    name: Check current deployment state (Blue/Green)
+  backup_current_state:
+    name: Backup current deployment for rollback
     runs-on: ubuntu-latest
     needs: [determine_environment]
     outputs:
-      active_slot: ${{ steps.determine_slot.outputs.active_slot }}
-      target_slot: ${{ steps.determine_slot.outputs.target_slot }}
-      blue_state: ${{ steps.parse_state.outputs.blue_state }}
-      green_state: ${{ steps.parse_state.outputs.green_state }}
+      backup_created: ${{ steps.backup.outputs.backup_created }}
     steps:
-      - name: Check blue and green app states on TrueNAS
-        id: check_state
+      - name: Backup current compose file and app state
+        id: backup
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
@@ -77,99 +74,33 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            APP_BLUE="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-blue"
-            APP_GREEN="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-green"
+            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
+            backup_dir="${base}/backups"
+            timestamp=$(date +%Y%m%d_%H%M%S)
             
-            has_jq() { command -v jq >/dev/null 2>&1; }
-            get_state() {
-              local app="$1"
-              j="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
-              if has_jq; then
-                state=$(echo "$j" | jq -r '.[0] | (.state // .status // empty)' 2>/dev/null | head -n1)
-              else
-                state=$(echo "$j" | tr -d '\n' | awk '{
-                  s=$0
-                  if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                    m=substr(s, RSTART, RLENGTH)
-                    gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                    gsub(/".*$/, "", m)
-                    print m
-                  }
-                }' | head -n1)
-              fi
-              if [ -z "$state" ]; then
-                echo "NOT_FOUND"
-              else
-                echo "$state"
-              fi
-            }
+            mkdir -p "$backup_dir"
             
-            blue_state="$(get_state "$APP_BLUE")"
-            green_state="$(get_state "$APP_GREEN")"
-            
-            echo "Blue app state: $blue_state"
-            echo "Green app state: $green_state"
-            echo "BLUE_STATE=${blue_state}"
-            echo "GREEN_STATE=${green_state}"
-      
-      - name: Parse deployment states
-        id: parse_state
-        run: |
-          set -euo pipefail
-          out='${{ steps.check_state.outputs.stdout }}'
-          blue_state=$(echo "$out" | awk -F= '/^BLUE_STATE=/{print $2}' | tail -n1)
-          green_state=$(echo "$out" | awk -F= '/^GREEN_STATE=/{print $2}' | tail -n1)
-          
-          echo "blue_state=${blue_state}" >> "$GITHUB_OUTPUT"
-          echo "green_state=${green_state}" >> "$GITHUB_OUTPUT"
-      
-      - name: Determine active and target slots
-        id: determine_slot
-        run: |
-          set -euo pipefail
-          blue_state="${{ steps.parse_state.outputs.blue_state }}"
-          green_state="${{ steps.parse_state.outputs.green_state }}"
-          
-          # Determine which slot is active
-          blue_active=false
-          green_active=false
-          
-          case "$blue_state" in
-            RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) blue_active=true ;;
-          esac
-          
-          case "$green_state" in
-            RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) green_active=true ;;
-          esac
-          
-          # Determine target slot for new deployment (opposite of active)
-          if [ "$blue_active" = "true" ] && [ "$green_active" != "true" ]; then
-            active_slot="blue"
-            target_slot="green"
-            echo "✅ Blue is active, deploying to GREEN (zero downtime)"
-          elif [ "$green_active" = "true" ] && [ "$blue_active" != "true" ]; then
-            active_slot="green"
-            target_slot="blue"
-            echo "✅ Green is active, deploying to BLUE (zero downtime)"
-          elif [ "$blue_active" = "true" ] && [ "$green_active" = "true" ]; then
-            # Both active - prefer deploying to green
-            active_slot="blue"
-            target_slot="green"
-            echo "⚠️  Both slots active, deploying to GREEN"
-          else
-            # Neither active - first deployment
-            active_slot="none"
-            target_slot="blue"
-            echo "🆕 First deployment, deploying to BLUE"
-          fi
-          
-          echo "active_slot=${active_slot}" >> "$GITHUB_OUTPUT"
-          echo "target_slot=${target_slot}" >> "$GITHUB_OUTPUT"
+            if [ -f "$agg" ]; then
+              backup_file="${backup_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-${timestamp}.yml"
+              cp "$agg" "$backup_file"
+              echo "✅ Backup created: $backup_file"
+              
+              # Keep only last 5 backups
+              ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null \
+                | tail -n +6 | xargs -r rm -f || true
+              
+              echo "BACKUP_CREATED=true"
+              echo "BACKUP_FILE=$backup_file"
+            else
+              echo "ℹ️  No existing deployment to backup (first deployment)"
+              echo "BACKUP_CREATED=false"
+            fi
 
   get_truenas_ports:
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
-    needs: [check_current_deployment]
+    needs: [backup_current_state]
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
@@ -219,7 +150,7 @@ jobs:
           tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
-    name: Generate & Upload New Compose for Target Slot
+    name: Generate & Upload New Compose
     runs-on: ubuntu-latest
     needs:
       [
@@ -227,7 +158,7 @@ jobs:
         determine_docker_tag,
         determine_compose_timestamp,
         calculate_unused_ports,
-        check_current_deployment,
+        backup_current_state,
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
@@ -311,21 +242,20 @@ jobs:
           test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-  deploy_to_target_slot:
-    name: Deploy to target slot (Blue/Green - Zero Downtime)
+  rolling_update_deployment:
+    name: Rolling update with zero downtime
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
-        check_current_deployment,
         generate_and_upload_truenas_compose_file,
+        backup_current_state,
       ]
     outputs:
-      deployment_stdout: ${{ steps.deploy_slot.outputs.stdout }}
-      deployed_slot: ${{ needs.check_current_deployment.outputs.target_slot }}
+      start_stdout: ${{ steps.rolling_update.outputs.stdout }}
     steps:
-      - name: Deploy to target slot and wait for healthy state
-        id: deploy_slot
+      - name: Perform rolling update (databases stay up, services update)
+        id: rolling_update
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
@@ -335,63 +265,84 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            target_slot="${{ needs.check_current_deployment.outputs.target_slot }}"
-            active_slot="${{ needs.check_current_deployment.outputs.active_slot }}"
+            
+            echo "=========================================="
+            echo "🔄 Rolling Update Deployment (Zero Downtime)"
+            echo "=========================================="
+            
             base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-${target_slot}"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-${target_slot}.yml"
-
-            echo "=========================================="
-            echo "🔵🟢 Blue-Green Deployment (Zero Downtime)"
-            echo "=========================================="
-            echo "Active slot: ${active_slot}"
-            echo "Target slot: ${target_slot}"
-            echo "Deploying to: $app"
-            echo "=========================================="
+            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
 
             test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
+            
+            # Update aggregator to point to new compose
             mkdir -p "$base"
             printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "✅ Updated aggregator -> $agg"
+            echo "✅ Updated aggregator -> $agg includes $new"
 
-            # Keep only 3 newest generated compose files for this env per slot
+            # Keep only 3 newest generated compose files for this env
             ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
-              | grep -v -- "-blue.yml$" | grep -v -- "-green.yml$" \
               | sort -r | awk 'NR>3' | xargs -r rm -f || true
 
-            echo "🚀 Starting app: $app"
-            if midclt call app.start "$app" 2>/dev/null; then
-              echo "✅ Started via app.start"
-            else
-              echo "ℹ️  app.start not available; trying chart.release.scale -> 1"
-              if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
-                echo "✅ Scaled to 1 replica"
-              else
-                echo "❌ ERROR: could not start app '$app'"
-                exit 1
-              fi
-            fi
-
+            # Check if app exists and is running
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
               j="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
               if has_jq; then
-                echo "$j" | jq -r '.[0] | (.state // .status // .health // .metadata.state // empty)' 2>/dev/null | head -n1
-                return 0
+                echo "$j" | jq -r '.[0] | (.state // .status // empty)' 2>/dev/null | head -n1
+              else
+                echo "$j" | tr -d '\n' | awk '{
+                  s=$0
+                  if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+                    m=substr(s, RSTART, RLENGTH)
+                    gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
+                    gsub(/".*$/, "", m)
+                    print m
+                  }
+                }' | head -n1
               fi
-              echo "$j" \
-                | tr -d '\n' \
-                | awk '{
-                    s=$0
-                    if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                      m=substr(s, RSTART, RLENGTH)
-                      gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                      gsub(/".*$/, "", m)
-                      print m
-                    }
-                  }' | head -n1
             }
+            
+            current_state="$(get_state || echo 'NOT_FOUND')"
+            echo "Current app state: $current_state"
+            
+            if [ "$current_state" = "NOT_FOUND" ] || [ "$current_state" = "STOPPED" ]; then
+              echo "📦 First deployment or app stopped - starting app normally"
+              if midclt call app.start "$app" 2>/dev/null; then
+                echo "✅ Started via app.start"
+              else
+                if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
+                  echo "✅ Scaled to 1 replica"
+                else
+                  echo "❌ ERROR: could not start app '$app'"
+                  exit 1
+                fi
+              fi
+            else
+              echo "🔄 App is running - performing rolling update"
+              echo "ℹ️  TrueNAS will restart containers with new images"
+              echo "ℹ️  Databases will remain running throughout"
+              
+              # Restart app to apply new compose
+              if midclt call app.restart "$app" 2>/dev/null; then
+                echo "✅ Restarted via app.restart"
+              else
+                echo "ℹ️  Restart not available, using stop/start"
+                midclt call app.stop "$app" 2>/dev/null || true
+                sleep 5
+                if midclt call app.start "$app" 2>/dev/null; then
+                  echo "✅ Started via app.start"
+                else
+                  echo "❌ ERROR: could not restart app"
+                  exit 1
+                fi
+              fi
+            fi
+            
+            # Wait for healthy state
+            echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
               case "$1" in
                 RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) return 0 ;;
@@ -399,192 +350,94 @@ jobs:
               esac
             }
 
-            echo "⏳ Waiting for ${target_slot} slot to become healthy..."
             i=0
             st=""
             while [ $i -lt 120 ]; do
               st="$(get_state || true)"
               [ -n "$st" ] || st="unknown"
-              echo "  Poll #$((i+1))/120: state=$st"
+              echo "  Health check #$((i+1))/120: state=$st"
               if is_good_state "$st"; then
-                echo "✅ ${target_slot} slot is HEALTHY"
+                echo "✅ App is HEALTHY"
                 break
               fi
               sleep 5
               i=$((i+1))
             done
-
+            
             if ! is_good_state "$st"; then
-              echo "❌ ERROR: ${target_slot} slot failed to reach healthy state (state=$st)"
-              echo "⚠️  ${active_slot} slot continues serving traffic - NO DOWNTIME"
+              echo "❌ ERROR: App failed to reach healthy state (state=$st)"
+              echo "⚠️  Rollback may be needed - backup is available"
               exit 1
             fi
+            
+            echo "=========================================="
+            echo "✅ Rolling update completed successfully!"
+            echo "✅ Zero downtime maintained"
+            echo "=========================================="
+            echo "APP_STATE=${st}"
 
-            echo "DEPLOYMENT_STATE=${st}"
-            echo "DEPLOYED_SLOT=${target_slot}"
-            echo "ACTIVE_SLOT=${active_slot}"
-
-  verify_new_deployment:
-    name: Verify new deployment is healthy
+  manual_approval_gate:
+    name: Manual approval before completing deployment
     runs-on: ubuntu-latest
-    needs: [deploy_to_target_slot, check_current_deployment]
+    needs: [rolling_update_deployment]
+    environment:
+      name: deployment-approval
+    steps:
+      - name: Wait for manual approval
+        run: |
+          echo "✅ Rolling update completed and app is healthy"
+          echo ""
+          echo "👉 Approve this step to complete the deployment"
+          echo "❌ Reject to investigate further (app is already updated)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update aggregator file only (no app start)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
+            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+
+            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
+            mkdir -p "$base"
+            printf 'include:\n  - %s\n' "$new" > "$agg"
+            echo "Updated aggregator -> $agg includes $new"
+            # Keep only 3 newest generated compose files for this env
+            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
+              | sort -r | awk 'NR>3' | xargs -r rm -f || true
+
+  verify_app_started:
+    name: Verify deployment health
+    runs-on: ubuntu-latest
+    needs: [rolling_update_deployment, manual_approval_gate]
     steps:
       - name: Parse and verify deployment result
         run: |
           set -euo pipefail
-          out='${{ needs.deploy_to_target_slot.outputs.deployment_stdout }}'
+          out='${{ needs.rolling_update_deployment.outputs.start_stdout }}'
           echo "=========================================="
           echo "📊 Deployment Verification"
           echo "=========================================="
           printf '%s\n' "$out"
           echo "=========================================="
-          st=$(echo "$out" | awk -F= '/^DEPLOYMENT_STATE=/{print $2}' | tail -n1)
-          deployed_slot=$(echo "$out" | awk -F= '/^DEPLOYED_SLOT=/{print $2}' | tail -n1)
-          active_slot=$(echo "$out" | awk -F= '/^ACTIVE_SLOT=/{print $2}' | tail -n1)
-          
+          st=$(echo "$out" | awk -F= '/^APP_STATE=/{print $2}' | tail -n1)
           case "$st" in
             RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY)
-              echo "✅ New deployment in ${deployed_slot} slot is HEALTHY"
-              echo "✅ Old ${active_slot} slot still serving traffic - ZERO DOWNTIME maintained"
-              echo ""
-              echo "Ready for manual approval to switch traffic!"
+              echo "✅ Deployment successful: $st"
               ;;
             *)
-              echo "❌ New deployment in ${deployed_slot} slot failed (state=$st)"
-              echo "✅ Old ${active_slot} slot continues serving traffic - NO DOWNTIME"
+              echo "❌ Deployment verification failed (state=$st)"
               exit 1
               ;;
           esac
-
-  manual_approval_gate:
-    name: Manual approval to switch traffic
-    runs-on: ubuntu-latest
-    needs: [verify_new_deployment, deploy_to_target_slot, check_current_deployment]
-    environment:
-      name: production-approval
-    steps:
-      - name: Wait for manual approval
-        run: |
-          echo "⚠️  MANUAL APPROVAL REQUIRED ⚠️"
-          echo "=========================================="
-          echo "New deployment verified in ${{ needs.deploy_to_target_slot.outputs.deployed_slot }} slot"
-          echo "Current traffic still on ${{ needs.check_current_deployment.outputs.active_slot }} slot"
-          echo ""
-          echo "✅ New version is healthy and ready"
-          echo "✅ Zero downtime maintained so far"
-          echo ""
-          echo "👉 Approve this step to switch traffic to new version"
-          echo "❌ Reject to keep old version active"
-          echo "=========================================="
-
-  switch_traffic_to_new_deployment:
-    name: Switch production traffic to new deployment
-    runs-on: ubuntu-latest
-    needs:
-      [
-        determine_environment,
-        check_current_deployment,
-        deploy_to_target_slot,
-        manual_approval_gate,
-      ]
-    outputs:
-      old_slot: ${{ needs.check_current_deployment.outputs.active_slot }}
-      new_slot: ${{ needs.deploy_to_target_slot.outputs.deployed_slot }}
-    steps:
-      - name: Switch traffic to new deployment slot
-        id: switch_traffic
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            new_slot="${{ needs.deploy_to_target_slot.outputs.deployed_slot }}"
-            old_slot="${{ needs.check_current_deployment.outputs.active_slot }}"
-            
-            echo "=========================================="
-            echo "🔄 Traffic Switch"
-            echo "=========================================="
-            echo "Switching from: ${old_slot} → ${new_slot}"
-            
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            primary_agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
-            new_slot_agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-${new_slot}.yml"
-            
-            if [ -f "$new_slot_agg" ]; then
-              cp "$new_slot_agg" "$primary_agg"
-              echo "✅ Traffic switched to ${new_slot} slot"
-              echo "✅ Primary aggregator now points to ${new_slot}"
-            else
-              echo "❌ ERROR: New slot aggregator not found: $new_slot_agg"
-              exit 1
-            fi
-            
-            echo "OLD_SLOT=${old_slot}"
-            echo "NEW_SLOT=${new_slot}"
-            echo "=========================================="
-      
-      - name: Verify traffic switch
-        run: |
-          out='${{ steps.switch_traffic.outputs.stdout }}'
-          echo "$out"
-          echo ""
-          echo "✅ Traffic successfully switched!"
-          echo "✅ Zero-downtime deployment complete!"
-
-  stop_old_deployment:
-    name: Stop old deployment slot
-    runs-on: ubuntu-latest
-    needs:
-      [
-        determine_environment,
-        check_current_deployment,
-        switch_traffic_to_new_deployment,
-      ]
-    steps:
-      - name: Stop the old deployment slot
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            old_slot="${{ needs.check_current_deployment.outputs.active_slot }}"
-            
-            # Skip if this is first deployment (no active slot)
-            if [ "$old_slot" = "none" ]; then
-              echo "ℹ️  First deployment - no old slot to stop"
-              exit 0
-            fi
-            
-            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}-${old_slot}"
-            
-            echo "=========================================="
-            echo "🛑 Stopping Old Deployment"
-            echo "=========================================="
-            echo "Stopping: $app (${old_slot} slot)"
-            
-            if midclt call app.stop "$app" 2>/dev/null; then
-              echo "✅ Stopped via app.stop"
-            else
-              echo "ℹ️  app.stop not available; trying chart.release.scale -> 0"
-              if midclt call chart.release.scale "$app" '{"replica_count":0}' 2>/dev/null; then
-                echo "✅ Scaled to 0 replicas"
-              else
-                echo "⚠️  Could not stop old app '$app' - it will remain running"
-                echo "   (This is OK - can be used for quick rollback if needed)"
-              fi
-            fi
-            
-            echo "✅ Old deployment stopped"
-            echo "   Available for quick rollback if needed"
-            echo "=========================================="
 
   update_cloudflare_tunnel:
     name: Update Cloudflare Tunnel (service-based hostnames)
@@ -593,7 +446,7 @@ jobs:
       [
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        switch_traffic_to_new_deployment,
+        verify_app_started,
       ]
     steps:
       - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN; preserve other envs)
@@ -813,11 +666,8 @@ jobs:
       - determine_docker_tag
       - determine_compose_timestamp
       - determine_environment
-      - check_current_deployment
-      - deploy_to_target_slot
-      - verify_new_deployment
-      - switch_traffic_to_new_deployment
-      - stop_old_deployment
+      - rolling_update_deployment
+      - verify_app_started
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
     if: always()
@@ -837,14 +687,13 @@ jobs:
           echo "   Name: ${{ needs.determine_environment.outputs.current_env }}"
           echo "   Slug: ${{ needs.determine_environment.outputs.env_slug }}"
           echo ""
-          echo "🔵🟢 Blue-Green Deployment:"
-          echo "   Deployed to: ${{ needs.deploy_to_target_slot.outputs.deployed_slot }} slot"
-          echo "   Previous: ${{ needs.check_current_deployment.outputs.active_slot }} slot (now stopped)"
+          echo "🔄 Deployment Strategy: Rolling Update"
+          echo "   Databases: Remained running (shared)"
+          echo "   Services: Updated with health checks"
           echo ""
           echo "✅ Status:"
-          echo "   New Deployment: ${{ needs.verify_new_deployment.result }}"
-          echo "   Traffic Switch: ${{ needs.switch_traffic_to_new_deployment.result }}"
-          echo "   Old Deployment Stopped: ${{ needs.stop_old_deployment.result }}"
+          echo "   Rolling Update: ${{ needs.rolling_update_deployment.result }}"
+          echo "   Verification: ${{ needs.verify_app_started.result }}"
           echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
           echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
           echo ""
