@@ -371,7 +371,25 @@ jobs:
               else
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
-                sleep 5
+                
+                # Wait for STOPPED state
+                echo "⏳ Waiting for app to stop..."
+                stop_wait=0
+                while [ $stop_wait -lt 60 ]; do
+                  stop_state="$(get_state || true)"
+                  echo "  Stop check #$((stop_wait+1))/60: state=$stop_state"
+                  if [ "$stop_state" = "STOPPED" ] || [ "$stop_state" = "NOT_FOUND" ]; then
+                    echo "✅ App stopped"
+                    break
+                  fi
+                  sleep 2
+                  stop_wait=$((stop_wait+1))
+                done
+                
+                if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
+                  echo "⚠️  Warning: App didn't reach STOPPED state, proceeding anyway (state=$stop_state)"
+                fi
+                
                 if midclt call app.start "$app" 2>/dev/null; then
                   echo "✅ Started via app.start"
                 else
