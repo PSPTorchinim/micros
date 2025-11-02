@@ -64,7 +64,8 @@ namespace Shared.Services.Run
         {
             try
             {
-                var lokiUrl = Environment.GetEnvironmentVariable("ASPNETCORE_LOKI_URL") ?? "http://loki:3100";
+                var lokiUrlEnvVar = Environment.GetEnvironmentVariable("ASPNETCORE_LOKI_URL");
+                var lokiUrl = lokiUrlEnvVar ?? "http://loki:3100";
                 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
                 var loggerConfig = new LoggerConfiguration()
@@ -79,9 +80,9 @@ namespace Shared.Services.Run
                         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Service} {Message:lj}{NewLine}{Exception}"
                     );
 
-                // Add Loki sink if Loki URL is configured
-                // Loki logging works in all environments when running in Docker
-                if (!string.IsNullOrEmpty(lokiUrl))
+                // Add Loki sink only if ASPNETCORE_LOKI_URL environment variable is explicitly set
+                // This allows disabling Loki logging by not setting the environment variable
+                if (!string.IsNullOrEmpty(lokiUrlEnvVar))
                 {
                     try
                     {
