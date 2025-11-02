@@ -372,14 +372,17 @@ jobs:
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
                 
-                # Wait for STOPPED state
+                # Wait for STOPPED state (3 minutes timeout)
                 echo "⏳ Waiting for app to stop..."
                 stop_wait=0
-                while [ $stop_wait -lt 60 ]; do
-                  stop_state="$(get_state || true)"
-                  echo "  Stop check #$((stop_wait+1))/60: state=$stop_state"
+                stop_state="UNKNOWN"
+                max_stop_iterations=90
+                while [ $stop_wait -lt $max_stop_iterations ]; do
+                  stop_state="$(get_state || echo 'UNKNOWN')"
+                  [ -z "$stop_state" ] && stop_state="UNKNOWN"
+                  echo "  Stop check $((stop_wait+1))/$max_stop_iterations: state=$stop_state"
                   if [ "$stop_state" = "STOPPED" ] || [ "$stop_state" = "NOT_FOUND" ]; then
-                    echo "✅ App stopped"
+                    echo "✅ App stopped successfully"
                     break
                   fi
                   sleep 2
@@ -387,7 +390,9 @@ jobs:
                 done
                 
                 if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
-                  echo "⚠️  Warning: App didn't reach STOPPED state, proceeding anyway (state=$stop_state)"
+                  echo "❌ ERROR: App failed to stop after 180 seconds (state=$stop_state)"
+                  echo "Cannot proceed with deployment - manual intervention required"
+                  exit 1
                 fi
                 
                 if midclt call app.start "$app" 2>/dev/null; then
@@ -399,7 +404,7 @@ jobs:
               fi
             fi
             
-            # Wait for healthy state
+            # Wait for healthy state (10 minutes timeout)
             echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
               case "$1" in
@@ -408,23 +413,24 @@ jobs:
               esac
             }
 
-            i=0
-            st=""
-            while [ $i -lt 120 ]; do
-              st="$(get_state || true)"
-              [ -n "$st" ] || st="unknown"
-              echo "  Health check #$((i+1))/120: state=$st"
-              if is_good_state "$st"; then
-                echo "✅ App is HEALTHY"
+            health_check=0
+            max_health_checks=120
+            app_state="UNKNOWN"
+            while [ $health_check -lt $max_health_checks ]; do
+              app_state="$(get_state || echo 'UNKNOWN')"
+              [ -z "$app_state" ] && app_state="UNKNOWN"
+              echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              if is_good_state "$app_state"; then
+                echo "✅ App is healthy and running"
                 break
               fi
               sleep 5
-              i=$((i+1))
+              health_check=$((health_check+1))
             done
             
-            if ! is_good_state "$st"; then
-              echo "❌ ERROR: App failed to reach healthy state (state=$st)"
-              echo "⚠️  Rollback may be needed - backup is available"
+            if ! is_good_state "$app_state"; then
+              echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
+              echo "⚠️  Rollback recommended - backup is available in backups directory"
               exit 1
             fi
             
