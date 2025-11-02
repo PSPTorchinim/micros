@@ -565,6 +565,62 @@ services:
       - rabbitmq_net
       - apigw_backends_net
 
+  # ================================================
+  # LOGGING & MONITORING SERVICES
+  # ================================================
+
+  loki:
+    build:
+      context: ../
+      dockerfile: Docker/infra/loki.Dockerfile
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "3100:3100"
+    networks:
+      - logging_net
+      - public
+    volumes:
+      - loki_data:/loki
+
+  promtail:
+    build:
+      context: ../
+      dockerfile: Docker/infra/promtail.Dockerfile
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "9080:9080"
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - logging_net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_data:/tmp
+
+  grafana:
+    build:
+      context: ../
+      dockerfile: Docker/infra/grafana.Dockerfile
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "3001:3001"
+    environment:
+      - GF_SERVER_HTTP_PORT=3001
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-djpanel_grafana_admin_2024}
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - logging_net
+      - public
+    volumes:
+      - grafana_data:/var/lib/grafana
+
 networks:
   mongo_net:
     driver: bridge
@@ -590,6 +646,9 @@ networks:
   strapi_fe_net:
     driver: bridge
     external: false
+  logging_net:
+    driver: bridge
+    external: false
   public:
     driver: bridge
     external: true
@@ -608,4 +667,10 @@ volumes:
   redis_data:
     driver: local
   strapi_app:
+    driver: local
+  loki_data:
+    driver: local
+  promtail_data:
+    driver: local
+  grafana_data:
     driver: local

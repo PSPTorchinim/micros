@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 using Shared.Configurations;
 using Shared.Services.App;
 using Shared.Services.Database;
@@ -27,12 +29,15 @@ namespace Shared.Services.Run
         {
             var systemConfig = configuration.Get<SystemConfiguration>();
             services.AddControllers().AddJsonOptions(ConfigureJsonOptions);
+            
+            // Configure Serilog for structured logging with Loki
+            ConfigureSerilog(name);
             services.AddLogging(loggingBuilder =>
             {
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddDebug();
-                // Add other logging providers/configuration as needed
+                loggingBuilder.ClearProviders();
+                loggingBuilder.AddSerilog();
             });
+            
             services.ConfigureCors();
             services.ConfigureApiVersioning();
             services.ConfigureHealthChecks();
@@ -53,6 +58,66 @@ namespace Shared.Services.Run
 
             Console.WriteLine("Basic services built for: " + name);
             return services;
+        }
+
+        private static void ConfigureSerilog(string serviceName)
+        {
+            try
+            {
+                var lokiUrl = Environment.GetEnvironmentVariable("ASPNETCORE_LOKI_URL") ?? "http://loki:3100";
+                var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+                var loggerConfig = new LoggerConfiguration()
+                    .MinimumLevel.Information()
+                    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+                    .Enrich.FromLogContext()
+                    .Enrich.WithProperty("Service", serviceName)
+                    .Enrich.WithProperty("Environment", environment)
+                    .Enrich.WithProperty("MachineName", System.Environment.MachineName)
+                    .WriteTo.Console(
+                        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Service} {Message:lj}{NewLine}{Exception}"
+                    );
+
+                // Add Loki sink if Loki URL is configured
+                // Loki logging works in all environments when running in Docker
+                if (!string.IsNullOrEmpty(lokiUrl))
+                {
+                    try
+                    {
+                        var labels = new List<LokiLabel>
+                        {
+                            new() { Key = "service", Value = serviceName },
+                            new() { Key = "environment", Value = environment },
+                            new() { Key = "app", Value = "djbeatblaster" }
+                        };
+
+                        loggerConfig.WriteTo.GrafanaLoki(
+                            lokiUrl,
+                            labels: labels
+                        );
+                        Console.WriteLine($"Serilog configured for {serviceName} with Loki at {lokiUrl}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Failed to configure Loki sink: {ex.Message}. Continuing with console logging only.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Serilog configured for {serviceName} with console logging only (Loki URL not configured)");
+                }
+
+                Log.Logger = loggerConfig.CreateLogger();
+            }
+            catch (Exception ex)
+            {
+                // Fallback to basic console logging if Serilog configuration fails
+                Console.WriteLine($"Error configuring Serilog: {ex.Message}. Using basic console logging.");
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.Console()
+                    .CreateLogger();
+            }
         }
 
         private static void ConfigureJsonOptions(JsonOptions options)
