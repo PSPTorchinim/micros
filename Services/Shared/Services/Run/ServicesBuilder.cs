@@ -99,8 +99,12 @@ namespace Shared.Services.Run
                         );
                         Console.WriteLine($"Serilog configured for {serviceName} with Loki at {lokiUrl}");
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
                     {
+                        // Intentionally catching all exceptions to ensure logging continues with console output
+                        // if Loki sink configuration fails (e.g., network issues, invalid URL, library errors)
                         Console.WriteLine($"Warning: Failed to configure Loki sink: {ex.Message}. Continuing with console logging only.");
                     }
                 }
@@ -111,9 +115,12 @@ namespace Shared.Services.Run
 
                 Log.Logger = loggerConfig.CreateLogger();
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
             {
-                // Fallback to basic console logging if Serilog configuration fails
+                // Intentionally catching all exceptions as a safety net to ensure the application
+                // can still start with basic logging if Serilog configuration completely fails
                 Console.WriteLine($"Error configuring Serilog: {ex.Message}. Using basic console logging.");
                 Log.Logger = new LoggerConfiguration()
                     .WriteTo.Console()
