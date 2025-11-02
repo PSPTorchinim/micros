@@ -162,6 +162,55 @@ midclt call app.query '[["name","=","dj-panel-dev"]]'
 
 **Rollback time:** < 5 minutes
 
+## Docker Image Tagging Strategy
+
+### Commit-Based Tags with Latest Alias
+
+Every build creates **two Docker image tags**:
+
+1. **Commit-based tag** (immutable): `dev-abc1234` or `prod-abc1234`
+2. **Latest alias** (updated): `dev-latest` or `prod-latest`
+
+**Example:**
+```
+ghcr.io/psptorchinim/micros/services/identityapi:dev-abc1234
+ghcr.io/psptorchinim/micros/services/identityapi:dev-latest
+```
+
+### Benefits
+
+✅ **Precise Rollback**: Backup files contain exact commit hash  
+✅ **Immutable History**: Each deployment preserved as unique image  
+✅ **Easy Current Version**: `latest` always points to active deployment  
+✅ **Automated Cleanup**: Old images can be pruned by retention policy  
+
+### How It Works
+
+**During Build:**
+```
+1. CI generates commit hash: abc1234
+2. Builds Docker image
+3. Pushes to both tags:
+   - dev-abc1234 (permanent)
+   - dev-latest (updated)
+```
+
+**During Deployment:**
+```
+1. Compose file uses dev-abc1234 (specific version)
+2. Backup saved with commit hash in filename
+3. Rollback restores exact version
+```
+
+**Rollback Example:**
+```bash
+# Backup contains: dev-abc1234
+# Restoring automatically uses that specific image
+cp dj-panel-dev-backup-20251102_143000.yml ../dj-panel-dev.yml
+midclt call app.restart "dj-panel-dev"
+# App now runs dev-abc1234, not dev-latest
+```
+
 ## Configuration
 
 ### GitHub Environments

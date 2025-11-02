@@ -36,6 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      all_tags: ${{ steps.tag_set.outputs.all_tags }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -109,10 +111,17 @@ jobs:
           LOWERCASE_SERVICE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
           echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
 
+      - name: Build docker tags list
+        id: docker_tags
+        run: |
+          BASE_PATH="ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}"
+          TAGS="${BASE_PATH}:${{ needs.determine_docker_tag.outputs.docker_tag }},${BASE_PATH}:${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          tag: ${{ steps.docker_tags.outputs.tags }}
           dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
@@ -179,10 +188,17 @@ jobs:
         with:
           service: ${{ matrix.image.name }}
 
+      - name: Build docker tags list
+        id: docker_tags
+        run: |
+          BASE_PATH="ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.image.name }}"
+          TAGS="${BASE_PATH}:${{ needs.determine_docker_tag.outputs.docker_tag }},${BASE_PATH}:${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          tag: ${{ steps.docker_tags.outputs.tags }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
@@ -239,10 +255,17 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
+      - name: Build docker tags list
+        id: docker_tags
+        run: |
+          BASE_PATH="ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}"
+          TAGS="${BASE_PATH}:${{ needs.determine_docker_tag.outputs.docker_tag }},${BASE_PATH}:${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
       - name: Login and Push to GitHub Container Registry
         uses: ./.github/templates/ghcr
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          tag: ${{ steps.docker_tags.outputs.tags }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: ${{ matrix.image.dockerfile }}
           # Pass ALL possible args; Docker will ignore ones not declared via ARG
