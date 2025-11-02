@@ -27,7 +27,9 @@ export const Input: React.FC<InputProps> = ({
     .join(' ');
 
   return (
-    <div className={`atom-input-wrapper ${fullWidth ? 'atom-input-wrapper--full-width' : ''}`}>
+    <div
+      className={`atom-input-wrapper ${fullWidth ? 'atom-input-wrapper--full-width' : ''}`}
+    >
       {label && (
         <label htmlFor={inputId} className="atom-input-label">
           {label}
