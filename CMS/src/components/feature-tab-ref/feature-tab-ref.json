@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_feature_tab_ref_feature_tab_refs",
+  "info": { "displayName": "FeatureTabRef" },
+  "attributes": {
+    "feature_tab": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::feature-tab.feature-tab"
+    }
+  }
+}

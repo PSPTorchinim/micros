@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_contact_info_ref_contact_info_refs",
+  "info": { "displayName": "ContactInfoRef" },
+  "attributes": {
+    "contact_info": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::contact-info.contact-info"
+    }
+  }
+}

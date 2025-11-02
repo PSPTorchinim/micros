@@ -157,6 +157,10 @@ services:
         API_GATEWAY: ${API_GATEWAY}
         SECURE_KEY: ${SECURE_KEY}
         JWT_TOKEN: ${JWT_KEY}
+        CMS_HOST: ${CMS_HOST}
+        CMS_PORT: ${CMS_PORT}
+        CMS_PROTOCOL: ${CMS_PROTOCOL}
+        CMS_API_PATH: ${CMS_API_PATH}
     restart: unless-stopped
     pull_policy: always
     ports:

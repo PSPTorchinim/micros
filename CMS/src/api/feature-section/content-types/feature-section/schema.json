@@ -1,0 +1,17 @@
+{
+  "collectionName": "feature_sections",
+  "info": {
+    "singularName": "feature-section",
+    "pluralName": "feature-sections",
+    "displayName": "Feature Section"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "reversed": { "type": "boolean", "default": false },
+    "tabs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::feature-tab.feature-tab"
+    }
+  }
+}

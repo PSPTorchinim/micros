@@ -17,9 +17,7 @@ export const LoginComponent = () => {
     try {
       const response = await usersService.Login(email, password);
       if (response.success) {
-        console.log('Login successful');
         if (setUser) {
-          console.log('Setting user:', response.data?.user);
           setUser(response.data?.user ?? null); // Check if setUser is defined
           setToken(response.data?.accessToken ?? null); // Check if setToken is defined
           setRefreshToken(response.data?.refreshToken ?? null); // Check if setToken is defined
@@ -38,7 +36,6 @@ export const LoginComponent = () => {
           );
         }
         if (setToken) {
-          console.log('Setting token:', response.data?.accessToken);
           setToken(response.data?.accessToken ?? null); // Check if setToken is defined
         }
         navigate('/dashboard');
@@ -46,7 +43,6 @@ export const LoginComponent = () => {
         setError(response.message ?? 'An error occurred.');
       }
     } catch (err: any) {
-      console.log(err);
       setError(err.message ?? 'An error occurred.');
     }
   };

@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "steps_containers",
+  "info": {
+    "singularName": "steps-container",
+    "pluralName": "steps-containers",
+    "displayName": "Steps Container"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "heading": { "type": "string" },
+    "content": { "type": "text" },
+    "action": {
+      "type": "dynamiczone",
+      "components": [
+        "image-slider-ref.image-slider-ref",
+        "article-block-ref.article-block-ref",
+        "steps-container-ref.steps-container-ref",
+        "cta-ref.cta-ref",
+        "contact-info-ref.contact-info-ref",
+        "contact-section-ref.contact-section-ref",
+        "feature-section-ref.feature-section-ref",
+        "feature-tab-ref.feature-tab-ref",
+        "hero-block-ref.hero-block-ref"
+      ]
+    },
+    "steps": {
+      "type": "dynamiczone",
+      "components": [
+        "image-slider-ref.image-slider-ref",
+        "article-block-ref.article-block-ref",
+        "steps-container-ref.steps-container-ref",
+        "cta-ref.cta-ref",
+        "contact-info-ref.contact-info-ref",
+        "contact-section-ref.contact-section-ref",
+        "feature-section-ref.feature-section-ref",
+        "feature-tab-ref.feature-tab-ref",
+        "hero-block-ref.hero-block-ref"
+      ]
+    }
+  }
+}
