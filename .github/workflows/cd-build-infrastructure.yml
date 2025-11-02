@@ -80,17 +80,18 @@ jobs:
             
             echo "Setting up directories for environment: ${ENV}"
             
-            # Create main directories
+            # Create main directories (mkdir -p is idempotent)
             mkdir -p "${BASE_DIR}/Images"
             mkdir -p "${BASE_DIR}/Images/backups"
             
             echo "✅ Created: ${BASE_DIR}/Images"
             echo "✅ Created: ${BASE_DIR}/Images/backups"
             
-            # Set permissions
-            chmod -R 755 "${BASE_DIR}"
+            # Set permissions on newly created directories (non-fatal)
+            chmod 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
+            chmod 755 "${BASE_DIR}/Images/backups" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images/backups (may already exist with correct permissions)"
             
-            echo "✅ Set permissions on ${BASE_DIR}"
+            echo "✅ Directory setup verified"
             echo "=========================================="
             echo "✅ TrueNAS directory setup complete!"
             echo "=========================================="
