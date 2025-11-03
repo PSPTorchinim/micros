@@ -27,7 +27,7 @@ jobs:
             echo "should_run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          
+
           # For workflow_run, check if build succeeded
           if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
             echo "Build workflow succeeded, proceeding with deployment"
@@ -107,27 +107,27 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "🔧 TrueNAS Directory Setup"
             echo "=========================================="
-            
+
             ENV="${{ needs.determine_environment.outputs.current_env }}"
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
-            
+
             echo "Setting up directories for environment: ${ENV}"
-            
+
             # Create main directories (mkdir -p is idempotent)
             mkdir -p "${BASE_DIR}/Images"
             mkdir -p "${BASE_DIR}/Images/backups"
-            
+
             echo "✅ Created: ${BASE_DIR}/Images"
             echo "✅ Created: ${BASE_DIR}/Images/backups"
-            
+
             # Set permissions on newly created directories (non-fatal)
             chmod 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
             chmod 755 "${BASE_DIR}/Images/backups" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images/backups (may already exist with correct permissions)"
-            
+
             echo "✅ Directory setup verified"
             echo "=========================================="
             echo "✅ TrueNAS directory setup complete!"
@@ -155,9 +155,9 @@ jobs:
             agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             backup_dir="${base}/backups"
             timestamp=$(date +%Y%m%d_%H%M%S)
-            
+
             mkdir -p "$backup_dir"
-            
+
             if [ -f "$agg" ]; then
               backup_file="${backup_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-${timestamp}.yml"
               cp "$agg" "$backup_file"
@@ -335,10 +335,10 @@ jobs:
       - name: Enable Cloudflare maintenance mode
         run: |
           echo "🔧 Enabling maintenance page on Cloudflare..."
-          
+
           # Read maintenance page HTML
           MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
-          
+
           # Create Cloudflare Worker script that serves the maintenance page
           WORKER_SCRIPT=$(cat <<'EOF'
           addEventListener('fetch', event => {
@@ -358,31 +358,31 @@ jobs:
           }
           EOF
           )
-          
+
           # Replace placeholder with actual HTML
           WORKER_SCRIPT="${WORKER_SCRIPT//MAINTENANCE_HTML_PLACEHOLDER/$MAINTENANCE_HTML}"
-          
+
           # Deploy worker to Cloudflare
           WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
-          
+
           # Create or update the worker
           curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/javascript" \
             --data-binary "${WORKER_SCRIPT}"
-          
+
           # Create route to enable the worker
           ZONE_ID="${{ secrets.CF_ZONE_ID }}"
           PATTERN="${{ vars.CF_MAINTENANCE_PATTERN || '*.djpanel.com/*' }}"
-          
+
           # Get existing routes
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
-          
+
           # Check if route already exists
           ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
-          
+
           if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
             echo "Updating existing route: $ROUTE_ID"
             ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
@@ -398,7 +398,7 @@ jobs:
               -H "Content-Type: application/json" \
               --data "${ROUTE_DATA}"
           fi
-          
+
           echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
           echo "WORKER_NAME=${WORKER_NAME}" >> $GITHUB_ENV
           echo "ROUTE_PATTERN=${PATTERN}" >> $GITHUB_ENV
@@ -427,18 +427,18 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "🔄 Rolling Update Deployment (Zero Downtime)"
             echo "=========================================="
-            
+
             base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
             agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
             app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
 
             test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
-            
+
             # Update aggregator to point to new compose
             mkdir -p "$base"
             printf 'include:\n  - %s\n' "$new" > "$agg"
@@ -466,10 +466,10 @@ jobs:
                 }' | head -n1
               fi
             }
-            
+
             current_state="$(get_state || echo 'NOT_FOUND')"
             echo "Current app state: $current_state"
-            
+
             if [ "$current_state" = "NOT_FOUND" ] || [ "$current_state" = "STOPPED" ]; then
               echo "📦 First deployment or app stopped - starting app normally"
               if midclt call app.start "$app" 2>/dev/null; then
@@ -525,7 +525,7 @@ jobs:
                 fi
               fi
             fi
-            
+
             # Wait for healthy state (10 minutes timeout)
             echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
@@ -549,13 +549,13 @@ jobs:
               sleep 5
               health_check=$((health_check+1))
             done
-            
+
             if ! is_good_state "$app_state"; then
               echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
               echo "⚠️  Rollback recommended - backup is available in backups directory"
               exit 1
             fi
-            
+
             echo "=========================================="
             echo "✅ Rolling update completed successfully!"
             echo "✅ Zero downtime maintained"
@@ -610,18 +610,18 @@ jobs:
       - name: Disable Cloudflare maintenance mode
         run: |
           echo "🔧 Disabling maintenance page on Cloudflare..."
-          
+
           ZONE_ID="${{ secrets.CF_ZONE_ID }}"
           PATTERN="${{ vars.CF_MAINTENANCE_PATTERN || '*.djpanel.com/*' }}"
-          
+
           # Get routes
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
-          
+
           # Find and delete the maintenance route
           ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
-          
+
           if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
             echo "Deleting maintenance route: $ROUTE_ID"
             curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
@@ -631,7 +631,7 @@ jobs:
           else
             echo "ℹ️  No maintenance route found (pattern: $PATTERN)"
           fi
-          
+
           # Optional: Delete the worker script itself
           WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
           curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
