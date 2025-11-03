@@ -8,6 +8,7 @@ on:
       - completed
     branches:
       - "releases/R*"
+      - "production"
 
 jobs:
   check_build_status:

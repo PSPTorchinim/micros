@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "releases/R*"
+      - "production"
   schedule:
     # Daily at midnight (00:00 UTC) for Development environment
     - cron: "0 0 * * *"
