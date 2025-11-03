@@ -4,12 +4,65 @@ on:
   push:
     branches:
       - "releases/R*"
+  schedule:
+    # Daily at midnight (00:00 UTC) for Development environment
+    - cron: "0 0 * * *"
+    # Monthly on the 1st at midnight (00:00 UTC) for Production environment
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 jobs:
+  check_for_commits:
+    name: Check for Recent Commits (Scheduled Runs Only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    outputs:
+      has_commits: ${{ steps.check.outputs.has_commits }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      
+      - name: Check for commits in the relevant timeframe
+        id: check
+        run: |
+          set -euo pipefail
+          
+          # Determine timeframe based on cron schedule
+          # Daily cron (0 0 * * *) -> Check for commits in last 24 hours
+          # Monthly cron (0 0 1 * *) -> Check for commits in last 30 days
+          
+          if [[ "${{ github.event.schedule }}" == "0 0 * * *" ]]; then
+            # Daily schedule - check last 24 hours
+            TIMEFRAME="24 hours ago"
+            echo "📅 Daily schedule - checking for commits in the last 24 hours..."
+          else
+            # Monthly schedule - check last 30 days
+            TIMEFRAME="30 days ago"
+            echo "📅 Monthly schedule - checking for commits in the last 30 days..."
+          fi
+          
+          # Check for commits in the timeframe on current branch
+          COMMIT_COUNT=$(git log --since="$TIMEFRAME" --oneline | wc -l)
+          
+          echo "Found $COMMIT_COUNT commits since $TIMEFRAME"
+          
+          if [[ $COMMIT_COUNT -gt 0 ]]; then
+            echo "✅ Commits found, proceeding with build and deployment"
+            echo "has_commits=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ℹ️  No commits found, skipping build and deployment"
+            echo "has_commits=false" >> "$GITHUB_OUTPUT"
+          fi
+
   determine_environment:
     name: Determine Environment
     runs-on: ubuntu-latest
+    needs: [check_for_commits]
+    if: |
+      always() &&
+      (github.event_name != 'schedule' || needs.check_for_commits.outputs.has_commits == 'true')
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
     steps:
