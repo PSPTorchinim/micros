@@ -234,6 +234,9 @@ jobs:
               dockerfile: "Docker/infra/sqlserver.Dockerfile",
             }
           - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+          - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
+          - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
+          - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
 
     steps:
       - name: Checkout Source Code

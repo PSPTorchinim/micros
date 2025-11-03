@@ -126,6 +126,9 @@ This platform follows a microservices architecture with each service owning its 
 | **MailingAPI**    | 5007 | .NET 9 + MongoDB      | MongoDB    | Email Campaigns & Templates      |
 | **DJ Panel**      | 3000 | React 19 + TypeScript | -          | Frontend Application             |
 | **Strapi CMS**    | 1337 | Strapi 5 + Node.js    | PostgreSQL | Content Management               |
+| **Grafana**       | 3001 | Grafana 11            | -          | Log Visualization & Dashboards   |
+| **Loki**          | 3100 | Loki 3.3              | Filesystem | Log Aggregation & Storage        |
+| **Promtail**      | 9080 | Promtail 3.3          | -          | Log Collection Agent             |
 
 ## 🚀 Quick Start
 
@@ -178,6 +181,7 @@ This platform follows a microservices architecture with each service owning its 
 - **DJ Panel Frontend**: http://localhost:3000
 - **API Gateway**: http://localhost:5000/swagger
 - **Strapi CMS**: http://localhost:1337/admin
+- **Grafana Logs**: http://localhost:3001 (admin/djpanel_grafana_admin_2024)
 - **Individual Service Swagger**: http://localhost:500X/swagger
 
 For detailed setup instructions, see [Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md).
@@ -205,6 +209,7 @@ For detailed deployment instructions, see [Docker README](Docker/README.md).
 - **[Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md)** - Complete guide for local development
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
 - **[API Documentation](Services/README.md)** - Microservices API documentation
+- **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
 - **[CMS Guide](CMS/README.md)** - Strapi CMS configuration and usage
 
