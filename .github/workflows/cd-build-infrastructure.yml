@@ -385,14 +385,14 @@ jobs:
           
           if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
             echo "Updating existing route: $ROUTE_ID"
-            ROUTE_DATA=$(jq -n --arg pattern "${PATTERN}" --arg script "${WORKER_NAME}" '{pattern: $pattern, script: $script}')
+            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
             curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
               -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
               --data "${ROUTE_DATA}"
           else
             echo "Creating new route"
-            ROUTE_DATA=$(jq -n --arg pattern "${PATTERN}" --arg script "${WORKER_NAME}" '{pattern: $pattern, script: $script}')
+            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
             curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
               -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
