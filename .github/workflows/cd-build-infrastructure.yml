@@ -319,6 +319,88 @@ jobs:
           test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
+  enable_maintenance_page:
+    name: Enable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_environment,
+        generate_and_upload_truenas_compose_file,
+        backup_current_state,
+      ]
+    steps:
+      - name: Checkout repository for maintenance page
+        uses: actions/checkout@v4
+
+      - name: Enable Cloudflare maintenance mode
+        run: |
+          echo "🔧 Enabling maintenance page on Cloudflare..."
+          
+          # Read maintenance page HTML
+          MAINTENANCE_HTML=$(cat .github/workflows/maintenance.html | jq -Rs .)
+          
+          # Create Cloudflare Worker script that serves the maintenance page
+          WORKER_SCRIPT=$(cat <<'EOF'
+          addEventListener('fetch', event => {
+            event.respondWith(handleRequest(event.request))
+          })
+
+          async function handleRequest(request) {
+            const maintenanceHTML = MAINTENANCE_HTML_PLACEHOLDER
+            return new Response(maintenanceHTML, {
+              status: 503,
+              headers: {
+                'Content-Type': 'text/html;charset=UTF-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Retry-After': '120'
+              }
+            })
+          }
+          EOF
+          )
+          
+          # Replace placeholder with actual HTML
+          WORKER_SCRIPT="${WORKER_SCRIPT//MAINTENANCE_HTML_PLACEHOLDER/$MAINTENANCE_HTML}"
+          
+          # Deploy worker to Cloudflare
+          WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
+          
+          # Create or update the worker
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/javascript" \
+            --data "$WORKER_SCRIPT"
+          
+          # Create route to enable the worker
+          ZONE_ID="${{ secrets.CF_ZONE_ID }}"
+          PATTERN="${{ vars.CF_MAINTENANCE_PATTERN || '*.djpanel.com/*' }}"
+          
+          # Get existing routes
+          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          
+          # Check if route already exists
+          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+          
+          if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+            echo "Updating existing route: $ROUTE_ID"
+            curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data "{\"pattern\":\"$PATTERN\",\"script\":\"${WORKER_NAME}\"}"
+          else
+            echo "Creating new route"
+            curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data "{\"pattern\":\"$PATTERN\",\"script\":\"${WORKER_NAME}\"}"
+          fi
+          
+          echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
+          echo "WORKER_NAME=${WORKER_NAME}" >> $GITHUB_ENV
+          echo "ROUTE_PATTERN=${PATTERN}" >> $GITHUB_ENV
+
   rolling_update_deployment:
     name: Rolling update with zero downtime
     runs-on: ubuntu-latest
@@ -327,6 +409,7 @@ jobs:
         determine_environment,
         generate_and_upload_truenas_compose_file,
         backup_current_state,
+        enable_maintenance_page,
       ]
     outputs:
       start_stdout: ${{ steps.rolling_update.outputs.stdout }}
@@ -516,6 +599,43 @@ jobs:
               ;;
           esac
 
+  disable_maintenance_page:
+    name: Disable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs: [determine_environment, verify_app_started, enable_maintenance_page]
+    if: always()
+    steps:
+      - name: Disable Cloudflare maintenance mode
+        run: |
+          echo "🔧 Disabling maintenance page on Cloudflare..."
+          
+          ZONE_ID="${{ secrets.CF_ZONE_ID }}"
+          PATTERN="${{ vars.CF_MAINTENANCE_PATTERN || '*.djpanel.com/*' }}"
+          
+          # Get routes
+          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          
+          # Find and delete the maintenance route
+          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+          
+          if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+            echo "Deleting maintenance route: $ROUTE_ID"
+            curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json"
+            echo "✅ Maintenance page disabled - traffic restored to normal"
+          else
+            echo "ℹ️  No maintenance route found (pattern: $PATTERN)"
+          fi
+          
+          # Optional: Delete the worker script itself
+          WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
+          curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            || echo "ℹ️  Worker already deleted or not found"
+
   update_cloudflare_tunnel:
     name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
@@ -524,6 +644,7 @@ jobs:
         determine_environment,
         generate_and_upload_truenas_compose_file,
         verify_app_started,
+        disable_maintenance_page,
       ]
     steps:
       - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN; preserve other envs)
