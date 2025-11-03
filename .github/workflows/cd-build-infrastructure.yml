@@ -400,8 +400,8 @@ jobs:
           fi
 
           echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
-          echo "WORKER_NAME=${WORKER_NAME}" >> $GITHUB_ENV
-          echo "ROUTE_PATTERN=${PATTERN}" >> $GITHUB_ENV
+          echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
+          echo "ROUTE_PATTERN=${PATTERN}" >> "$GITHUB_ENV"
 
   rolling_update_deployment:
     name: Rolling update with zero downtime
