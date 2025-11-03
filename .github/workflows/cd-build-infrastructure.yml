@@ -475,7 +475,7 @@ jobs:
             echo "✅ Rolling update completed successfully!"
             echo "✅ Zero downtime maintained"
             echo "=========================================="
-            echo "APP_STATE=${st}"
+            echo "APP_STATE=${app_state}"
 
   manual_approval_gate:
     name: Manual approval before completing deployment
