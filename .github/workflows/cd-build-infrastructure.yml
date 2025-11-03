@@ -337,7 +337,7 @@ jobs:
           echo "🔧 Enabling maintenance page on Cloudflare..."
           
           # Read maintenance page HTML
-          MAINTENANCE_HTML=$(cat .github/workflows/maintenance.html | jq -Rs .)
+          MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
           
           # Create Cloudflare Worker script that serves the maintenance page
           WORKER_SCRIPT=$(cat <<'EOF'
@@ -369,7 +369,7 @@ jobs:
           curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/javascript" \
-            --data "$WORKER_SCRIPT"
+            --data "${WORKER_SCRIPT}"
           
           # Create route to enable the worker
           ZONE_ID="${{ secrets.CF_ZONE_ID }}"
@@ -388,13 +388,13 @@ jobs:
             curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
               -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
-              --data "{\"pattern\":\"$PATTERN\",\"script\":\"${WORKER_NAME}\"}"
+              --data "{\"pattern\":\"${PATTERN}\",\"script\":\"${WORKER_NAME}\"}"
           else
             echo "Creating new route"
             curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
               -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
-              --data "{\"pattern\":\"$PATTERN\",\"script\":\"${WORKER_NAME}\"}"
+              --data "{\"pattern\":\"${PATTERN}\",\"script\":\"${WORKER_NAME}\"}"
           fi
           
           echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
