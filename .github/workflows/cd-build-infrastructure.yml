@@ -644,8 +644,7 @@ jobs:
           curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" \
-            -H "Content-Type: application/json"
-            || echo "ℹ️  Worker already deleted or not found"
+            -H "Content-Type: application/json" || echo "ℹ️  Worker already deleted or not found"
 
   update_cloudflare_tunnel:
     name: Update Cloudflare Tunnel (service-based hostnames)
