@@ -380,8 +380,8 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
 
-          # Check if route already exists
-          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+          # Check if route already exists (with error handling)
+          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[]? | select(.pattern == \"$PATTERN\")? | .id // empty" 2>/dev/null || echo "")
 
           if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
             echo "Updating existing route: $ROUTE_ID"
