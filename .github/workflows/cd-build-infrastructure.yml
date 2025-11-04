@@ -338,8 +338,8 @@ jobs:
 
           # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
-            for pair in $(echo $entry | tr ',' '\n'); do
-              svc=$(echo $pair | cut -d: -f1)
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
               PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
               ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
               echo "Creating maintenance route for $PATTERN"
