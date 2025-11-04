@@ -521,6 +521,7 @@ jobs:
         determine_environment,
         enable_maintenance_page,
         rolling_update_deployment,
+        generate_and_upload_truenas_compose_file,
       ]
     if: always()
     steps:
@@ -543,8 +544,8 @@ jobs:
 
           # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
-            for pair in $(echo $entry | tr ',' '\n'); do
-              svc=$(echo $pair | cut -d: -f1)
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
               PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
               ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
               if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
