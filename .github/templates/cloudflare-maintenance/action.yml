@@ -1,0 +1,36 @@
+name: Cloudflare Maintenance (enable/disable)
+description: Enable or disable maintenance Workers for service hostnames.
+inputs:
+  mode: { required: true, description: enable|disable }
+  maintenance_html_path: { required: false }
+  external_map_json: { required: false }
+  env_slug: { required: true }
+  cf_account_id: { required: true }
+  cf_email: { required: true }
+  cf_key: { required: true }
+  zone_id: { required: true }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        ROOT=.github/scripts
+        chmod +x "$ROOT"/*.sh
+        if [ "${{ inputs.mode }}" = enable ]; then
+          "$ROOT/cf-enable-maintenance.sh" \
+            "${{ inputs.maintenance_html_path }}" \
+            "${{ inputs.external_map_json }}" \
+            "${{ inputs.env_slug }}" \
+            "${{ inputs.cf_account_id }}" \
+            "${{ inputs.cf_email }}" \
+            "${{ inputs.cf_key }}" \
+            "${{ inputs.zone_id }}"
+        else
+          "$ROOT/cf-disable-maintenance.sh" \
+            "${{ inputs.env_slug }}" \
+            "${{ inputs.cf_account_id }}" \
+            "${{ inputs.cf_email }}" \
+            "${{ inputs.cf_key }}" \
+            "${{ inputs.zone_id }}"
+        fi
