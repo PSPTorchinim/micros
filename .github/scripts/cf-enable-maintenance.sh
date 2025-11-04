@@ -14,9 +14,9 @@ MAINTENANCE_HTML=$(jq -Rs . < "$HTML_PATH")
 for APP in $APP_NAMES; do
   WORKER_NAME="maintenance-page-${ENV_SLUG}-${APP}"
   PATTERN="dj-panel-${ENV_SLUG}-${APP}.djbeatblaster.com/*"
-  cat > /tmp/worker-script.js <<EOF
-    addEventListener('fetch', event => { event.respondWith(new Response($MAINTENANCE_HTML,{status:503,headers:{'Content-Type':'text/html;charset=UTF-8','Cache-Control':'no-store, no-cache, must-revalidate, proxy-revalidate','Retry-After':'120'}})) })
-  EOF
+  # Read the JS template and inject MAINTENANCE_HTML
+  WORKER_TEMPLATE="$ROOT/maintenance-worker.js"
+  sed "s/MAINTENANCE_HTML/$MAINTENANCE_HTML/" "$WORKER_TEMPLATE" > /tmp/worker-script.js
   curl -sS -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
     -H "X-Auth-Email: ${CF_EMAIL}" -H "X-Auth-Key: ${CF_KEY}" -H "Content-Type: application/javascript" \
     --data-binary @/tmp/worker-script.js >/dev/null
