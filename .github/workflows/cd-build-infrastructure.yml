@@ -354,13 +354,18 @@ jobs:
           }
           EOF
 
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+
           # Deploy worker to Cloudflare
           WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
 
           # Create or update the worker - use file upload
           echo "Uploading worker script: ${WORKER_NAME}"
-          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/javascript" \
             --data-binary @/tmp/worker-script.js
 
@@ -371,7 +376,7 @@ jobs:
 
           # Get existing routes
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "Content-Type: application/json")
 
           # Check if route already exists (with error handling)
@@ -381,14 +386,16 @@ jobs:
             echo "Updating existing route: $ROUTE_ID"
             ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
             curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
               -H "Content-Type: application/json" \
               --data "${ROUTE_DATA}"
           else
             echo "Creating new route"
             ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
             curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
               -H "Content-Type: application/json" \
               --data "${ROUTE_DATA}"
           fi
@@ -405,6 +412,7 @@ jobs:
         determine_environment,
         generate_and_upload_truenas_compose_file,
         backup_current_state,
+        enable_maintenance_page,
       ]
     outputs:
       start_stdout: ${{ steps.rolling_update.outputs.stdout }}
@@ -604,12 +612,17 @@ jobs:
         run: |
           echo "🔧 Disabling maintenance page on Cloudflare..."
 
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
           PATTERN="*${{ needs.determine_environment.outputs.env_slug }}*.djbeatblaster.com/*"
 
           # Get routes
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/json")
 
           # Find and delete the maintenance route
@@ -618,7 +631,8 @@ jobs:
           if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
             echo "Deleting maintenance route: $ROUTE_ID"
             curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
               -H "Content-Type: application/json"
             echo "✅ Maintenance page disabled - traffic restored to normal"
           else
@@ -627,8 +641,10 @@ jobs:
 
           # Optional: Delete the worker script itself
           WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
-          curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/json"
             || echo "ℹ️  Worker already deleted or not found"
 
   update_cloudflare_tunnel:
