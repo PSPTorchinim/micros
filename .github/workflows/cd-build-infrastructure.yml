@@ -335,13 +335,14 @@ jobs:
           MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
 
           # Create Cloudflare Worker script that serves the maintenance page
-          WORKER_SCRIPT=$(cat <<'EOF'
+          # Save to a file for proper binary upload
+          cat > /tmp/worker-script.js <<EOF
           addEventListener('fetch', event => {
             event.respondWith(handleRequest(event.request))
           })
 
           async function handleRequest(request) {
-            const maintenanceHTML = MAINTENANCE_HTML_PLACEHOLDER
+            const maintenanceHTML = ${MAINTENANCE_HTML}
             return new Response(maintenanceHTML, {
               status: 503,
               headers: {
@@ -352,19 +353,16 @@ jobs:
             })
           }
           EOF
-          )
-
-          # Replace placeholder with actual HTML
-          WORKER_SCRIPT="${WORKER_SCRIPT//MAINTENANCE_HTML_PLACEHOLDER/$MAINTENANCE_HTML}"
 
           # Deploy worker to Cloudflare
           WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
 
-          # Create or update the worker
+          # Create or update the worker - use file upload
+          echo "Uploading worker script: ${WORKER_NAME}"
           curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/workers/scripts/${WORKER_NAME}" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/javascript" \
-            --data-binary "${WORKER_SCRIPT}"
+            --data-binary @/tmp/worker-script.js
 
           # Create route to enable the worker
           ZONE_ID="${{ secrets.CF_ZONE_ID }}"
