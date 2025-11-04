@@ -11,39 +11,9 @@ on:
       - "production"
 
 jobs:
-  check_build_status:
-    name: Check Build Workflow Status
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-    steps:
-      - name: Check if build workflow succeeded
-        id: check
-        run: |
-          # For workflow_dispatch, always run
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual trigger, proceeding with deployment"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # For workflow_run, check if build succeeded
-          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-            echo "Build workflow succeeded, proceeding with deployment"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Build workflow did not succeed (status: ${{ github.event.workflow_run.conclusion }}), skipping deployment"
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
-
   determine_environment:
     runs-on: ubuntu-latest
     name: Determine Environment
-    needs: [check_build_status]
-    if: |
-      always() &&
-      (github.event_name == 'workflow_dispatch' || needs.check_build_status.outputs.should_run == 'true')
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.slug.outputs.env_slug }}
