@@ -11,9 +11,39 @@ on:
       - "production"
 
 jobs:
+  check_build_status:
+    name: Check Build Workflow Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if build workflow succeeded
+        id: check
+        run: |
+          # For workflow_dispatch, always run
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Manual trigger, proceeding with deployment"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # For workflow_run, check if build succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "Build workflow succeeded, proceeding with deployment"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Build workflow did not succeed (status: ${{ github.event.workflow_run.conclusion }}), skipping deployment"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   determine_environment:
     runs-on: ubuntu-latest
     name: Determine Environment
+    needs: [check_build_status]
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' || needs.check_build_status.outputs.should_run == 'true')
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.slug.outputs.env_slug }}
@@ -289,25 +319,90 @@ jobs:
           test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-  # -------------------------
-  # Cloudflare maintenance ON
-  # -------------------------
   enable_maintenance_page:
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
     needs: [generate_and_upload_truenas_compose_file, determine_environment]
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/templates/cloudflare-maintenance
-        with:
-          mode: enable
-          maintenance_html_path: .github/workflows/maintenance.html
-          external_map_json: ${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}
-          env_slug: ${{ needs.determine_environment.outputs.env_slug }}
-          cf_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          cf_email: ${{ secrets.CLOUDFLARE_EMAIL }}
-          cf_key: ${{ secrets.CLOUDFLARE_API_KEY }}
-          zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      - name: Checkout repository for maintenance page
+        uses: actions/checkout@v4
+
+      - name: Enable Cloudflare maintenance mode
+        run: |
+          echo "🔧 Enabling maintenance page on Cloudflare..."
+
+          # Read maintenance page HTML
+          MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
+
+          # Create Cloudflare Worker script that serves the maintenance page
+          # Save to a file for proper binary upload
+          cat > /tmp/worker-script.js <<EOF
+          addEventListener('fetch', event => {
+            event.respondWith(handleRequest(event.request))
+          })
+
+          async function handleRequest(request) {
+            const maintenanceHTML = ${MAINTENANCE_HTML}
+            return new Response(maintenanceHTML, {
+              status: 503,
+              headers: {
+                'Content-Type': 'text/html;charset=UTF-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Retry-After': '120'
+              }
+            })
+          }
+          EOF
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+
+          # Deploy worker to Cloudflare
+          WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
+
+          # Create or update the worker - use file upload
+          echo "Uploading worker script: ${WORKER_NAME}"
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/javascript" \
+            --data-binary @/tmp/worker-script.js
+
+          # Create route to enable the worker
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          # pattern based on env slug (*{env_slug}.djbeatblaster.com/*)
+          PATTERN="*${{ needs.determine_environment.outputs.env_slug }}*.djbeatblaster.com/*"
+
+          # Get existing routes
+          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "Content-Type: application/json")
+
+          # Check if route already exists (with error handling)
+          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[]? | select(.pattern == \"$PATTERN\")? | .id // empty" 2>/dev/null || echo "")
+
+          if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+            echo "Updating existing route: $ROUTE_ID"
+            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+            curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
+              -H "Content-Type: application/json" \
+              --data "${ROUTE_DATA}"
+          else
+            echo "Creating new route"
+            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+            curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
+              -H "Content-Type: application/json" \
+              --data "${ROUTE_DATA}"
+          fi
+
+          echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
+          echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
+          echo "ROUTE_PATTERN=${PATTERN}" >> "$GITHUB_ENV"
 
   rolling_update_deployment:
     name: Rolling update with zero downtime
