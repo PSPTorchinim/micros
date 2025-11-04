@@ -327,15 +327,11 @@ jobs:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
 
-      - name: Enable Cloudflare maintenance mode
+      - name: Enable Cloudflare maintenance mode for all external service hostnames
         run: |
           echo "🔧 Enabling maintenance page on Cloudflare..."
 
-          # Read maintenance page HTML
           MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
-
-          # Create Cloudflare Worker script that serves the maintenance page
-          # Save to a file for proper binary upload
           cat > /tmp/worker-script.js <<EOF
           addEventListener('fetch', event => {
             event.respondWith(handleRequest(event.request))
@@ -357,11 +353,12 @@ jobs:
           ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Deploy worker to Cloudflare
-          WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
-
-          # Create or update the worker - use file upload
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
           echo "Uploading worker script: ${WORKER_NAME}"
           curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
@@ -369,40 +366,23 @@ jobs:
             -H "Content-Type: application/javascript" \
             --data-binary @/tmp/worker-script.js
 
-          # Create route to enable the worker
-          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
-          # pattern based on env slug (*{env_slug}.djbeatblaster.com/*)
-          PATTERN="*${{ needs.determine_environment.outputs.env_slug }}*.djbeatblaster.com/*"
+          # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo $entry | tr ',' '\n'); do
+              svc=$(echo $pair | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+              echo "Creating maintenance route for $PATTERN"
+              curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+                -H "X-Auth-Email: ${CF_EMAIL}" \
+                -H "X-Auth-Key: ${CF_KEY}" \
+                -H "Content-Type: application/json" \
+                --data "${ROUTE_DATA}"
+            done
+          done
 
-          # Get existing routes
-          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-            -H "X-Auth-Email: ${CF_EMAIL}" \
-            -H "Content-Type: application/json")
-
-          # Check if route already exists (with error handling)
-          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[]? | select(.pattern == \"$PATTERN\")? | .id // empty" 2>/dev/null || echo "")
-
-          if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
-            echo "Updating existing route: $ROUTE_ID"
-            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
-            curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}" \
-              -H "Content-Type: application/json" \
-              --data "${ROUTE_DATA}"
-          else
-            echo "Creating new route"
-            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
-            curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}" \
-              -H "Content-Type: application/json" \
-              --data "${ROUTE_DATA}"
-          fi
-
-          echo "✅ Maintenance page enabled - users will see maintenance page during deployment"
+          echo "✅ Maintenance page enabled for all external service hostnames."
           echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
-          echo "ROUTE_PATTERN=${PATTERN}" >> "$GITHUB_ENV"
 
   rolling_update_deployment:
     name: Rolling update with zero downtime
@@ -608,16 +588,16 @@ jobs:
     needs: [determine_environment, verify_app_started, enable_maintenance_page]
     if: always()
     steps:
-      - name: Disable Cloudflare maintenance mode
+      - name: Disable Cloudflare maintenance mode for all external service hostnames
         run: |
           echo "🔧 Disabling maintenance page on Cloudflare..."
 
           ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
-
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
-          PATTERN="*${{ needs.determine_environment.outputs.env_slug }}*.djbeatblaster.com/*"
+          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Get routes
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
@@ -625,22 +605,27 @@ jobs:
             -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/json")
 
-          # Find and delete the maintenance route
-          ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
-
-          if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
-            echo "Deleting maintenance route: $ROUTE_ID"
-            curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}" \
-              -H "Content-Type: application/json"
-            echo "✅ Maintenance page disabled - traffic restored to normal"
-          else
-            echo "ℹ️  No maintenance route found (pattern: $PATTERN)"
-          fi
+          # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo $entry | tr ',' '\n'); do
+              svc=$(echo $pair | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+              if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+                echo "Deleting maintenance route: $ROUTE_ID ($PATTERN)"
+                curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+                  -H "X-Auth-Email: ${CF_EMAIL}" \
+                  -H "X-Auth-Key: ${CF_KEY}" \
+                  -H "Content-Type: application/json"
+                echo "✅ Maintenance page disabled for $PATTERN"
+              else
+                echo "ℹ️  No maintenance route found for $PATTERN"
+              fi
+            done
+          done
 
           # Optional: Delete the worker script itself
-          WORKER_NAME="maintenance-page-${{ needs.determine_environment.outputs.env_slug }}"
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
           curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" \
