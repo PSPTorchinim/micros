@@ -820,7 +820,7 @@ jobs:
           echo ""
           echo "✅ Status:"
           echo "   Rolling Update: ${{ needs.rolling_update_deployment.result }}"
-          echo "   Verification: ${{ needs.verify_app_started.result }}"
+          # Removed reference to verify_app_started (undefined job)
           echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
           echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
           echo ""
