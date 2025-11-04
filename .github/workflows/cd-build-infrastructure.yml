@@ -11,39 +11,9 @@ on:
       - "production"
 
 jobs:
-  check_build_status:
-    name: Check Build Workflow Status
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-    steps:
-      - name: Check if build workflow succeeded
-        id: check
-        run: |
-          # For workflow_dispatch, always run
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual trigger, proceeding with deployment"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # For workflow_run, check if build succeeded
-          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-            echo "Build workflow succeeded, proceeding with deployment"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Build workflow did not succeed (status: ${{ github.event.workflow_run.conclusion }}), skipping deployment"
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
-
   determine_environment:
     runs-on: ubuntu-latest
     name: Determine Environment
-    needs: [check_build_status]
-    if: |
-      always() &&
-      (github.event_name == 'workflow_dispatch' || needs.check_build_status.outputs.should_run == 'true')
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.slug.outputs.env_slug }}
@@ -543,49 +513,15 @@ jobs:
             echo "=========================================="
             echo "APP_STATE=${app_state}"
 
-  manual_approval_gate:
-    name: Manual approval before completing deployment
-    runs-on: ubuntu-latest
-    needs: [rolling_update_deployment]
-    environment:
-      name: deployment-approval
-    steps:
-      - name: Wait for manual approval
-        run: |
-          echo "✅ Rolling update completed and app is healthy"
-          echo ""
-          echo "👉 Approve this step to complete the deployment"
-          echo "❌ Reject to investigate further (app is already updated)"
-
-  verify_app_started:
-    name: Verify deployment health
-    runs-on: ubuntu-latest
-    needs: [rolling_update_deployment, manual_approval_gate]
-    steps:
-      - name: Parse and verify deployment result
-        run: |
-          set -euo pipefail
-          out='${{ needs.rolling_update_deployment.outputs.start_stdout }}'
-          echo "=========================================="
-          echo "📊 Deployment Verification"
-          echo "=========================================="
-          printf '%s\n' "$out"
-          echo "=========================================="
-          st=$(echo "$out" | awk -F= '/^APP_STATE=/{print $2}' | tail -n1)
-          case "$st" in
-            RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY)
-              echo "✅ Deployment successful: $st"
-              ;;
-            *)
-              echo "❌ Deployment verification failed (state=$st)"
-              exit 1
-              ;;
-          esac
-
   disable_maintenance_page:
     name: Disable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
-    needs: [determine_environment, verify_app_started, enable_maintenance_page]
+    needs:
+      [
+        determine_environment,
+        enable_maintenance_page,
+        rolling_update_deployment,
+      ]
     if: always()
     steps:
       - name: Disable Cloudflare maintenance mode for all external service hostnames
@@ -638,7 +574,6 @@ jobs:
       [
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        verify_app_started,
         disable_maintenance_page,
       ]
     steps:
@@ -860,7 +795,6 @@ jobs:
       - determine_compose_timestamp
       - determine_environment
       - rolling_update_deployment
-      - verify_app_started
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
     if: always()
