@@ -12,6 +12,7 @@ on:
 
 jobs:
   determine_environment:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     name: Determine Environment
     outputs:
@@ -35,6 +36,7 @@ jobs:
           echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
 
   determine_docker_tag:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Determine Docker Tag
     runs-on: ubuntu-latest
     outputs:
@@ -48,6 +50,7 @@ jobs:
         uses: ./.github/templates/determine-docker-tag
 
   determine_compose_timestamp:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Determine Compose File Timestamp
     needs: [determine_environment]
     runs-on: ubuntu-latest
@@ -64,6 +67,7 @@ jobs:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
 
   setup_truenas_directories:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Setup TrueNAS directory structure (first-time)
     runs-on: ubuntu-latest
     needs: [determine_environment]
@@ -104,6 +108,7 @@ jobs:
             echo "=========================================="
 
   backup_current_state:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Backup current deployment for rollback
     runs-on: ubuntu-latest
     needs: [determine_environment, setup_truenas_directories]
@@ -145,6 +150,7 @@ jobs:
             fi
 
   get_truenas_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
     needs: [backup_current_state]
@@ -167,6 +173,7 @@ jobs:
               | sort -n | uniq
 
   calculate_unused_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Calculate Unused External and Internal Ports
     runs-on: ubuntu-latest
     needs: [get_truenas_ports]
@@ -197,6 +204,7 @@ jobs:
           tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Generate & Upload New Compose
     runs-on: ubuntu-latest
     needs:
@@ -290,6 +298,7 @@ jobs:
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
   enable_maintenance_page:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
     needs: [generate_and_upload_truenas_compose_file, determine_environment]
@@ -355,6 +364,7 @@ jobs:
           echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
 
   rolling_update_deployment:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Rolling update with zero downtime
     runs-on: ubuntu-latest
     needs:
@@ -514,6 +524,7 @@ jobs:
             echo "APP_STATE=${app_state}"
 
   disable_maintenance_page:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Disable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
     needs:
@@ -523,7 +534,6 @@ jobs:
         rolling_update_deployment,
         generate_and_upload_truenas_compose_file,
       ]
-    if: always()
     steps:
       - name: Disable Cloudflare maintenance mode for all external service hostnames
         run: |
@@ -569,6 +579,7 @@ jobs:
             -H "Content-Type: application/json" || echo "ℹ️  Worker already deleted or not found"
 
   update_cloudflare_tunnel:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
     needs:
@@ -669,6 +680,7 @@ jobs:
           echo "Cloudflare Tunnel configuration updated successfully."
 
   update_cloudflare_dns_records:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Ensure Cloudflare DNS CNAMEs for tunnel hostnames
     runs-on: ubuntu-latest
     needs:
@@ -789,6 +801,7 @@ jobs:
           echo "DNS sync (env-scoped) complete."
 
   deployment_summary:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Zero-Downtime Deployment Summary
     runs-on: ubuntu-latest
     needs:
@@ -798,7 +811,6 @@ jobs:
       - rolling_update_deployment
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
-    if: always()
     steps:
       - name: Summary
         run: |

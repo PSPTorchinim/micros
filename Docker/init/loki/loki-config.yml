@@ -1,5 +1,5 @@
 # Loki Configuration for DJ Beat Blaster Platform
-# Configures log storage, retention, and query settings
+# Single-binary Loki using filesystem TSDB with 7-day retention
 
 auth_enabled: false
 
@@ -43,13 +43,7 @@ limits_config:
   per_stream_rate_limit: 10MB
   per_stream_rate_limit_burst: 20MB
   max_query_series: 10000
-  max_query_lookback: 720h # 30 days
-
-chunk_store_config: {}
-
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 168h # 7 days
+  max_query_lookback: 168h # match retention
 
 compactor:
   working_directory: /loki/compactor
@@ -57,6 +51,7 @@ compactor:
   retention_enabled: true
   retention_delete_delay: 2h
   retention_delete_worker_count: 150
+  delete_request_store: /lki/compactor-delete-requests
 
 query_range:
   align_queries_with_step: true
