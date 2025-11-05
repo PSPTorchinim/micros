@@ -413,3 +413,24 @@ dotnet test --filter Category=Load
 - Manual approval for production deployment
 
 For detailed deployment instructions, see the [Docker README](../Docker/README.md) and [Kubernetes configurations](../k8s/README.md).
+
+## 📖 Individual Service Documentation
+
+Each microservice has its own detailed README with specific implementation details, API endpoints, and configuration:
+
+- **[IdentityAPI](./IdentityAPI/README.md)** - Authentication & User Management Service
+- **[MusicAPI](./MusicAPI/README.md)** - Music Library Management Service
+- **[EquipmentAPI](./EquipmentAPI/README.md)** - DJ Equipment Management Service (GearAPI)
+- **[DocumentsAPI](./DocumentsAPI/README.md)** - Document & Template Management Service
+- **[CompanyAPI](./CompanyAPI/README.md)** - Brand & Client Management Service (BrandAPI)
+- **[PartyAPI](./PartyAPI/README.md)** - Event & Booking Management Service
+- **[MailingAPI](./MailingAPI/README.md)** - Email Campaign & Communication Service
+- **[DJHostGateway](./DJHostGateway/README.md)** - API Gateway Service (YARP)
+
+Each service README includes:
+- Detailed API endpoint documentation
+- Local development setup instructions
+- Configuration examples
+- Testing guidelines
+- Docker deployment instructions
+- Integration information
