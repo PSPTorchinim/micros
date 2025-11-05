@@ -206,12 +206,31 @@ For detailed deployment instructions, see [Docker README](Docker/README.md).
 
 ## 📚 Documentation
 
+### Platform Documentation
+
 - **[Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md)** - Complete guide for local development
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
-- **[API Documentation](Services/README.md)** - Microservices API documentation
 - **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
-- **[CMS Guide](CMS/README.md)** - Strapi CMS configuration and usage
+- **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
+- **[TrueNAS Setup](TRUENAS_SETUP_GUIDE.md)** - Storage configuration guide
+
+### Service Documentation
+
+- **[Services Overview](Services/README.md)** - Microservices architecture and patterns
+- **[IdentityAPI](Services/IdentityAPI/README.md)** - Authentication & user management
+- **[MusicAPI](Services/MusicAPI/README.md)** - Music library management
+- **[EquipmentAPI](Services/EquipmentAPI/README.md)** - Equipment inventory
+- **[DocumentsAPI](Services/DocumentsAPI/README.md)** - Document generation
+- **[CompanyAPI](Services/CompanyAPI/README.md)** - Client & brand management
+- **[PartyAPI](Services/PartyAPI/README.md)** - Event management
+- **[MailingAPI](Services/MailingAPI/README.md)** - Email campaigns
+- **[DJHostGateway](Services/DJHostGateway/README.md)** - API Gateway
+
+### Frontend Documentation
+
+- **[DJ Panel Frontend](Frontends/dj-panel/README.md)** - React frontend application
+- **[Strapi CMS](CMS/README.md)** - Content management system
 
 ## 🧪 Testing
 
