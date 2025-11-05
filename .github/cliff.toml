@@ -39,6 +39,8 @@ filter_unconventional = false
 split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
+    # Convert issue references to GitHub issue links
+    # Note: Update the repository path if the repo is renamed/moved
     { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/PSPTorchinim/micros/issues/${2}))" },
 ]
 # regex for parsing and grouping commits
