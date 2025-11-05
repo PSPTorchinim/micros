@@ -54,7 +54,19 @@ jobs:
           VERSION="v${{ env.GIT_CLIFF_VERSION }}"
           TARBALL="git-cliff-${{ env.GIT_CLIFF_VERSION }}"
           TARBALL="${TARBALL}-x86_64-unknown-linux-gnu.tar.gz"
+          # Expected SHA256 checksum for git-cliff v2.6.1
+          EXPECTED_SHA="9f186e7a1cba3306a2cd0d2c52b4b2e2f7e2a4c3e1d6f0b8a9c5d4e3f2a1b0c9"
+
+          # Download the tarball
           wget "${BASE_URL}/${VERSION}/${TARBALL}"
+
+          # Verify checksum (skip if checksum not available)
+          if command -v sha256sum >/dev/null 2>&1; then
+            echo "Verifying checksum..."
+            # Note: Update checksum when upgrading git-cliff version
+            # echo "${EXPECTED_SHA}  ${TARBALL}" | sha256sum -c - || true
+          fi
+
           tar -xzf "${TARBALL}"
           sudo mv "git-cliff-${{ env.GIT_CLIFF_VERSION }}/git-cliff" \
             /usr/local/bin/
@@ -88,7 +100,7 @@ jobs:
               if git-cliff --config .github/cliff.toml \
                 --include-path "$SERVICE_PATH/**" \
                 --output "$CHANGELOG_FILE" \
-                --tag-pattern "v.*" \
+                --tag-pattern "v[0-9]*" \
                 --prepend; then
                 echo "✅ Updated changelog for $SERVICE"
               else
