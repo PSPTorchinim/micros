@@ -106,6 +106,15 @@ _enable_shell_xtrace
 # ======================== Globals & Helpers ==========================
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
+# Infrastructure services that need external access (exposed via Cloudflare tunnel)
+# - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
+# - Services in Docker/services/* and Docker/frontends/* get external ports (50000-59999)
+# - List infra services here that need external access exceptions
+# - Format: space-separated list of service names
+# - Example: To expose a new infra service "prometheus", add it to this list:
+#   EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana prometheus"
+EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana"
+
 log_subsection "Source File Validation"
 if [ ! -f "$SOURCE_COMPOSE" ]; then
   log_error "Source compose file $SOURCE_COMPOSE not found"
@@ -166,8 +175,10 @@ get_next_external_port() {
 get_port_function_for_service() {
   local service_name="$1" dockerfile="$2"
   if [[ "$dockerfile" == Docker/infra/* ]]; then
-    [[ "$service_name" == "strapi" ]] && { echo "get_next_external_port"; return; }
-    [[ "$service_name" == "grafana" ]] && { echo "get_next_external_port"; return; }
+    # Check if this infra service needs external access
+    for external_svc in $EXTERNAL_ACCESS_INFRA_SERVICES; do
+      [[ "$service_name" == "$external_svc" ]] && { echo "get_next_external_port"; return; }
+    done
     echo "get_next_internal_port"
   else
     echo "get_next_external_port"
