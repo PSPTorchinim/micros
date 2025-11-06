@@ -3,10 +3,16 @@
 
 FROM grafana/grafana:11.4.0
 
+# Build args for admin credentials configuration
+ARG GRAFANA_ADMIN_USER
+ARG GRAFANA_ADMIN_PASSWORD
+
 # Set environment variables
 # Note: Admin credentials should be configured via environment variables in docker-compose
 # or via GitHub secrets in CI/CD pipelines for security
-ENV GF_SECURITY_ADMIN_USER=admin
+# WARNING: Default password is for LOCAL DEVELOPMENT ONLY! Always change for production!
+ENV GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+ENV GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-djpanel_grafana_admin_2024}
 ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_ANALYTICS_REPORTING_ENABLED=false
 ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource

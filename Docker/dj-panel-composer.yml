@@ -605,6 +605,9 @@ services:
     build:
       context: ../
       dockerfile: Docker/infra/grafana.Dockerfile
+      args:
+        GRAFANA_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+        GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     restart: unless-stopped
     pull_policy: always
     ports:
