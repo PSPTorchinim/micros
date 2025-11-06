@@ -286,11 +286,11 @@ jobs:
                 # Wait for STOPPED state (2 minutes timeout: 60 iterations × 2 seconds)
                 echo "⏳ Waiting for app to stop..."
                 stop_wait=0
-                max_stop_iterations=60
-                while [ $stop_wait -lt $max_stop_iterations ]; do
+                max_stop_checks=60
+                while [ $stop_wait -lt $max_stop_checks ]; do
                   stop_state="$(get_state || echo 'UNKNOWN')"
                   [ -z "$stop_state" ] && stop_state="UNKNOWN"
-                  echo "  Stop check $((stop_wait+1))/$max_stop_iterations: state=$stop_state"
+                  echo "  Stop check $((stop_wait+1))/$max_stop_checks: state=$stop_state"
                   if [ "$stop_state" = "STOPPED" ] || [ "$stop_state" = "NOT_FOUND" ]; then
                     echo "✅ App stopped"
                     break
