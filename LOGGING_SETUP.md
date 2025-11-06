@@ -104,10 +104,24 @@ The platform uses a modern logging stack consisting of:
    - `type`: Service type (microservice, frontend, infrastructure)
    - `environment`: Deployment environment
    - `compose_project`: Docker Compose project name
-3. **Pre-built Dashboards**: Three dashboards are automatically provisioned for DJ Panel services:
+3. **Pre-built Dashboards**: 13 dashboards are automatically provisioned for DJ Panel services:
+   
+   **Aggregate Dashboards:**
    - **DJ Panel - Overview**: Comprehensive view of all DJ Panel services with log rates, error counts, and real-time logs
    - **DJ Panel - Microservices**: Detailed monitoring of backend services (identity_be, music_be, gear_be, documents_be, brand_be, party_be, mailing_be, apigateway)
    - **DJ Panel - Frontend Services**: Focused view of frontend services (host_fe, strapi)
+   
+   **Individual Service Dashboards:**
+   - **Identity Service**: User authentication and session management logs
+   - **Music Service**: Music library and playlist logs
+   - **Equipment Service**: DJ equipment and gear management logs
+   - **Documents Service**: Document storage and management logs
+   - **Company Service**: Company and brand management logs
+   - **Party Service**: Event and party management logs
+   - **Mailing Service**: Email campaign and notification logs
+   - **API Gateway**: Gateway and routing logs
+   - **DJ Panel Frontend**: React frontend application logs
+   - **Strapi CMS**: Content management system logs
 
 ### Accessing Pre-built Dashboards
 
@@ -116,8 +130,8 @@ The platform uses a modern logging stack consisting of:
 3. Open the "DJ Beat Blaster" folder
 4. Select one of the pre-configured dashboards:
    - Use **DJ Panel - Overview** for a quick health check of all services
-   - Use **DJ Panel - Microservices** for detailed backend service monitoring with filtering by service and log level
-   - Use **DJ Panel - Frontend Services** for frontend-specific log analysis
+   - Use **DJ Panel - Microservices** or **DJ Panel - Frontend Services** for grouped monitoring with filtering
+   - Use individual service dashboards (e.g., **Identity Service**, **Music Service**) for deep-dive analysis of a specific service
 
 All dashboards automatically filter to show only logs from DJ Panel services (excluding infrastructure services like databases, message queues, etc.).
 
