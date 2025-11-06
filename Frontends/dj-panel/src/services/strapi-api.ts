@@ -361,6 +361,56 @@ class StrapiAPI {
       return null;
     }
   }
+
+  async getLoginBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.loginBlock.getLoginBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching login-block by documentId ${id}:`, e);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(
+        `Error fetching forgot-password-block by documentId ${id}:`,
+        e,
+      );
+      return null;
+    }
+  }
+
+  // Singleton methods for Login and ForgotPassword blocks
+  async getLoginBlockSingleton() {
+    try {
+      const res = await this.api.loginBlock.getLoginBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching login-block singleton:', e);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockSingleton() {
+    try {
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching forgot-password-block singleton:', e);
+      return null;
+    }
+  }
 }
 
 export const strapiAPI = new StrapiAPI();
