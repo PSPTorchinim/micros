@@ -167,6 +167,7 @@ get_port_function_for_service() {
   local service_name="$1" dockerfile="$2"
   if [[ "$dockerfile" == Docker/infra/* ]]; then
     [[ "$service_name" == "strapi" ]] && { echo "get_next_external_port"; return; }
+    [[ "$service_name" == "grafana" ]] && { echo "get_next_external_port"; return; }
     echo "get_next_internal_port"
   else
     echo "get_next_external_port"
