@@ -214,6 +214,7 @@ For detailed deployment instructions, see [Docker README](Docker/README.md).
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
 - **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
 - **[TrueNAS Setup](TRUENAS_SETUP_GUIDE.md)** - Storage configuration guide
+- **[Changelog Management](CHANGELOG_MANAGEMENT.md)** - Auto-generated changelog documentation
 
 ### Service Documentation
 
