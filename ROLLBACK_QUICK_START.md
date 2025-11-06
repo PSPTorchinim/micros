@@ -1,6 +1,22 @@
 # Rollback Quick Start Guide
 
-## 🚨 Need to Rollback? Here's How
+## ℹ️ Automatic Rollback
+
+**Good news!** The deployment workflow now includes **automatic rollback** when deployment fails:
+
+- ✅ Triggers automatically when health checks fail
+- ✅ Restores most recent backup without manual action
+- ✅ Completes in ~2-3 minutes
+- ✅ Notifies in deployment summary
+
+**Most failures are handled automatically!** Only use manual rollback if:
+- You need to rollback to a specific older version (not latest)
+- Automatic rollback failed (rare)
+- You want to rollback a successful deployment for other reasons
+
+---
+
+## 🚨 Manual Rollback (When Needed)
 
 ### Quick Steps (2 minutes)
 

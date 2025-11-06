@@ -128,16 +128,50 @@ ALTER TABLE users DROP COLUMN email;
 
 ## Rollback Procedure
 
-### Automated Rollback (Recommended)
+### Automatic Rollback on Deployment Failure
 
-The **preferred method** for rollback is to use the automated GitHub Actions workflow, which provides:
+**NEW**: The deployment workflow now includes **automatic rollback** when deployment fails:
+
+✅ **Triggered automatically** when health checks fail during deployment  
+✅ **Restores most recent backup** without manual intervention  
+✅ **Verifies rollback health** to ensure app is working  
+✅ **Maintains service availability** by quickly reverting to known good state  
+
+**What happens during automatic rollback:**
+
+```
+1. Deployment Health Check Fails
+   └─ Rolling update cannot start app or health checks timeout
+
+2. Automatic Rollback Triggered
+   ├─ Finds most recent backup file
+   ├─ Restores backup to aggregator
+   └─ Restarts TrueNAS application
+
+3. Verify Rollback Health (5 minutes)
+   ├─ Monitors app state
+   └─ Confirms RUNNING/HEALTHY status
+
+4. Continue Workflow
+   ├─ Disables maintenance page
+   ├─ Updates Cloudflare tunnel
+   └─ Completes with rollback notification
+```
+
+**Rollback time:** ~2-3 minutes (automatic)
+
+**⚠️ Important**: If automatic rollback fails, manual intervention is required. Use the manual rollback procedure below.
+
+### Manual Rollback (User-Initiated)
+
+The **preferred method** for user-initiated rollback is to use the automated GitHub Actions workflow, which provides:
 
 ✅ **Safety**: Creates a pre-rollback snapshot before proceeding  
 ✅ **Validation**: Verifies backup exists and app health after rollback  
 ✅ **Audit Trail**: Full logs of rollback process in GitHub Actions  
 ✅ **Consistency**: Same process every time, reduces human error  
 
-**How to perform automated rollback:**
+**How to perform manual rollback:**
 
 1. **Navigate to Actions tab** in GitHub repository
 2. **Select "Rollback Deployment" workflow**
@@ -150,7 +184,7 @@ The **preferred method** for rollback is to use the automated GitHub Actions wor
    - **Skip health check**: Leave unchecked (only use for emergency)
 5. **Click "Run workflow" to start**
 
-**What happens during automated rollback:**
+**What happens during manual rollback:**
 
 ```
 1. List Available Backups
@@ -175,19 +209,11 @@ The **preferred method** for rollback is to use the automated GitHub Actions wor
    └─ Displays results and next steps
 ```
 
-**Rollback time:** ~2-5 minutes (automated) + health check time
+**Rollback time:** ~2-5 minutes (manual) + health check time
 
 **Note:** Cloudflare tunnel configuration may need manual update if the rolled-back version has different service ports.
 
-### Automatic Rollback on Deployment Failure
-
-If health checks fail during deployment:
-- Deployment workflow stops automatically
-- App may be in partially updated state
-- Use automated rollback workflow to restore previous version
-- Last 5 backups are retained for rollback capability
-
-### Manual Rollback (Emergency Only)
+### Emergency Manual Rollback (SSH)
 
 **⚠️ Use only when GitHub Actions is unavailable or for emergency situations**
 
