@@ -1,6 +1,5 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { LoginComponent } from './pages/identity/login';
 import { Layout } from './layout';
 import './index.css';
 import { AuthProvider } from './providers/auth-provider';
@@ -25,7 +24,6 @@ export default function App() {
                 element={<Layout navigation={{ links: dynamicNavigation }} />}
               >
                 <Route path="users">
-                  <Route path="login" element={<LoginComponent />} />
                   <Route
                     path="forgot-password"
                     element={<ForgotPasswordComponent />}
