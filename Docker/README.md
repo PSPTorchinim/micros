@@ -133,6 +133,19 @@ RabbitMQ message broker with management interface.
 - Monitoring and metrics
 - High availability configuration
 
+#### `grafana.Dockerfile`
+
+Grafana for visualization and monitoring dashboards.
+
+**Features:**
+
+- Grafana 11.4.0 with pre-installed plugins
+- External access configuration support
+- Loki data source integration
+- Custom dashboard provisioning
+- Health check endpoints
+- Secure admin credentials via environment variables
+
 ## 🚀 Docker Compose Configuration
 
 ### `dj-panel-composer.yml`
@@ -141,7 +154,7 @@ Complete orchestration file for the entire platform.
 
 **Services Included:**
 
-- All 8 microservices
+- All 8 microservices (IdentityAPI, MusicAPI, etc.)
 - React frontend (DJ Panel)
 - Strapi CMS
 - SQL Server database
@@ -149,6 +162,9 @@ Complete orchestration file for the entire platform.
 - PostgreSQL database
 - Redis cache
 - RabbitMQ message broker
+- Loki logging aggregation
+- Promtail log collector
+- Grafana monitoring dashboards
 
 **Network Configuration:**
 
@@ -162,6 +178,7 @@ networks:
   apigw_fe_net: # API Gateway to frontend
   strapi: # Strapi CMS network
   strapi_fe_net: # Strapi to frontend
+  logging_net: # Logging and monitoring network
   public: # Public access network
 ```
 
@@ -175,6 +192,9 @@ volumes:
   redis_data: # Redis data persistence
   rabbitmq_data: # RabbitMQ data persistence
   strapi_app: # Strapi application data
+  loki_data: # Loki logs persistence
+  promtail_positions: # Promtail position tracking
+  grafana_data: # Grafana dashboards and configurations
 ```
 
 ## 🏃‍♂️ Running the Platform
@@ -223,80 +243,61 @@ docker-compose -f dj-panel-composer.yml up -d --scale music-api=3
 
 ### Environment Variables File
 
-Create `.env` file in the Docker directory:
+Create `.env` file in the Docker directory. A template is provided with default values for local development.
+
+**Key Configuration Sections:**
+
+#### Database Configuration
+```bash
+DATABASE_HOST_SQLSERVER=sqlserver
+DATABASE_PASSWORD_SQLSERVER=YourStrong@Passw0rd
+DATABASE_HOST_MONGODB=mongodb
+DATABASE_PASSWORD_MONGODB=password
+```
+
+#### External Access Configuration
+For services accessible from outside the Docker network (frontend, Strapi CMS, Grafana):
 
 ```bash
-# Database Configuration
-DATABASE_HOST_SQLSERVER=sqlserver
-DATABASE_PORT_SQLSERVER=1433
-DATABASE_USER_SQLSERVER=sa
-DATABASE_PASSWORD_SQLSERVER=YourStrong@Passw0rd
+# API Gateway External Access
+API_GATEWAY=http://localhost:3000
 
-DATABASE_HOST_MONGODB=mongodb
-DATABASE_PORT_MONGODB=27017
-DATABASE_USER_MONGODB=admin
-DATABASE_PASSWORD_MONGODB=password
+# Strapi CMS External Access
+CMS_HOST=localhost
+CMS_PORT=1337
+CMS_PROTOCOL=http
+CMS_API_PATH=/api
 
-DATABASE_HOST_POSTGRES=postgres
-DATABASE_PORT_POSTGRES=5432
-DATABASE_USER_POSTGRES=strapi
-DATABASE_PASSWORD_POSTGRES=strapi
+# Grafana External Access
+GRAFANA_HOST=localhost
+GRAFANA_PORT=3001
+GRAFANA_PROTOCOL=http
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=djpanel_grafana_admin_2024
+```
 
-# Cache Configuration
+**Note:** For production deployment:
+- Update HOST values to your production domain
+- Change PROTOCOL to `https`
+- Use strong, unique passwords
+- Configure these in GitHub Secrets/Variables for CI/CD
+
+#### Cache and Message Queue Configuration
+```bash
 REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_PASSWORD=
-
-# Message Queue Configuration
+REDIS_PASSWORD=your_redis_password
 RABBITMQ_HOST=rabbitmq
-RABBITMQ_PORT=5672
 RABBITMQ_USER=guest
 RABBITMQ_PASSWORD=guest
+```
 
-# Security Configuration
+#### Security Configuration
+```bash
 SECURE_KEY=ProductionSecureKey123456789
 JWT_KEY=ProductionJWTKey123456789012345678901234567890
-
-# Service Configuration
-ASPNETCORE_ENVIRONMENT=Production
-ASPNETCORE_IDENTITY_BE_ADDRESS=http://identity-api:8080
-ASPNETCORE_MUSIC_BE_ADDRESS=http://music-api:8080
-ASPNETCORE_GEAR_BE_ADDRESS=http://equipment-api:8080
-ASPNETCORE_DOCUMENTS_BE_ADDRESS=http://documents-api:8080
-ASPNETCORE_BRAND_BE_ADDRESS=http://company-api:8080
-ASPNETCORE_PARTY_BE_ADDRESS=http://party-api:8080
-ASPNETCORE_MAILING_BE_ADDRESS=http://mailing-api:8080
-
-# Database Catalogs
-IDENTITY_DATABASE_CATALOG=IdentityDB
-MUSIC_DATABASE_CATALOG=MusicDB
-GEAR_DATABASE_CATALOG=GearDB
-DOCUMENTS_DATABASE_CATALOG=DocumentsDB
-BRAND_DATABASE_CATALOG=BrandDB
-PARTY_DATABASE_CATALOG=PartyDB
-MAILING_DATABASE_CATALOG=MailingDB
-APIGATEWAY_DATABASE_CATALOG=ApiGatewayDB
-
-# Frontend Configuration
-REACT_APP_API_GATEWAY=http://localhost:5000
-REACT_APP_API_SECURE_KEY=ProductionSecureKey123456789
-
-# Strapi Configuration
-CMS_DATABASE_CLIENT=postgres
-CMS_NODE_ENV=production
-CMS_DATABASE_NAME=strapi
-CMS_DATABASE_HOST=postgres
-CMS_DATABASE_PORT=5432
-CMS_DATABASE_USERNAME=strapi
-CMS_DATABASE_PASSWORD=strapi
-CMS_JWT_SECRET=your-jwt-secret
-CMS_ADMIN_JWT_SECRET=your-admin-jwt-secret
-CMS_APP_KEYS=your-app-keys
-
-# User Configuration
-DJPANEL_USER_EMAIL=admin@djbeatblaster.com
-DJPANEL_USER_PASSWORD=Admin123!
 ```
+
+See the `.env` file for the complete list of configuration options.
 
 ### Service-Specific Environment Files
 
