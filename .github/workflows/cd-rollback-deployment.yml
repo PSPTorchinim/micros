@@ -406,7 +406,9 @@ jobs:
     needs:
       [
         determine_environment,
+        list_available_backups,
         validate_and_prepare_rollback,
+        create_pre_rollback_snapshot,
         perform_rollback,
         verify_rollback_health,
       ]

@@ -707,6 +707,8 @@ jobs:
       [
         determine_environment,
         generate_and_upload_truenas_compose_file,
+        rolling_update_deployment,
+        automatic_rollback_on_failure,
         disable_maintenance_page,
       ]
     steps:
@@ -809,6 +811,8 @@ jobs:
         update_cloudflare_tunnel,
         determine_environment,
         generate_and_upload_truenas_compose_file,
+        rolling_update_deployment,
+        automatic_rollback_on_failure,
       ]
     steps:
       - name: Create/Update DNS CNAMEs for service FQDNs (env-scoped)
