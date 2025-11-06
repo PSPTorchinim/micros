@@ -42,6 +42,14 @@
     "customStyles": {
       "type": "json",
       "default": {}
+    },
+    "redirectPath": {
+      "type": "string",
+      "default": "/dashboard"
+    },
+    "forgotPasswordUrl": {
+      "type": "string",
+      "default": "/users/forgot-password"
     }
   }
 }

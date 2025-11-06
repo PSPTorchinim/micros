@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/use-auth';
 import { useServices } from '../../../hooks/use-services';
 import { Button } from '../../atoms/Button';
@@ -16,6 +16,8 @@ interface LoginBlockProps {
   emailPlaceholder?: string;
   passwordPlaceholder?: string;
   customStyles?: Record<string, any>;
+  redirectPath?: string;
+  forgotPasswordUrl?: string;
 }
 
 export const LoginBlock: React.FC<LoginBlockProps> = ({
@@ -28,6 +30,8 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
   emailPlaceholder = 'Enter your email',
   passwordPlaceholder = 'Enter your password',
   customStyles = {},
+  redirectPath = '/dashboard',
+  forgotPasswordUrl = '/users/forgot-password',
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,7 +68,7 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
             JSON.stringify(response.data?.refreshToken ?? null),
           );
         }
-        navigate('/dashboard');
+        navigate(redirectPath);
       } else {
         setError(response.message ?? 'An error occurred.');
       }
@@ -105,9 +109,9 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
         </Button>
         <p className="login-block-forgot">
           {forgotPasswordText}{' '}
-          <a href="#/users/forgot-password" className="login-block-link">
+          <Link to={forgotPasswordUrl} className="login-block-link">
             {resetPasswordLinkText}
-          </a>
+          </Link>
         </p>
       </form>
     </div>
