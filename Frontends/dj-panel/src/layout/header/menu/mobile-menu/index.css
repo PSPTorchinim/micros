@@ -1,5 +1,7 @@
 .navbar-burger-menu {
   display: none;
+  cursor: pointer;
+  color: var(--dl-color-theme-text-primary);
 }
 
 .navbar-mobile-icon {
@@ -17,7 +19,7 @@
   z-index: 100;
   position: absolute;
   flex-direction: column;
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
 }
 
 .navbar-mobile-nav {

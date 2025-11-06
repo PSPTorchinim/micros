@@ -4,18 +4,23 @@ import './index.css';
 
 export const NotFoundComponent = () => {
   return (
-    <div className="not-found1-container1">
+    <div className="not-found-container">
       <Helmet>
-        <title>Spotless Hungry Crocodile</title>
+        <title>404 - Page Not Found</title>
       </Helmet>
-      <h3>OOPS! PAGE NOT FOUND</h3>
-      <div className="not-found1-container2">
-        <h1 className="not-found1-text2">404</h1>
-      </div>
-      <div className="not-found1-container3">
-        <h2 className="not-found1-text3">
-          WE ARE SORRY, BUT THE PAGE YOU REQUESTED WAS NOT FOUND
-        </h2>
+      <div className="not-found-content">
+        <h3 className="not-found-subtitle">OOPS! PAGE NOT FOUND</h3>
+        <div className="not-found-code">
+          <h1 className="not-found-number">404</h1>
+        </div>
+        <div className="not-found-message">
+          <h2 className="not-found-text">
+            WE ARE SORRY, BUT THE PAGE YOU REQUESTED WAS NOT FOUND
+          </h2>
+        </div>
+        <a href="#/" className="not-found-link">
+          Go Back Home
+        </a>
       </div>
     </div>
   );
