@@ -9,6 +9,7 @@ import {
   ContactBlock,
   FeatureTabBlock,
   ContactInfoBlock,
+  LoginBlock,
 } from './content-blocks';
 
 /**
@@ -38,6 +39,8 @@ export function renderBlock(block: any, index: number) {
       return <FeatureTabBlock key={index} {...block} />;
     case 'contact-info':
       return <ContactInfoBlock key={index} {...block} />;
+    case 'login-block':
+      return <LoginBlock key={index} {...block} />;
   }
 
   // LEGACY/FALLBACK: gdyby trafił tu oryginalny komponent kolekcji z __component

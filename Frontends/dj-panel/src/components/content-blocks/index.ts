@@ -7,3 +7,4 @@ export { FeatureBlock } from './FeatureBlock';
 export { ContactBlock } from './ContactBlock';
 export { FeatureTabBlock } from './FeatureTabBlock';
 export { ContactInfoBlock } from './ContactInfoBlock';
+export { LoginBlock } from './LoginBlock';

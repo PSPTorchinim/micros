@@ -33,6 +33,7 @@ const FIELD_BY_REF: Record<string, string> = {
   'contact-section-ref.contact-section-ref': 'contact_section',
   'feature-tab-ref.feature-tab-ref': 'feature_tab',
   'contact-info-ref.contact-info-ref': 'contact_info',
+  'login-block-ref.login-block-ref': 'login_block',
 };
 
 // 3) Główna funkcja – rekurencyjnie rozwija refy i zagnieżdżenia
@@ -99,6 +100,9 @@ export async function mapStrapiContentToFrontend(block: any): Promise<any> {
           data = await (strapiAPI as any).getContactInfoBlockByDocumentId(
             docId,
           );
+          break;
+        case 'login-block':
+          data = await (strapiAPI as any).getLoginBlockByDocumentId(docId);
           break;
         default:
           // nieznany typ — oddaj surowy blok

@@ -34,6 +34,9 @@ const TEMPLATE_CONTENT_POPULATE = {
       'contact-info-ref.contact-info-ref': {
         populate: { contact_info: { fields: ['documentId'] } },
       },
+      'login-block-ref.login-block-ref': {
+        populate: { login_block: { fields: ['documentId'] } },
+      },
     },
   },
   // przy okazji możesz mieć page z podstawowymi polami
@@ -358,6 +361,19 @@ class StrapiAPI {
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching contact-info by documentId ${id}:`, e);
+      return null;
+    }
+  }
+
+  async getLoginBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.loginBlock.getLoginBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching login-block by documentId ${id}:`, e);
       return null;
     }
   }

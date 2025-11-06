@@ -1,0 +1,47 @@
+{
+  "collectionName": "login_blocks",
+  "info": {
+    "singularName": "login-block",
+    "pluralName": "login-blocks",
+    "displayName": "Login Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Login"
+    },
+    "emailLabel": {
+      "type": "string",
+      "default": "Email"
+    },
+    "passwordLabel": {
+      "type": "string",
+      "default": "Password"
+    },
+    "submitButtonText": {
+      "type": "string",
+      "default": "Login"
+    },
+    "forgotPasswordText": {
+      "type": "string",
+      "default": "Forgot your password?"
+    },
+    "resetPasswordLinkText": {
+      "type": "string",
+      "default": "Reset Password"
+    },
+    "emailPlaceholder": {
+      "type": "string",
+      "default": "Enter your email"
+    },
+    "passwordPlaceholder": {
+      "type": "string",
+      "default": "Enter your password"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}
