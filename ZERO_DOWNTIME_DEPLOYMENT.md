@@ -376,7 +376,12 @@ echo "Total downtime: ${DOWNTIME} seconds"
 
 **Symptoms:** App stuck in STARTING or DEGRADED state
 
-**Debug:**
+**Solution (Automated):**
+1. Go to Actions → "Rollback Deployment"
+2. Run workflow with `latest` backup
+3. Monitor health check results
+
+**Debug (Manual):**
 ```bash
 ssh user@truenas-host
 
@@ -391,6 +396,79 @@ cd /mnt/Files/Apps/DJPanel/Development/Images/backups
 cp dj-panel-dev-backup-LATEST.yml ../dj-panel-dev.yml
 midclt call app.restart "dj-panel-dev"
 ```
+
+### Rollback Workflow Issues
+
+#### Workflow Fails to Find Backups
+
+**Symptoms:** "No backups found" error in workflow
+
+**Causes:**
+- First deployment (no backups exist yet)
+- Wrong environment selected
+- Backup directory not created
+
+**Solution:**
+```bash
+# SSH to TrueNAS and check backup directory
+ssh user@truenas-host
+ls -la /mnt/Files/Apps/DJPanel/Development/Images/backups/
+ls -la /mnt/Files/Apps/DJPanel/Production/Images/backups/
+```
+
+#### Rollback Health Check Fails
+
+**Symptoms:** "App failed to reach healthy state" after rollback
+
+**Causes:**
+- Rolled-back version has compatibility issues
+- Database state incompatible with old code
+- Resource constraints on TrueNAS
+
+**Solution:**
+1. Check GitHub Actions logs for specific error
+2. SSH to TrueNAS and check app logs:
+   ```bash
+   midclt call app.query '[["name","=","dj-panel-dev"]]'
+   ```
+3. If app state is RUNNING but health check failed, the app may actually be healthy
+4. Use "Skip health check" option in rollback workflow if needed
+
+#### Backup File Corrupted
+
+**Symptoms:** Error reading backup YAML file
+
+**Causes:**
+- Incomplete file write during backup
+- Disk space issues
+- Permission problems
+
+**Solution:**
+1. List all available backups:
+   ```bash
+   ssh user@truenas-host
+   cd /mnt/Files/Apps/DJPanel/Development/Images/backups
+   ls -lah dj-panel-dev-backup-*.yml
+   ```
+2. Use an older backup:
+   - Run rollback workflow with specific timestamp
+   - Or manually restore: `cp dj-panel-dev-backup-YYYYMMDD_HHMMSS.yml ../dj-panel-dev.yml`
+
+#### Pre-Rollback Snapshot Not Created
+
+**Symptoms:** Warning "No current aggregator file to snapshot"
+
+**Causes:**
+- First time running rollback
+- Main aggregator file was deleted
+
+**Impact:**
+- No snapshot to revert to if rollback needs to be undone
+- Safe to proceed if you're confident in rollback
+
+**Solution:**
+- This is usually safe to ignore for rollback operations
+- If concerned, check current app state before proceeding
 
 ### Database Connection Errors
 
@@ -450,6 +528,56 @@ midclt call app.restart "dj-panel-dev"
 3. ✅ Check database connections
 4. ✅ Test user-facing features
 5. ✅ Keep backup available for 24 hours
+
+### When to Rollback
+
+**Immediate rollback recommended:**
+- ❌ Critical functionality broken
+- ❌ High error rates in production
+- ❌ Data corruption detected
+- ❌ Security vulnerability introduced
+- ❌ Major performance degradation
+
+**Consider rollback:**
+- ⚠️ Non-critical bugs in new features
+- ⚠️ UI/UX issues affecting user experience
+- ⚠️ Unexpected behavior in edge cases
+- ⚠️ Integration failures with external services
+
+**Don't rollback:**
+- ✅ Minor cosmetic issues
+- ✅ Issues that can be hotfixed quickly
+- ✅ Problems only in non-production environments
+- ✅ Expected breaking changes with migration plan
+
+### Rollback Best Practices
+
+1. **Always use automated rollback workflow when possible**
+   - Safer than manual SSH commands
+   - Creates audit trail
+   - Validates health automatically
+
+2. **Document the reason for rollback**
+   - Add comment in rollback workflow run
+   - Create GitHub issue describing the problem
+   - Include error logs and screenshots
+
+3. **Communicate with team**
+   - Notify team before initiating rollback
+   - Update status in team channels
+   - Document timeline and impact
+
+4. **After rollback:**
+   - Investigate root cause of deployment failure
+   - Fix issues in development environment
+   - Test thoroughly before redeploying
+   - Consider gradual rollout if possible
+
+5. **Backup retention:**
+   - Last 5 backups are kept automatically
+   - Pre-rollback snapshots allow re-rollback
+   - Backups include complete Docker Compose configuration
+   - Each backup tagged with commit hash for traceability
 
 ## Comparison with Blue-Green
 

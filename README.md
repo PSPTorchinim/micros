@@ -213,7 +213,7 @@ If a deployment causes issues, use the automated rollback workflow:
 3. Select environment and backup timestamp (use `latest` for most recent)
 4. Monitor the rollback process
 
-See [Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md#rollback-procedure) for detailed rollback instructions.
+See **[Rollback Quick Start Guide](ROLLBACK_QUICK_START.md)** for step-by-step instructions, or [Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md#rollback-procedure) for detailed documentation.
 
 ## 📚 Documentation
 
@@ -223,6 +223,7 @@ See [Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md#rollback-procedure) f
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
 - **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
+- **[Rollback Quick Start](ROLLBACK_QUICK_START.md)** - Quick guide to rollback deployments
 - **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
 - **[TrueNAS Setup](TRUENAS_SETUP_GUIDE.md)** - Storage configuration guide
 - **[Changelog Management](CHANGELOG_MANAGEMENT.md)** - Auto-generated changelog documentation
