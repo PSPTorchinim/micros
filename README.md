@@ -262,6 +262,30 @@ npm test
 
 ## 🛠️ Development Tools
 
+### Code Quality
+
+This repository uses automated code quality tools to ensure consistent code style and catch issues early:
+
+- **ESLint**: Automatically lints JavaScript/TypeScript code
+- **Prettier**: Automatically formats code according to project standards
+- **Husky**: Git hooks for running checks on commit
+- **lint-staged**: Runs linters only on staged files for better performance
+
+When you commit changes, the following will happen automatically:
+- ESLint will check and auto-fix JavaScript/TypeScript files in `Frontends/dj-panel/src/`
+- Prettier will format your code according to project standards
+- Only staged files are processed for fast commits
+
+To manually run linting and formatting:
+
+```bash
+# From the Frontends/dj-panel directory
+npm run lint        # Check for linting issues
+npm run lint:fix    # Auto-fix linting issues
+npm run format      # Check formatting
+npm run format:fix  # Auto-format code
+```
+
 ### VS Code Extensions
 
 - C# for Visual Studio Code
@@ -269,6 +293,8 @@ npm test
 - Docker
 - Kubernetes
 - REST Client
+- ESLint
+- Prettier - Code formatter
 
 ### Visual Studio Extensions
 
