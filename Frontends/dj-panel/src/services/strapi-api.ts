@@ -389,7 +389,10 @@ class StrapiAPI {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching forgot-password-block by documentId ${id}:`, e);
+      console.error(
+        `Error fetching forgot-password-block by documentId ${id}:`,
+        e,
+      );
       return null;
     }
   }

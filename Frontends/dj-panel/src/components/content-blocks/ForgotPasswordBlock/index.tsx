@@ -39,7 +39,7 @@ export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-    
+
     try {
       const response = await UsersService.forgotPassword(email);
       if (response.success) {

@@ -34,7 +34,8 @@ const FIELD_BY_REF: Record<string, string> = {
   'feature-tab-ref.feature-tab-ref': 'feature_tab',
   'contact-info-ref.contact-info-ref': 'contact_info',
   'login-block-ref.login-block-ref': 'login_block',
-  'forgot-password-block-ref.forgot-password-block-ref': 'forgot_password_block',
+  'forgot-password-block-ref.forgot-password-block-ref':
+    'forgot_password_block',
 };
 
 // 3) Główna funkcja – rekurencyjnie rozwija refy i zagnieżdżenia
@@ -106,7 +107,9 @@ export async function mapStrapiContentToFrontend(block: any): Promise<any> {
           data = await (strapiAPI as any).getLoginBlockByDocumentId(docId);
           break;
         case 'forgot-password-block':
-          data = await (strapiAPI as any).getForgotPasswordBlockByDocumentId(docId);
+          data = await (strapiAPI as any).getForgotPasswordBlockByDocumentId(
+            docId,
+          );
           break;
         default:
           // nieznany typ — oddaj surowy blok

@@ -45,7 +45,7 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-    
+
     try {
       const response = await usersService.Login(email, password);
       if (response.success) {
@@ -53,7 +53,7 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
           setUser(response.data?.user ?? null);
           setToken(response.data?.accessToken ?? null);
           setRefreshToken(response.data?.refreshToken ?? null);
-          
+
           // Persist user in localStorage
           localStorage.setItem(
             'user',
