@@ -35,9 +35,7 @@
         "contact-section-ref.contact-section-ref",
         "feature-section-ref.feature-section-ref",
         "feature-tab-ref.feature-tab-ref",
-        "hero-block-ref.hero-block-ref",
-        "login-block-ref.login-block-ref",
-        "forgot-password-block-ref.forgot-password-block-ref"
+        "hero-block-ref.hero-block-ref"
       ]
     }
   }
