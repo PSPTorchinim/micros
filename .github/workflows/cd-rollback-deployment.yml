@@ -21,6 +21,10 @@ on:
         type: boolean
         default: false
 
+# Restrict permissions to minimum required (none needed for SSH operations)
+permissions:
+  contents: read
+
 jobs:
   determine_environment:
     name: Determine Environment Slug
