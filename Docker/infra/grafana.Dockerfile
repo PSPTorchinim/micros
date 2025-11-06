@@ -26,6 +26,9 @@ RUN mkdir -p /etc/grafana/provisioning/datasources && \
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
 COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 
+# Copy dashboard JSON files
+COPY Docker/init/grafana/dashboards/*.json /etc/grafana/provisioning/dashboards/
+
 USER grafana
 
 # Expose Grafana port
