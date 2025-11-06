@@ -3,13 +3,26 @@
 
 FROM grafana/grafana:11.4.0
 
+# Build args for external access configuration
+ARG GRAFANA_ADMIN_USER
+ARG GRAFANA_ADMIN_PASSWORD
+ARG GRAFANA_HOST
+ARG GRAFANA_PORT
+ARG GRAFANA_PROTOCOL
+
 # Set environment variables
 # Note: Admin credentials should be configured via environment variables in docker-compose
 # or via GitHub secrets in CI/CD pipelines for security
-ENV GF_SECURITY_ADMIN_USER=admin
+ENV GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+ENV GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-djpanel_grafana_admin_2024}
 ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_ANALYTICS_REPORTING_ENABLED=false
 ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+
+# External access configuration
+ENV GRAFANA_HOST=${GRAFANA_HOST:-localhost}
+ENV GRAFANA_PORT=${GRAFANA_PORT:-3001}
+ENV GRAFANA_PROTOCOL=${GRAFANA_PROTOCOL:-http}
 
 # Create directories for provisioning
 USER root
