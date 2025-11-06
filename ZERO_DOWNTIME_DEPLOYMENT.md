@@ -391,9 +391,12 @@ midclt call app.query '[["name","=","dj-panel-dev"]]'
 # Try restarting
 midclt call app.restart "dj-panel-dev"
 
-# If still failing, rollback
+# If still failing, rollback to most recent backup
 cd /mnt/Files/Apps/DJPanel/Development/Images/backups
-cp dj-panel-dev-backup-LATEST.yml ../dj-panel-dev.yml
+# List backups to find the most recent one
+ls -lt dj-panel-dev-backup-*.yml | head -1
+# Copy most recent backup (example timestamp)
+cp dj-panel-dev-backup-20241106_143000.yml ../dj-panel-dev.yml
 midclt call app.restart "dj-panel-dev"
 ```
 

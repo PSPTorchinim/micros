@@ -34,6 +34,13 @@ jobs:
           set -euo pipefail
           env_raw='${{ inputs.environment }}'
           env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+          
+          # Validate slug is safe (alphanumeric and dashes only)
+          if ! echo "$env_slug" | grep -qE '^[a-z0-9-]+$'; then
+            echo "ERROR: Invalid environment slug: $env_slug"
+            exit 1
+          fi
+          
           echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
           echo "Environment slug: $env_slug"
 
@@ -272,7 +279,7 @@ jobs:
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
                 
-                # Wait for STOPPED state
+                # Wait for STOPPED state (2 minutes timeout: 60 iterations × 2 seconds)
                 echo "⏳ Waiting for app to stop..."
                 stop_wait=0
                 max_stop_iterations=60
@@ -289,7 +296,7 @@ jobs:
                 done
                 
                 if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
-                  echo "❌ ERROR: App failed to stop (state=$stop_state)"
+                  echo "❌ ERROR: App failed to stop after 2 minutes (state=$stop_state)"
                   exit 1
                 fi
                 
@@ -359,6 +366,7 @@ jobs:
               esac
             }
             
+            # Wait for healthy state (10 minutes timeout: 120 iterations × 5 seconds)
             echo "⏳ Waiting for app to become healthy (timeout: 10 minutes)..."
             health_check=0
             max_health_checks=120
