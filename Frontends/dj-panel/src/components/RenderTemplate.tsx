@@ -71,8 +71,9 @@ export const RenderTemplate: React.FC<Props> = ({
 
     const run = async () => {
       // Get template type
-      const templateType = tpl?.attributes?.TemplateType || (tpl as any)?.TemplateType;
-      
+      const templateType =
+        tpl?.attributes?.TemplateType || (tpl as any)?.TemplateType;
+
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
@@ -86,12 +87,15 @@ export const RenderTemplate: React.FC<Props> = ({
         }
         return;
       }
-      
+
       if (templateType === 'ForgotPassword') {
         try {
-          const forgotPasswordBlock = await strapiAPI.getForgotPasswordBlockSingleton();
+          const forgotPasswordBlock =
+            await strapiAPI.getForgotPasswordBlockSingleton();
           if (mounted && forgotPasswordBlock) {
-            setBlocks([{ __kind: 'forgot-password-block', ...forgotPasswordBlock }]);
+            setBlocks([
+              { __kind: 'forgot-password-block', ...forgotPasswordBlock },
+            ]);
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
