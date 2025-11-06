@@ -128,14 +128,94 @@ ALTER TABLE users DROP COLUMN email;
 
 ## Rollback Procedure
 
-### Automatic Rollback
+### Automatic Rollback on Deployment Failure
 
-If health checks fail:
-- Deployment stops automatically
-- App may be in partially updated state
-- Use manual rollback to restore previous version
+**NEW**: The deployment workflow now includes **automatic rollback** when deployment fails:
 
-### Manual Rollback
+✅ **Triggered automatically** when health checks fail during deployment  
+✅ **Restores most recent backup** without manual intervention  
+✅ **Verifies rollback health** to ensure app is working  
+✅ **Maintains service availability** by quickly reverting to known good state  
+
+**What happens during automatic rollback:**
+
+```
+1. Deployment Health Check Fails
+   └─ Rolling update cannot start app or health checks timeout
+
+2. Automatic Rollback Triggered
+   ├─ Finds most recent backup file
+   ├─ Restores backup to aggregator
+   └─ Restarts TrueNAS application
+
+3. Verify Rollback Health (5 minutes)
+   ├─ Monitors app state
+   └─ Confirms RUNNING/HEALTHY status
+
+4. Continue Workflow
+   ├─ Disables maintenance page
+   ├─ Updates Cloudflare tunnel
+   └─ Completes with rollback notification
+```
+
+**Rollback time:** ~2-3 minutes (automatic)
+
+**⚠️ Important**: If automatic rollback fails, manual intervention is required. Use the manual rollback procedure below.
+
+### Manual Rollback (User-Initiated)
+
+The **preferred method** for user-initiated rollback is to use the automated GitHub Actions workflow, which provides:
+
+✅ **Safety**: Creates a pre-rollback snapshot before proceeding  
+✅ **Validation**: Verifies backup exists and app health after rollback  
+✅ **Audit Trail**: Full logs of rollback process in GitHub Actions  
+✅ **Consistency**: Same process every time, reduces human error  
+
+**How to perform manual rollback:**
+
+1. **Navigate to Actions tab** in GitHub repository
+2. **Select "Rollback Deployment" workflow**
+3. **Click "Run workflow"**
+4. **Configure parameters:**
+   - **Environment**: `Development` or `Production`
+   - **Backup timestamp**: 
+     - Use `latest` for most recent backup (recommended)
+     - Or specify exact timestamp like `20241106_143000`
+   - **Skip health check**: Leave unchecked (only use for emergency)
+5. **Click "Run workflow" to start**
+
+**What happens during manual rollback:**
+
+```
+1. List Available Backups
+   ├─ Shows all backups for selected environment
+   └─ Validates backup file exists
+
+2. Create Pre-Rollback Snapshot
+   ├─ Saves current state before rollback
+   └─ Allows re-rollback if needed
+
+3. Perform Rollback
+   ├─ Restores selected backup to aggregator
+   ├─ Restarts TrueNAS app
+   └─ Applies previous configuration
+
+4. Verify Health
+   ├─ Waits for app to reach healthy state
+   ├─ Checks for RUNNING/ACTIVE/HEALTHY status
+   └─ Fails if not healthy within 10 minutes
+
+5. Summary
+   └─ Displays results and next steps
+```
+
+**Rollback time:** ~2-5 minutes (manual) + health check time
+
+**Note:** Cloudflare tunnel configuration may need manual update if the rolled-back version has different service ports.
+
+### Emergency Manual Rollback (SSH)
+
+**⚠️ Use only when GitHub Actions is unavailable or for emergency situations**
 
 **Via SSH to TrueNAS:**
 
@@ -160,7 +240,7 @@ midclt call app.restart "dj-panel-dev"
 midclt call app.query '[["name","=","dj-panel-dev"]]'
 ```
 
-**Rollback time:** < 5 minutes
+**Manual rollback time:** < 5 minutes
 
 ## Docker Image Tagging Strategy
 
@@ -322,7 +402,12 @@ echo "Total downtime: ${DOWNTIME} seconds"
 
 **Symptoms:** App stuck in STARTING or DEGRADED state
 
-**Debug:**
+**Solution (Automated):**
+1. Go to Actions → "Rollback Deployment"
+2. Run workflow with `latest` backup
+3. Monitor health check results
+
+**Debug (Manual):**
 ```bash
 ssh user@truenas-host
 
@@ -332,11 +417,87 @@ midclt call app.query '[["name","=","dj-panel-dev"]]'
 # Try restarting
 midclt call app.restart "dj-panel-dev"
 
-# If still failing, rollback
+# If still failing, rollback to most recent backup
 cd /mnt/Files/Apps/DJPanel/Development/Images/backups
-cp dj-panel-dev-backup-LATEST.yml ../dj-panel-dev.yml
+# List backups to find the most recent one
+ls -lt dj-panel-dev-backup-*.yml | head -1
+# Copy most recent backup (example timestamp)
+cp dj-panel-dev-backup-20241106_143000.yml ../dj-panel-dev.yml
 midclt call app.restart "dj-panel-dev"
 ```
+
+### Rollback Workflow Issues
+
+#### Workflow Fails to Find Backups
+
+**Symptoms:** "No backups found" error in workflow
+
+**Causes:**
+- First deployment (no backups exist yet)
+- Wrong environment selected
+- Backup directory not created
+
+**Solution:**
+```bash
+# SSH to TrueNAS and check backup directory
+ssh user@truenas-host
+ls -la /mnt/Files/Apps/DJPanel/Development/Images/backups/
+ls -la /mnt/Files/Apps/DJPanel/Production/Images/backups/
+```
+
+#### Rollback Health Check Fails
+
+**Symptoms:** "App failed to reach healthy state" after rollback
+
+**Causes:**
+- Rolled-back version has compatibility issues
+- Database state incompatible with old code
+- Resource constraints on TrueNAS
+
+**Solution:**
+1. Check GitHub Actions logs for specific error
+2. SSH to TrueNAS and check app logs:
+   ```bash
+   midclt call app.query '[["name","=","dj-panel-dev"]]'
+   ```
+3. If app state is RUNNING but health check failed, the app may actually be healthy
+4. Use "Skip health check" option in rollback workflow if needed
+
+#### Backup File Corrupted
+
+**Symptoms:** Error reading backup YAML file
+
+**Causes:**
+- Incomplete file write during backup
+- Disk space issues
+- Permission problems
+
+**Solution:**
+1. List all available backups:
+   ```bash
+   ssh user@truenas-host
+   cd /mnt/Files/Apps/DJPanel/Development/Images/backups
+   ls -lah dj-panel-dev-backup-*.yml
+   ```
+2. Use an older backup:
+   - Run rollback workflow with specific timestamp
+   - Or manually restore: `cp dj-panel-dev-backup-YYYYMMDD_HHMMSS.yml ../dj-panel-dev.yml`
+
+#### Pre-Rollback Snapshot Not Created
+
+**Symptoms:** Warning "No current aggregator file to snapshot"
+
+**Causes:**
+- First time running rollback
+- Main aggregator file was deleted
+
+**Impact:**
+- No snapshot to revert to if rollback needs to be undone
+- Safe to proceed if you're confident in rollback
+
+**Solution:**
+- This is usually safe to ignore for rollback operations
+- If concerned, check current app state before proceeding
 
 ### Database Connection Errors
 
@@ -396,6 +557,56 @@ midclt call app.restart "dj-panel-dev"
 3. ✅ Check database connections
 4. ✅ Test user-facing features
 5. ✅ Keep backup available for 24 hours
+
+### When to Rollback
+
+**Immediate rollback recommended:**
+- ❌ Critical functionality broken
+- ❌ High error rates in production
+- ❌ Data corruption detected
+- ❌ Security vulnerability introduced
+- ❌ Major performance degradation
+
+**Consider rollback:**
+- ⚠️ Non-critical bugs in new features
+- ⚠️ UI/UX issues affecting user experience
+- ⚠️ Unexpected behavior in edge cases
+- ⚠️ Integration failures with external services
+
+**Don't rollback:**
+- ✅ Minor cosmetic issues
+- ✅ Issues that can be hotfixed quickly
+- ✅ Problems only in non-production environments
+- ✅ Expected breaking changes with migration plan
+
+### Rollback Best Practices
+
+1. **Always use automated rollback workflow when possible**
+   - Safer than manual SSH commands
+   - Creates audit trail
+   - Validates health automatically
+
+2. **Document the reason for rollback**
+   - Add comment in rollback workflow run
+   - Create GitHub issue describing the problem
+   - Include error logs and screenshots
+
+3. **Communicate with team**
+   - Notify team before initiating rollback
+   - Update status in team channels
+   - Document timeline and impact
+
+4. **After rollback:**
+   - Investigate root cause of deployment failure
+   - Fix issues in development environment
+   - Test thoroughly before redeploying
+   - Consider gradual rollout if possible
+
+5. **Backup retention:**
+   - Last 5 backups are kept automatically
+   - Pre-rollback snapshots allow re-rollback
+   - Backups include complete Docker Compose configuration
+   - Each backup tagged with commit hash for traceability
 
 ## Comparison with Blue-Green
 
