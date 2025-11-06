@@ -7,6 +7,7 @@ import { AuthProvider } from './providers/auth-provider';
 import { ThemeProvider } from './context/theme-context';
 
 import { ForgotPasswordComponent } from './pages/identity/forgot-password';
+import { NotFoundComponent } from './pages/not-found';
 import { ServicesProvider } from './providers/services-provider';
 
 import { useDynamicRoutes } from './components/DynamicRoutes';
@@ -31,6 +32,7 @@ export default function App() {
                   />
                 </Route>
                 {dynamicRoutes}
+                <Route path="*" element={<NotFoundComponent />} />
               </Route>
             </Routes>
           </AuthProvider>
