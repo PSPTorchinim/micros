@@ -1,0 +1,57 @@
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_section:41] ==================== Script Initialization ====================
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:97] Starting Docker Compose file generation
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:98] Log level: INFO
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:99] Log file: generate-compose-20251106_110701.log
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:100] File logging: true
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:101] Base data directory (normalized): /mnt/test
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_section:41] ==================== Input Validation ====================
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:validate_inputs:80] Input validation passed
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_subsection:42] ---------- Source File Validation ----------
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:115] Source compose file found: Docker/dj-panel-composer.yml
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_subsection:42] ---------- Port Configuration ----------
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:122] Internal ports available: 15
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:123] External ports available: 15
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_section:41] ==================== Compose File Generation ====================
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:258] Output file: /tmp/test-compose/output.yml
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_subsection:42] ---------- Service Discovery ----------
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:266] Found 18 services
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:log_subsection:42] ---------- Service Processing ----------
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 1/18: mongodb_container
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign mongodb_container: host=40000 -> container=27017
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 2/18: strapi_db
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign strapi_db: host=40001 -> container=5432
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:323] Injected PGDATA for strapi_db
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 3/18: rabbitmq
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign rabbitmq: host=40002 -> container=15672
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 4/18: redis
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign redis: host=40003 -> container=6379
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 5/18: sqlserver
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign sqlserver: host=40004 -> container=1433
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 6/18: apigateway
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign apigateway: host=50000 -> container=8080
+[2025-11-06 11:07:01] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 7/18: host_fe
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign host_fe: host=50001 -> container=3000
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 8/18: strapi
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign strapi: host=50002 -> container=1337
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 9/18: identity_be
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 10/18: music_be
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 11/18: gear_be
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 12/18: documents_be
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 13/18: brand_be
+[2025-11-06 11:07:02] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 14/18: mailing_be
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 15/18: party_be
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 16/18: loki
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign loki: host=40005 -> container=3100
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 17/18: promtail
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign promtail: host=40006 -> container=9080
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:274] Processing 18/18: grafana
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:convert_ports:235] Assign grafana: host=40007 -> container=3001
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:log_subsection:42] ---------- Copy top-level volumes (networks intentionally skipped) ----------
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:351] Skipping top-level networks import by design
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:log_section:41] ==================== Generation Summary ====================
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:363] Generated: /tmp/test-compose/output.yml
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:364] Processed services: 18
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:365] External ports used: 3/15
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:366] Internal ports used: 8/15
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:main:370] YAML validation: OK
+[2025-11-06 11:07:03] [INFO] [.github/scripts/generate-compose-file.sh:log_timer:52] Total execution time: 2s
