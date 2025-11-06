@@ -37,6 +37,9 @@ const TEMPLATE_CONTENT_POPULATE = {
       'login-block-ref.login-block-ref': {
         populate: { login_block: { fields: ['documentId'] } },
       },
+      'forgot-password-block-ref.forgot-password-block-ref': {
+        populate: { forgot_password_block: { fields: ['documentId'] } },
+      },
     },
   },
   // przy okazji możesz mieć page z podstawowymi polami
@@ -374,6 +377,19 @@ class StrapiAPI {
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching login-block by documentId ${id}:`, e);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching forgot-password-block by documentId ${id}:`, e);
       return null;
     }
   }
