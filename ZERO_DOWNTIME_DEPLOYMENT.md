@@ -128,14 +128,68 @@ ALTER TABLE users DROP COLUMN email;
 
 ## Rollback Procedure
 
-### Automatic Rollback
+### Automated Rollback (Recommended)
 
-If health checks fail:
-- Deployment stops automatically
+The **preferred method** for rollback is to use the automated GitHub Actions workflow, which provides:
+
+✅ **Safety**: Creates a pre-rollback snapshot before proceeding  
+✅ **Validation**: Verifies backup exists and app health after rollback  
+✅ **Audit Trail**: Full logs of rollback process in GitHub Actions  
+✅ **Consistency**: Same process every time, reduces human error  
+
+**How to perform automated rollback:**
+
+1. **Navigate to Actions tab** in GitHub repository
+2. **Select "Rollback Deployment" workflow**
+3. **Click "Run workflow"**
+4. **Configure parameters:**
+   - **Environment**: `Development` or `Production`
+   - **Backup timestamp**: 
+     - Use `latest` for most recent backup (recommended)
+     - Or specify exact timestamp like `20241106_143000`
+   - **Skip health check**: Leave unchecked (only use for emergency)
+5. **Click "Run workflow" to start**
+
+**What happens during automated rollback:**
+
+```
+1. List Available Backups
+   ├─ Shows all backups for selected environment
+   └─ Validates backup file exists
+
+2. Create Pre-Rollback Snapshot
+   ├─ Saves current state before rollback
+   └─ Allows re-rollback if needed
+
+3. Perform Rollback
+   ├─ Restores selected backup to aggregator
+   ├─ Restarts TrueNAS app
+   └─ Applies previous configuration
+
+4. Verify Health
+   ├─ Waits for app to reach healthy state
+   ├─ Checks for RUNNING/ACTIVE/HEALTHY status
+   └─ Fails if not healthy within 10 minutes
+
+5. Summary
+   └─ Displays results and next steps
+```
+
+**Rollback time:** ~2-5 minutes (automated) + health check time
+
+**Note:** Cloudflare tunnel configuration may need manual update if the rolled-back version has different service ports.
+
+### Automatic Rollback on Deployment Failure
+
+If health checks fail during deployment:
+- Deployment workflow stops automatically
 - App may be in partially updated state
-- Use manual rollback to restore previous version
+- Use automated rollback workflow to restore previous version
+- Last 5 backups are retained for rollback capability
 
-### Manual Rollback
+### Manual Rollback (Emergency Only)
+
+**⚠️ Use only when GitHub Actions is unavailable or for emergency situations**
 
 **Via SSH to TrueNAS:**
 
@@ -160,7 +214,7 @@ midclt call app.restart "dj-panel-dev"
 midclt call app.query '[["name","=","dj-panel-dev"]]'
 ```
 
-**Rollback time:** < 5 minutes
+**Manual rollback time:** < 5 minutes
 
 ## Docker Image Tagging Strategy
 

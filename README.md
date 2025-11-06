@@ -204,6 +204,17 @@ helm install dj-beat-blaster .
 
 For detailed deployment instructions, see [Docker README](Docker/README.md).
 
+### Rollback Deployment
+
+If a deployment causes issues, use the automated rollback workflow:
+
+1. Go to **Actions** → **Rollback Deployment**
+2. Click **Run workflow**
+3. Select environment and backup timestamp (use `latest` for most recent)
+4. Monitor the rollback process
+
+See [Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md#rollback-procedure) for detailed rollback instructions.
+
 ## 📚 Documentation
 
 ### Platform Documentation
