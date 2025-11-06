@@ -1,0 +1,22 @@
+{
+  "name": "dj-beat-blaster-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DJ Beat Blaster Microservices Platform - Monorepo Root",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  },
+  "lint-staged": {
+    "Frontends/dj-panel/src/**/*.{js,jsx,ts,tsx}": [
+      "cd Frontends/dj-panel && npm run lint:fix",
+      "cd Frontends/dj-panel && npm run format:fix"
+    ],
+    "CMS/**/*.{js,jsx,ts,tsx}": [
+      "cd CMS && prettier --write"
+    ]
+  }
+}
