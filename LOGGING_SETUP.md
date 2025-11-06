@@ -104,6 +104,22 @@ The platform uses a modern logging stack consisting of:
    - `type`: Service type (microservice, frontend, infrastructure)
    - `environment`: Deployment environment
    - `compose_project`: Docker Compose project name
+3. **Pre-built Dashboards**: Three dashboards are automatically provisioned for DJ Panel services:
+   - **DJ Panel - Overview**: Comprehensive view of all DJ Panel services with log rates, error counts, and real-time logs
+   - **DJ Panel - Microservices**: Detailed monitoring of backend services (identity_be, music_be, gear_be, documents_be, brand_be, party_be, mailing_be, apigateway)
+   - **DJ Panel - Frontend Services**: Focused view of frontend services (host_fe, strapi)
+
+### Accessing Pre-built Dashboards
+
+1. Log in to Grafana at http://localhost:3001
+2. Navigate to "Dashboards" in the left sidebar
+3. Open the "DJ Beat Blaster" folder
+4. Select one of the pre-configured dashboards:
+   - Use **DJ Panel - Overview** for a quick health check of all services
+   - Use **DJ Panel - Microservices** for detailed backend service monitoring with filtering by service and log level
+   - Use **DJ Panel - Frontend Services** for frontend-specific log analysis
+
+All dashboards automatically filter to show only logs from DJ Panel services (excluding infrastructure services like databases, message queues, etc.).
 
 ### Creating Your First Dashboard
 
