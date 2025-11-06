@@ -53,10 +53,10 @@ This platform follows a microservices architecture with each service owning its 
 │ │Identity  │ │  Music   │ │Equipment │ │  Party   │       │
 │ │   API    │ │   API    │ │   API    │ │   API    │       │
 │ └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐                    │
-│ │ Company  │ │Documents │ │ Mailing  │                    │
-│ │   API    │ │   API    │ │   API    │                    │
-│ └──────────┘ └──────────┘ └──────────┘                    │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│ │ Company  │ │Documents │ │ Mailing  │ │Component │       │
+│ │   API    │ │   API    │ │   API    │ │   API    │       │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
 └─────────────────────────────────────────────────────────────┘
                              │
 ┌─────────────────────────────────────────────────────────────┐
@@ -124,6 +124,7 @@ This platform follows a microservices architecture with each service owning its 
 | **CompanyAPI**    | 5005 | .NET 9 + EF Core      | SQL Server | Brand & Client Management        |
 | **PartyAPI**      | 5006 | .NET 9 + EF Core      | SQL Server | Event & Booking Management       |
 | **MailingAPI**    | 5007 | .NET 9 + MongoDB      | MongoDB    | Email Campaigns & Templates      |
+| **ComponentsAPI** | 5008 | .NET 9 + EF Core      | SQL Server | Component Stories & Documentation|
 | **DJ Panel**      | 3000 | React 19 + TypeScript | -          | Frontend Application             |
 | **Strapi CMS**    | 1337 | Strapi 5 + Node.js    | PostgreSQL | Content Management               |
 | **Grafana**       | 3001 | Grafana 11            | -          | Log Visualization & Dashboards   |
@@ -238,6 +239,7 @@ See **[Rollback Quick Start Guide](ROLLBACK_QUICK_START.md)** for step-by-step i
 - **[CompanyAPI](Services/CompanyAPI/README.md)** - Client & brand management
 - **[PartyAPI](Services/PartyAPI/README.md)** - Event management
 - **[MailingAPI](Services/MailingAPI/README.md)** - Email campaigns
+- **[ComponentsAPI](Services/ComponentsAPI/README.md)** - Component stories & documentation
 - **[DJHostGateway](Services/DJHostGateway/README.md)** - API Gateway
 
 ### Frontend Documentation
