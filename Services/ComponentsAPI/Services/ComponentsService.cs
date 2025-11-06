@@ -50,6 +50,7 @@ namespace ComponentsAPI.Services
             existing.UpdatedDate = DateTime.UtcNow;
 
             await _repository.Update(existing);
+            await _repository.Save();
             return existing;
         }
 
