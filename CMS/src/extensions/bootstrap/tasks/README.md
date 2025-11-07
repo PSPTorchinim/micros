@@ -31,6 +31,12 @@ Automatically creates standard pages that should exist in all environments:
   - Creates About Template with `TemplateType: "Standard"`
   - Creates About Page with company description
 
+- **User Profile Page** (`/profile`)
+  - Creates Profile Template with `TemplateType: "Standard"`
+  - Creates Profile Page that displays user data from IdentityAPI
+  - Available after user login
+  - Shows user email, roles, permissions, and account status
+
 **Behavior:**
 - Runs in **all environments** (development, staging, production)
 - Creates pages if they don't exist
@@ -42,6 +48,7 @@ After the seeder runs, you can customize the content through the Strapi admin pa
 - Navigate to **Content Manager** and select the content type you want to edit
 - Modify the text, labels, placeholders, or custom styles
 - Save and publish your changes
+- Note: User Profile page content is fetched dynamically from IdentityAPI, so customization is limited to the page metadata
 
 ### `seed-dev.ts`
 

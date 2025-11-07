@@ -1,4 +1,4 @@
-// Automatic seeder for standard pages (Login, Forgot Password, Home, About)
+// Automatic seeder for standard pages (Login, Forgot Password, Home, About, Profile)
 // This seeder creates essential pages that should exist in all environments
 
 const LOGIN_BLOCK_UID = 'api::login-block.login-block';
@@ -685,6 +685,72 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
         data: aboutPageData,
       });
       strapi.log.info('[SEED][STANDARD_PAGES] About Page created');
+    }
+
+    // 9. Create User Profile Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating User Profile Page...');
+
+    // Create Profile Template (empty - data will be fetched from IdentityAPI)
+    const profileTemplateData = {
+      Name: 'User Profile Page Template',
+      TemplateType: 'Standard',
+      Content: [],
+      publishedAt: now(),
+    };
+
+    let profileTemplate;
+    const existingProfileTemplate = await strapi.db
+      .query(TEMPLATE_UID)
+      .findOne({
+        where: { Name: 'User Profile Page Template' },
+      });
+    if (existingProfileTemplate && existingProfileTemplate.id) {
+      profileTemplate = await strapi.entityService.update(
+        TEMPLATE_UID,
+        existingProfileTemplate.id,
+        {
+          data: profileTemplateData,
+        },
+      );
+      strapi.log.info('[SEED][STANDARD_PAGES] Profile Template updated');
+    } else {
+      profileTemplate = await strapi.entityService.create(TEMPLATE_UID, {
+        data: profileTemplateData,
+      });
+      strapi.log.info('[SEED][STANDARD_PAGES] Profile Template created');
+    }
+
+    // Create Profile Page
+    const profilePageData = {
+      Title: 'Profile',
+      Slug: '/profile',
+      Visible: true,
+      Menu: 'Main',
+      NavigationOrder: 3,
+      NavigationAction: 'Link',
+      configuration:
+        configuration?.documentId || configuration?.id
+          ? { connect: [configuration.documentId || configuration.id] }
+          : undefined,
+      template: profileTemplate?.documentId
+        ? { connect: [profileTemplate.documentId] }
+        : undefined,
+      publishedAt: now(),
+    };
+
+    const existingProfilePage = await strapi.db.query(PAGE_UID).findOne({
+      where: { Slug: '/profile' },
+    });
+    if (existingProfilePage && existingProfilePage.id) {
+      await strapi.entityService.update(PAGE_UID, existingProfilePage.id, {
+        data: profilePageData,
+      });
+      strapi.log.info('[SEED][STANDARD_PAGES] Profile Page updated');
+    } else {
+      await strapi.entityService.create(PAGE_UID, {
+        data: profilePageData,
+      });
+      strapi.log.info('[SEED][STANDARD_PAGES] Profile Page created');
     }
 
     strapi.log.info(

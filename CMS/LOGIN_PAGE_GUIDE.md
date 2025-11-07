@@ -13,6 +13,7 @@ The Login Page feature allows you to create customizable login pages through the
 - **Login and Forgot Password Pages**: Create Login Block and Forgot Password Block with default values, templates, and pages at `/users/login` and `/users/forgot-password`
 - **Home Page**: Create Home page at `/` with hero block, feature section, and steps container
 - **About Page**: Create About page at `/about` with contact section and company information
+- **User Profile Page**: Create User Profile page at `/profile` that displays user data from IdentityAPI (available after login)
 - Link all pages to the first available configuration or create a default one
 
 If these pages already exist, the seeder will update them with the default values. You can customize them after they are created.
