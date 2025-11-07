@@ -4,44 +4,42 @@ This document describes how frontend tests are integrated into the CI/CD pipelin
 
 ## Overview
 
-The frontend testing is now separated into dedicated steps in the CI/CD pipeline and optionally included in the Docker build process as a separate stage.
+The frontend testing is integrated into the CI/CD pipeline as part of the build process and optionally included in the Docker build process as a separate stage.
 
 ## CI/CD Pipeline Integration
 
-### Separate Test Job
+### Build and Test in Single Job
 
-The CI/CD pipeline has been updated to include a separate `test_react` job that runs independently from the `validate_react` build job.
+The CI/CD pipeline includes testing as part of the `validate_react` build job using the `build-react-service` template.
 
-**Pipeline Jobs:**
-1. `validate_react` - Builds the React application
-   - Installs dependencies
-   - Runs linting
-   - Checks code formatting
-   - Builds the application
+**Pipeline Job: `validate_react`**
+- Installs dependencies
+- Runs linting
+- Checks code formatting
+- Builds the application
+- Runs Jest unit tests
+- Installs Playwright browsers
+- Runs Playwright E2E tests
+- Uploads test results as artifacts
 
-2. `test_react` - Tests the React application (NEW)
-   - Installs dependencies
-   - Runs Jest unit tests
-   - Installs Playwright browsers
-   - Runs Playwright E2E tests
-   - Uploads test results as artifacts
+### Build Template
 
-### Test Template
+The GitHub Actions template at `.github/templates/build-react-service/action.yml` encapsulates all build and test steps:
 
-A new GitHub Actions template has been created at `.github/templates/test-react-service/action.yml` that encapsulates all testing steps:
+- **Install Dependencies**: Installs npm packages
+- **Lint Source Code**: Runs ESLint checks
+- **Check Code Formatting**: Validates code formatting with Prettier
+- **Build React App**: Builds the production bundle
+- **Run Jest Unit Tests**: Executes all unit and integration tests
+- **Install Playwright Browsers**: Installs browser binaries for E2E testing
+- **Run Playwright E2E Tests**: Executes end-to-end tests with browser automation
+- **Upload Test Results**: Automatically uploads test reports as artifacts with 30-day retention
 
-- **Jest Unit Tests**: Runs all unit and integration tests
-- **Playwright E2E Tests**: Runs end-to-end tests with browser automation
-- **Test Results Upload**: Automatically uploads test reports as artifacts with 30-day retention
-
-### Workflow File Changes
+### Workflow File
 
 **File**: `.github/workflows/ci-validation-pipeline.yml`
 
-**Changes:**
-- Added new `test_react` job
-- Updated `report_status` to include `test_react` in success criteria
-- Separated testing from build process for better pipeline visibility
+The `validate_react` job uses the `build-react-service` template which includes all build and test steps in a single job.
 
 ## Docker Integration
 
@@ -53,7 +51,7 @@ The Dockerfile has been updated to include a test stage:
 
 **Stages:**
 1. **builder** - Builds the React application
-2. **tester** (NEW) - Runs tests
+2. **tester** - Runs tests
    - Installs Playwright dependencies
    - Runs Jest unit tests
    - Attempts to run E2E tests (may skip if server is not available)
@@ -116,9 +114,9 @@ npm run test:all
 
 ## Benefits of This Approach
 
-1. **Separation of Concerns**: Build and test are separate pipeline jobs
-2. **Parallel Execution**: Tests can run in parallel with other validation jobs
-3. **Better Visibility**: Easier to identify if failure is in build or test
+1. **Integrated Testing**: Build and test run together in a single job
+2. **Simplified Pipeline**: Fewer jobs to manage and monitor
+3. **Sequential Execution**: Tests run after successful build
 4. **Flexible Docker Builds**: Tests can be included or excluded from Docker builds
 5. **Artifact Preservation**: Test results are saved for analysis
 6. **Resource Optimization**: Can skip tests in production Docker builds
