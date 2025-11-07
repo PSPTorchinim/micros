@@ -59,6 +59,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Playwright browsers
+# hadolint ignore=DL3059
+RUN npx playwright install --with-deps
+
 # Run Jest unit tests
 # hadolint ignore=DL3059
 RUN npm run test
