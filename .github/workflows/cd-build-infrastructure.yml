@@ -435,9 +435,15 @@ jobs:
               echo "📦 First deployment or app stopped - starting app normally"
               if midclt call app.start "$app" 2>/dev/null; then
                 echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
                   echo "✅ Scaled to 1 replica"
+                  # Give TrueNAS time to process the scale command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
                 else
                   echo "❌ ERROR: could not start app '$app'"
                   exit 1
@@ -486,6 +492,10 @@ jobs:
                 fi
               fi
             fi
+
+            # Give TrueNAS time to process the start command
+            echo "⏳ Waiting for TrueNAS to begin startup process..."
+            sleep 10
 
             # Wait for healthy state (10 minutes timeout)
             echo "⏳ Waiting for app to become healthy..."
@@ -592,12 +602,18 @@ jobs:
             echo "🔄 Restarting application to apply rollback..."
             if midclt call app.restart "$app" 2>/dev/null; then
               echo "✅ Restarted via app.restart"
+              # Give TrueNAS time to process the restart command
+              echo "⏳ Waiting for TrueNAS to begin startup process..."
+              sleep 10
             else
               echo "ℹ️  Restart not available, using stop/start"
               midclt call app.stop "$app" 2>/dev/null || true
               sleep 5
               if midclt call app.start "$app" 2>/dev/null; then
                 echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 echo "❌ ERROR: Failed to start app after rollback"
                 exit 1
