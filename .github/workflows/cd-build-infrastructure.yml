@@ -238,12 +238,15 @@ jobs:
           set -euo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          # Extract repo name from "owner/repo" format
+          repo_name="${{ github.repository }}"
+          repo_name="${repo_name##*/}"
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
             "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
-            "${{ github.event.repository.name }}" \
+            "$repo_name" \
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
           {
