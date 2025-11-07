@@ -1,0 +1,55 @@
+name: Create Release PR
+
+on:
+  push:
+    branches:
+      - 'releases/R*'
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract release number from branch
+        id: extract_release
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          RELEASE_NUMBER="${BRANCH_NAME#releases/}"
+          echo "release_number=$RELEASE_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Check if this is the first commit on the release branch
+        id: check_first_commit
+        run: |
+          # Get the number of commits on this branch that are not in main
+          COMMIT_COUNT=$(git rev-list --count main..${{ github.ref_name }})
+          echo "commit_count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
+          
+          if [ "$COMMIT_COUNT" -eq 1 ]; then
+            echo "is_first_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_first_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if PR already exists
+        if: steps.check_first_commit.outputs.is_first_commit == 'true'
+        id: check_pr
+        run: |
+          PR_COUNT=$(gh pr list --head "${{ github.ref_name }}" --base main --state open --json number --jq 'length')
+          echo "pr_exists=$PR_COUNT" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        if: steps.check_first_commit.outputs.is_first_commit == 'true' && steps.check_pr.outputs.pr_exists == '0'
+        run: |
+          gh pr create \
+            --title "${{ steps.extract_release.outputs.release_number }} to main" \
+            --body "Automated PR for merging ${{ steps.extract_release.outputs.release_number }} into main branch." \
+            --base main \
+            --head "${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
