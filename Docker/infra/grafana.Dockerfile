@@ -16,6 +16,7 @@ ENV GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-djpanel_grafana_admin_2
 ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_ANALYTICS_REPORTING_ENABLED=false
 ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+ENV GF_SERVER_HTTP_PORT=3001
 
 # Create directories for provisioning
 USER root
