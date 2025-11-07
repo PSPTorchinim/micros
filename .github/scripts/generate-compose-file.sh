@@ -193,7 +193,8 @@ normalize_dockerfile_path() {
   # This handles multiple levels of .. properly
   local result=""
   local IFS='/'
-  local -a parts=($path)
+  local -a parts
+  read -ra parts <<< "$path"
   local -a stack=()
   
   for part in "${parts[@]}"; do
@@ -207,7 +208,7 @@ normalize_dockerfile_path() {
   done
   
   # Join the stack back into a path
-  result=$(IFS='/'; echo "${stack[*]}")
+  result=$(IFS='/'; printf '%s' "${stack[*]}")
   echo "$result"
 }
 
