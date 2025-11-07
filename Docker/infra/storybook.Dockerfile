@@ -3,13 +3,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY ["Frontends/${MICROFRONTEND_NAME}/package.json", "./"]
+COPY ["Frontends/${MICROFRONTEND_NAME}/", "./"]
 
 # Install dependencies
 RUN npm ci
-
-# Copy source files
-COPY . .
 
 # Expose Storybook port
 EXPOSE 6006

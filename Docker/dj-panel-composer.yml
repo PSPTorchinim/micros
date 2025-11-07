@@ -178,8 +178,8 @@ services:
 
   storybook:
     build:
-      context: ../Frontends/dj-panel
-      dockerfile: ../../Docker/frontends/storybook.Dockerfile
+      context: ../
+      dockerfile: Docker/infra/storybook.Dockerfile
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -187,8 +187,8 @@ services:
     networks:
       - public
     volumes:
-      - ../Frontends/dj-panel/src:/app/src:ro
-      - ../Frontends/dj-panel/.storybook:/app/.storybook:ro
+      - Frontends/dj-panel/src:/app/src:ro
+      - Frontends/dj-panel/.storybook:/app/.storybook:ro
 
   strapi:
     build:
