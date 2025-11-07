@@ -74,12 +74,19 @@ namespace Shared.Services.Cache
                     var server = _connectionMultiplexer.GetServer(endpoints.First());
                     
                     var pattern = $"{_instanceName}{prefix}*";
-                    var keys = server.Keys(pattern: pattern).ToArray();
                     
-                    if (keys.Length > 0)
+                    // Use SCAN instead of KEYS for better performance in production
+                    // SCAN doesn't block the server like KEYS does
+                    var keys = new List<RedisKey>();
+                    await foreach (var key in server.KeysAsync(pattern: pattern))
                     {
-                        await db.KeyDeleteAsync(keys);
-                        _logger.LogInformation("Deleted {Count} cache keys with prefix {Prefix}", keys.Length, prefix);
+                        keys.Add(key);
+                    }
+                    
+                    if (keys.Count > 0)
+                    {
+                        await db.KeyDeleteAsync(keys.ToArray());
+                        _logger.LogInformation("Deleted {Count} cache keys with prefix {Prefix}", keys.Count, prefix);
                     }
                 }
                 catch (Exception ex)

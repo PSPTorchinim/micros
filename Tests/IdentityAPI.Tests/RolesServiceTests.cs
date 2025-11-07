@@ -36,9 +36,9 @@ namespace IdentityAPI.Tests
             
             // Setup default cache behavior - always return null (cache miss) for any type
             _cacheServiceMock.Setup(x => x.GetAsync<List<Role>>(It.IsAny<string>()))
-                .ReturnsAsync((List<Role>)null!);
+                .ReturnsAsync(default(List<Role>));
             _cacheServiceMock.Setup(x => x.GetAsync<GetRoleDTO>(It.IsAny<string>()))
-                .ReturnsAsync((GetRoleDTO)null!);
+                .ReturnsAsync(default(GetRoleDTO));
             _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
                 .Returns(Task.CompletedTask);
             _cacheServiceMock.Setup(x => x.RemoveByPrefixAsync(It.IsAny<string>()))

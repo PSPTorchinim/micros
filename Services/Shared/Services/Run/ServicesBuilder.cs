@@ -253,8 +253,11 @@ namespace Shared.Services.Run
             });
             
             // Register Redis ConnectionMultiplexer for advanced operations
-            var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(connection);
-            services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
+            // Using lazy initialization to avoid blocking during startup
+            services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+            {
+                return StackExchange.Redis.ConnectionMultiplexer.Connect(connection);
+            });
             
             // Register cache service
             services.AddScoped<Shared.Services.Cache.ICacheService>(provider =>
