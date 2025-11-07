@@ -1668,41 +1668,41 @@ export interface Footer {
           id?: number;
           documentId?: string;
         };
-        Content?: InternalNull1 &
+        Content?: DiscriminatorNull1 &
           (
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "image-slider-ref.image-slider-ref",
                 ImageSliderRefImageSliderRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "article-block-ref.article-block-ref",
                 ArticleBlockRefArticleBlockRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "steps-container-ref.steps-container-ref",
                 StepsContainerRefStepsContainerRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "cta-ref.cta-ref",
                 CtaRefCtaRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "contact-info-ref.contact-info-ref",
                 ContactInfoRefContactInfoRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "contact-section-ref.contact-section-ref",
                 ContactSectionRefContactSectionRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "feature-section-ref.feature-section-ref",
                 FeatureSectionRefFeatureSectionRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "feature-tab-ref.feature-tab-ref",
                 FeatureTabRefFeatureTabRefComponent
               >
-            | InternalNull1ComponentMapping<
+            | DiscriminatorNull1ComponentMapping<
                 "hero-block-ref.hero-block-ref",
                 HeroBlockRefHeroBlockRefComponent
               >
@@ -1823,6 +1823,196 @@ export interface FooterResponse {
   meta?: object;
 }
 
+export interface ForgotPasswordBlockRequest {
+  data: {
+    title?: string;
+    description?: string;
+    emailLabel?: string;
+    submitButtonText?: string;
+    backToLoginText?: string;
+    loginLinkText?: string;
+    emailPlaceholder?: string;
+    successRedirectPath?: string;
+    loginUrl?: string;
+    customStyles?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ForgotPasswordBlockListResponse {
+  data?: ForgotPasswordBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ForgotPasswordBlock {
+  id?: number;
+  documentId?: string;
+  title?: string;
+  description?: string;
+  emailLabel?: string;
+  submitButtonText?: string;
+  backToLoginText?: string;
+  loginLinkText?: string;
+  emailPlaceholder?: string;
+  successRedirectPath?: string;
+  loginUrl?: string;
+  customStyles?: any;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    description?: string;
+    emailLabel?: string;
+    submitButtonText?: string;
+    backToLoginText?: string;
+    loginLinkText?: string;
+    emailPlaceholder?: string;
+    successRedirectPath?: string;
+    loginUrl?: string;
+    customStyles?: any;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface ForgotPasswordBlockResponse {
+  data?: ForgotPasswordBlock;
+  meta?: object;
+}
+
 export interface HeroBlockRequest {
   data: {
     heading?: string;
@@ -1858,41 +2048,41 @@ export interface HeroBlock {
     Label?: string;
     url?: string;
     OpenInNewTab?: boolean;
-    article?: DiscriminatorNull1 &
+    article?: InternalNull1 &
       (
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | DiscriminatorNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -1949,41 +2139,41 @@ export interface ImageSliderRequest {
     reversed?: boolean;
     AutoPlay?: boolean;
     IntervalMs?: number;
-    Slides?: DiscriminatorNull2 &
+    Slides?: PolymorphNull1 &
       (
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | PolymorphNull1ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2073,6 +2263,199 @@ export interface ImageSlider {
 
 export interface ImageSliderResponse {
   data?: ImageSlider;
+  meta?: object;
+}
+
+export interface LoginBlockRequest {
+  data: {
+    title?: string;
+    emailLabel?: string;
+    passwordLabel?: string;
+    submitButtonText?: string;
+    forgotPasswordText?: string;
+    resetPasswordLinkText?: string;
+    emailPlaceholder?: string;
+    passwordPlaceholder?: string;
+    customStyles?: any;
+    redirectPath?: string;
+    forgotPasswordUrl?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface LoginBlockListResponse {
+  data?: LoginBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface LoginBlock {
+  id?: number;
+  documentId?: string;
+  title?: string;
+  emailLabel?: string;
+  passwordLabel?: string;
+  submitButtonText?: string;
+  forgotPasswordText?: string;
+  resetPasswordLinkText?: string;
+  emailPlaceholder?: string;
+  passwordPlaceholder?: string;
+  customStyles?: any;
+  redirectPath?: string;
+  forgotPasswordUrl?: string;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    emailLabel?: string;
+    passwordLabel?: string;
+    submitButtonText?: string;
+    forgotPasswordText?: string;
+    resetPasswordLinkText?: string;
+    emailPlaceholder?: string;
+    passwordPlaceholder?: string;
+    customStyles?: any;
+    redirectPath?: string;
+    forgotPasswordUrl?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface LoginBlockResponse {
+  data?: LoginBlock;
   meta?: object;
 }
 
@@ -2290,41 +2673,41 @@ export interface Page {
         id?: number;
         documentId?: string;
       };
-      Content?: PolymorphNull1 &
+      Content?: PolymorphNull2 &
         (
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | PolymorphNull1ComponentMapping<
+          | PolymorphNull2ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -2414,80 +2797,80 @@ export interface StepsContainerRequest {
   data: {
     heading?: string;
     content?: string;
-    action?: DiscriminatorNull3 &
+    action?: DiscriminatorNull2 &
       (
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
       );
-    steps?: InternalNull3 &
+    steps?: DiscriminatorNull3 &
       (
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | InternalNull3ComponentMapping<
+        | DiscriminatorNull3ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2516,80 +2899,74 @@ export interface StepsContainer {
   documentId?: string;
   heading?: string;
   content?: string;
-  action?: DiscriminatorNull4 &
+  action?: AbstractNull1 &
     (
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
-          "cta-ref.cta-ref",
-          CtaRefCtaRefComponent
-        >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | AbstractNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | DiscriminatorNull4ComponentMapping<
+      | AbstractNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
     );
-  steps?: DiscriminatorNull5 &
+  steps?: InternalNull3 &
     (
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
-          "cta-ref.cta-ref",
-          CtaRefCtaRefComponent
-        >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull3ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | DiscriminatorNull5ComponentMapping<
+      | InternalNull3ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -2626,41 +3003,41 @@ export interface TemplateRequest {
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
-    Content?: InternalNull4 &
+    Content?: AbstractNull2 &
       (
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | InternalNull4ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2864,41 +3241,41 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: PolymorphNull2 &
+      Content?: AbstractNull3 &
         (
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | AbstractNull3ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -2943,38 +3320,38 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: PolymorphNull3 &
+  Content?: InternalNull4 &
     (
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | PolymorphNull3ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull4ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | PolymorphNull3ComponentMapping<
+      | InternalNull4ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -3169,6 +3546,8 @@ export enum ConfigurationNavigationActionEnum {
 
 export enum ConfigurationTemplateTypeEnum {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
 
 type DiscriminatorNull = (
@@ -3231,23 +3610,9 @@ export enum FooterNavigationActionEnum {
 
 export enum FooterTemplateTypeEnum {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
-
-type InternalNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type InternalNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
 
 type DiscriminatorNull1 = (
   | ImageSliderRefImageSliderRefComponent
@@ -3265,7 +3630,7 @@ type DiscriminatorNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type DiscriminatorNull2 = (
+type InternalNull1 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3277,7 +3642,23 @@ type DiscriminatorNull2 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type DiscriminatorNull2ComponentMapping<Key, Type> = {
+type InternalNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type PolymorphNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type PolymorphNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -3319,9 +3700,11 @@ export enum PageNavigationActionEnum {
 
 export enum PageTemplateTypeEnum {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
 
-type PolymorphNull1 = (
+type PolymorphNull2 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3333,7 +3716,7 @@ type PolymorphNull1 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNull1ComponentMapping<Key, Type> = {
+type PolymorphNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -3346,6 +3729,22 @@ export enum PageNavigationActionEnum1 {
   Link = "Link",
   Action = "Action",
 }
+
+type DiscriminatorNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
 
 type DiscriminatorNull3 = (
   | ImageSliderRefImageSliderRefComponent
@@ -3360,6 +3759,22 @@ type DiscriminatorNull3 = (
 )[];
 
 type DiscriminatorNull3ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type AbstractNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type AbstractNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -3379,43 +3794,13 @@ type InternalNull3ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type DiscriminatorNull4 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type DiscriminatorNull4ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-type DiscriminatorNull5 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type DiscriminatorNull5ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
 export enum TemplateRequestTemplateTypeEnum {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
 
-type InternalNull4 = (
+type AbstractNull2 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3427,12 +3812,14 @@ type InternalNull4 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type InternalNull4ComponentMapping<Key, Type> = {
+type AbstractNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
 export enum TemplateTemplateTypeEnum {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
 
 export enum TemplateMenuEnum {
@@ -3447,9 +3834,11 @@ export enum TemplateNavigationActionEnum {
 
 export enum TemplateTemplateTypeEnum1 {
   Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
 }
 
-type PolymorphNull2 = (
+type AbstractNull3 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3461,11 +3850,11 @@ type PolymorphNull2 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNull2ComponentMapping<Key, Type> = {
+type AbstractNull3ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type PolymorphNull3 = (
+type InternalNull4 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3477,7 +3866,7 @@ type PolymorphNull3 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNull3ComponentMapping<Key, Type> = {
+type InternalNull4ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -4729,6 +5118,88 @@ export class Api<
         ...params,
       }),
   };
+  forgotPasswordBlock = {
+    /**
+     * No description
+     *
+     * @tags Forgot-password-block
+     * @name GetForgotPasswordBlock
+     * @request GET:/forgot-password-block
+     * @secure
+     */
+    getForgotPasswordBlock: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ForgotPasswordBlockResponse, Error>({
+        path: `/forgot-password-block`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Forgot-password-block
+     * @name PutForgotPasswordBlock
+     * @request PUT:/forgot-password-block
+     * @secure
+     */
+    putForgotPasswordBlock: (
+      data: ForgotPasswordBlockRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ForgotPasswordBlockResponse, Error>({
+        path: `/forgot-password-block`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Forgot-password-block
+     * @name DeleteForgotPasswordBlock
+     * @request DELETE:/forgot-password-block
+     * @secure
+     */
+    deleteForgotPasswordBlock: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/forgot-password-block`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   heroBlock = {
     /**
      * No description
@@ -4961,6 +5432,85 @@ export class Api<
     deleteImageSlidersId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/image-sliders/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  loginBlock = {
+    /**
+     * No description
+     *
+     * @tags Login-block
+     * @name GetLoginBlock
+     * @request GET:/login-block
+     * @secure
+     */
+    getLoginBlock: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: Record<string, any>;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<LoginBlockResponse, Error>({
+        path: `/login-block`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Login-block
+     * @name PutLoginBlock
+     * @request PUT:/login-block
+     * @secure
+     */
+    putLoginBlock: (data: LoginBlockRequest, params: RequestParams = {}) =>
+      this.request<LoginBlockResponse, Error>({
+        path: `/login-block`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Login-block
+     * @name DeleteLoginBlock
+     * @request DELETE:/login-block
+     * @secure
+     */
+    deleteLoginBlock: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/login-block`,
         method: "DELETE",
         secure: true,
         format: "json",

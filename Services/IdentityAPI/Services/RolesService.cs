@@ -5,6 +5,7 @@ using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using Shared.Data.Exceptions;
 using Shared.Services.App;
+using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
 
 namespace IdentityAPI.Services
@@ -22,11 +23,15 @@ namespace IdentityAPI.Services
     {
         private readonly IRolesRepository _rolesRepository;
         private readonly IPermissionsRepository _permissionsRepository;
+        private readonly ICacheService _cacheService;
+        private const string RolesCachePrefix = "Roles_";
+        private static readonly TimeSpan DefaultCacheExpiration = TimeSpan.FromMinutes(5);
 
         public RolesService(ILogger<IRolesService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, RabbitMQProducerService rabbitMQProducerService, IServiceProvider serviceProvider) : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
             _rolesRepository = serviceProvider.GetRequiredService<IRolesRepository>();
             _permissionsRepository = serviceProvider.GetRequiredService<IPermissionsRepository>();
+            _cacheService = serviceProvider.GetRequiredService<ICacheService>();
         }
 
         public async Task<List<Role>> GetRoles()
@@ -34,9 +39,23 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting all roles.");
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Calling _rolesRepository.Get()");
+                var cacheKey = $"{RolesCachePrefix}All";
+                
+                // Try to get from cache
+                var cached = await _cacheService.GetAsync<List<Role>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogDebug("Cache hit for all roles.");
+                    return cached;
+                }
+                
+                _logger.LogDebug("Cache miss for all roles. Calling _rolesRepository.Get()");
                 var roles = (await _rolesRepository.Get()).ToList();
-                _logger.LogInformation("Retrieved {Count} roles.", roles.Count);
+                
+                // Store in cache
+                await _cacheService.SetAsync(cacheKey, roles, DefaultCacheExpiration);
+                
+                _logger.LogInformation("Retrieved {Count} roles and cached them.", roles.Count);
                 return roles;
             }, _logger);
         }
@@ -46,7 +65,17 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting role with Id: {RoleId}", id);
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Creating RolePermissionsSpec for Id: {RoleId}", id);
+                var cacheKey = $"{RolesCachePrefix}{id}";
+                
+                // Try to get from cache
+                var cached = await _cacheService.GetAsync<GetRoleDTO>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogDebug("Cache hit for role Id: {RoleId}", id);
+                    return cached;
+                }
+                
+                _logger.LogDebug("Cache miss for role Id: {RoleId}. Creating RolePermissionsSpec", id);
                 var spec = new RolePermissionsSpec(x => x.Id.Equals(id));
                 _logger.LogDebug("Calling _rolesRepository.Get(spec) for Id: {RoleId}", id);
                 var req = await _rolesRepository.Get(spec);
@@ -58,7 +87,16 @@ namespace IdentityAPI.Services
                 {
                     _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
                 }
-                return _mapper.Map<GetRoleDTO>(req);
+                
+                var result = _mapper.Map<GetRoleDTO>(req);
+                
+                // Store in cache
+                if (result != null)
+                {
+                    await _cacheService.SetAsync(cacheKey, result, DefaultCacheExpiration);
+                }
+                
+                return result;
             }, _logger);
         }
 
@@ -87,7 +125,11 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Adding role '{RoleName}' to repository.", request.Name);
                 var result = await _rolesRepository.Add(toAdd);
                 await _rolesRepository.Save();
-                _logger.LogInformation("Role '{RoleName}' added successfully: {Result}", request.Name, result);
+                
+                // Invalidate cache after adding
+                await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
+                _logger.LogInformation("Role '{RoleName}' added successfully and cache invalidated: {Result}", request.Name, result);
+                
                 return result;
             }, _logger);
         }
@@ -113,7 +155,11 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Updating role with Id: {RoleId} in repository.", id);
                 var result = await _rolesRepository.Update(foundByName);
                 await _rolesRepository.Save();
-                _logger.LogInformation("Role with Id: {RoleId} updated: {Result}", id, result);
+                
+                // Invalidate cache after editing
+                await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
+                _logger.LogInformation("Role with Id: {RoleId} updated and cache invalidated: {Result}", id, result);
+                
                 return result;
             }, _logger);
         }
@@ -139,7 +185,11 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Deleting role with Id: {RoleId} from repository.", id);
                 var result = await _rolesRepository.Delete(foundByName);
-                _logger.LogInformation("Role with Id: {RoleId} deleted: {Result}", id, result);
+                
+                // Invalidate cache after deleting
+                await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
+                _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated: {Result}", id, result);
+                
                 return result;
             }, _logger);
         }

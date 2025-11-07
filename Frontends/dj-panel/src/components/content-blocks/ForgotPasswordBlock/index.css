@@ -1,0 +1,74 @@
+.forgot-password-block-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--dl-space-space-fourunits);
+  min-height: 400px;
+}
+
+.forgot-password-block-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+  padding: var(--dl-space-space-threeunits);
+  border-radius: var(--dl-radius-radius-cardradius);
+  background-color: var(--dl-color-theme-background);
+  box-shadow: 0 4px 6px var(--dl-color-theme-shadow);
+  max-width: 400px;
+  width: 100%;
+}
+
+.forgot-password-block-title {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--dl-color-theme-text-primary);
+  margin: 0;
+}
+
+.forgot-password-block-description {
+  font-size: 14px;
+  text-align: center;
+  color: var(--dl-color-theme-text-secondary);
+  margin: 0;
+}
+
+.forgot-password-block-error {
+  font-size: 14px;
+  color: #dc3545;
+  margin: 0;
+  padding: var(--dl-space-space-halfunit);
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: var(--dl-radius-radius-radius4);
+  text-align: center;
+}
+
+.forgot-password-block-login {
+  font-size: 14px;
+  text-align: center;
+  color: var(--dl-color-theme-text-secondary);
+  margin: 0;
+}
+
+.forgot-password-block-link {
+  color: var(--dl-color-theme-primary1);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.forgot-password-block-link:hover {
+  color: var(--dl-color-theme-primary2);
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .forgot-password-block-container {
+    padding: var(--dl-space-space-twounits);
+  }
+
+  .forgot-password-block-form {
+    padding: var(--dl-space-space-twounits);
+    max-width: 100%;
+  }
+}

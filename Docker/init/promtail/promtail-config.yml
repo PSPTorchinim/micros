@@ -1,0 +1,106 @@
+# Promtail Configuration for DJ Beat Blaster Platform
+# Collects logs from Docker containers and sends to Loki
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /var/lib/promtail/positions.yaml # persistent
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+
+    relabel_configs:
+      # Helpful static job label for querying
+      - target_label: job
+        replacement: docker
+
+      # Container name (strip leading slash)
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+
+      # Container ID
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: container_id
+
+      # stdout/stderr stream
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: stream
+
+      # Extract service name from container name (e.g., djpanel-identity_be-1 -> identity_be)
+      - source_labels: ["__meta_docker_container_name"]
+        regex: '/djpanel-(.+?)-\d+'
+        target_label: service
+        replacement: "$1"
+
+      # Docker compose labels
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_project"]
+        target_label: compose_project
+
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: compose_service
+
+      # Optional environment label (if present on containers)
+      - source_labels: ["__meta_docker_container_label_environment"]
+        target_label: environment
+        replacement: "$1"
+
+      # Classify microservices / frontends / infra via compose service name
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_service"]
+        regex: "(identity_be|music_be|gear_be|documents_be|brand_be|party_be|mailing_be|apigateway)"
+        target_label: type
+        replacement: microservice
+
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_service"]
+        regex: "(host_fe|strapi)"
+        target_label: type
+        replacement: frontend
+
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_service"]
+        regex: "(mongodb_container|sqlserver|redis|rabbitmq|strapi_db)"
+        target_label: type
+        replacement: infrastructure
+
+      # Tell Promtail where to read each container's file
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: __path__
+        replacement: /var/lib/docker/containers/$1/$1-json.log
+
+    pipeline_stages:
+      # Normalize Docker json-file logs (handles docker's framing/fields)
+      - docker: {}
+
+      # Parse JSON payloads from .NET Serilog-style logs
+      - json:
+          expressions:
+            timestamp: Timestamp
+            level: Level
+            message: RenderedMessage
+            exception: Exception
+
+      # Expose level as a label
+      - labels:
+          level:
+
+      # Use the app-provided timestamp (RFC3339Nano)
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      # Emit only the message as the log line
+      - output:
+          source: message

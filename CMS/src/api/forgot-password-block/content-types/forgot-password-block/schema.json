@@ -1,0 +1,52 @@
+{
+  "kind": "singleType",
+  "collectionName": "forgot_password_blocks",
+  "info": {
+    "singularName": "forgot-password-block",
+    "pluralName": "forgot-password-blocks",
+    "displayName": "Forgot Password Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Forgot Password"
+    },
+    "description": {
+      "type": "string",
+      "default": "Enter your email address to reset your password."
+    },
+    "emailLabel": {
+      "type": "string",
+      "default": "Email"
+    },
+    "submitButtonText": {
+      "type": "string",
+      "default": "Send Reset Link"
+    },
+    "backToLoginText": {
+      "type": "string",
+      "default": "Remembered your password?"
+    },
+    "loginLinkText": {
+      "type": "string",
+      "default": "Login"
+    },
+    "emailPlaceholder": {
+      "type": "string",
+      "default": "Enter your email"
+    },
+    "successRedirectPath": {
+      "type": "string",
+      "default": "/users/login"
+    },
+    "loginUrl": {
+      "type": "string",
+      "default": "/users/login"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

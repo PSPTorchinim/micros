@@ -70,6 +70,40 @@ export const RenderTemplate: React.FC<Props> = ({
     let mounted = true;
 
     const run = async () => {
+      // Get template type
+      const templateType =
+        tpl?.attributes?.TemplateType || (tpl as any)?.TemplateType;
+
+      // For Login and ForgotPassword templates, fetch the singleton blocks
+      if (templateType === 'Login') {
+        try {
+          const loginBlock = await strapiAPI.getLoginBlockSingleton();
+          if (mounted && loginBlock) {
+            setBlocks([{ __kind: 'login-block', ...loginBlock }]);
+          }
+        } catch (e) {
+          console.error('Error fetching login block singleton:', e);
+          if (mounted) setBlocks([]);
+        }
+        return;
+      }
+
+      if (templateType === 'ForgotPassword') {
+        try {
+          const forgotPasswordBlock =
+            await strapiAPI.getForgotPasswordBlockSingleton();
+          if (mounted && forgotPasswordBlock) {
+            setBlocks([
+              { __kind: 'forgot-password-block', ...forgotPasswordBlock },
+            ]);
+          }
+        } catch (e) {
+          console.error('Error fetching forgot password block singleton:', e);
+          if (mounted) setBlocks([]);
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: any[] = Array.isArray(tpl?.attributes?.Content)
         ? tpl!.attributes!.Content
