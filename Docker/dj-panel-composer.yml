@@ -186,9 +186,6 @@ services:
       - "6006:6006"
     networks:
       - public
-    volumes:
-      - Frontends/dj-panel/src:/app/src:ro
-      - Frontends/dj-panel/.storybook:/app/.storybook:ro
 
   strapi:
     build:
