@@ -1,0 +1,35 @@
+.atom-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--dl-color-theme-surface) 0%,
+    var(--dl-color-theme-border) 50%,
+    var(--dl-color-theme-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: var(--dl-radius-radius-radius4);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Variants */
+.atom-skeleton--text {
+  height: 1em;
+  margin-bottom: 0.5em;
+  border-radius: var(--dl-radius-radius-radius2);
+}
+
+.atom-skeleton--rectangular {
+  border-radius: var(--dl-radius-radius-radius4);
+}
+
+.atom-skeleton--circular {
+  border-radius: var(--dl-radius-radius-round);
+}
