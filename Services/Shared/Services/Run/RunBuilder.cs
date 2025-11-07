@@ -22,6 +22,8 @@ namespace Shared.Services.App
             app.UseRouting();
             app.UseCors("cors");
             app.Logger.LogInformation("Routing is enabled");
+            app.UseResponseCaching();
+            app.Logger.LogInformation("Response caching is enabled");
             app.UseStaticFiles();
             app.Logger.LogInformation("Static files middleware is enabled");
             app.UseAuthentication();

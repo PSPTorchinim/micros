@@ -28,7 +28,15 @@ namespace Shared.Services.Run
         public static IServiceCollection BuildBasicServices(this IServiceCollection services, ConfigurationManager configuration, string name, string version, bool isApiGW = false)
         {
             var systemConfig = configuration.Get<SystemConfiguration>();
-            services.AddControllers().AddJsonOptions(ConfigureJsonOptions);
+            services.AddControllers(options =>
+            {
+                // Configure cache profiles
+                var cacheProfiles = Shared.Services.Cache.CacheProfiles.GetProfiles();
+                foreach (var profile in cacheProfiles)
+                {
+                    options.CacheProfiles.Add(profile.Key, profile.Value);
+                }
+            }).AddJsonOptions(ConfigureJsonOptions);
             
             // Configure Serilog for structured logging with Loki
             ConfigureSerilog(name);
@@ -52,9 +60,15 @@ namespace Shared.Services.Run
             }
             else
             {
+                Console.WriteLine("Configuring Redis for API Gateway.");
+                services.ConfigureRedis(name);
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
             }
+            
+            // Add response caching
+            services.AddResponseCaching();
+            Console.WriteLine("Response caching configured.");
 
             Console.WriteLine("Basic services built for: " + name);
             return services;
@@ -237,6 +251,20 @@ namespace Shared.Services.Run
                 options.InstanceName = $"{name}_";
                 options.Configuration = connection;
             });
+            
+            // Register Redis ConnectionMultiplexer for advanced operations
+            var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(connection);
+            services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
+            
+            // Register cache service
+            services.AddScoped<Shared.Services.Cache.ICacheService>(provider =>
+            {
+                var distributedCache = provider.GetRequiredService<Microsoft.Extensions.Caching.Distributed.IDistributedCache>();
+                var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Shared.Services.Cache.RedisCacheService>>();
+                var connectionMultiplexer = provider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                return new Shared.Services.Cache.RedisCacheService(distributedCache, logger, connectionMultiplexer, $"{name}_");
+            });
+            
             Console.WriteLine($"Redis configured with connection: {connection}");
             // services.AddEFSecondLevelCache(options => options.UseStackExchangeRedisCacheProvider(connection, TimeSpan.FromMinutes(5)));
         }
