@@ -457,6 +457,9 @@ jobs:
               # Restart app to apply new compose
               if midclt call app.restart "$app" 2>/dev/null; then
                 echo "✅ Restarted via app.restart"
+                # Give TrueNAS time to process the restart command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
@@ -486,16 +489,15 @@ jobs:
                 
                 if midclt call app.start "$app" 2>/dev/null; then
                   echo "✅ Started via app.start"
+                  # Give TrueNAS time to process the start command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
                 else
                   echo "❌ ERROR: could not restart app"
                   exit 1
                 fi
               fi
             fi
-
-            # Give TrueNAS time to process the start command
-            echo "⏳ Waiting for TrueNAS to begin startup process..."
-            sleep 10
 
             # Wait for healthy state (10 minutes timeout)
             echo "⏳ Waiting for app to become healthy..."
