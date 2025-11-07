@@ -11,7 +11,17 @@ const meta = {
   argTypes: {
     type: {
       control: 'select',
-      options: ['page', 'block', 'text', 'card', 'hero', 'article', 'feature', 'cta', 'slider'],
+      options: [
+        'page',
+        'block',
+        'text',
+        'card',
+        'hero',
+        'article',
+        'feature',
+        'cta',
+        'slider',
+      ],
       description: 'The type of content skeleton to display',
     },
     count: {

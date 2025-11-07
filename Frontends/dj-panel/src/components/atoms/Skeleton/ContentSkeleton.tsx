@@ -3,7 +3,16 @@ import { Skeleton } from './Skeleton';
 import './ContentSkeleton.css';
 
 export interface ContentSkeletonProps {
-  type?: 'page' | 'block' | 'text' | 'card' | 'hero' | 'article' | 'feature' | 'cta' | 'slider';
+  type?:
+    | 'page'
+    | 'block'
+    | 'text'
+    | 'card'
+    | 'hero'
+    | 'article'
+    | 'feature'
+    | 'cta'
+    | 'slider';
   count?: number;
 }
 
@@ -107,7 +116,11 @@ export const ContentSkeleton: React.FC<ContentSkeletonProps> = ({
   };
 
   return (
-    <div className="content-skeleton-container" role="status" aria-label="Loading content">
+    <div
+      className="content-skeleton-container"
+      role="status"
+      aria-label="Loading content"
+    >
       {Array.from({ length: count }, (_, i) => (
         <div key={i}>{renderSkeleton()}</div>
       ))}

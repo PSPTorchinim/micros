@@ -14,11 +14,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   height,
   className = '',
 }) => {
-  const classes = [
-    'atom-skeleton',
-    `atom-skeleton--${variant}`,
-    className,
-  ]
+  const classes = ['atom-skeleton', `atom-skeleton--${variant}`, className]
     .filter(Boolean)
     .join(' ');
 
@@ -27,5 +23,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     height: typeof height === 'number' ? `${height}px` : height,
   };
 
-  return <div className={classes} style={style} role="status" aria-hidden="true" />;
+  return (
+    <div className={classes} style={style} role="status" aria-hidden="true" />
+  );
 };

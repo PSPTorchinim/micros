@@ -110,12 +110,12 @@
   .content-skeleton-feature {
     grid-template-columns: 1fr;
   }
-  
+
   .content-skeleton-hero__actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .content-skeleton-slider__images {
     overflow-x: auto;
   }
