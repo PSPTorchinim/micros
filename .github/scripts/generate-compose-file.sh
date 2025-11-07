@@ -187,11 +187,35 @@ get_port_function_for_service() {
 
 to_lc() { tr '[:upper:]' '[:lower:]' <<<"$1"; }
 
+normalize_dockerfile_path() {
+  local path="$1"
+  # Normalize path by resolving .. and . components
+  # This handles multiple levels of .. properly
+  local result=""
+  local IFS='/'
+  local -a parts=($path)
+  local -a stack=()
+  
+  for part in "${parts[@]}"; do
+    if [[ "$part" == ".." ]]; then
+      # Pop from stack if not empty
+      [[ ${#stack[@]} -gt 0 ]] && unset 'stack[-1]'
+    elif [[ "$part" != "." && -n "$part" ]]; then
+      # Push non-empty, non-current-dir parts
+      stack+=("$part")
+    fi
+  done
+  
+  # Join the stack back into a path
+  result=$(IFS='/'; echo "${stack[*]}")
+  echo "$result"
+}
+
 dockerfile_to_image() {
   local dockerfile="$1" service_name="$2" microservice_name="$3"
   # Normalize the dockerfile path to remove .. and .
   local normalized_dockerfile
-  normalized_dockerfile=$(echo "$dockerfile" | sed 's|/\./|/|g; s|[^/]*/\.\./||g; s|^\.\./||g')
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
   local dockerfile_dir; dockerfile_dir=$(dirname "$normalized_dockerfile" | sed 's|Docker/||')
   local dockerfile_base; dockerfile_base=$(basename "$normalized_dockerfile" .Dockerfile)
 
