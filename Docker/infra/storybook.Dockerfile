@@ -3,8 +3,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY ["Frontends/${MICROFRONTEND_NAME}/package.json", "./"]
-COPY ["Frontends/${MICROFRONTEND_NAME}/", "./"]
+COPY ["Frontends/dj-panel/package.json", "./"]
+COPY ["Frontends/dj-panel/", "./"]
 
 # Install dependencies
 RUN npm ci
