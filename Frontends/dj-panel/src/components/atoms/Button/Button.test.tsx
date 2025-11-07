@@ -48,7 +48,11 @@ describe('Button Component', () => {
 
   it('can be disabled', () => {
     const handleClick = jest.fn();
-    render(<Button disabled onClick={handleClick}>Disabled Button</Button>);
+    render(
+      <Button disabled onClick={handleClick}>
+        Disabled Button
+      </Button>,
+    );
     const button = screen.getByRole('button', { name: /disabled button/i });
     expect(button).toBeDisabled();
     fireEvent.click(button);
@@ -56,7 +60,11 @@ describe('Button Component', () => {
   });
 
   it('passes through native button props', () => {
-    render(<Button type="submit" aria-label="Submit form">Submit</Button>);
+    render(
+      <Button type="submit" aria-label="Submit form">
+        Submit
+      </Button>,
+    );
     const button = screen.getByRole('button', { name: /submit form/i });
     expect(button).toHaveAttribute('type', 'submit');
   });

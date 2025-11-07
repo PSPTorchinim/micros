@@ -42,7 +42,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 const TestComponent: React.FC = () => {
   const context = React.useContext(ThemeContext);
-  
+
   if (!context) {
     return <div>No context</div>;
   }
@@ -65,7 +65,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
@@ -87,7 +87,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
@@ -97,7 +97,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
@@ -114,7 +114,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
@@ -129,7 +129,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     const button = screen.getByRole('button', { name: /toggle theme/i });
@@ -142,7 +142,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
@@ -168,7 +168,7 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
@@ -190,19 +190,19 @@ describe('ThemeProvider', () => {
     render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     const button = screen.getByRole('button', { name: /toggle theme/i });
 
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
-    
+
     fireEvent.click(button);
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
-    
+
     fireEvent.click(button);
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
-    
+
     fireEvent.click(button);
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
   });

@@ -10,7 +10,7 @@ const renderWithThemeContext = (theme: 'light' | 'dark') => {
   return render(
     <ThemeContext.Provider value={{ theme, toggleTheme: mockToggleTheme }}>
       <ThemeToggle />
-    </ThemeContext.Provider>
+    </ThemeContext.Provider>,
   );
 };
 
@@ -57,30 +57,40 @@ describe('ThemeToggle Component', () => {
 
   it('updates title based on current theme', () => {
     const { rerender } = render(
-      <ThemeContext.Provider value={{ theme: 'light', toggleTheme: mockToggleTheme }}>
+      <ThemeContext.Provider
+        value={{ theme: 'light', toggleTheme: mockToggleTheme }}
+      >
         <ThemeToggle />
-      </ThemeContext.Provider>
+      </ThemeContext.Provider>,
     );
-    
-    expect(screen.getByRole('button')).toHaveAttribute('title', 'Switch to dark mode');
+
+    expect(screen.getByRole('button')).toHaveAttribute(
+      'title',
+      'Switch to dark mode',
+    );
 
     rerender(
-      <ThemeContext.Provider value={{ theme: 'dark', toggleTheme: mockToggleTheme }}>
+      <ThemeContext.Provider
+        value={{ theme: 'dark', toggleTheme: mockToggleTheme }}
+      >
         <ThemeToggle />
-      </ThemeContext.Provider>
+      </ThemeContext.Provider>,
     );
 
-    expect(screen.getByRole('button')).toHaveAttribute('title', 'Switch to light mode');
+    expect(screen.getByRole('button')).toHaveAttribute(
+      'title',
+      'Switch to light mode',
+    );
   });
 
   it('can be clicked multiple times', () => {
     renderWithThemeContext('light');
     const button = screen.getByRole('button');
-    
+
     fireEvent.click(button);
     fireEvent.click(button);
     fireEvent.click(button);
-    
+
     expect(mockToggleTheme).toHaveBeenCalledTimes(3);
   });
 });
