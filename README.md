@@ -125,6 +125,7 @@ This platform follows a microservices architecture with each service owning its 
 | **PartyAPI**      | 5006 | .NET 9 + EF Core      | SQL Server | Event & Booking Management       |
 | **MailingAPI**    | 5007 | .NET 9 + MongoDB      | MongoDB    | Email Campaigns & Templates      |
 | **DJ Panel**      | 3000 | React 19 + TypeScript | -          | Frontend Application             |
+| **Storybook**     | 6006 | Storybook 10          | -          | Component Documentation          |
 | **Strapi CMS**    | 1337 | Strapi 5 + Node.js    | PostgreSQL | Content Management               |
 | **Grafana**       | 3001 | Grafana 11            | -          | Log Visualization & Dashboards   |
 | **Loki**          | 3100 | Loki 3.3              | Filesystem | Log Aggregation & Storage        |
@@ -179,6 +180,7 @@ This platform follows a microservices architecture with each service owning its 
 ### Access URLs
 
 - **DJ Panel Frontend**: http://localhost:3000
+- **Storybook**: http://localhost:6006
 - **API Gateway**: http://localhost:5000/swagger
 - **Strapi CMS**: http://localhost:1337/admin
 - **Grafana Logs**: http://localhost:3001 (admin/djpanel_grafana_admin_2024)
