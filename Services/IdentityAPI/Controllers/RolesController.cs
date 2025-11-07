@@ -4,6 +4,7 @@ using IdentityAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
 using Shared.Services.App;
+using Shared.Services.Cache;
 
 namespace IdentityAPI.Controllers
 {
@@ -18,6 +19,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(CacheProfileName = CacheProfiles.Medium)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<IEnumerable<Role>>))]
         public async Task<IActionResult> GetRolesV1()
         {
@@ -39,6 +41,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [ResponseCache(CacheProfileName = CacheProfiles.Medium)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<Role>))]
         public async Task<IActionResult> GetRoleV1(Guid id)
         {
@@ -60,6 +63,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpPost]
+        [ResponseCache(CacheProfileName = CacheProfiles.NoCache)]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Response<bool>))]
         public async Task<IActionResult> PostRoleV1(AddRoleRequest request)
         {
@@ -81,6 +85,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [ResponseCache(CacheProfileName = CacheProfiles.NoCache)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<bool>))]
         public async Task<IActionResult> PutRoleV1(Guid id, [FromBody] AddRoleRequest request)
         {
@@ -102,6 +107,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ResponseCache(CacheProfileName = CacheProfiles.NoCache)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<bool>))]
         public async Task<IActionResult> DeleteRoleV1(Guid id)
         {

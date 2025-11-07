@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Shared.Services.MessagesBroker.RabbitMQ;
+using Shared.Services.Cache;
 using Shared.Data.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace IdentityAPI.Tests
     {
         private readonly Mock<IRolesRepository> _rolesRepositoryMock = new();
         private readonly Mock<IPermissionsRepository> _permissionsRepositoryMock = new();
+        private readonly Mock<ICacheService> _cacheServiceMock = new();
         private readonly Mock<ILogger<IRolesService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
@@ -30,6 +32,18 @@ namespace IdentityAPI.Tests
         {
             _serviceProviderMock.Setup(x => x.GetService(typeof(IRolesRepository))).Returns(_rolesRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(IPermissionsRepository))).Returns(_permissionsRepositoryMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
+            
+            // Setup default cache behavior - always return null (cache miss) for any type
+            _cacheServiceMock.Setup(x => x.GetAsync<List<Role>>(It.IsAny<string>()))
+                .ReturnsAsync((List<Role>)null!);
+            _cacheServiceMock.Setup(x => x.GetAsync<GetRoleDTO>(It.IsAny<string>()))
+                .ReturnsAsync((GetRoleDTO)null!);
+            _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
+                .Returns(Task.CompletedTask);
+            _cacheServiceMock.Setup(x => x.RemoveByPrefixAsync(It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+            
             return new RolesService(
                 _loggerMock.Object,
                 _mapperMock.Object,
