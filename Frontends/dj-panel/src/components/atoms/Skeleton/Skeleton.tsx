@@ -27,5 +27,5 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     height: typeof height === 'number' ? `${height}px` : height,
   };
 
-  return <div className={classes} style={style} />;
+  return <div className={classes} style={style} role="status" aria-hidden="true" />;
 };

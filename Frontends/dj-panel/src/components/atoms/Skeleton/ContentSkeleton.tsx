@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton } from '../Skeleton';
+import { Skeleton } from './Skeleton';
 import './ContentSkeleton.css';
 
 export interface ContentSkeletonProps {
@@ -51,7 +51,7 @@ export const ContentSkeleton: React.FC<ContentSkeletonProps> = ({
   };
 
   return (
-    <div className="content-skeleton-container">
+    <div className="content-skeleton-container" role="status" aria-label="Loading content">
       {Array.from({ length: count }, (_, i) => (
         <div key={i}>{renderSkeleton()}</div>
       ))}
