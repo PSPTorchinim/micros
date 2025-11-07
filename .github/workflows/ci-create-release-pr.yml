@@ -24,8 +24,8 @@ jobs:
       - name: Check if this is the first commit on the release branch
         id: check_first_commit
         run: |
-          # Get the number of commits on this branch that are not in main
-          COMMIT_COUNT=$(git rev-list --count main..${{ github.ref_name }})
+          # Get the number of commits on this branch that are not in origin/main
+          COMMIT_COUNT=$(git rev-list --count origin/main..${{ github.ref_name }})
           echo "commit_count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
           
           if [ "$COMMIT_COUNT" -eq 1 ]; then
@@ -38,7 +38,7 @@ jobs:
         if: steps.check_first_commit.outputs.is_first_commit == 'true'
         id: check_pr
         run: |
-          PR_COUNT=$(gh pr list --head "${{ github.ref_name }}" --base main --state open --json number --jq 'length')
+          PR_COUNT=$(gh pr list --head "${{ github.ref_name }}" --base main --state all --json number --jq 'length')
           echo "pr_exists=$PR_COUNT" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
