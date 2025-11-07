@@ -189,8 +189,11 @@ to_lc() { tr '[:upper:]' '[:lower:]' <<<"$1"; }
 
 dockerfile_to_image() {
   local dockerfile="$1" service_name="$2" microservice_name="$3"
-  local dockerfile_dir; dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
-  local dockerfile_base; dockerfile_base=$(basename "$dockerfile" .Dockerfile)
+  # Normalize the dockerfile path to remove .. and .
+  local normalized_dockerfile
+  normalized_dockerfile=$(echo "$dockerfile" | sed 's|/\./|/|g; s|[^/]*/\.\./||g; s|^\.\./||g')
+  local dockerfile_dir; dockerfile_dir=$(dirname "$normalized_dockerfile" | sed 's|Docker/||')
+  local dockerfile_base; dockerfile_base=$(basename "$normalized_dockerfile" .Dockerfile)
 
   local owner_lc repo_lc base_lc msvc_lc mfe_lc service_lc dir_lc
   owner_lc="$(to_lc "${REPO_OWNER}")"
@@ -200,15 +203,15 @@ dockerfile_to_image() {
   service_lc="$(to_lc "${service_name}")"
   msvc_lc="$(to_lc "${microservice_name}")"
 
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
     echo "ghcr.io/${owner_lc}/${repo_lc}/infra/${base_lc}:${DOCKER_TAG}"
-  elif [[ "$dockerfile" == Docker/services/* ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/services/* ]]; then
     if [[ -n "$microservice_name" && "$microservice_name" != "null" ]]; then
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${msvc_lc}:${DOCKER_TAG}"
     else
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${base_lc}:${DOCKER_TAG}"
     fi
-  elif [[ "$dockerfile" == Docker/frontends/* || "$dockerfile" == *react.Dockerfile ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/frontends/* || "$normalized_dockerfile" == *react.Dockerfile ]]; then
     local microfrontend_name
     microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then
