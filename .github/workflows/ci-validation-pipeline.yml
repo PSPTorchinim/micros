@@ -68,6 +68,9 @@ jobs:
     environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write
     strategy:
       matrix:
         service: ["dj-panel"]
