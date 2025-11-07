@@ -173,10 +173,6 @@ jobs:
               name: "dj-panel",
               dockerfile: "Docker/frontends/react.Dockerfile",
             }
-          - {
-              name: "storybook",
-              dockerfile: "Docker/frontends/storybook.Dockerfile",
-            }
     env:
       API_GATEWAY: ${{ vars.API_GATEWAY }}
       API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
@@ -264,6 +260,10 @@ jobs:
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
+          - {
+              name: "storybook",
+              dockerfile: "Docker/infra/storybook.Dockerfile",
+            }
 
     steps:
       - name: Checkout Source Code
