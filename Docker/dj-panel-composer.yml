@@ -176,6 +176,20 @@ services:
       strapi:
         condition: service_healthy
 
+  storybook:
+    build:
+      context: ../Frontends/dj-panel
+      dockerfile: ../../Docker/frontends/storybook.Dockerfile
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "6006:6006"
+    networks:
+      - public
+    volumes:
+      - ../Frontends/dj-panel/src:/app/src:ro
+      - ../Frontends/dj-panel/.storybook:/app/.storybook:ro
+
   strapi:
     build:
       context: ../

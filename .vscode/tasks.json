@@ -116,6 +116,14 @@
       "problemMatcher": []
     },
     {
+      "label": "storybook-build",
+      "type": "npm",
+      "script": "build-storybook",
+      "path": "Frontends/dj-panel",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
       "label": "install-strapi",
       "type": "npm",
       "script": "install",
