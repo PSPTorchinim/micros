@@ -1,5 +1,5 @@
-name: Build React Service
-description: Common build steps for React microfrontend
+name: Test React Service
+description: Common test steps for React microfrontend
 inputs:
   service:
     description: Working directory for the service
@@ -17,17 +17,27 @@ runs:
       shell: bash
       run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
-    - name: Lint Source Code
+    - name: Run Jest Unit Tests
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm run lint
+      run: npm run test
 
-    - name: Check Code Formatting
+    - name: Install Playwright Browsers
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm run format
+      run: npx playwright install --with-deps chromium
 
-    - name: Build React App
+    - name: Run Playwright E2E Tests
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm run build
+      run: npm run test:e2e
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ inputs.service }}
+        path: |
+          Frontends/${{ inputs.service }}/playwright-report/
+          Frontends/${{ inputs.service }}/test-results/
+        retention-days: 30
