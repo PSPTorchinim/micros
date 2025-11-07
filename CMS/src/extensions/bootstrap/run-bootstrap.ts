@@ -52,6 +52,10 @@ const TASKS = {
     "./set-all-public-permissions",
   ] as const,
   seedDev: ["./tasks/seed-dev", "./seed-dev"] as const,
+  seedStandardPages: [
+    "./tasks/seed-standard-pages",
+    "./seed-standard-pages",
+  ] as const,
 } as const;
 
 // ---- orchestrator ----------------------------------------------------------
@@ -64,7 +68,10 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     TASKS.allPublicPermissions
   );
 
-  // 2) Dev-only seed
+  // 2) Seed standard pages (Login, Forgot Password) - runs in all environments
+  await runTask(strapi, "seed-standard-pages", TASKS.seedStandardPages);
+
+  // 3) Dev-only seed
   if (isDevSeedingEnabled()) {
     await runTask(strapi, "seed-dev", TASKS.seedDev);
   } else {
