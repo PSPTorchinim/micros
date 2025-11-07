@@ -238,12 +238,15 @@ jobs:
           set -euo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          # Extract repo name from "owner/repo" format
+          repo_name="${{ github.repository }}"
+          repo_name="${repo_name##*/}"
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
             "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
-            "${{ github.event.repository.name }}" \
+            "$repo_name" \
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
           {
@@ -435,9 +438,15 @@ jobs:
               echo "📦 First deployment or app stopped - starting app normally"
               if midclt call app.start "$app" 2>/dev/null; then
                 echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
                   echo "✅ Scaled to 1 replica"
+                  # Give TrueNAS time to process the scale command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
                 else
                   echo "❌ ERROR: could not start app '$app'"
                   exit 1
@@ -451,6 +460,9 @@ jobs:
               # Restart app to apply new compose
               if midclt call app.restart "$app" 2>/dev/null; then
                 echo "✅ Restarted via app.restart"
+                # Give TrueNAS time to process the restart command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
@@ -480,6 +492,9 @@ jobs:
                 
                 if midclt call app.start "$app" 2>/dev/null; then
                   echo "✅ Started via app.start"
+                  # Give TrueNAS time to process the start command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
                 else
                   echo "❌ ERROR: could not restart app"
                   exit 1
@@ -592,12 +607,18 @@ jobs:
             echo "🔄 Restarting application to apply rollback..."
             if midclt call app.restart "$app" 2>/dev/null; then
               echo "✅ Restarted via app.restart"
+              # Give TrueNAS time to process the restart command
+              echo "⏳ Waiting for TrueNAS to begin startup process..."
+              sleep 10
             else
               echo "ℹ️  Restart not available, using stop/start"
               midclt call app.stop "$app" 2>/dev/null || true
               sleep 5
               if midclt call app.start "$app" 2>/dev/null; then
                 echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 echo "❌ ERROR: Failed to start app after rollback"
                 exit 1

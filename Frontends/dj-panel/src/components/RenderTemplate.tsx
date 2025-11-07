@@ -8,6 +8,7 @@ import { strapiAPI } from '../services/strapi-api';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
+import { ContentSkeleton } from './atoms/Skeleton';
 
 type Props = {
   /** documentId templatek (Strapi v5) */
@@ -129,7 +130,7 @@ export const RenderTemplate: React.FC<Props> = ({
 
   return (
     <div>
-      {loading && <div>Loading...</div>}
+      {loading && <ContentSkeleton type="block" count={2} />}
       {!loading && error && (
         <div
           style={{
