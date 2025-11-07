@@ -5,6 +5,9 @@ on:
     branches:
       - 'releases/R*'
 
+env:
+  BASE_BRANCH: production
+
 jobs:
   create-pr:
     runs-on: ubuntu-latest
@@ -27,8 +30,8 @@ jobs:
       - name: Check if this is the first commit on the release branch
         id: check_first_commit
         run: |
-          # Get the number of commits on this branch that are not in origin/main
-          COMMIT_COUNT=$(git rev-list --count origin/main..${{ github.ref_name }})
+          # Get the number of commits on this branch that are not in origin/$BASE_BRANCH
+          COMMIT_COUNT=$(git rev-list --count "origin/$BASE_BRANCH..${{ github.ref_name }}")
           echo "commit_count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
           
           if [ "$COMMIT_COUNT" -eq 1 ]; then
@@ -41,7 +44,7 @@ jobs:
         if: steps.check_first_commit.outputs.is_first_commit == 'true'
         id: check_pr
         run: |
-          PR_COUNT=$(gh pr list --head "${{ github.ref_name }}" --base main --state all --json number --jq 'length')
+          PR_COUNT=$(gh pr list --head "${{ github.ref_name }}" --base "$BASE_BRANCH" --state all --json number --jq 'length')
           echo "pr_exists=$PR_COUNT" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,9 +53,9 @@ jobs:
         if: steps.check_first_commit.outputs.is_first_commit == 'true' && steps.check_pr.outputs.pr_exists == '0'
         run: |
           gh pr create \
-            --title "${{ steps.extract_release.outputs.release_number }} to main" \
-            --body "Automated PR for merging ${{ steps.extract_release.outputs.release_number }} into main branch." \
-            --base main \
+            --title "${{ steps.extract_release.outputs.release_number }} to $BASE_BRANCH" \
+            --body "Automated PR for merging ${{ steps.extract_release.outputs.release_number }} into $BASE_BRANCH branch." \
+            --base "$BASE_BRANCH" \
             --head "${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
