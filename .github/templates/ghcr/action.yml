@@ -1,8 +1,8 @@
 name: GHCR Push Docker Image
-description: Pushes a Docker image to GitHub Container Registry (GHCR)
+description: Pushes a Docker image to GitHub Container Registry (GHCR) with optional multiple tags
 inputs:
   tag:
-    description: Docker image tag
+    description: Docker image tag (single tag or comma-separated list)
     required: true
   dockerfile:
     description: Path to the Dockerfile

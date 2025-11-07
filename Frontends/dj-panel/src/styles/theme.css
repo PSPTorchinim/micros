@@ -1,0 +1,72 @@
+/* Theme system with light and dark mode support */
+
+:root {
+  /* Spacing */
+  --dl-size-size-large: 144px;
+  --dl-size-size-small: 48px;
+  --dl-size-size-medium: 96px;
+  --dl-size-size-xlarge: 192px;
+  --dl-size-size-xsmall: 16px;
+  --dl-space-space-unit: 16px;
+  --dl-size-size-xxlarge: 288px;
+  --dl-size-size-maxwidth: 1400px;
+  --dl-space-space-halfunit: 8px;
+  --dl-space-space-sixunits: 96px;
+  --dl-space-space-twounits: 32px;
+  --dl-space-space-fiveunits: 80px;
+  --dl-space-space-fourunits: 64px;
+  --dl-space-space-threeunits: 48px;
+  --dl-space-space-oneandhalfunits: 24px;
+
+  /* Border Radius */
+  --dl-radius-radius-round: 50%;
+  --dl-radius-radius-radius2: 2px;
+  --dl-radius-radius-radius4: 4px;
+  --dl-radius-radius-radius8: 8px;
+  --dl-radius-radius-cardradius: 8px;
+  --dl-radius-radius-imageradius: 8px;
+  --dl-radius-radius-inputradius: 4px;
+  --dl-radius-radius-buttonradius: 4px;
+
+  /* Light Mode Colors */
+  --dl-color-theme-primary1: #ed2a4f;
+  --dl-color-theme-primary2: #698a93;
+  --dl-color-theme-accent1: #ccc7d6;
+  --dl-color-theme-accent2: #aea7bf;
+  --dl-color-theme-secondary1: #e6ebe0;
+  --dl-color-theme-secondary2: #d9ded3;
+  --dl-color-theme-neutral-dark: #000000;
+  --dl-color-theme-neutral-light: #ffffff;
+  --dl-color-theme-background: #ffffff;
+  --dl-color-theme-surface: #f5f5f5;
+  --dl-color-theme-text-primary: #1a1a1a;
+  --dl-color-theme-text-secondary: #666666;
+  --dl-color-theme-border: #e0e0e0;
+  --dl-color-theme-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Colors */
+[data-theme='dark'] {
+  --dl-color-theme-primary1: #ff4365;
+  --dl-color-theme-primary2: #7fa9b3;
+  --dl-color-theme-accent1: #433e52;
+  --dl-color-theme-accent2: #5a5269;
+  --dl-color-theme-secondary1: #2a2f28;
+  --dl-color-theme-secondary2: #363b33;
+  --dl-color-theme-neutral-dark: #ffffff;
+  --dl-color-theme-neutral-light: #1a1a1a;
+  --dl-color-theme-background: #121212;
+  --dl-color-theme-surface: #1e1e1e;
+  --dl-color-theme-text-primary: #e0e0e0;
+  --dl-color-theme-text-secondary: #a0a0a0;
+  --dl-color-theme-border: #333333;
+  --dl-color-theme-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}

@@ -4,3 +4,7 @@ obj/
 bin/
 Migrations/
 test
+*.log
+node_modules/
+package-lock.json
+actionlint

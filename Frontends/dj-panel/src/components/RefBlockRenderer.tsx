@@ -1,6 +1,7 @@
 import React from 'react';
 import { strapiAPI } from '../services/strapi-api';
 import { renderBlock } from './renderBlock';
+import { ContentSkeleton } from './atoms/Skeleton';
 
 /**
  * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
@@ -196,25 +197,7 @@ export const RefBlockRenderer: React.FC<{ block: any; index: number }> = ({
   }
 
   if (!resolved) {
-    return (
-      <pre
-        key={index}
-        style={{
-          background: '#fff3cd',
-          padding: 12,
-          borderRadius: 8,
-          color: '#856404',
-          border: '1px solid #ffeeba',
-        }}
-      >
-        Loading {refUID}
-        {docId
-          ? ` (documentId: ${docId})`
-          : numericId
-            ? ` (id: ${numericId})`
-            : ''}
-      </pre>
-    );
+    return <ContentSkeleton key={index} type="block" />;
   }
 
   return renderBlock(resolved, index);

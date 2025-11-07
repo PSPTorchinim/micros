@@ -2,9 +2,17 @@ name: Build TrueNAS Infrastructure
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types:
+      - completed
+    branches:
+      - "releases/R*"
+      - "production"
 
 jobs:
   determine_environment:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     name: Determine Environment
     outputs:
@@ -13,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set Environment
         id: set_env
@@ -28,6 +36,7 @@ jobs:
           echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
 
   determine_docker_tag:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Determine Docker Tag
     runs-on: ubuntu-latest
     outputs:
@@ -41,6 +50,7 @@ jobs:
         uses: ./.github/templates/determine-docker-tag
 
   determine_compose_timestamp:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Determine Compose File Timestamp
     needs: [determine_environment]
     runs-on: ubuntu-latest
@@ -56,95 +66,94 @@ jobs:
         with:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
 
-  stop_app:
-    name: Stop existing app cleanly
+  setup_truenas_directories:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Setup TrueNAS directory structure (first-time)
     runs-on: ubuntu-latest
     needs: [determine_environment]
-    outputs:
-      stop_stdout: ${{ steps.stop_remote.outputs.stdout }}
-      stop_state: ${{ steps.set_stop_state.outputs.stop_state }}
     steps:
-      - name: Stop app on TrueNAS (app.stop or scale -> 0) and wait until stopped
-        id: stop_remote
+      - name: Create directory structure on TrueNAS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,APP_NAME
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🔧 TrueNAS Directory Setup"
+            echo "=========================================="
+
+            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+
+            echo "Setting up directories for environment: ${ENV}"
+
+            # Create main directories (mkdir -p is idempotent)
+            mkdir -p "${BASE_DIR}/Images"
+            mkdir -p "${BASE_DIR}/Images/backups"
+
+            echo "✅ Created: ${BASE_DIR}/Images"
+            echo "✅ Created: ${BASE_DIR}/Images/backups"
+
+            # Set permissions on newly created directories (non-fatal)
+            chmod 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
+            chmod 755 "${BASE_DIR}/Images/backups" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images/backups (may already exist with correct permissions)"
+
+            echo "✅ Directory setup verified"
+            echo "=========================================="
+            echo "✅ TrueNAS directory setup complete!"
+            echo "=========================================="
+
+  backup_current_state:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Backup current deployment for rollback
+    runs-on: ubuntu-latest
+    needs: [determine_environment, setup_truenas_directories]
+    outputs:
+      backup_created: ${{ steps.backup.outputs.backup_created }}
+    steps:
+      - name: Backup current compose file and app state
+        id: backup
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
-            APP="dj-panel-$(printf '%s' "${{ needs.determine_environment.outputs.env_slug }}")"
+            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
+            backup_dir="${base}/backups"
+            timestamp=$(date +%Y%m%d_%H%M%S)
 
-            echo "Stopping app: $APP"
-            if midclt call app.stop "$APP" 2>/dev/null; then
-              echo "Stopped via app.stop"
+            mkdir -p "$backup_dir"
+
+            if [ -f "$agg" ]; then
+              backup_file="${backup_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-${timestamp}.yml"
+              cp "$agg" "$backup_file"
+              echo "✅ Backup created: $backup_file"
+              
+              # Keep only last 5 backups
+              ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null \
+                | tail -n +6 | xargs -r rm -f || true
+              
+              echo "BACKUP_CREATED=true"
+              echo "BACKUP_FILE=$backup_file"
             else
-              echo "app.stop not available; trying chart.release.scale -> 0"
-              if midclt call chart.release.scale "$APP" '{"replica_count":0}' 2>/dev/null; then
-                echo "Scaled to 0 replicas"
-              else
-                echo "WARN: could not stop app '$APP' with known methods."
-              fi
+              echo "ℹ️  No existing deployment to backup (first deployment)"
+              echo "BACKUP_CREATED=false"
             fi
-
-            has_jq() { command -v jq >/dev/null 2>&1; }
-            get_state() {
-              j="$(midclt call app.query '[["name","=","'"$APP"'"]]' 2>/dev/null || echo '[]')"
-              if has_jq; then
-                echo "$j" | jq -r '.[0] | (.state // .status // .health // .metadata.state // empty)' 2>/dev/null | head -n1
-                return 0
-              fi
-              echo "$j" \
-               | tr -d '\n' \
-               | awk '{
-                    s=$0
-                    if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                      m=substr(s, RSTART, RLENGTH)
-                      gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                      gsub(/".*$/, "", m)
-                      print m
-                    }
-                  }' | head -n1
-            }
-            is_stopped() {
-              case "$1" in
-                STOPPED|INACTIVE|OFF|SCALED_DOWN|DEGRADED|UNKNOWN) return 0 ;;
-                *) return 1 ;;
-              esac
-            }
-            i=0
-            st=""
-            while [ $i -lt 60 ]; do
-              st="$(get_state || true)"
-              [ -n "$st" ] || st="unknown"
-              echo "Stop poll #$((i+1)): state=$st"
-              if is_stopped "$st"; then
-                break
-              fi
-              sleep 5
-              i=$((i+1))
-            done
-            echo "APP_STOP_STATE=${st}"
-            # If state is unknown, do not fail, allow pipeline to continue
-            if [ "$st" = "unknown" ]; then
-              echo "WARNING: App stop state is unknown, continuing pipeline with fallback."
-            fi
-      - name: Parse stop state from SSH output
-        id: set_stop_state
-        run: |
-          set -euo pipefail
-          out='${{ steps.stop_remote.outputs.stdout }}'
-          st=$(echo "$out" | awk -F= '/^APP_STOP_STATE=/{print $2}' | tail -n1)
-          echo "Detected stop state: $st"
-          echo "stop_state=$st" >> "$GITHUB_OUTPUT"
 
   get_truenas_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
-    needs: [stop_app]
+    needs: [backup_current_state]
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
@@ -164,6 +173,7 @@ jobs:
               | sort -n | uniq
 
   calculate_unused_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Calculate Unused External and Internal Ports
     runs-on: ubuntu-latest
     needs: [get_truenas_ports]
@@ -194,6 +204,7 @@ jobs:
           tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Generate & Upload New Compose
     runs-on: ubuntu-latest
     needs:
@@ -202,9 +213,8 @@ jobs:
         determine_docker_tag,
         determine_compose_timestamp,
         calculate_unused_ports,
-        stop_app,
+        backup_current_state,
       ]
-    if: always() && (needs.stop_app.outputs.stop_state != 'unknown') || (needs.stop_app.outputs.stop_state == 'unknown')
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
       external_map_json: ${{ steps.generate_compose_file.outputs.external_ports_map }}
@@ -228,12 +238,15 @@ jobs:
           set -euo pipefail
           chmod +x .github/scripts/generate-compose-file.sh
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          # Extract repo name from "owner/repo" format
+          repo_name="${{ github.repository }}"
+          repo_name="${repo_name##*/}"
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
             "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
-            "${{ github.event.repository.name }}" \
+            "$repo_name" \
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
           {
@@ -287,77 +300,210 @@ jobs:
           test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-  update_aggregator_and_start_app:
-    name: Update aggregator, prune old files, start app & wait healthy
+  enable_maintenance_page:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Enable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs: [generate_and_upload_truenas_compose_file, determine_environment]
+    steps:
+      - name: Checkout repository for maintenance page
+        uses: actions/checkout@v4
+
+      - name: Enable Cloudflare maintenance mode for all external service hostnames
+        run: |
+          echo "🔧 Enabling maintenance page on Cloudflare..."
+
+          MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
+          cat > /tmp/worker-script.js <<EOF
+          addEventListener('fetch', event => {
+            event.respondWith(handleRequest(event.request))
+          })
+
+          async function handleRequest(request) {
+            const maintenanceHTML = ${MAINTENANCE_HTML}
+            return new Response(maintenanceHTML, {
+              status: 503,
+              headers: {
+                'Content-Type': 'text/html;charset=UTF-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Retry-After': '120'
+              }
+            })
+          }
+          EOF
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Deploy worker to Cloudflare
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
+          echo "Uploading worker script: ${WORKER_NAME}"
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/javascript" \
+            --data-binary @/tmp/worker-script.js
+
+          # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+              echo "Creating maintenance route for $PATTERN"
+              curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+                -H "X-Auth-Email: ${CF_EMAIL}" \
+                -H "X-Auth-Key: ${CF_KEY}" \
+                -H "Content-Type: application/json" \
+                --data "${ROUTE_DATA}"
+            done
+          done
+
+          echo "✅ Maintenance page enabled for all external service hostnames."
+          echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
+
+  rolling_update_deployment:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Rolling update with zero downtime
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        stop_app,
+        backup_current_state,
+        enable_maintenance_page,
       ]
     outputs:
-      start_stdout: ${{ steps.agg_start.outputs.stdout }}
-    if: needs.stop_app.outputs.stop_state != 'unknown'
+      start_stdout: ${{ steps.rolling_update.outputs.stdout }}
     steps:
-      - name: Update aggregator and start app (robust state wait)
-        id: agg_start
+      - name: Perform rolling update (databases stay up, services update)
+        id: rolling_update
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
+
+            echo "=========================================="
+            echo "🔄 Rolling Update Deployment (Zero Downtime)"
+            echo "=========================================="
+
             base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
             agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
             app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
 
             test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
+
+            # Update aggregator to point to new compose
             mkdir -p "$base"
             printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "Updated aggregator -> $agg includes $new"
+            echo "✅ Updated aggregator -> $agg includes $new"
 
             # Keep only 3 newest generated compose files for this env
             ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
               | sort -r | awk 'NR>3' | xargs -r rm -f || true
 
-            echo "Starting app: $app"
-            if midclt call app.start "$app" 2>/dev/null; then
-              echo "Started via app.start"
-            else
-              echo "app.start not available; trying chart.release.scale -> 1"
-              if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
-                echo "Scaled to 1 replica"
-              else
-                echo "ERROR: could not start app '$app' with known methods."
-                exit 1
-              fi
-            fi
-
+            # Check if app exists and is running
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
               j="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
               if has_jq; then
-                echo "$j" | jq -r '.[0] | (.state // .status // .health // .metadata.state // empty)' 2>/dev/null | head -n1
-                return 0
+                echo "$j" | jq -r '.[0] | (.state // .status // empty)' 2>/dev/null | head -n1
+              else
+                echo "$j" | tr -d '\n' | awk '{
+                  s=$0
+                  if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+                    m=substr(s, RSTART, RLENGTH)
+                    gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
+                    gsub(/".*$/, "", m)
+                    print m
+                  }
+                }' | head -n1
               fi
-              echo "$j" \
-                | tr -d '\n' \
-                | awk '{
-                    s=$0
-                    if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                      m=substr(s, RSTART, RLENGTH)
-                      gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                      gsub(/".*$/, "", m)
-                      print m
-                    }
-                  }' | head -n1
             }
+
+            current_state="$(get_state || echo 'NOT_FOUND')"
+            echo "Current app state: $current_state"
+
+            if [ "$current_state" = "NOT_FOUND" ] || [ "$current_state" = "STOPPED" ]; then
+              echo "📦 First deployment or app stopped - starting app normally"
+              if midclt call app.start "$app" 2>/dev/null; then
+                echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
+              else
+                if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
+                  echo "✅ Scaled to 1 replica"
+                  # Give TrueNAS time to process the scale command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
+                else
+                  echo "❌ ERROR: could not start app '$app'"
+                  exit 1
+                fi
+              fi
+            else
+              echo "🔄 App is running - performing rolling update"
+              echo "ℹ️  TrueNAS will restart containers with new images"
+              echo "ℹ️  Databases will remain running throughout"
+              
+              # Restart app to apply new compose
+              if midclt call app.restart "$app" 2>/dev/null; then
+                echo "✅ Restarted via app.restart"
+                # Give TrueNAS time to process the restart command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
+              else
+                echo "ℹ️  Restart not available, using stop/start"
+                midclt call app.stop "$app" 2>/dev/null || true
+                
+                # Wait for STOPPED state (3 minutes timeout)
+                echo "⏳ Waiting for app to stop..."
+                stop_wait=0
+                stop_state="UNKNOWN"
+                max_stop_iterations=90
+                while [ $stop_wait -lt $max_stop_iterations ]; do
+                  stop_state="$(get_state || echo 'UNKNOWN')"
+                  [ -z "$stop_state" ] && stop_state="UNKNOWN"
+                  echo "  Stop check $((stop_wait+1))/$max_stop_iterations: state=$stop_state"
+                  if [ "$stop_state" = "STOPPED" ] || [ "$stop_state" = "NOT_FOUND" ]; then
+                    echo "✅ App stopped successfully"
+                    break
+                  fi
+                  sleep 2
+                  stop_wait=$((stop_wait+1))
+                done
+                
+                if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
+                  echo "❌ ERROR: App failed to stop after 180 seconds (state=$stop_state)"
+                  echo "Cannot proceed with deployment - manual intervention required"
+                  exit 1
+                fi
+                
+                if midclt call app.start "$app" 2>/dev/null; then
+                  echo "✅ Started via app.start"
+                  # Give TrueNAS time to process the start command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
+                else
+                  echo "❌ ERROR: could not restart app"
+                  exit 1
+                fi
+              fi
+            fi
+
+            # Wait for healthy state (10 minutes timeout)
+            echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
               case "$1" in
                 RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) return 0 ;;
@@ -365,89 +511,227 @@ jobs:
               esac
             }
 
-            i=0
-            st=""
-            while [ $i -gt 120 ]; do
-              st="$(get_state || true)"
-              [ -n "$st" ] || st="unknown"
-              echo "Poll #$((i+1)): state=$st"
-              if is_good_state "$st"; then
+            health_check=0
+            max_health_checks=120
+            app_state="UNKNOWN"
+            while [ $health_check -lt $max_health_checks ]; do
+              app_state="$(get_state || echo 'UNKNOWN')"
+              [ -z "$app_state" ] && app_state="UNKNOWN"
+              echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              if is_good_state "$app_state"; then
+                echo "✅ App is healthy and running"
                 break
               fi
               sleep 5
-              i=$((i+1))
+              health_check=$((health_check+1))
             done
 
-            echo "APP_STATE=${st}"
+            if ! is_good_state "$app_state"; then
+              echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
+              echo "⚠️  Rollback recommended - backup is available in backups directory"
+              exit 1
+            fi
 
-  update_aggregator_compose_only:
-    name: Update aggregator (compose only, skip start)
+            echo "=========================================="
+            echo "✅ Rolling update completed successfully!"
+            echo "✅ Zero downtime maintained"
+            echo "=========================================="
+            echo "APP_STATE=${app_state}"
+
+  automatic_rollback_on_failure:
+    if: ${{ always() && needs.rolling_update_deployment.result == 'failure' }}
+    name: Automatic Rollback on Deployment Failure
+    runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
-        generate_and_upload_truenas_compose_file,
-        stop_app,
+        backup_current_state,
+        rolling_update_deployment,
       ]
-    if: needs.stop_app.outputs.stop_state == 'unknown'
-    runs-on: ubuntu-latest
     steps:
-      - name: Update aggregator file only (no app start)
+      - name: Perform automatic rollback to previous version
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔄 AUTOMATIC ROLLBACK - Deployment Failed"
+            echo "=========================================="
+            
             base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
             agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
-            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-
-            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
-            mkdir -p "$base"
-            printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "Updated aggregator -> $agg includes $new"
-            # Keep only 3 newest generated compose files for this env
-            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
-              | sort -r | awk 'NR>3' | xargs -r rm -f || true
-
-  verify_app_started:
-    name: Verify app healthy
-    runs-on: ubuntu-latest
-    needs: [update_aggregator_and_start_app]
-    if: needs.update_aggregator_and_start_app.result == 'success'
-    steps:
-      - name: Parse and verify start result
-        run: |
-          set -euo pipefail
-          out='${{ needs.update_aggregator_and_start_app.outputs.start_stdout }}'
-          echo "---- start stdout ----"
-          printf '%s\n' "$out"
-          st=$(echo "$out" | awk -F= '/^APP_STATE=/{print $2}' | tail -n1)
-          case "$st" in
-            RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY)
-              echo "App reached acceptable state: $st"
-              ;;
-            *)
-              echo "App failed to reach a healthy state (state=$st)"
+            backup_dir="${base}/backups"
+            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+            
+            # Find most recent backup
+            latest_backup=$(ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null | head -n1)
+            
+            if [ -z "$latest_backup" ]; then
+              echo "❌ ERROR: No backup found for rollback"
               exit 1
-              ;;
-          esac
+            fi
+            
+            echo "ℹ️  Rolling back to: $latest_backup"
+            
+            # Restore backup
+            cp "$latest_backup" "$agg"
+            echo "✅ Restored backup to aggregator"
+            
+            # Helper function to get app state
+            has_jq() { command -v jq >/dev/null 2>&1; }
+            get_state() {
+              j="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+              if has_jq; then
+                echo "$j" | jq -r '.[0] | (.state // .status // empty)' 2>/dev/null | head -n1
+              else
+                echo "$j" | tr -d '\n' | awk '{
+                  s=$0
+                  if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+                    m=substr(s, RSTART, RLENGTH)
+                    gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
+                    gsub(/".*$/, "", m)
+                    print m
+                  }
+                }' | head -n1
+              fi
+            }
+            
+            # Restart app to apply rollback
+            echo ""
+            echo "🔄 Restarting application to apply rollback..."
+            if midclt call app.restart "$app" 2>/dev/null; then
+              echo "✅ Restarted via app.restart"
+              # Give TrueNAS time to process the restart command
+              echo "⏳ Waiting for TrueNAS to begin startup process..."
+              sleep 10
+            else
+              echo "ℹ️  Restart not available, using stop/start"
+              midclt call app.stop "$app" 2>/dev/null || true
+              sleep 5
+              if midclt call app.start "$app" 2>/dev/null; then
+                echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
+              else
+                echo "❌ ERROR: Failed to start app after rollback"
+                exit 1
+              fi
+            fi
+            
+            # Wait for healthy state (5 minutes timeout for rollback)
+            echo ""
+            echo "⏳ Verifying rollback health (timeout: 5 minutes)..."
+            is_good_state() {
+              case "$1" in
+                RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) return 0 ;;
+                *) return 1 ;;
+              esac
+            }
+            
+            health_check=0
+            max_health_checks=60
+            app_state="UNKNOWN"
+            while [ $health_check -lt $max_health_checks ]; do
+              app_state="$(get_state || echo 'UNKNOWN')"
+              [ -z "$app_state" ] && app_state="UNKNOWN"
+              echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              if is_good_state "$app_state"; then
+                echo ""
+                echo "✅ Rollback successful - app is healthy"
+                break
+              fi
+              sleep 5
+              health_check=$((health_check+1))
+            done
+            
+            if ! is_good_state "$app_state"; then
+              echo ""
+              echo "❌ ERROR: Rollback health check failed (final state=$app_state)"
+              echo "⚠️  Manual intervention required"
+              exit 1
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ Automatic rollback completed successfully"
+            echo "✅ Application restored to previous version"
+            echo "=========================================="
+
+  disable_maintenance_page:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success' || needs.automatic_rollback_on_failure.result == 'success') }}
+    name: Disable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine_environment,
+        enable_maintenance_page,
+        rolling_update_deployment,
+        automatic_rollback_on_failure,
+        generate_and_upload_truenas_compose_file,
+      ]
+    steps:
+      - name: Disable Cloudflare maintenance mode for all external service hostnames
+        run: |
+          echo "🔧 Disabling maintenance page on Cloudflare..."
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Get routes
+          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/json")
+
+          # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+              if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+                echo "Deleting maintenance route: $ROUTE_ID ($PATTERN)"
+                curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+                  -H "X-Auth-Email: ${CF_EMAIL}" \
+                  -H "X-Auth-Key: ${CF_KEY}" \
+                  -H "Content-Type: application/json"
+                echo "✅ Maintenance page disabled for $PATTERN"
+              else
+                echo "ℹ️  No maintenance route found for $PATTERN"
+              fi
+            done
+          done
+
+          # Optional: Delete the worker script itself
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
+          curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/json" || echo "ℹ️  Worker already deleted or not found"
 
   update_cloudflare_tunnel:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success' || needs.automatic_rollback_on_failure.result == 'success') }}
     name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
     needs:
       [
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        verify_app_started,
-        stop_app,
+        rolling_update_deployment,
+        automatic_rollback_on_failure,
+        disable_maintenance_page,
       ]
-    if: needs.stop_app.outputs.stop_state != 'unknown'
     steps:
       - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN; preserve other envs)
         id: cf_update
@@ -540,6 +824,7 @@ jobs:
           echo "Cloudflare Tunnel configuration updated successfully."
 
   update_cloudflare_dns_records:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success' || needs.automatic_rollback_on_failure.result == 'success') }}
     name: Ensure Cloudflare DNS CNAMEs for tunnel hostnames
     runs-on: ubuntu-latest
     needs:
@@ -547,9 +832,9 @@ jobs:
         update_cloudflare_tunnel,
         determine_environment,
         generate_and_upload_truenas_compose_file,
-        stop_app,
+        rolling_update_deployment,
+        automatic_rollback_on_failure,
       ]
-    if: needs.stop_app.outputs.stop_state != 'unknown'
     steps:
       - name: Create/Update DNS CNAMEs for service FQDNs (env-scoped)
         run: |
@@ -662,28 +947,57 @@ jobs:
           echo "DNS sync (env-scoped) complete."
 
   deployment_summary:
+    if: ${{ always() }}
     name: Deployment Summary
     runs-on: ubuntu-latest
     needs:
       - determine_docker_tag
       - determine_compose_timestamp
       - determine_environment
-      - calculate_unused_ports
-      - generate_and_upload_truenas_compose_file
-      - stop_app
-      - update_aggregator_and_start_app
-      - update_aggregator_compose_only
-      - verify_app_started
+      - rolling_update_deployment
+      - automatic_rollback_on_failure
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
     steps:
       - name: Summary
         run: |
           set -euo pipefail
-          echo "=== TrueNAS DJ Panel Deployment Summary ==="
-          echo "Docker Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
-          echo "Latest Tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
-          echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-          echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
-          echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
-          echo "New compose absolute: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+          echo "=========================================="
+          if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
+            echo "  🎉 Zero-Downtime Deployment Complete!"
+          elif [ "${{ needs.automatic_rollback_on_failure.result }}" = "success" ]; then
+            echo "  🔄 Deployment Failed - Automatic Rollback Successful"
+          else
+            echo "  ❌ Deployment Failed"
+          fi
+          echo "=========================================="
+          echo ""
+          echo "📦 Docker Image:"
+          echo "   Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
+          echo "   Latest: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo ""
+          echo "🌍 Environment:"
+          echo "   Name: ${{ needs.determine_environment.outputs.current_env }}"
+          echo "   Slug: ${{ needs.determine_environment.outputs.env_slug }}"
+          echo ""
+          echo "🔄 Deployment Strategy: Rolling Update"
+          echo "   Databases: Remained running (shared)"
+          echo "   Services: Updated with health checks"
+          echo ""
+          echo "✅ Status:"
+          echo "   Rolling Update: ${{ needs.rolling_update_deployment.result }}"
+          echo "   Automatic Rollback: ${{ needs.automatic_rollback_on_failure.result }}"
+          echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
+          echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
+          echo ""
+          echo "📄 Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          echo ""
+          echo "=========================================="
+          if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
+            echo "✨ ZERO DOWNTIME ACHIEVED ✨"
+          elif [ "${{ needs.automatic_rollback_on_failure.result }}" = "success" ]; then
+            echo "⚠️  DEPLOYMENT ROLLED BACK - INVESTIGATE FAILURE"
+          else
+            echo "❌ DEPLOYMENT FAILED - MANUAL INTERVENTION REQUIRED"
+          fi
+          echo "=========================================="

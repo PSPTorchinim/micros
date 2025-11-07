@@ -1,0 +1,16 @@
+# Grafana Dashboards Provisioning Configuration
+# Auto-loads dashboard configurations on Grafana startup
+
+apiVersion: 1
+
+providers:
+  - name: 'DJ Beat Blaster Logs'
+    orgId: 1
+    folder: 'DJ Beat Blaster'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true

@@ -48,6 +48,16 @@
       }
     },
     {
+      "name": "DJ Panel: Storybook Start",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/Frontends/dj-panel",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook"],
+      "skipFiles": ["<node_internals>/**"],
+      "preLaunchTask": "storybook-build"
+    },
+    {
       "name": "C#: PartyAPI Debug",
       "type": "coreclr",
       "request": "launch",
@@ -381,7 +391,11 @@
     },
     {
       "name": "Launch Frontends Stack",
-      "configurations": ["CMS: Strapi Debug", "DJ Panel: React Debug"],
+      "configurations": [
+        "CMS: Strapi Debug", 
+        "DJ Panel: React Debug",
+        "DJ Panel: Storybook Start"
+      ],
       "stopAll": true,
       "presentation": {
         "hidden": false,
@@ -401,7 +415,8 @@
         "C#: CompanyAPI Debug",
         "C#: DJHostGateway Debug",
         "CMS: Strapi Debug",
-        "DJ Panel: React Debug"
+        "DJ Panel: React Debug",
+        "DJ Panel: Storybook Start"
       ],
       "stopAll": true,
       "presentation": {

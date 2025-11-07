@@ -106,6 +106,15 @@ _enable_shell_xtrace
 # ======================== Globals & Helpers ==========================
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
+# Infrastructure services that need external access (exposed via Cloudflare tunnel)
+# - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
+# - Services in Docker/services/* and Docker/frontends/* get external ports (50000-59999)
+# - List infra services here that need external access exceptions
+# - Format: space-separated list of service names
+# - Example: To expose a new infra service "prometheus", add it to this list:
+#   EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana prometheus"
+EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana"
+
 log_subsection "Source File Validation"
 if [ ! -f "$SOURCE_COMPOSE" ]; then
   log_error "Source compose file $SOURCE_COMPOSE not found"
@@ -165,8 +174,14 @@ get_next_external_port() {
 
 get_port_function_for_service() {
   local service_name="$1" dockerfile="$2"
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
-    [[ "$service_name" == "strapi" ]] && { echo "get_next_external_port"; return; }
+  # Normalize the dockerfile path for consistent matching
+  local normalized_dockerfile
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
+    # Check if this infra service needs external access
+    for external_svc in $EXTERNAL_ACCESS_INFRA_SERVICES; do
+      [[ "$service_name" == "$external_svc" ]] && { echo "get_next_external_port"; return; }
+    done
     echo "get_next_internal_port"
   else
     echo "get_next_external_port"
@@ -175,10 +190,38 @@ get_port_function_for_service() {
 
 to_lc() { tr '[:upper:]' '[:lower:]' <<<"$1"; }
 
+normalize_dockerfile_path() {
+  local path="$1"
+  # Normalize path by resolving .. and . components
+  # This handles multiple levels of .. properly
+  local result=""
+  local IFS='/'
+  local -a parts
+  read -ra parts <<< "$path"
+  local -a stack=()
+  
+  for part in "${parts[@]}"; do
+    if [[ "$part" == ".." ]]; then
+      # Pop from stack if not empty
+      [[ ${#stack[@]} -gt 0 ]] && unset 'stack[-1]'
+    elif [[ "$part" != "." && -n "$part" ]]; then
+      # Push non-empty, non-current-dir parts
+      stack+=("$part")
+    fi
+  done
+  
+  # Join the stack back into a path
+  result=$(IFS='/'; printf '%s' "${stack[*]}")
+  echo "$result"
+}
+
 dockerfile_to_image() {
   local dockerfile="$1" service_name="$2" microservice_name="$3"
-  local dockerfile_dir; dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
-  local dockerfile_base; dockerfile_base=$(basename "$dockerfile" .Dockerfile)
+  # Normalize the dockerfile path to remove .. and .
+  local normalized_dockerfile
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
+  local dockerfile_dir; dockerfile_dir=$(dirname "$normalized_dockerfile" | sed 's|Docker/||')
+  local dockerfile_base; dockerfile_base=$(basename "$normalized_dockerfile" .Dockerfile)
 
   local owner_lc repo_lc base_lc msvc_lc mfe_lc service_lc dir_lc
   owner_lc="$(to_lc "${REPO_OWNER}")"
@@ -188,15 +231,15 @@ dockerfile_to_image() {
   service_lc="$(to_lc "${service_name}")"
   msvc_lc="$(to_lc "${microservice_name}")"
 
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
     echo "ghcr.io/${owner_lc}/${repo_lc}/infra/${base_lc}:${DOCKER_TAG}"
-  elif [[ "$dockerfile" == Docker/services/* ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/services/* ]]; then
     if [[ -n "$microservice_name" && "$microservice_name" != "null" ]]; then
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${msvc_lc}:${DOCKER_TAG}"
     else
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${base_lc}:${DOCKER_TAG}"
     fi
-  elif [[ "$dockerfile" == Docker/frontends/* || "$dockerfile" == *react.Dockerfile ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/frontends/* || "$normalized_dockerfile" == *react.Dockerfile ]]; then
     local microfrontend_name
     microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then

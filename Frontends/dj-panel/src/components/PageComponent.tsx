@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Page, Template } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { RenderTemplate } from './RenderTemplate';
+import { ContentSkeleton } from './atoms/Skeleton';
 
 interface PageComponentProps {
   pageId?: string;
@@ -25,7 +26,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
     return <p>Page not found.</p>;
   }
   if (page === undefined) {
-    return <p>Loading...</p>;
+    return <ContentSkeleton type="page" />;
   }
 
   return (

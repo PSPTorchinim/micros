@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Options;
+using Serilog;
 using Shared.Services.App;
 using Shared.Services.Run;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Yarp.ReverseProxy.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 builder.Services.BuildBasicServices(builder.Configuration, "ApiGateway", "v0.0.1", true);
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
@@ -23,3 +25,4 @@ app.BuildBasicApp(null, options =>
 app.MapReverseProxy();
 
 app.Run();
+Log.CloseAndFlush();
