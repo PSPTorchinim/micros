@@ -8,12 +8,12 @@ The Login Page feature allows you to create customizable login pages through the
 
 ## Automatic Seeding
 
-**NEW**: Standard pages (Login and Forgot Password) are now automatically created when Strapi starts up. The seeder will:
+**NEW**: Standard pages are now automatically created when Strapi starts up. The seeder will:
 
-- Create Login Block and Forgot Password Block with default values
-- Create Login and Forgot Password templates
-- Create Login and Forgot Password pages at `/users/login` and `/users/forgot-password`
-- Link them to the first available configuration or create a default one
+- **Login and Forgot Password Pages**: Create Login Block and Forgot Password Block with default values, templates, and pages at `/users/login` and `/users/forgot-password`
+- **Home Page**: Create Home page at `/` with hero block, feature section, and steps container
+- **About Page**: Create About page at `/about` with contact section and company information
+- Link all pages to the first available configuration or create a default one
 
 If these pages already exist, the seeder will update them with the default values. You can customize them after they are created.
 

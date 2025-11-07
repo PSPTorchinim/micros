@@ -18,6 +18,19 @@ Automatically creates standard pages that should exist in all environments:
   - Creates Forgot Password Template with `TemplateType: "ForgotPassword"`
   - Creates Forgot Password Page with proper configuration
 
+- **Home Page** (`/`)
+  - Creates Hero Block with welcome message
+  - Creates Feature Section with business management features
+  - Creates Steps Container with getting started guide
+  - Creates Home Template with `TemplateType: "Standard"`
+  - Creates Home Page as main landing page
+
+- **About Page** (`/about`)
+  - Creates Contact Section with company information
+  - Creates Contact Info with contact details
+  - Creates About Template with `TemplateType: "Standard"`
+  - Creates About Page with company description
+
 **Behavior:**
 - Runs in **all environments** (development, staging, production)
 - Creates pages if they don't exist
@@ -26,7 +39,7 @@ Automatically creates standard pages that should exist in all environments:
 
 **Customization:**
 After the seeder runs, you can customize the content through the Strapi admin panel:
-- Navigate to **Content Manager** → **Login Block** or **Forgot Password Block**
+- Navigate to **Content Manager** and select the content type you want to edit
 - Modify the text, labels, placeholders, or custom styles
 - Save and publish your changes
 
