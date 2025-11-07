@@ -15,7 +15,9 @@
     "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\" --ignore-path .prettierignore",
     "format:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\" --ignore-path .prettierignore",
     "map:api": "node scripts/map-api.js",
-    "map:strapi": "node scripts/map-strapi.js"
+    "map:strapi": "node scripts/map-strapi.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "license": "MIT",
   "author": {
@@ -64,7 +66,12 @@
     "typescript": "^5.9.2",
     "webpack": "^5.101.3",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.2",
+    "storybook": "^10.0.5",
+    "@storybook/react-webpack5": "^10.0.5",
+    "@storybook/addon-webpack5-compiler-swc": "^4.0.1",
+    "@storybook/addon-docs": "^10.0.5",
+    "@storybook/addon-onboarding": "^10.0.5"
   },
   "dependencies": {
     "axios": "^1.12.2",

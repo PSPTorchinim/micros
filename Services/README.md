@@ -162,34 +162,6 @@ Handles email campaigns, templates, and communication management.
 - `POST /api/mailings/send` - Send emails
 - `GET /api/analytics` - Email analytics
 
-### 📦 ComponentsAPI
-
-**Port**: 5008 | **Database**: SQL Server (ComponentsDB)
-
-Manages component stories and documentation for showcasing UI components.
-
-**Key Features:**
-
-- Component library management
-- Story/example management for each component
-- Component categorization and tagging
-- Props and configuration documentation
-- Code examples and previews
-
-**Endpoints:**
-
-- `GET /api/components` - List all components
-- `GET /api/components/{id}` - Get component details
-- `POST /api/components` - Create new component
-- `PUT /api/components/{id}` - Update component
-- `DELETE /api/components/{id}` - Delete component
-- `GET /api/stories` - List all stories
-- `GET /api/stories/{id}` - Get story details
-- `GET /api/stories/component/{componentId}` - Get stories for component
-- `POST /api/stories` - Create new story
-- `PUT /api/stories/{id}` - Update story
-- `DELETE /api/stories/{id}` - Delete story
-
 ### 🌐 DJHostGateway (API Gateway)
 
 **Port**: 5000 | **Database**: SQL Server (ApiGatewayDB)
@@ -214,7 +186,6 @@ Central API Gateway using YARP for routing, load balancing, and cross-cutting co
 - `/brand/api/*` → CompanyAPI
 - `/party/api/*` → PartyAPI
 - `/mailing/api/*` → MailingAPI
-- `/components/api/*` → ComponentsAPI
 
 ## 🔧 Shared Components
 
@@ -454,7 +425,6 @@ Each microservice has its own detailed README with specific implementation detai
 - **[CompanyAPI](./CompanyAPI/README.md)** - Brand & Client Management Service (BrandAPI)
 - **[PartyAPI](./PartyAPI/README.md)** - Event & Booking Management Service
 - **[MailingAPI](./MailingAPI/README.md)** - Email Campaign & Communication Service
-- **[ComponentsAPI](./ComponentsAPI/README.md)** - Component Stories & Documentation Service
 - **[DJHostGateway](./DJHostGateway/README.md)** - API Gateway Service (YARP)
 
 Each service README includes:
