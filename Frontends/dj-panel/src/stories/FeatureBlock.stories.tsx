@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { FeatureBlock } from './index';
+import { FeatureBlock } from '../components/content-blocks/FeatureBlock';
 
 const meta = {
   title: 'Content Blocks/FeatureBlock',

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { CTABlock } from './index';
+import { CTABlock } from '../components/content-blocks/CTABlock';
 
 const meta = {
   title: 'Content Blocks/CTABlock',
