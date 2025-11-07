@@ -16,7 +16,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     heading: 'Ready to Book Your Event?',
-    content: 'Contact us today to discuss your event needs and get a custom quote.',
+    content:
+      'Contact us today to discuss your event needs and get a custom quote.',
     action: {
       text: 'Get Started',
       url: '#/contact',
@@ -28,7 +29,8 @@ export const Default: Story = {
 export const WithoutAction: Story = {
   args: {
     heading: 'Premium DJ Services',
-    content: 'Elevate your event with professional DJ services tailored to your needs.',
+    content:
+      'Elevate your event with professional DJ services tailored to your needs.',
   },
 };
 
@@ -47,7 +49,8 @@ export const ExternalLink: Story = {
 export const LongContent: Story = {
   args: {
     heading: 'Transform Your Event',
-    content: 'From intimate gatherings to large-scale celebrations, our experienced DJs and state-of-the-art equipment ensure your event is memorable. We work closely with you to understand your vision and deliver an unforgettable experience.',
+    content:
+      'From intimate gatherings to large-scale celebrations, our experienced DJs and state-of-the-art equipment ensure your event is memorable. We work closely with you to understand your vision and deliver an unforgettable experience.',
     action: {
       text: 'View Packages',
       url: '#/packages',

@@ -16,7 +16,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     heading: 'Welcome to DJ Beat Blaster',
-    content: 'Professional DJ services for all your events. From weddings to corporate events, we bring the party to life.',
+    content:
+      'Professional DJ services for all your events. From weddings to corporate events, we bring the party to life.',
     actions: [
       {
         text: 'Get Started',
@@ -49,7 +50,8 @@ export const SingleAction: Story = {
 export const ExternalLink: Story = {
   args: {
     heading: 'Join Our Community',
-    content: 'Connect with us on social media and stay updated with the latest events.',
+    content:
+      'Connect with us on social media and stay updated with the latest events.',
     actions: [
       {
         text: 'Follow Us',
@@ -63,7 +65,8 @@ export const ExternalLink: Story = {
 export const LongContent: Story = {
   args: {
     heading: 'Premium DJ Services for Every Occasion',
-    content: 'Whether you\'re planning a wedding, corporate event, birthday party, or any special celebration, our experienced DJs bring professional equipment, extensive music libraries, and the energy to make your event unforgettable. We work with you to create the perfect atmosphere for your guests.',
+    content:
+      "Whether you're planning a wedding, corporate event, birthday party, or any special celebration, our experienced DJs bring professional equipment, extensive music libraries, and the energy to make your event unforgettable. We work with you to create the perfect atmosphere for your guests.",
     actions: [
       {
         text: 'View Packages',
