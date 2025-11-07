@@ -174,7 +174,10 @@ get_next_external_port() {
 
 get_port_function_for_service() {
   local service_name="$1" dockerfile="$2"
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
+  # Normalize the dockerfile path for consistent matching
+  local normalized_dockerfile
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
     # Check if this infra service needs external access
     for external_svc in $EXTERNAL_ACCESS_INFRA_SERVICES; do
       [[ "$service_name" == "$external_svc" ]] && { echo "get_next_external_port"; return; }
