@@ -3,6 +3,7 @@ import { Page } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
+import { ContentSkeleton } from './atoms/Skeleton';
 
 function buildPath(page: Page, parentPath = ''): string {
   const slug = (page as any)?.Slug || (page as any)?.Title || (page as any)?.id;
@@ -135,7 +136,11 @@ export function useDynamicRoutes() {
         )
       ) {
         routes = [
-          <Route key="fallback-index" index element={<div>Loading...</div>} />,
+          <Route
+            key="fallback-index"
+            index
+            element={<ContentSkeleton type="page" />}
+          />,
           ...routes,
         ];
       }
