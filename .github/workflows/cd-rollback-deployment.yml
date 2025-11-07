@@ -271,6 +271,9 @@ jobs:
               echo "📦 App is stopped - starting app"
               if midclt call app.start "$app" 2>/dev/null; then
                 echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
               else
                 echo "❌ ERROR: Failed to start app"
                 exit 1
@@ -306,6 +309,9 @@ jobs:
                 
                 if midclt call app.start "$app" 2>/dev/null; then
                   echo "✅ Started via app.start"
+                  # Give TrueNAS time to process the start command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
                 else
                   echo "❌ ERROR: Failed to start app"
                   exit 1
