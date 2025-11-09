@@ -1913,7 +1913,8 @@ The combination of DJing and production is powerful. You'll understand music on 
           `[SEED][STANDARD_PAGES] Article created: ${data.Title}`,
         );
       }
-      articles.push(article);
+      // Store both the data and the created/updated article
+      articles.push({ ...article, ...data });
     }
 
     // 7.2 Create Pages for Each Article
@@ -1921,10 +1922,26 @@ The combination of DJing and production is powerful. You'll understand music on 
       '[SEED][STANDARD_PAGES] Creating pages for each article...',
     );
     for (const article of articles) {
+      // Skip if article doesn't have a Title
+      if (!article.Title) {
+        strapi.log.warn(
+          '[SEED][STANDARD_PAGES] Skipping article without Title',
+        );
+        continue;
+      }
+
       // Create a URL-friendly slug from the article title
       const slug = `/articles/${article.Title.toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')}`;
+
+      // Validate slug is not empty
+      if (!slug || slug === '/articles/' || slug === '/articles') {
+        strapi.log.warn(
+          `[SEED][STANDARD_PAGES] Invalid slug generated for article: ${article.Title}`,
+        );
+        continue;
+      }
 
       // Create a simple template for the article page
       const articleTemplateData = {
