@@ -370,41 +370,18 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     // Create Feature Section for Home Page
     strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Feature Section...');
     let homeFeatureSection;
-    const existingHomeFeatureSection = await strapi.db
-      .query(FEATURE_SECTION_UID)
-      .findOne({
-        where: { sectionTitle: 'Why Choose DJ Beat Blaster' },
-      });
-    if (existingHomeFeatureSection && existingHomeFeatureSection.id) {
-      homeFeatureSection = await strapi.entityService.update(
-        FEATURE_SECTION_UID,
-        existingHomeFeatureSection.id,
-        {
-          data: {
-            sectionTitle: 'Why Choose DJ Beat Blaster',
-            sectionDescription:
-              'Discover powerful features designed to help you manage and grow your DJ business efficiently.',
-            reversed: false,
-            tabs: ref(homeFeatureTab),
-            publishedAt: now(),
-          },
+    // Feature section doesn't have unique fields, so we'll just create/update without checking
+    homeFeatureSection = await strapi.entityService.create(
+      FEATURE_SECTION_UID,
+      {
+        data: {
+          reversed: false,
+          tabs: ref(homeFeatureTab),
+          publishedAt: now(),
         },
-      );
-    } else {
-      homeFeatureSection = await strapi.entityService.create(
-        FEATURE_SECTION_UID,
-        {
-          data: {
-            sectionTitle: 'Why Choose DJ Beat Blaster',
-            sectionDescription:
-              'Discover powerful features designed to help you manage and grow your DJ business efficiently.',
-            reversed: false,
-            tabs: ref(homeFeatureTab),
-            publishedAt: now(),
-          },
-        },
-      );
-    }
+      },
+    );
+    strapi.log.info('[SEED][STANDARD_PAGES] Home Feature Section created');
 
     // Create Steps Container for Home Page
     let homeStepsContainer;
