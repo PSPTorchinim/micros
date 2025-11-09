@@ -19,7 +19,8 @@ jobs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
@@ -41,10 +42,13 @@ jobs:
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
       latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-      - id: tag_set
+      
+      - name: Determine Docker tag
+        id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
   determine_compose_timestamp:
@@ -56,10 +60,13 @@ jobs:
       compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
       compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-      - id: timestamp_set
+      
+      - name: Determine compose timestamp
+        id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
         with:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
@@ -71,11 +78,13 @@ jobs:
     needs: [determine_environment]
     steps:
       - name: Create directory structure on TrueNAS
+        id: create_dirs
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
@@ -179,7 +188,8 @@ jobs:
       external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
       internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
@@ -217,7 +227,8 @@ jobs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
       external_map_json: ${{ steps.generate_compose_file.outputs.external_ports_map }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
