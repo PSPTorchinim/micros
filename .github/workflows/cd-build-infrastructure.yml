@@ -1,5 +1,15 @@
 name: Build TrueNAS Infrastructure
 
+# This workflow deploys the application stack to TrueNAS with zero-downtime:
+# 1. Determines environment (Development/Production) and generates unique tags
+# 2. Calculates available ports on TrueNAS for service allocation
+# 3. Generates and uploads Docker Compose file with service configurations
+# 4. Enables Cloudflare maintenance page to prevent user disruption
+# 5. Performs rolling update of services while keeping databases running
+# 6. Updates Cloudflare tunnel and DNS for service routing
+# 7. Disables maintenance page after successful deployment
+# 8. Includes automatic rollback on failure
+
 on:
   workflow_dispatch:
   workflow_run:
@@ -19,7 +29,8 @@ jobs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
@@ -41,10 +52,13 @@ jobs:
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
       latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-      - id: tag_set
+
+      - name: Determine Docker tag
+        id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
   determine_compose_timestamp:
@@ -56,10 +70,13 @@ jobs:
       compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
       compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
-      - id: timestamp_set
+
+      - name: Determine compose timestamp
+        id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
         with:
           env_slug: ${{ needs.determine_environment.outputs.env_slug }}
@@ -71,11 +88,13 @@ jobs:
     needs: [determine_environment]
     steps:
       - name: Create directory structure on TrueNAS
+        id: create_dirs
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
@@ -179,7 +198,8 @@ jobs:
       external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
       internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
@@ -217,7 +237,8 @@ jobs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
       external_map_json: ${{ steps.generate_compose_file.outputs.external_ports_map }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
@@ -234,11 +255,19 @@ jobs:
           LOG_LEVEL: DEBUG
         run: |
           set -euo pipefail
+          
+          echo "🔧 Generating Docker Compose file..."
           chmod +x .github/scripts/generate-compose-file.sh
+          
           output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          echo "Output file: $output_file"
+          
           # Extract repo name from "owner/repo" format
           repo_name="${{ github.repository }}"
           repo_name="${repo_name##*/}"
+          echo "Repository: $repo_name"
+          
+          echo "Running compose generator script..."
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
@@ -247,6 +276,8 @@ jobs:
             "$repo_name" \
             "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
             "$output_file")
+          
+          echo "✅ Compose file generated successfully"
           {
             echo "compose_file=$output_file"
             echo "external_ports_map=$external_map_json"
@@ -256,9 +287,15 @@ jobs:
         id: package_compose
         run: |
           set -euo pipefail
+          
+          echo "📦 Packaging compose file for transfer..."
           COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
-          test -f "$COMPOSE_FILE" || { echo "Compose not found: $COMPOSE_FILE" >&2; exit 1; }
+          test -f "$COMPOSE_FILE" || { echo "❌ Compose not found: $COMPOSE_FILE" >&2; exit 1; }
+          
+          echo "Encoding file: $COMPOSE_FILE"
           B64=$(base64 -w0 "$COMPOSE_FILE")
+          echo "✅ File encoded successfully"
+          
           {
             echo "compose_name=$COMPOSE_FILE"
             echo "compose_b64=$B64"
@@ -293,9 +330,14 @@ jobs:
         id: parse_upload
         run: |
           set -euo pipefail
+          
+          echo "🔍 Parsing upload output..."
           out='${{ steps.upload_compose.outputs.stdout }}'
           abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
-          test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
+          
+          test -n "$abs" || { echo "❌ No COMPOSE_ABS marker in SSH output"; exit 1; }
+          
+          echo "✅ Compose uploaded to: $abs"
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
   enable_maintenance_page:
@@ -339,25 +381,33 @@ jobs:
 
           # Deploy worker to Cloudflare
           WORKER_NAME="maintenance-page-${ENV_SLUG}"
-          echo "Uploading worker script: ${WORKER_NAME}"
-          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+          echo "📤 Uploading worker script: ${WORKER_NAME}"
+          
+          response=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/javascript" \
-            --data-binary @/tmp/worker-script.js
+            --data-binary @/tmp/worker-script.js)
+          
+          if echo "$response" | jq -e '.success' > /dev/null; then
+            echo "✅ Worker script uploaded successfully"
+          else
+            echo "⚠️  Worker upload response: $response"
+          fi
 
           # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          echo "🔗 Creating maintenance routes..."
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
               PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
               ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
-              echo "Creating maintenance route for $PATTERN"
-              curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+              echo "  - Creating route for: $PATTERN"
+              curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
                 -H "X-Auth-Email: ${CF_EMAIL}" \
                 -H "X-Auth-Key: ${CF_KEY}" \
                 -H "Content-Type: application/json" \
-                --data "${ROUTE_DATA}"
+                --data "${ROUTE_DATA}" > /dev/null
             done
           done
 
@@ -790,36 +840,47 @@ jobs:
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Get routes
+          echo "🔍 Fetching existing routes..."
           ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/json")
 
           # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          echo "🗑️  Deleting maintenance routes..."
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
               PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
               ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
               if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
-                echo "Deleting maintenance route: $ROUTE_ID ($PATTERN)"
-                curl -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+                echo "  - Deleting route: $ROUTE_ID ($PATTERN)"
+                curl -s -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
                   -H "X-Auth-Email: ${CF_EMAIL}" \
                   -H "X-Auth-Key: ${CF_KEY}" \
-                  -H "Content-Type: application/json"
-                echo "✅ Maintenance page disabled for $PATTERN"
+                  -H "Content-Type: application/json" > /dev/null
+                echo "    ✅ Deleted"
               else
-                echo "ℹ️  No maintenance route found for $PATTERN"
+                echo "  ℹ️  No maintenance route found for $PATTERN"
               fi
             done
           done
 
           # Optional: Delete the worker script itself
+          echo "🗑️  Deleting worker script..."
           WORKER_NAME="maintenance-page-${ENV_SLUG}"
-          curl -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+          response=$(curl -s -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}" \
-            -H "Content-Type: application/json" || echo "ℹ️  Worker already deleted or not found"
+            -H "Content-Type: application/json")
+          
+          if echo "$response" | jq -e '.success' > /dev/null 2>&1; then
+            echo "✅ Worker script deleted"
+          else
+            echo "ℹ️  Worker already deleted or not found"
+          fi
+          
+          echo "✅ Maintenance page fully disabled"
 
   update_cloudflare_dns_records:
     if: ${{ always() && (needs.rolling_update_deployment.result == 'success' || needs.automatic_rollback_on_failure.result == 'success') }}
