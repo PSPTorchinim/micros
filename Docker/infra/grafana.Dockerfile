@@ -7,6 +7,10 @@ FROM grafana/grafana:11.4.0
 ARG GRAFANA_ADMIN_USER
 ARG GRAFANA_ADMIN_PASSWORD
 
+# Build args for dashboard generation
+ARG PROJECT_NAME=ix-dj-panel-development
+ARG REPLICA_INDEX=1
+
 # Set environment variables
 # Note: Admin credentials should be configured via environment variables in docker-compose
 # or via GitHub secrets in CI/CD pipelines for security
@@ -27,8 +31,15 @@ RUN mkdir -p /etc/grafana/provisioning/datasources && \
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
 COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 
-# Copy dashboard JSON files
-COPY Docker/init/grafana/dashboards/*.json /etc/grafana/provisioning/dashboards/
+# Copy dashboard templates and generator script
+COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboards-templates/
+COPY Docker/init/grafana/generate-dashboards.sh /etc/grafana/provisioning/
+
+# Generate dashboards from templates during build
+RUN cd /etc/grafana/provisioning && \
+    chmod +x generate-dashboards.sh && \
+    ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" && \
+    echo "Generated dashboards for project: ${PROJECT_NAME}, replica: ${REPLICA_INDEX}"
 
 USER grafana
 
