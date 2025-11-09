@@ -267,6 +267,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Page content...');
 
     // Create CTA for Home Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating Home CTA...');
     let homeCTA;
     const existingHomeCTA = await strapi.db.query(CTA_UID).findOne({
       where: { Label: 'Get Started' },
@@ -280,6 +281,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
           publishedAt: now(),
         },
       });
+      strapi.log.info('[SEED][STANDARD_PAGES] Home CTA updated');
     } else {
       homeCTA = await strapi.entityService.create(CTA_UID, {
         data: {
@@ -289,9 +291,11 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
           publishedAt: now(),
         },
       });
+      strapi.log.info('[SEED][STANDARD_PAGES] Home CTA created');
     }
 
     // Create Hero Block for Home Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Hero Block...');
     let homeHeroBlock;
     const existingHomeHero = await strapi.db.query(HERO_BLOCK_UID).findOne({
       where: { heading: 'Welcome to DJ Beat Blaster' },
@@ -310,6 +314,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
           },
         },
       );
+      strapi.log.info('[SEED][STANDARD_PAGES] Home Hero Block updated');
     } else {
       homeHeroBlock = await strapi.entityService.create(HERO_BLOCK_UID, {
         data: {
@@ -320,9 +325,11 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
           publishedAt: now(),
         },
       });
+      strapi.log.info('[SEED][STANDARD_PAGES] Home Hero Block created');
     }
 
     // Create Feature Tab for Home Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Feature Tab...');
     let homeFeatureTab;
     const existingHomeFeatureTab = await strapi.db
       .query(FEATURE_TAB_UID)
@@ -357,9 +364,11 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
           publishedAt: now(),
         },
       });
+      strapi.log.info('[SEED][STANDARD_PAGES] Home Feature Tab created');
     }
 
     // Create Feature Section for Home Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Feature Section...');
     let homeFeatureSection;
     const existingHomeFeatureSection = await strapi.db
       .query(FEATURE_SECTION_UID)
@@ -763,6 +772,9 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     if (error?.stack) {
       strapi.log.error(error.stack);
     }
-    throw error;
+    // Don't throw - allow partial success
+    strapi.log.warn(
+      '[SEED][STANDARD_PAGES] Seeding completed with errors - some pages may not have been created',
+    );
   }
 }
