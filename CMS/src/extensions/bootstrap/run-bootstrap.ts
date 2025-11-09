@@ -37,13 +37,6 @@ async function runTask(
   }
 }
 
-/** Guard for dev-only tasks (e.g., seeding). */
-function isDevSeedingEnabled() {
-  const env = process.env.NODE_ENV || 'development';
-  const wantSeed = (process.env.SEED_DEV ?? 'true').toLowerCase() === 'true';
-  return env === 'development' && wantSeed;
-}
-
 // ---- task path maps --------------------------------------------------------
 
 const TASKS = {
@@ -51,7 +44,6 @@ const TASKS = {
     './tasks/set-all-public-permissions',
     './set-all-public-permissions',
   ] as const,
-  seedDev: ['./tasks/seed-dev', './seed-dev'] as const,
   seedStandardPages: [
     './tasks/seed-standard-pages',
     './seed-standard-pages',
@@ -70,13 +62,4 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
 
   // 2) Seed standard pages (Login, Forgot Password) - runs in all environments
   await runTask(strapi, 'seed-standard-pages', TASKS.seedStandardPages);
-
-  // 3) Dev-only seed
-  if (isDevSeedingEnabled()) {
-    await runTask(strapi, 'seed-dev', TASKS.seedDev);
-  } else {
-    const env = process.env.NODE_ENV || 'development';
-    const wantSeed = (process.env.SEED_DEV ?? 'true').toLowerCase() === 'true';
-    strapi.log.info(`[SEED] Skipped (env=${env}, SEED_DEV=${wantSeed})`);
-  }
 }
