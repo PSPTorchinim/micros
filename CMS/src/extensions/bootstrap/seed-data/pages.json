@@ -1,0 +1,42 @@
+[
+  {
+    "Title": "Login",
+    "Slug": "/users/login",
+    "Visible": true,
+    "Menu": "Login",
+    "NavigationOrder": 1,
+    "NavigationAction": "Link"
+  },
+  {
+    "Title": "Forgot Password",
+    "Slug": "/users/forgot-password",
+    "Visible": true,
+    "Menu": "Login",
+    "NavigationOrder": 2,
+    "NavigationAction": "Link"
+  },
+  {
+    "Title": "Home",
+    "Slug": "/",
+    "Visible": true,
+    "Menu": "Main",
+    "NavigationOrder": 1,
+    "NavigationAction": "Link"
+  },
+  {
+    "Title": "About",
+    "Slug": "/about",
+    "Visible": true,
+    "Menu": "Main",
+    "NavigationOrder": 2,
+    "NavigationAction": "Link"
+  },
+  {
+    "Title": "Profile",
+    "Slug": "/profile",
+    "Visible": true,
+    "Menu": "Main",
+    "NavigationOrder": 3,
+    "NavigationAction": "Link"
+  }
+]
