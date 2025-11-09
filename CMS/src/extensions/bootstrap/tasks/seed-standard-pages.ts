@@ -1916,7 +1916,92 @@ The combination of DJing and production is powerful. You'll understand music on 
       articles.push(article);
     }
 
-    // 7.2 Create Article Blocks
+    // 7.2 Create Pages for Each Article
+    strapi.log.info(
+      '[SEED][STANDARD_PAGES] Creating pages for each article...',
+    );
+    for (const article of articles) {
+      // Create a URL-friendly slug from the article title
+      const slug = `/articles/${article.Title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')}`;
+
+      // Create a simple template for the article page
+      const articleTemplateData = {
+        Name: `Template: ${article.Title}`,
+        Type: 'Standard',
+        content: [
+          {
+            __component: 'article-block-ref.article-block-ref',
+            article: article.documentId
+              ? { connect: [article.documentId] }
+              : undefined,
+          },
+        ],
+        publishedAt: now(),
+      };
+
+      let articleTemplate;
+      const existingArticleTemplate = await strapi.db
+        .query(TEMPLATE_UID)
+        .findOne({
+          where: { Name: `Template: ${article.Title}` },
+        });
+
+      if (existingArticleTemplate && existingArticleTemplate.id) {
+        articleTemplate = await strapi.entityService.update(
+          TEMPLATE_UID,
+          existingArticleTemplate.id,
+          {
+            data: articleTemplateData,
+          },
+        );
+      } else {
+        articleTemplate = await strapi.entityService.create(TEMPLATE_UID, {
+          data: articleTemplateData,
+        });
+      }
+
+      // Create the article page
+      const articlePageData = {
+        Title: article.Title,
+        Slug: slug,
+        description: article.Summary,
+        Menu: 'Main',
+        VisibleInNavigation: false, // Don't clutter the main navigation
+        NavigationOrder: 100 + articles.indexOf(article),
+        configuration:
+          configuration?.documentId || configuration?.id
+            ? { connect: [configuration.documentId || configuration.id] }
+            : undefined,
+        template: articleTemplate?.documentId
+          ? { connect: [articleTemplate.documentId] }
+          : undefined,
+        publishedAt: now(),
+      };
+
+      const existingArticlePage = await strapi.db.query(PAGE_UID).findOne({
+        where: { Slug: slug },
+      });
+
+      if (existingArticlePage && existingArticlePage.id) {
+        await strapi.entityService.update(PAGE_UID, existingArticlePage.id, {
+          data: articlePageData,
+        });
+        strapi.log.info(
+          `[SEED][STANDARD_PAGES] Article page updated: ${article.Title}`,
+        );
+      } else {
+        await strapi.entityService.create(PAGE_UID, {
+          data: articlePageData,
+        });
+        strapi.log.info(
+          `[SEED][STANDARD_PAGES] Article page created: ${article.Title}`,
+        );
+      }
+    }
+
+    // 7.3 Create Article Blocks
     strapi.log.info('[SEED][STANDARD_PAGES] Creating Article Blocks...');
     const articleBlocks = [];
     const articleBlockTitles = [
@@ -1962,7 +2047,7 @@ The combination of DJing and production is powerful. You'll understand music on 
       articleBlocks.push(articleBlock);
     }
 
-    // 7.3 Create Image Sliders
+    // 7.4 Create Image Sliders
     strapi.log.info('[SEED][STANDARD_PAGES] Creating Image Sliders...');
     const imageSliders = [];
     const sliderData = [
