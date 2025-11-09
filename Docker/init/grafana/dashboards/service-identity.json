@@ -85,7 +85,11 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": ["mean", "max", "last"],
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -103,7 +107,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "rate({compose_project=\"djpanel\", service=\"identity_be\"}[1m])",
+          "expr": "rate({compose_project=\"djpanel\", compose_service=\"identity_be\"}[1m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -157,7 +161,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": ""
         },
         "textMode": "auto"
@@ -170,7 +176,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", service=\"identity_be\"} |~ \"(?i)error\" [$__range]))",
+          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"identity_be\"} |~ \"(?i)error\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -224,7 +230,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": ""
         },
         "textMode": "auto"
@@ -237,7 +245,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", service=\"identity_be\"} |~ \"(?i)warning\" [$__range]))",
+          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"identity_be\"} |~ \"(?i)warning\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -283,7 +291,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": ""
         },
         "textMode": "auto"
@@ -296,7 +306,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", service=\"identity_be\"} [$__range]))",
+          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"identity_be\"} [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -334,7 +344,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=\"djpanel\", service=\"identity_be\"}",
+          "expr": "{compose_project=\"djpanel\", compose_service=\"identity_be\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -405,7 +415,9 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -423,7 +435,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "count_over_time({compose_project=\"djpanel\", service=\"identity_be\"} |~ \"(?i)error\" [5m])",
+          "expr": "count_over_time({compose_project=\"djpanel\", compose_service=\"identity_be\"} |~ \"(?i)error\" [5m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -461,7 +473,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=\"djpanel\", service=\"identity_be\"} |~ \"(?i)error|exception\"",
+          "expr": "{compose_project=\"djpanel\", compose_service=\"identity_be\"} |~ \"(?i)error|exception\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -473,7 +485,11 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["dj-panel", "identity", "authentication"],
+  "tags": [
+    "dj-panel",
+    "identity",
+    "authentication"
+  ],
   "templating": {
     "list": []
   },

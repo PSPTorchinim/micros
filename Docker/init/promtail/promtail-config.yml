@@ -28,6 +28,11 @@ scrape_configs:
         regex: "/(.*)"
         target_label: container
 
+      # Service name (full container name without leading slash)
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: service_name
+
       # Container ID
       - source_labels: ["__meta_docker_container_id"]
         target_label: container_id
