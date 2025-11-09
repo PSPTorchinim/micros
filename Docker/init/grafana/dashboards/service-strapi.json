@@ -107,7 +107,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "rate({compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"}[1m])",
+          "expr": "rate({service_name=~\".*-strapi-\\\\d+\"}[1m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -176,7 +176,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"} |~ \"(?i)error\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -245,7 +245,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"} |~ \"(?i)warning\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)warning\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -306,7 +306,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"} [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -344,7 +344,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"}",
+          "expr": "{service_name=~\".*-strapi-\\\\d+\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -435,7 +435,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"} |~ \"(?i)error\" [5m])",
+          "expr": "count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error\" [5m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -473,7 +473,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=~\".*dj-?panel.*\", compose_service=\"strapi\"} |~ \"(?i)error|exception\"",
+          "expr": "{service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error|exception\"",
           "queryType": "range",
           "refId": "A"
         }
