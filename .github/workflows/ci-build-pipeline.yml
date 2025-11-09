@@ -28,7 +28,7 @@ jobs:
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
-      
+
       - name: Compute env slug
         id: compute_slug
         uses: ./.github/templates/compute-env-slug
