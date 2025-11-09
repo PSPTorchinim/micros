@@ -197,7 +197,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
       Title: 'Login',
       Slug: '/users/login',
       Visible: true,
-      Menu: 'login',
+      Menu: 'Login',
       NavigationOrder: 1,
       NavigationAction: 'Link',
       configuration:
@@ -231,7 +231,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
       Title: 'Forgot Password',
       Slug: '/users/forgot-password',
       Visible: true,
-      Menu: 'login',
+      Menu: 'Login',
       NavigationOrder: 2,
       NavigationAction: 'Link',
       configuration:
@@ -524,7 +524,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
       Title: 'Home',
       Slug: '/',
       Visible: true,
-      Menu: 'main',
+      Menu: 'Main',
       NavigationOrder: 1,
       NavigationAction: 'Link',
       configuration:
@@ -668,7 +668,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
       Title: 'About',
       Slug: '/about',
       Visible: true,
-      Menu: 'main',
+      Menu: 'Main',
       NavigationOrder: 2,
       NavigationAction: 'Link',
       configuration:
@@ -734,7 +734,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
       Title: 'Profile',
       Slug: '/profile',
       Visible: true,
-      Menu: 'main',
+      Menu: 'Main',
       NavigationOrder: 3,
       NavigationAction: 'Link',
       configuration:
