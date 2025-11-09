@@ -107,12 +107,12 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "rate({service_name=\"ix-dj-panel-development-apigateway-1\"}[1m])",
+          "expr": "rate({service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"}[1m])",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "API Gateway - Log Rate",
+      "title": "Company Service - Log Rate",
       "type": "timeseries"
     },
     {
@@ -176,7 +176,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-apigateway-1\"} |~ \"(?i)error\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"} |~ \"(?i)error\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -245,7 +245,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-apigateway-1\"} |~ \"(?i)warning\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"} |~ \"(?i)warning\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -306,7 +306,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-apigateway-1\"} [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"} [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -344,12 +344,12 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=\"ix-dj-panel-development-apigateway-1\"}",
+          "expr": "{service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"}",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "API Gateway - All Logs",
+      "title": "Company Service - All Logs",
       "type": "logs"
     },
     {
@@ -435,12 +435,12 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "count_over_time({service_name=\"ix-dj-panel-development-apigateway-1\"} |~ \"(?i)error\" [5m])",
+          "expr": "count_over_time({service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"} |~ \"(?i)error\" [5m])",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "API Gateway - Errors Over Time",
+      "title": "Company Service - Errors Over Time",
       "type": "timeseries"
     },
     {
@@ -473,12 +473,12 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=\"ix-dj-panel-development-apigateway-1\"} |~ \"(?i)error|exception\"",
+          "expr": "{service_name=\"${PROJECT_NAME}-brand_be-${REPLICA_INDEX}\"} |~ \"(?i)error|exception\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "API Gateway - Errors and Exceptions",
+      "title": "Company Service - Errors and Exceptions",
       "type": "logs"
     }
   ],
@@ -487,8 +487,8 @@
   "style": "dark",
   "tags": [
     "dj-panel",
-    "gateway",
-    "api"
+    "company",
+    "brand"
   ],
   "templating": {
     "list": []
@@ -499,8 +499,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "API Gateway",
-  "uid": "dj-panel-gateway",
+  "title": "Company Service",
+  "uid": "dj-panel-company",
   "version": 1,
   "weekStart": ""
 }

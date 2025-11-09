@@ -107,7 +107,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "rate({service_name=~\".*-strapi-\\\\d+\"}[1m])",
+          "expr": "rate({service_name=\"ix-dj-panel-development-strapi-1\"}[1m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -176,7 +176,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-strapi-1\"} |~ \"(?i)error\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -245,7 +245,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)warning\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-strapi-1\"} |~ \"(?i)warning\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -306,7 +306,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=~\".*-strapi-\\\\d+\"} [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"ix-dj-panel-development-strapi-1\"} [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -344,7 +344,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=~\".*-strapi-\\\\d+\"}",
+          "expr": "{service_name=\"ix-dj-panel-development-strapi-1\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -435,7 +435,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "count_over_time({service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error\" [5m])",
+          "expr": "count_over_time({service_name=\"ix-dj-panel-development-strapi-1\"} |~ \"(?i)error\" [5m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -473,7 +473,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=~\".*-strapi-\\\\d+\"} |~ \"(?i)error|exception\"",
+          "expr": "{service_name=\"ix-dj-panel-development-strapi-1\"} |~ \"(?i)error|exception\"",
           "queryType": "range",
           "refId": "A"
         }
