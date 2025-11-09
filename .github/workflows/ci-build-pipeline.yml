@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
-      env_slug: ${{ steps.slug.outputs.env_slug }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -22,13 +22,11 @@ jobs:
         id: set_env
         uses: ./.github/templates/determine-environment
       
-      - name: Compute env slug for Grafana dashboard generation
-        id: slug
-        run: |
-          set -euo pipefail
-          env_raw='${{ steps.set_env.outputs.current_env }}'
-          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
-          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
+      - name: Compute env slug
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
   determine_target_branch:
     name: Determine Target Branch
