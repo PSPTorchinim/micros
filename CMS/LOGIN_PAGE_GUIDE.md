@@ -6,7 +6,21 @@ This guide explains how to create and configure a dynamic Login Page using the S
 
 The Login Page feature allows you to create customizable login pages through the Strapi CMS. You can configure the text, labels, placeholders, and even apply custom styles without touching the code.
 
-## Creating a Login Page
+## Automatic Seeding
+
+**NEW**: Standard pages are now automatically created when Strapi starts up. The seeder will:
+
+- **Login and Forgot Password Pages**: Create Login Block and Forgot Password Block with default values, templates, and pages at `/users/login` and `/users/forgot-password`
+- **Home Page**: Create Home page at `/` with hero block, feature section, and steps container
+- **About Page**: Create About page at `/about` with contact section and company information
+- **User Profile Page**: Create User Profile page at `/profile` that displays user data from IdentityAPI (available after login)
+- Link all pages to the first available configuration or create a default one
+
+If these pages already exist, the seeder will update them with the default values. You can customize them after they are created.
+
+## Creating a Login Page Manually
+
+If you want to create additional login pages or customize the automatically created ones:
 
 ### Step 1: Create a Login Block
 
@@ -122,9 +136,11 @@ The Login Block uses the existing authentication service:
 ## Technical Details
 
 ### Backend (Strapi CMS)
-- **Content Type**: `login-block` 
-- **Component**: `login-block-ref`
-- **Template Type**: `Login` (enum value)
+- **Content Type**: `login-block` and `forgot-password-block` (single types)
+- **Component**: `login-block-ref` and `forgot-password-block-ref`
+- **Template Type**: `Login` and `ForgotPassword` (enum values)
+- **Automatic Seeder**: `seed-standard-pages.ts` in `CMS/src/extensions/bootstrap/tasks/`
+- **Bootstrap**: Runs automatically on Strapi startup in all environments
 
 ### Frontend
 - **Component**: `LoginBlock` in `src/components/content-blocks/LoginBlock/`
