@@ -14,12 +14,21 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.slug.outputs.env_slug }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+      
+      - name: Compute env slug for Grafana dashboard generation
+        id: slug
+        run: |
+          set -euo pipefail
+          env_raw='${{ steps.set_env.outputs.current_env }}'
+          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
 
   determine_target_branch:
     name: Determine Target Branch
@@ -303,3 +312,5 @@ jobs:
             DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
             GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
             GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
+            REPLICA_INDEX=1
