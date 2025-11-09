@@ -22,7 +22,7 @@ async function runTask(
   strapi: StrapiAny,
   label: string,
   possiblePaths: readonly string[],
-  args: Record<string, unknown> = {}
+  args: Record<string, unknown> = {},
 ) {
   try {
     const task = await loadTask(possiblePaths);
@@ -37,21 +37,13 @@ async function runTask(
   }
 }
 
-/** Guard for dev-only tasks (e.g., seeding). */
-function isDevSeedingEnabled() {
-  const env = process.env.NODE_ENV || "development";
-  const wantSeed = (process.env.SEED_DEV ?? "true").toLowerCase() === "true";
-  return env === "development" && wantSeed;
-}
-
 // ---- task path maps --------------------------------------------------------
 
 const TASKS = {
   allPublicPermissions: [
-    "./tasks/set-all-public-permissions",
-    "./set-all-public-permissions",
-  ] as const,
-  seedDev: ["./tasks/seed-dev", "./seed-dev"] as const,
+    './tasks/set-all-public-permissions',
+    './set-all-public-permissions',
+  ] as const
 } as const;
 
 // ---- orchestrator ----------------------------------------------------------
@@ -60,16 +52,7 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   // 1) Public role → enable all public permissions (unified)
   await runTask(
     strapi,
-    "set-all-public-permissions",
-    TASKS.allPublicPermissions
+    'set-all-public-permissions',
+    TASKS.allPublicPermissions,
   );
-
-  // 2) Dev-only seed
-  if (isDevSeedingEnabled()) {
-    await runTask(strapi, "seed-dev", TASKS.seedDev);
-  } else {
-    const env = process.env.NODE_ENV || "development";
-    const wantSeed = (process.env.SEED_DEV ?? "true").toLowerCase() === "true";
-    strapi.log.info(`[SEED] Skipped (env=${env}, SEED_DEV=${wantSeed})`);
-  }
 }
