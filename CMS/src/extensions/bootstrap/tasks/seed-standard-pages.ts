@@ -384,6 +384,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     strapi.log.info('[SEED][STANDARD_PAGES] Home Feature Section created');
 
     // Create Steps Container for Home Page
+    strapi.log.info('[SEED][STANDARD_PAGES] Creating Home Steps Container...');
     let homeStepsContainer;
     const existingHomeSteps = await strapi.db
       .query(STEPS_CONTAINER_UID)
@@ -399,28 +400,13 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
             heading: 'Get Started in Minutes',
             content:
               'Join DJ Beat Blaster today and take control of your DJ business with our easy-to-use platform.',
-            steps: [
-              {
-                title: 'Create Your Account',
-                description:
-                  'Sign up for free and get instant access to all features.',
-              },
-              {
-                title: 'Set Up Your Profile',
-                description:
-                  'Add your business information, equipment, and services.',
-              },
-              {
-                title: 'Start Managing Events',
-                description:
-                  'Create contracts, track bookings, and manage your calendar.',
-              },
-            ],
+            steps: [],
             action: [],
             publishedAt: now(),
           },
         },
       );
+      strapi.log.info('[SEED][STANDARD_PAGES] Home Steps Container updated');
     } else {
       homeStepsContainer = await strapi.entityService.create(
         STEPS_CONTAINER_UID,
@@ -429,28 +415,13 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
             heading: 'Get Started in Minutes',
             content:
               'Join DJ Beat Blaster today and take control of your DJ business with our easy-to-use platform.',
-            steps: [
-              {
-                title: 'Create Your Account',
-                description:
-                  'Sign up for free and get instant access to all features.',
-              },
-              {
-                title: 'Set Up Your Profile',
-                description:
-                  'Add your business information, equipment, and services.',
-              },
-              {
-                title: 'Start Managing Events',
-                description:
-                  'Create contracts, track bookings, and manage your calendar.',
-              },
-            ],
+            steps: [],
             action: [],
             publishedAt: now(),
           },
         },
       );
+      strapi.log.info('[SEED][STANDARD_PAGES] Home Steps Container created');
     }
 
     // Create Home Template
