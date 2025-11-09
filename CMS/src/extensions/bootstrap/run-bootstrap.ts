@@ -43,11 +43,7 @@ const TASKS = {
   allPublicPermissions: [
     './tasks/set-all-public-permissions',
     './set-all-public-permissions',
-  ] as const,
-  seedStandardPages: [
-    './tasks/seed-standard-pages',
-    './seed-standard-pages',
-  ] as const,
+  ] as const
 } as const;
 
 // ---- orchestrator ----------------------------------------------------------
@@ -59,7 +55,4 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     'set-all-public-permissions',
     TASKS.allPublicPermissions,
   );
-
-  // 2) Seed standard pages (Login, Forgot Password) - runs in all environments
-  await runTask(strapi, 'seed-standard-pages', TASKS.seedStandardPages);
 }
