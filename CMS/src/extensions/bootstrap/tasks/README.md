@@ -2,79 +2,192 @@
 
 This directory contains bootstrap tasks that run when Strapi starts up. These tasks are executed automatically to set up essential content and configurations.
 
+## File Structure
+
+The seeding tasks are organized into focused, single-purpose files for better maintainability:
+
+### Content Type Seeders
+
+- **`seed-hero-blocks.ts`** - Seeds hero blocks
+- **`seed-feature-sections.ts`** - Seeds feature sections
+- **`seed-article-blocks.ts`** - Seeds article blocks
+- **`seed-steps-containers.ts`** - Seeds steps containers
+- **`seed-contact-info.ts`** - Seeds contact info entries
+- **`seed-contact-sections.ts`** - Seeds contact sections
+
+### Page Seeders
+
+- **`seed-login-page.ts`** - Seeds the Login page
+- **`seed-forgot-password-page.ts`** - Seeds the Forgot Password page
+- **`seed-home-page.ts`** - Seeds the Home page (references content blocks)
+- **`seed-about-page.ts`** - Seeds the About page (references content blocks)
+
+### Content Seeders
+
+- **`seed-articles.ts`** - Seeds DJ articles
+- **`seed-footer.ts`** - Seeds the footer (not currently used)
+
+### Helpers
+
+- **`seed-configuration.ts`** - Helper to get/create default configuration
+
+### Orchestrators
+
+- **`seed-content-types.ts`** - Orchestrates all content type seeding
+- **`seed-pages.ts`** - Orchestrates all page seeding tasks
+
 ## Available Tasks
 
-### `seed-standard-pages.ts`
+### `seed-content-types.ts` (Content Orchestrator)
 
-Automatically creates standard pages that should exist in all environments:
+Coordinates seeding of all reusable content types. These content blocks are created first and then referenced by pages:
 
-- **Login Page** (`/users/login`)
-  - Creates Login Block single-type with default values
-  - Creates Login Template with `TemplateType: "Login"`
-  - Creates Login Page with proper configuration
+1. Seeds Hero Blocks
+2. Seeds Feature Sections
+3. Seeds Article Blocks
+4. Seeds Steps Containers
+5. Seeds Contact Info entries
+6. Seeds Contact Sections
 
-- **Forgot Password Page** (`/users/forgot-password`)
-  - Creates Forgot Password Block single-type with default values
-  - Creates Forgot Password Template with `TemplateType: "ForgotPassword"`
-  - Creates Forgot Password Page with proper configuration
+**Content Types Created:**
 
-- **Home Page** (`/`)
-  - Creates Hero Block with welcome message
-  - Creates Feature Section with business management features
-  - Creates Steps Container with getting started guide
-  - Creates Home Template with `TemplateType: "Standard"`
-  - Creates Home Page as main landing page
+- **Hero Block**: "Welcome to DJ Beat Blaster" with CTAs
+- **Feature Section**: 6 DJ business features (Music Library, Events, Clients, Equipment, Contracts, Email Marketing)
+- **Article Block**: "Latest DJ Tips & Guides" container
+- **Steps Container**: "Get Started in 3 Simple Steps"
+- **Contact Info**: Email, Phone, Location entries
+- **Contact Section**: About page content with contact details
 
-- **About Page** (`/about`)
-  - Creates Contact Section with company information
-  - Creates Contact Info with contact details
-  - Creates About Template with `TemplateType: "Standard"`
-  - Creates About Page with company description
+### `seed-pages.ts` (Page Orchestrator)
 
-- **User Profile Page** (`/profile`)
-  - Creates Profile Template with `TemplateType: "Standard"`
-  - Creates Profile Page that displays user data from IdentityAPI
-  - Available after user login
-  - Shows user email, roles, permissions, and account status
+Main entry point that coordinates seeding of all standard pages. Pages reference pre-seeded content blocks:
+
+1. Gets or creates default configuration
+2. Seeds Login page
+3. Seeds Forgot Password page
+4. Seeds Home page (uses Hero Block, Feature Section, Article Block, Steps Container)
+5. Seeds About page (uses Contact Section)
+
+### Individual Page Seeders
+
+#### `seed-login-page.ts`
+
+- Creates Login Block single-type with DJ-themed content ("Welcome Back, DJ!")
+- Creates Login Template with `TemplateType: "Login"`
+- Creates Login Page at `/users/login`
+- Includes links to Forgot Password page
+
+#### `seed-forgot-password-page.ts`
+
+- Creates Forgot Password Block single-type with default values
+- Creates Forgot Password Template with `TemplateType: "ForgotPassword"`
+- Creates Forgot Password Page at `/users/forgot-password`
+- Includes links back to Login page
+
+#### `seed-home-page.ts`
+
+- **References** existing Hero Block ("Welcome to DJ Beat Blaster")
+- **References** existing Feature Section (6 DJ business features)
+- **References** existing Article Block ("Latest DJ Tips & Guides")
+- **References** existing Steps Container ("Get Started in 3 Simple Steps")
+- Creates Home Template that combines all these content blocks
+- Creates Home Page at `/`
+
+#### `seed-about-page.ts`
+
+- **References** existing Contact Section
+- Creates About Template
+- Creates About Page at `/about`
 
 **Behavior:**
-- Runs in **all environments** (development, staging, production)
-- Creates pages if they don't exist
-- Updates existing pages with default values if they already exist
-- Links pages to the first available configuration or creates a default one
+
+- Each seeder runs in **all environments** (development, staging, production)
+- Creates content if it doesn't exist
+- Updates existing content with default values if it already exists
+- All pages are linked to the configuration (created if needed)
+- All content is DJ-themed as specified in requirements
 
 **Customization:**
 After the seeder runs, you can customize the content through the Strapi admin panel:
+
 - Navigate to **Content Manager** and select the content type you want to edit
 - Modify the text, labels, placeholders, or custom styles
 - Save and publish your changes
-- Note: User Profile page content is fetched dynamically from IdentityAPI, so customization is limited to the page metadata
 
-### `seed-dev.ts`
+### `seed-articles.ts`
 
-Seeds development data for all content types. This task:
-- Only runs in **development** environment when `SEED_DEV=true` (default)
-- Cleans existing data
-- Creates 5 sample entries for each content type
-- Includes realistic data for testing and development
+Seeds 5 comprehensive articles about DJing topics. These articles are available for display in article blocks and have individual pages under `/articles/{article-slug}`.
+
+**Articles created:**
+
+1. **Essential DJ Equipment for Beginners**
+   - Comprehensive guide to essential DJ gear
+   - Covers controllers, headphones, speakers, laptops, and software
+   - Includes budget considerations and getting started tips
+
+2. **Beatmatching Basics: Master the Fundamental Skill**
+   - In-depth tutorial on beatmatching techniques
+   - Traditional method vs. sync button discussion
+   - Practice exercises and common mistakes
+
+3. **Creating the Perfect DJ Set: Song Selection and Flow**
+   - Energy management and song selection principles
+   - Set structure and mixing techniques
+   - Harmonic mixing and phrase matching
+
+4. **EQ Techniques Every DJ Should Master**
+   - Complete guide to DJ EQ techniques
+   - Bass swap, high-pass filters, and frequency management
+   - Genre-specific tips and practice exercises
+
+5. **Building Your Music Library: Organization and Discovery**
+   - Library organization systems and best practices
+   - Music discovery sources and testing processes
+   - Backup strategies and metadata management
+
+**Behavior:**
+
+- Runs in **all environments** (development, staging, production)
+- Creates articles if they don't exist (checks by Title)
+- Skips articles that already exist to avoid duplicates
+- All articles are published with proper locale settings
+- Articles include cover images, summaries, and full rich-text content
 
 ### `seed-footer.ts`
 
 Seeds the footer single-type with default content including:
+
 - Copyright text
 - Link columns (Company, Quick Links)
 - Social media links
 
+**Note:** This task is defined but not currently called in the bootstrap orchestrator. To enable it, add it to the TASKS object in `run-bootstrap.ts` and call it in the `runBootstrap` function.
+
 ## Task Execution Order
 
 1. `set-all-public-permissions` - Sets up public access permissions
-2. `seed-standard-pages` - Creates essential pages (runs in all environments)
-3. `seed-dev` - Seeds development data (only in development)
+2. `seed-content-types` - Seeds all reusable content blocks:
+   - Calls `seedHeroBlocks`
+   - Calls `seedFeatureSections`
+   - Calls `seedArticleBlocks`
+   - Calls `seedStepsContainers`
+   - Calls `seedContactInfo`
+   - Calls `seedContactSections`
+3. `seed-articles` - Seeds 5 comprehensive DJing articles
+4. `seed-pages` - Seeds pages that reference the content blocks:
+   - Calls `getOrCreateConfiguration` helper
+   - Calls `seedLoginPage`
+   - Calls `seedForgotPasswordPage`
+   - Calls `seedHomePage` (references Hero Block, Feature Section, Article Block, Steps Container)
+   - Calls `seedAboutPage` (references Contact Section)
+
+**Key Principle**: Content types are seeded first, then articles, then pages that reference the content. This allows content blocks to be reusable across multiple pages.
 
 ## Environment Variables
 
 - `NODE_ENV`: Controls which tasks run (development, production, etc.)
-- `SEED_DEV`: Controls whether development data is seeded (default: `true`)
+
+All seeding tasks run in all environments to ensure consistent content across deployments.
 
 ## Adding New Bootstrap Tasks
 

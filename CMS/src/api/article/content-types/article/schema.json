@@ -25,16 +25,6 @@
       "required": true,
       "unique": true
     },
-    "Slug": {
-      "type": "uid",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "targetField": "Title",
-      "required": true
-    },
     "Summary": {
       "type": "string",
       "pluginOptions": {
