@@ -28,6 +28,11 @@ scrape_configs:
         regex: "/(.*)"
         target_label: container
 
+      # Service name (full container name without leading slash)
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: service_name
+
       # Container ID
       - source_labels: ["__meta_docker_container_id"]
         target_label: container_id
@@ -36,11 +41,13 @@ scrape_configs:
       - source_labels: ["__meta_docker_container_log_stream"]
         target_label: stream
 
-      # Extract service name from container name (e.g., djpanel-identity_be-1 -> identity_be)
+      # Extract service name from container name
+      # Pattern: {project_name}-{service_name}-{replica_index}
+      # Examples: djpanel-apigateway-1, dj-panel-development-apigateway-1, ix-dj-panel-development-apigateway-1
       - source_labels: ["__meta_docker_container_name"]
-        regex: '/djpanel-(.+?)-\d+'
+        regex: '/(.+)-(\w+)-(\d+)$'
         target_label: service
-        replacement: "$1"
+        replacement: "$2"
 
       # Docker compose labels
       - source_labels:

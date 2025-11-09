@@ -14,12 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+      
+      - name: Compute env slug
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
   determine_target_branch:
     name: Determine Target Branch
@@ -303,3 +310,5 @@ jobs:
             DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
             GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
             GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
+            REPLICA_INDEX=1

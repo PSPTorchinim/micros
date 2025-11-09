@@ -619,6 +619,8 @@ services:
       args:
         GRAFANA_ADMIN_USER: ${GRAFANA_ADMIN_USER}
         GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+        PROJECT_NAME: ${PROJECT_NAME:-ix-dj-panel-development}
+        REPLICA_INDEX: ${REPLICA_INDEX:-1}
     restart: unless-stopped
     pull_policy: always
     ports:

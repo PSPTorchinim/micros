@@ -8,3 +8,6 @@ test
 node_modules/
 package-lock.json
 actionlint
+
+# Generated Grafana dashboards (use templates instead)
+Docker/init/grafana/dashboards/*.json

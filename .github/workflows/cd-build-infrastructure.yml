@@ -17,7 +17,7 @@ jobs:
     name: Determine Environment
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
-      env_slug: ${{ steps.slug.outputs.env_slug }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -28,12 +28,10 @@ jobs:
         uses: ./.github/templates/determine-environment
 
       - name: Compute env slug
-        id: slug
-        run: |
-          set -euo pipefail
-          env_raw='${{ steps.set_env.outputs.current_env }}'
-          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
-          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
   determine_docker_tag:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
