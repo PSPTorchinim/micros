@@ -510,7 +510,7 @@ jobs:
             }
 
             health_check=0
-            max_health_checks=120
+            max_health_checks=200
             app_state="UNKNOWN"
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
