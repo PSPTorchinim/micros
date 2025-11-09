@@ -107,7 +107,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "rate({compose_project=\"djpanel\", compose_service=\"brand_be\"}[1m])",
+          "expr": "rate({compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"}[1m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -176,7 +176,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"brand_be\"} |~ \"(?i)error\" [$__range]))",
+          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"} |~ \"(?i)error\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -245,7 +245,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"brand_be\"} |~ \"(?i)warning\" [$__range]))",
+          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"} |~ \"(?i)warning\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -306,7 +306,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({compose_project=\"djpanel\", compose_service=\"brand_be\"} [$__range]))",
+          "expr": "sum(count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"} [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -344,7 +344,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=\"djpanel\", compose_service=\"brand_be\"}",
+          "expr": "{compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -435,7 +435,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "count_over_time({compose_project=\"djpanel\", compose_service=\"brand_be\"} |~ \"(?i)error\" [5m])",
+          "expr": "count_over_time({compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"} |~ \"(?i)error\" [5m])",
           "queryType": "range",
           "refId": "A"
         }
@@ -473,7 +473,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{compose_project=\"djpanel\", compose_service=\"brand_be\"} |~ \"(?i)error|exception\"",
+          "expr": "{compose_project=~\".*dj-?panel.*\", compose_service=\"brand_be\"} |~ \"(?i)error|exception\"",
           "queryType": "range",
           "refId": "A"
         }
