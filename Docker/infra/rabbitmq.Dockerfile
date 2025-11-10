@@ -17,12 +17,24 @@ USER root
 # Use explicit shell for shell form commands (DL4000)
 SHELL ["/bin/sh", "-c"]
 
-# Ensure data dir exists, is owned by rabbitmq, and create the fix-cookie shim in one RUN
-# hadolint ignore=SC2016
+# Ensure data dir exists and is owned by rabbitmq
 RUN mkdir -p /var/lib/rabbitmq \
-  && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq \
-  && printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chown rabbitmq:rabbitmq "$COOKIE" || true\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie \
-  && chmod +x /usr/local/bin/fix-cookie
+  && chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
+
+# Create a wrapper entrypoint script to fix cookie permissions
+# hadolint ignore=SC2016
+RUN printf '#!/bin/sh\n\
+set -e\n\
+\n\
+# Fix Erlang cookie permissions if it exists\n\
+COOKIE="/var/lib/rabbitmq/.erlang.cookie"\n\
+if [ -f "$COOKIE" ]; then\n\
+  chmod 600 "$COOKIE" 2>/dev/null || true\n\
+fi\n\
+\n\
+# Execute the original entrypoint with all arguments\n\
+exec docker-entrypoint.sh "$@"\n' > /usr/local/bin/rabbitmq-wrapper.sh \
+  && chmod +x /usr/local/bin/rabbitmq-wrapper.sh
 
 # Back to the non-root user used by the official image
 USER rabbitmq
@@ -33,8 +45,9 @@ USER rabbitmq
 #   - RABBITMQ_DEFAULT_PASS
 
 
-# Use a shell entrypoint to ensure fix-cookie runs before the official entrypoint
-ENTRYPOINT ["/bin/sh", "-c", "/usr/local/bin/fix-cookie && exec docker-entrypoint.sh rabbitmq-server"]
+# Use the wrapper entrypoint
+ENTRYPOINT ["/usr/local/bin/rabbitmq-wrapper.sh"]
+CMD ["rabbitmq-server"]
 
 EXPOSE 5672 15672
 
