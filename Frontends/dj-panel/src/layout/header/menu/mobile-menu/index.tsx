@@ -109,7 +109,9 @@ export const MobileMenu = (props: any) => {
                       (element: any) =>
                         (element.menu === 'main' ||
                           element.menu === undefined) &&
-                        element.url,
+                        element.url &&
+                        (element.Visible === undefined ||
+                          element.Visible === true),
                     )
                     .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
                 : props.links,
@@ -121,7 +123,11 @@ export const MobileMenu = (props: any) => {
             props.links?.filter
               ? props.links
                   .filter(
-                    (element: any) => element.menu === 'login' && element.url,
+                    (element: any) =>
+                      element.menu === 'login' &&
+                      element.url &&
+                      (element.Visible === undefined ||
+                        element.Visible === true),
                   )
                   .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
               : [],
