@@ -1,4 +1,4 @@
-FROM redis:8
+FROM redis:8-alpine
 
 ARG REDIS_PASSWORD
 

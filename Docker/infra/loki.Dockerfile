@@ -1,6 +1,7 @@
-FROM grafana/loki:3.3.2
+FROM grafana/loki:3.5
 
-# Copy Loki configuration
+
+# Copy only Loki configuration
 COPY Docker/init/loki/loki-config.yml /etc/loki/local-config.yaml
 
 EXPOSE 3100

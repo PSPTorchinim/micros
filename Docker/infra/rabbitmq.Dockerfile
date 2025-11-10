@@ -1,6 +1,6 @@
 # Docker/infra/rabbitmq.Dockerfile
 # Hadolint best practices: pin version, add label, use one ENV per line, explicit shell, comments
-FROM rabbitmq:4.0.0
+FROM rabbitmq:4-alpine
 
 LABEL maintainer="PSPTorchinim <your-email@example.com>"
 
@@ -32,9 +32,9 @@ USER rabbitmq
 #   - RABBITMQ_DEFAULT_USER
 #   - RABBITMQ_DEFAULT_PASS
 
-# Run the fix before the official entrypoint
-ENTRYPOINT ["/usr/local/bin/fix-cookie", "docker-entrypoint.sh"]
-CMD ["rabbitmq-server"]
+
+# Use a shell entrypoint to ensure fix-cookie runs before the official entrypoint
+ENTRYPOINT ["/bin/sh", "-c", "/usr/local/bin/fix-cookie && exec docker-entrypoint.sh rabbitmq-server"]
 
 EXPOSE 5672 15672
 
