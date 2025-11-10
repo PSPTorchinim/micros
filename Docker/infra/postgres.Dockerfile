@@ -1,4 +1,4 @@
-FROM postgres:18
+FROM postgres:18-alpine
 
 # --- Build-time inputs baked into the image ---
 ARG DATABASE_NAME_POSTGRES

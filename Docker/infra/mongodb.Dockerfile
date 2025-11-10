@@ -10,10 +10,9 @@ ENV MONGO_INITDB_DATABASE=admin
 # Create initialization script directory
 RUN mkdir -p /docker-entrypoint-initdb.d
 
-# Copy the initialization script
-COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js
 
-# Set proper permissions
+# Copy only the initialization script and set permissions in one layer
+COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js
 RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 
 EXPOSE 27017

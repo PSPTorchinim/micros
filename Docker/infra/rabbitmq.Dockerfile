@@ -1,6 +1,6 @@
 # Docker/infra/rabbitmq.Dockerfile
 # Hadolint best practices: pin version, add label, use one ENV per line, explicit shell, comments
-FROM rabbitmq:4.0.0
+FROM rabbitmq:4-alpine
 
 LABEL maintainer="PSPTorchinim <your-email@example.com>"
 

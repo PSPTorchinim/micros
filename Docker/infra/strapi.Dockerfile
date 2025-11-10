@@ -1,5 +1,5 @@
 # Node.js LTS on Alpine
-FROM node:18-alpine3.18
+FROM node:25-alpine
 
 WORKDIR /app
 
@@ -36,29 +36,27 @@ ENV DATABASE_CLIENT=$CMS_DATABASE_CLIENT \
   HOST=0.0.0.0 \
   PORT=1337
 
-# ---- Install runtime deps that must remain in the final image ----
-# Keep libc6-compat and *runtime* libvips, plus tools for health checks and connectivity
-RUN apk add --no-cache \
-    libc6-compat=~1.2 \
-    vips=~8.14 \
-    wget=~1.21 \
-    netcat-openbsd=~1.219
 
-# ---- Copy manifests first to leverage Docker layer caching ----
+# Install runtime deps
+RUN apk add --no-cache libc6-compat=~1.2 vips=~8.14 wget=~1.21 netcat-openbsd=~1.219
+
+# Copy manifests first for better cache
 COPY CMS/package*.json ./
 
-# ---- Install build deps only for compiling native modules, then remove ----
-RUN apk add --no-cache --virtual .build-deps \
-      python3=~3.11 make=~4.4 g++=~12.2 vips-dev=~8.14 \
+# Install build deps, build, clean up
+RUN apk add --no-cache --virtual .build-deps python3=~3.11 make=~4.4 g++=~12.2 vips-dev=~8.14 \
   && npm ci --only=production \
+  && npm run build \
+  && npm cache clean --force \
   && apk del .build-deps
 
-# ---- Copy app code ----
+# Copy app code
 COPY CMS/ ./
 
-
-# ---- Build Strapi admin, make entrypoint executable, and drop privileges in one RUN ----
-RUN npm run build \
+# Remove docs/tests, set permissions, drop privileges
+RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github \
+  && find /app -type d -name "__tests__" -exec rm -rf {} + \
+  && find /app -type f -name "*.md" -delete \
   && chmod +x docker-entrypoint.sh \
   && addgroup -g 1001 -S strapi \
   && adduser -S strapi -u 1001 \

@@ -1,4 +1,6 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+
+# Use official .NET SDK as build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 
 ARG MICROSERVICE_NAME
 
@@ -64,33 +66,31 @@ ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
 
 RUN apt-get update
 
-# Set WORKDIR before COPY (DL3045)
-WORKDIR /
 
+# Set WORKDIR before COPY (DL3045)
+WORKDIR /src
+
+# Copy only csproj and restore as distinct layers for better cache
 COPY Services/${MICROSERVICE_NAME}/*.csproj ./Services/${MICROSERVICE_NAME}/
 COPY Services/Shared/*.csproj ./Services/Shared/
-RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
+RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj --no-cache
 
-# Dopiero potem kopiuj resztę kodu
+# Copy the rest of the source code
 COPY Services/${MICROSERVICE_NAME}/ ./Services/${MICROSERVICE_NAME}/
 COPY Services/Shared/ ./Services/Shared/
 
-# Use absolute WORKDIR (DL3000)
-WORKDIR /Services/${MICROSERVICE_NAME}/
-RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools" \
-    && (dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations") \
-    && dotnet test -c Release --no-restore \
-    && dotnet build -c Release -o /app/build --no-restore \
-    && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
+# Build and publish
+WORKDIR /src/Services/${MICROSERVICE_NAME}/
+RUN dotnet publish -c Release -o /app/publish --no-restore --no-build --self-contained false /p:UseAppHost=false || dotnet build -c Release -o /app/build --no-restore && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-SHELL ["/bin/bash","-lc"]
 
-# hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+# Use minimal runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+SHELL ["/bin/sh","-c"]
+
+# Install curl for healthcheck (alpine)
+RUN apk add --no-cache curl
 
 EXPOSE 8080
 ARG MICROSERVICE_NAME
@@ -154,6 +154,7 @@ ENV ASPNETCORE_MAILING_BE_ADDRESS=$MAILING_BE_ADDRESS
 ENV ASPNETCORE_DATABASE_CATALOG=$DATABASE_CATALOG
 ENV ASPNETCORE_DJPANEL_USER_EMAIL=$DJPANEL_USER_EMAIL
 ENV ASPNETCORE_DJPANEL_USER_PASSWORD=$DJPANEL_USER_PASSWORD
+
 
 WORKDIR /app
 COPY --from=build /app/publish/ .

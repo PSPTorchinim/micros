@@ -1,10 +1,10 @@
 # Promtail Dockerfile for DJ Beat Blaster Platform
-FROM grafana/promtail:3.3.2
+FROM grafana/promtail:3.5
 
-# Install curl for healthcheck (Ubuntu-based image)
+
+# Use Alpine-based image if available, install curl with apk
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 # Copy Promtail configuration
 COPY Docker/init/promtail/promtail-config.yml /etc/promtail/config.yml
