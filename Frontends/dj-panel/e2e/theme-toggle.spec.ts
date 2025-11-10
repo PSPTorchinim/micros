@@ -5,8 +5,8 @@ test.describe('Theme Toggle E2E', () => {
     // Wait for page to fully load
     await page.goto('/', { waitUntil: 'networkidle' });
     
-    // Wait for React app to be ready by checking if root element has content
-    await page.waitForSelector('#root > *', { timeout: 30000 });
+    // Wait for React app to be ready by checking if app element has content
+    await page.waitForSelector('#app > *', { timeout: 30000 });
     
     // Wait for the theme to be initialized with increased timeout for slow browsers
     await page.waitForFunction(() => {
@@ -59,7 +59,7 @@ test.describe('Theme Toggle E2E', () => {
     await page.goto('/', { waitUntil: 'networkidle' });
     
     // Wait for React app to be ready
-    await page.waitForSelector('#root > *', { timeout: 30000 });
+    await page.waitForSelector('#app > *', { timeout: 30000 });
     
     // Wait for the theme to be initialized with increased timeout
     await page.waitForFunction(() => {
@@ -84,7 +84,7 @@ test.describe('Theme Toggle E2E', () => {
     await page.reload({ waitUntil: 'networkidle' });
     
     // Wait for React app to be ready after reload
-    await page.waitForSelector('#root > *', { timeout: 30000 });
+    await page.waitForSelector('#app > *', { timeout: 30000 });
     
     // Wait for theme to be restored from localStorage
     await page.waitForFunction(() => {
