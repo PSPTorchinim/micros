@@ -237,6 +237,8 @@ jobs:
       CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
       CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
       CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
+      CMS_ENCRYPTION_KEY: ${{ secrets.CMS_ENCRYPTION_KEY }}
+      CMS_TRANSFER_TOKEN_SALT: ${{ secrets.CMS_TRANSFER_TOKEN_SALT }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
@@ -296,6 +298,8 @@ jobs:
             CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
             CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
             CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
+            CMS_TRANSFER_TOKEN_SALT=${{ secrets.CMS_TRANSFER_TOKEN_SALT }}
+            CMS_ENCRYPTION_KEY=${{ secrets.CMS_ENCRYPTION_KEY }}
             REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
             RABBITMQ_USER=${{ env.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
