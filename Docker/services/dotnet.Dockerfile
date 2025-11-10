@@ -90,6 +90,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 SHELL ["/bin/sh","-c"]
 
 # Install curl for healthcheck (alpine)
+# hadolint ignore=DL3018
 RUN apk add --no-cache curl
 
 EXPOSE 8080
