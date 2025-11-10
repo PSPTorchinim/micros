@@ -3,13 +3,17 @@ import { randomBytes } from "crypto";
 export default ({ env }) => ({
   auth: {
     secret: env("ADMIN_JWT_SECRET"),
+    sessions: {
+      maxRefreshTokenLifespan: "30d", // 30 days
+      maxSessionLifespan: "30d", // 30 days
+    },
   },
   apiToken: {
-    salt: randomBytes(16).toString("base64"),
+    salt: env("API_TOKEN_SALT", randomBytes(16).toString("base64")),
   },
   transfer: {
     token: {
-      salt: randomBytes(16).toString("base64"),
+      salt: env("TRANSFER_TOKEN_SALT", randomBytes(16).toString("base64")),
     },
   },
   secrets: {
