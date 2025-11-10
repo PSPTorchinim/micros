@@ -66,7 +66,7 @@ RUN npm run build \
 USER strapi
 
 # Health check – use custom health endpoint with longer grace period
-HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=15s --start-period=180s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider --timeout=10 http://localhost:1337/api/health || exit 1
 
 EXPOSE 1337

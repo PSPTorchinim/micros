@@ -82,5 +82,10 @@ RUN npm install -g serve@14.2.0
 
 ENV NUGET_PACKAGES=/root/.nuget/packages
 
+# Health check to ensure the server is responding
+# Using curl which is available in node image
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
+
 EXPOSE 3000
 CMD ["serve", "-s", "dist", "-l", "3000"]

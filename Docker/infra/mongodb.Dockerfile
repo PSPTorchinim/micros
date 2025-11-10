@@ -19,5 +19,5 @@ RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 EXPOSE 27017
 
 # Health check with better error handling
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
   CMD mongosh --username="$MONGO_INITDB_ROOT_USERNAME" --password="$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase=admin --eval "try { db.adminCommand('ping').ok } catch(e) { print('Health check failed: ' + e); quit(1) }" --quiet || exit 1
