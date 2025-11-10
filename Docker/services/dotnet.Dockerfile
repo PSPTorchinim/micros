@@ -84,7 +84,7 @@ RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/t
     && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 SHELL ["/bin/bash","-lc"]
 
 # hadolint ignore=DL3008

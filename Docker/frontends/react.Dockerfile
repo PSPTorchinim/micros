@@ -74,11 +74,14 @@ RUN npm run test
 RUN npm run test:e2e || echo "E2E tests require running server, skipping in Docker build"
 
 # Stage 3: Use a lightweight web server for static files
-FROM node:20.19.0 AS runner
+FROM node:20.19.0-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-RUN npm install -g serve@14.2.0
+
+# Install serve and curl for healthcheck
+RUN npm install -g serve@14.2.0 && \
+    apk add --no-cache curl
 
 ENV NUGET_PACKAGES=/root/.nuget/packages
 
