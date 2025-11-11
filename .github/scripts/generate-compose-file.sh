@@ -296,6 +296,47 @@ copy_service_key_if_present() {
   fi
 }
 
+# ---- Transform volumes to direct TrueNAS bind mounts ----
+transform_and_copy_volumes() {
+  local service="$1"
+  local has_volumes; has_volumes=$(yq eval ".services.${service} | has(\"volumes\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  
+  if [[ "$has_volumes" != "true" ]]; then
+    return 0
+  fi
+  
+  echo "    volumes:" >> "$OUTPUT_FILE"
+  
+  local volume_entries; volume_entries=$(yq eval ".services.${service}.volumes[]" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  
+  while IFS= read -r volume_entry; do
+    [[ -z "$volume_entry" || "$volume_entry" == "null" ]] && continue
+    
+    # Check if this is a named volume (e.g., "pg_data:/var/lib/postgresql/data")
+    # or already a bind mount (starts with /)
+    if [[ "$volume_entry" =~ ^/ ]] || [[ "$volume_entry" =~ ^\./ ]] || [[ "$volume_entry" =~ ^\.\. ]]; then
+      # Already a bind mount or relative path, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_info "Keeping bind mount as-is for ${service}: $volume_entry"
+    elif [[ "$volume_entry" =~ ^([a-zA-Z0-9_-]+):(.+)$ ]]; then
+      # Named volume reference (e.g., "pg_data:/var/lib/postgresql/data")
+      local volume_name="${BASH_REMATCH[1]}"
+      local container_path="${BASH_REMATCH[2]}"
+      
+      # Transform to direct TrueNAS bind mount
+      local truenas_path="${BASE_DATA_DIR}/data/${service}/${volume_name}"
+      local transformed="${truenas_path}:${container_path}"
+      
+      echo "      - ${transformed}" >> "$OUTPUT_FILE"
+      log_info "Transformed volume for ${service}: ${volume_name} -> ${truenas_path}"
+    else
+      # Unknown format, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_warn "Unknown volume format for ${service}: $volume_entry"
+    fi
+  done <<< "$volume_entries"
+}
+
 # ======================== Compose Generation ==========================
 log_section "Compose File Generation"
 log_info "Output file: $OUTPUT_FILE"
@@ -350,10 +391,14 @@ while IFS= read -r service; do
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
-  # Preserve critical service blocks, but **intentionally skip networks**
-  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  # Preserve critical service blocks, but **intentionally skip networks and volumes**
+  # Volumes are handled separately with transformation
+  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
+  
+  # Transform and copy volumes with TrueNAS bind mounts
+  transform_and_copy_volumes "$service"
 
   # depends_on (force all to map with condition: service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
@@ -377,42 +422,12 @@ while IFS= read -r service; do
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (volumes mapped to TrueNAS datasets) ==========================
-log_subsection "Generate TrueNAS dataset volume mappings (networks intentionally skipped)"
+# ======================== Top-level sections (networks intentionally skipped) ==========================
+log_subsection "Skipping top-level volumes and networks (using direct bind mounts)"
 log_info "Skipping top-level networks import by design"
-log_info "Converting Docker volumes to TrueNAS dataset bind mounts"
+log_info "Volumes are now direct TrueNAS bind mounts in service definitions"
+# No top-level volumes section needed - all volumes are direct bind mounts in services
 
-# Generate volumes section with TrueNAS dataset paths
-has_volumes=$(yq eval "has(\"volumes\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-if [[ "$has_volumes" == "true" ]]; then
-  echo "volumes:" >> "$OUTPUT_FILE"
-  
-  # Get all volume names from source compose
-  volume_names=$(yq eval '.volumes | keys | .[]' "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-  
-  while IFS= read -r volume_name; do
-    [[ -z "$volume_name" || "$volume_name" == "null" ]] && continue
-    
-    # Map each volume to a TrueNAS dataset path
-    # Format: /mnt/Files/Apps/DJPanel/{Environment}/data/{volume_name}
-    truenas_path="${BASE_DATA_DIR}/data/${volume_name}"
-    
-    log_info "Mapping volume '${volume_name}' to TrueNAS dataset: ${truenas_path}"
-    
-    # Write volume configuration as bind mount
-    cat >> "$OUTPUT_FILE" << EOF
-  ${volume_name}:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${truenas_path}
-EOF
-  done <<< "$volume_names"
-  
-  echo "" >> "$OUTPUT_FILE"
-  log_info "Converted $(echo "$volume_names" | wc -l) volumes to TrueNAS dataset bind mounts"
-fi
 
 # ======================== Summary & Sanity Reports ==========================
 log_section "Generation Summary"

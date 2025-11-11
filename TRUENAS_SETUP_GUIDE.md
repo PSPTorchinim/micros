@@ -172,20 +172,28 @@ ssh admin@truenas-ip
 ls -la /mnt/Files/Apps/DJPanel/Development/data/
 ```
 
-Expected output showing all persistent data directories:
+Expected output showing service-organized data directories:
 ```
-drwxr-xr-x 12 root  wheel  12 Nov 11 10:00 .
-drwxr-xr-x  4 root  wheel   4 Nov 11 10:00 ..
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 grafana_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 loki_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mongo_config
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mongo_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mssql_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 pg_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 promtail_positions
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 rabbitmq_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 redis_data
-drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 strapi_app
+drwxr-xr-x 12 root  wheel  12 Nov 11 12:00 .
+drwxr-xr-x  4 root  wheel   4 Nov 11 12:00 ..
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 grafana
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 loki
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 mongodb_container
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 promtail
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 rabbitmq
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 redis
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 sqlserver
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 strapi
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 strapi_db
+```
+
+Each service directory contains its volume data:
+```bash
+ls -la /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/
+# Shows: mongo_config, mongo_data
+
+ls -la /mnt/Files/Apps/DJPanel/Development/data/strapi_db/
+# Shows: pg_data
 ```
 
 ### Check TrueNAS App
@@ -201,23 +209,31 @@ Should show app details with state: `RUNNING`
 
 ### Check Volume Mounts
 
-The generated Docker Compose file uses bind mounts to TrueNAS datasets instead of Docker volumes. Each volume is mapped to a directory under `/mnt/Files/Apps/DJPanel/{Environment}/data/`.
+The generated Docker Compose file uses **direct bind mounts** to TrueNAS datasets. Each service's volumes are mapped directly to service-specific directories under `/mnt/Files/Apps/DJPanel/{Environment}/data/{service_name}/`.
 
-Example volume configuration:
+Example service configuration:
 ```yaml
-volumes:
-  mongo_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt/Files/Apps/DJPanel/Development/data/mongo_data
+services:
+  strapi_db:
+    image: ghcr.io/.../postgres:tag
+    volumes:
+      - /mnt/Files/Apps/DJPanel/Development/data/strapi_db/pg_data:/var/lib/postgresql/data
+  
+  mongodb_container:
+    image: ghcr.io/.../mongodb:tag
+    volumes:
+      - /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/mongo_data:/data/db
+      - /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/mongo_config:/data/configdb
 ```
+
+**Note:** There is **no top-level `volumes:` section** - all mounts are direct bind mounts in the service definitions.
 
 This ensures:
 - Data persists across container restarts
-- Data is stored on TrueNAS datasets for easy backup and management
+- Data is organized by service for easy management
+- Data is stored on TrueNAS datasets for easy backup
 - Each environment (Development/Staging/Production) has isolated data
+- Simpler configuration without named volume indirection
 
 ## Troubleshooting
 

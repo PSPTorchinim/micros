@@ -364,44 +364,41 @@ jobs:
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
             COMPOSE_FILE="${{ steps.parse_upload.outputs.new_compose_abs }}"
             
-            echo "Extracting volume names from: ${COMPOSE_FILE}"
+            echo "Extracting volume paths from: ${COMPOSE_FILE}"
             
-            # Check if yq is available, if not use alternative parsing
+            # Extract unique volume paths from service bind mounts
+            # Pattern: /mnt/Files/Apps/DJPanel/{ENV}/data/{service}/{volume}:/container/path
             if command -v yq >/dev/null 2>&1; then
-              echo "Using yq to extract volume names"
-              volume_names=$(yq eval '.volumes | keys | .[]' "$COMPOSE_FILE" 2>/dev/null || echo "")
+              echo "Using yq to extract volume paths from service bind mounts"
+              # Get all volume entries from all services
+              volume_paths=$(yq eval '.services.*.volumes[]? | select(. == "*/mnt/Files*")' "$COMPOSE_FILE" 2>/dev/null | \
+                grep -o '/mnt/Files/Apps/DJPanel/[^:]*' | sort -u || echo "")
             else
-              echo "Using awk to extract volume names (yq not available)"
-              # Alternative: extract volume names using awk
-              volume_names=$(awk '
-                /^volumes:$/ { in_volumes=1; next }
-                in_volumes && /^[a-z]/ && !/^volumes:/ { in_volumes=0 }
-                in_volumes && /^  [a-z_]+:$/ {
-                  gsub(/^  /, "")
-                  gsub(/:$/, "")
-                  print
-                }
-              ' "$COMPOSE_FILE" || echo "")
+              echo "Using grep to extract volume paths (yq not available)"
+              # Extract paths that start with /mnt/Files and end before :
+              volume_paths=$(grep -E '^\s+-\s+/mnt/Files/Apps/DJPanel/' "$COMPOSE_FILE" | \
+                sed -E 's/.*-\s+([^:]+):.*/\1/' | sort -u || echo "")
             fi
             
-            if [ -z "$volume_names" ]; then
-              echo "⚠️  No volumes found in compose file, skipping volume directory creation"
+            if [ -z "$volume_paths" ]; then
+              echo "⚠️  No TrueNAS volume paths found in compose file"
+              echo "ℹ️  This might be expected if no services use TrueNAS volumes"
               exit 0
             fi
             
-            echo "Found volumes:"
-            echo "$volume_names"
+            echo "Found volume paths:"
+            echo "$volume_paths"
             echo ""
             
-            # Create subdirectories for each volume
+            # Create directories for each unique path
             volume_count=0
-            for volume in $volume_names; do
-              mkdir -p "${BASE_DIR}/data/${volume}"
-              echo "✅ Created: ${BASE_DIR}/data/${volume}"
+            for vol_path in $volume_paths; do
+              mkdir -p "$vol_path"
+              echo "✅ Created: $vol_path"
               volume_count=$((volume_count + 1))
             done
             
-            # Set permissions
+            # Set permissions on data directory
             chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
             
             echo ""
