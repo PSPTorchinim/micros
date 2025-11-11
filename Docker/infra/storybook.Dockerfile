@@ -1,10 +1,13 @@
 
+# hadolint global ignore=DL3059
 # Stage 1: Build Storybook
 FROM node:25-alpine AS builder
 WORKDIR /app
 COPY Frontends/dj-panel/package.json ./
 COPY Frontends/dj-panel/ ./
-RUN npm ci && npm run build-storybook && npm cache clean --force
+RUN npm ci
+RUN NODE_OPTIONS="--localstorage-file=/tmp/localstorage" npm run build-storybook 
+RUN npm cache clean --force
 
 # Stage 2: Runtime image
 FROM node:25-alpine AS runner

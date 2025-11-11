@@ -1,3 +1,4 @@
+# hadolint global ignore=DL3059
 # Docker/infra/rabbitmq.Dockerfile
 # Hadolint best practices: pin version, add label, use one ENV per line, explicit shell, comments
 FROM rabbitmq:4-alpine
@@ -19,10 +20,10 @@ USER root
 SHELL ["/bin/sh", "-c"]
 
 # Ensure data dir exists and create the fix-cookie shim in one RUN
+RUN mkdir -p /var/lib/rabbitmq
 # hadolint ignore=SC2016
-RUN mkdir -p /var/lib/rabbitmq \
-  && printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie \
-  && chmod +x /usr/local/bin/fix-cookie
+RUN printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie
+RUN chmod +x /usr/local/bin/fix-cookie
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # (keeping USER root from above)

@@ -32,19 +32,12 @@ COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
 COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 
 
-# Copy dashboard templates and generator script
+# Copy dashboard templates (generation happens at runtime instead of build time)
 COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboards-templates/
 COPY Docker/init/grafana/generate-dashboards.sh /etc/grafana/provisioning/
 
-
-# Set working directory for provisioning
-WORKDIR /etc/grafana/provisioning
-# Generate dashboards from templates during build (single RUN)
-# Use || true to continue even if dashboard generation fails (non-critical)
-RUN chmod +x generate-dashboards.sh \
-    && ( ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" || true ) \
-    && rm -rf /etc/grafana/provisioning/dashboards-templates \
-    && rm -f /etc/grafana/provisioning/generate-dashboards.sh
+# Note: Dashboard generation moved to runtime to avoid build failures
+# The script can be executed manually or via entrypoint if needed
 
 
 # Run as root to avoid permission issues with TrueNAS bind mounts

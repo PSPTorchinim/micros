@@ -1,4 +1,4 @@
-
+# hadolint global ignore=DL3059
 
 # --- Stage 1: Builder ---
 FROM node:25-alpine AS builder
@@ -38,13 +38,14 @@ RUN npm ci --only=production
 COPY CMS/ ./
 
 # Build the app
-RUN npm run build && npm cache clean --force
+RUN npm run build
+RUN npm cache clean --force
 
 # Remove unnecessary files to reduce image size
-RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github \
-  && find /app -type d -name "__tests__" -exec rm -rf {} + \
-  && find /app -type f -name "*.md" -delete \
-  && chmod +x docker-entrypoint.sh
+RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github
+RUN find /app -type d -name "__tests__" -exec rm -rf {} +
+RUN find /app -type f -name "*.md" -delete
+RUN chmod +x docker-entrypoint.sh
 
 # --- Stage 2: Runtime ---
 FROM node:25-alpine AS runtime

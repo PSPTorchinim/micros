@@ -1,3 +1,5 @@
+# hadolint global ignore=DL3059
+
 FROM mongo:8
 
 ARG DATABASE_USER_MONGODB
@@ -9,8 +11,8 @@ ENV MONGO_INITDB_DATABASE=admin
 
 
 # Create initialization script directory and mount point directories in one layer
-RUN mkdir -p /docker-entrypoint-initdb.d \
-  && mkdir -p /data/db /data/configdb
+RUN mkdir -p /docker-entrypoint-initdb.d
+RUN mkdir -p /data/db /data/configdb
 
 # Copy initialization script
 COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js

@@ -1,5 +1,6 @@
 
 # Stage 1: Build the application
+# hadolint global ignore=DL3059
 FROM node:25-alpine AS builder
 WORKDIR /app
 
@@ -24,7 +25,9 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 
 COPY Frontends/${MICROFRONTEND_NAME}/package.json ./
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
-RUN npm ci && npm run build && npm cache clean --force
+RUN npm ci
+RUN npm run build
+RUN npm cache clean --force
 
 
 # Stage 2: Runtime image
@@ -51,8 +54,10 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
+
+RUN npm install -g serve@14.2.0
 # hadolint ignore=DL3018
-RUN npm install -g serve@14.2.0 && apk add --no-cache curl
+RUN apk add --no-cache curl
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002
