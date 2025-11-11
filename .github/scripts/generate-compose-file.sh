@@ -351,7 +351,7 @@ while IFS= read -r service; do
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
   # Preserve critical service blocks, but **intentionally skip networks**
-  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
 
