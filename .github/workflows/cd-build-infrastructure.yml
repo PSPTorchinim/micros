@@ -111,13 +111,21 @@ jobs:
             # Create main directories (mkdir -p is idempotent)
             mkdir -p "${BASE_DIR}/Images"
             mkdir -p "${BASE_DIR}/Images/backups"
+            mkdir -p "${BASE_DIR}/data"
 
             echo "✅ Created: ${BASE_DIR}/Images"
             echo "✅ Created: ${BASE_DIR}/Images/backups"
+            echo "✅ Created: ${BASE_DIR}/data"
+
+            # Create data subdirectories for each volume
+            for volume in mongo_config mongo_data mssql_data pg_data rabbitmq_data redis_data strapi_app loki_data promtail_positions grafana_data; do
+              mkdir -p "${BASE_DIR}/data/${volume}"
+              echo "✅ Created: ${BASE_DIR}/data/${volume}"
+            done
 
             # Set permissions on newly created directories (non-fatal)
-            chmod 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
-            chmod 755 "${BASE_DIR}/Images/backups" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images/backups (may already exist with correct permissions)"
+            chmod -R 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
+            chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data (may already exist with correct permissions)"
 
             echo "✅ Directory setup verified"
             echo "=========================================="

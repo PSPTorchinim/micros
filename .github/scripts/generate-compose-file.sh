@@ -389,17 +389,42 @@ while IFS= read -r service; do
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (volumes only; networks skipped) ==========================
-log_subsection "Copy top-level volumes (networks intentionally skipped)"
+# ======================== Top-level sections (volumes mapped to TrueNAS datasets) ==========================
+log_subsection "Generate TrueNAS dataset volume mappings (networks intentionally skipped)"
 log_info "Skipping top-level networks import by design"
-for top in volumes; do
-  has=$(yq eval "has(\"$top\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-  if [[ "$has" == "true" ]]; then
-    echo "$top:" >> "$OUTPUT_FILE"
-    yq eval ".$top" "$SOURCE_COMPOSE" | sed 's/^/  /' >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
-  fi
-done
+log_info "Converting Docker volumes to TrueNAS dataset bind mounts"
+
+# Generate volumes section with TrueNAS dataset paths
+has_volumes=$(yq eval "has(\"volumes\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+if [[ "$has_volumes" == "true" ]]; then
+  echo "volumes:" >> "$OUTPUT_FILE"
+  
+  # Get all volume names from source compose
+  volume_names=$(yq eval '.volumes | keys | .[]' "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  
+  while IFS= read -r volume_name; do
+    [[ -z "$volume_name" || "$volume_name" == "null" ]] && continue
+    
+    # Map each volume to a TrueNAS dataset path
+    # Format: /mnt/Files/Apps/DJPanel/{Environment}/data/{volume_name}
+    truenas_path="${BASE_DATA_DIR}/data/${volume_name}"
+    
+    log_info "Mapping volume '${volume_name}' to TrueNAS dataset: ${truenas_path}"
+    
+    # Write volume configuration as bind mount
+    cat >> "$OUTPUT_FILE" << EOF
+  ${volume_name}:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${truenas_path}
+EOF
+  done <<< "$volume_names"
+  
+  echo "" >> "$OUTPUT_FILE"
+  log_info "Converted $(echo "$volume_names" | wc -l) volumes to TrueNAS dataset bind mounts"
+fi
 
 # ======================== Summary & Sanity Reports ==========================
 log_section "Generation Summary"

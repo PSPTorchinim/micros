@@ -125,13 +125,21 @@ If you prefer to set up directories manually before the first deployment:
 # SSH to TrueNAS
 ssh admin@truenas-ip
 
-# Create directory structure
+# Create directory structure for compose files and backups
 mkdir -p /mnt/Files/Apps/DJPanel/Development/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Development/Images/backups
 mkdir -p /mnt/Files/Apps/DJPanel/Staging/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Staging/Images/backups
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images/backups
+
+# Create directory structure for persistent data volumes
+for env in Development Staging Production; do
+  mkdir -p /mnt/Files/Apps/DJPanel/${env}/data
+  for volume in mongo_config mongo_data mssql_data pg_data rabbitmq_data redis_data strapi_app loki_data promtail_positions grafana_data; do
+    mkdir -p /mnt/Files/Apps/DJPanel/${env}/data/${volume}
+  done
+done
 
 # Set permissions
 chmod -R 755 /mnt/Files/Apps/DJPanel
@@ -146,14 +154,38 @@ ls -la /mnt/Files/Apps/DJPanel/
 
 ```bash
 ssh admin@truenas-ip
-ls -la /mnt/Files/Apps/DJPanel/Development/Images/
+ls -la /mnt/Files/Apps/DJPanel/Development/
 ```
 
 Expected output:
 ```
-drwxr-xr-x  3 root  wheel   3 Nov  2 10:00 .
-drwxr-xr-x  3 root  wheel   3 Nov  2 10:00 ..
-drwxr-xr-x  2 root  wheel   2 Nov  2 10:00 backups
+drwxr-xr-x  4 root  wheel   4 Nov 11 10:00 .
+drwxr-xr-x  3 root  wheel   3 Nov 11 10:00 ..
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 Images
+drwxr-xr-x 12 root  wheel  12 Nov 11 10:00 data
+```
+
+### Check Data Volumes
+
+```bash
+ssh admin@truenas-ip
+ls -la /mnt/Files/Apps/DJPanel/Development/data/
+```
+
+Expected output showing all persistent data directories:
+```
+drwxr-xr-x 12 root  wheel  12 Nov 11 10:00 .
+drwxr-xr-x  4 root  wheel   4 Nov 11 10:00 ..
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 grafana_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 loki_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mongo_config
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mongo_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 mssql_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 pg_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 promtail_positions
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 rabbitmq_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 redis_data
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 strapi_app
 ```
 
 ### Check TrueNAS App
@@ -167,19 +199,25 @@ midclt call app.query '[["name","=","dj-panel-dev"]]'
 
 Should show app details with state: `RUNNING`
 
-### Check Docker Volumes
+### Check Volume Mounts
 
-```bash
-ssh admin@truenas-ip
-docker volume ls | grep dj
+The generated Docker Compose file uses bind mounts to TrueNAS datasets instead of Docker volumes. Each volume is mapped to a directory under `/mnt/Files/Apps/DJPanel/{Environment}/data/`.
+
+Example volume configuration:
+```yaml
+volumes:
+  mongo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/Files/Apps/DJPanel/Development/data/mongo_data
 ```
 
-Should show volumes for databases:
-- `djpanel_mongo_data`
-- `djpanel_mssql_data`
-- `djpanel_pg_data`
-- `djpanel_redis_data`
-- `djpanel_rabbitmq_data`
+This ensures:
+- Data persists across container restarts
+- Data is stored on TrueNAS datasets for easy backup and management
+- Each environment (Development/Staging/Production) has isolated data
 
 ## Troubleshooting
 
