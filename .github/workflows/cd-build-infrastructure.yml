@@ -393,16 +393,36 @@ jobs:
             # Create directories for each unique path
             volume_count=0
             for vol_path in $volume_paths; do
-              mkdir -p "$vol_path"
+              # Create directory if it doesn't exist
+              if [ ! -d "$vol_path" ]; then
+                mkdir -p "$vol_path"
+                echo "📁 Created: $vol_path"
+              else
+                echo "ℹ️  Exists: $vol_path"
+              fi
+              
               # Set permissions to allow container users to write
-              # Containers may run as non-root users (e.g., mssql UID 10001)
-              chmod 777 "$vol_path" 2>/dev/null || echo "⚠️  Could not set permissions on $vol_path"
-              echo "✅ Created: $vol_path"
+              # Containers may run as non-root users (e.g., mssql UID 10001, loki, etc.)
+              # Using 777 to ensure any container user can read/write
+              chmod -R 777 "$vol_path" 2>/dev/null || {
+                echo "⚠️  Could not set permissions on $vol_path, trying without -R"
+                chmod 777 "$vol_path" 2>/dev/null || echo "❌ Failed to set permissions on $vol_path"
+              }
+              
+              # Verify permissions
+              actual_perms=$(stat -c '%a' "$vol_path" 2>/dev/null || stat -f '%Lp' "$vol_path" 2>/dev/null || echo "unknown")
+              if [ "$actual_perms" = "777" ]; then
+                echo "✅ Permissions: $vol_path (777)"
+              else
+                echo "⚠️  Permissions: $vol_path ($actual_perms) - expected 777"
+              fi
+              
               volume_count=$((volume_count + 1))
             done
             
-            # Ensure parent data directory also has correct permissions
+            # Ensure parent directories have execute permissions for traversal
             chmod 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
+            chmod 755 "${BASE_DIR}" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}"
             
             echo ""
             echo "=========================================="
