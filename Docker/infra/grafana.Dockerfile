@@ -46,7 +46,8 @@ RUN cd /etc/grafana/provisioning \
     && rm -f /etc/grafana/provisioning/generate-dashboards.sh
 
 
-USER grafana
+# Run as root to avoid permission issues with TrueNAS bind mounts
+USER root
 
 # Expose Grafana port
 EXPOSE 3001

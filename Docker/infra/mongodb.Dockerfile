@@ -15,6 +15,9 @@ RUN mkdir -p /docker-entrypoint-initdb.d
 COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js
 RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 
+# Run as root to avoid permission issues with TrueNAS bind mounts
+USER root
+
 EXPOSE 27017
 
 # Health check with better error handling

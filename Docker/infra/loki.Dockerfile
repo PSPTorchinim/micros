@@ -4,6 +4,9 @@ FROM grafana/loki:3.5
 # Copy only Loki configuration
 COPY Docker/init/loki/loki-config.yml /etc/loki/local-config.yaml
 
+# Run as root to avoid permission issues with TrueNAS bind mounts
+USER root
+
 EXPOSE 3100
 
 # Use wget which is available in the busybox-based image

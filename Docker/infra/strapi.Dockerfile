@@ -89,11 +89,8 @@ RUN apk add --no-cache libc6-compat vips wget netcat-openbsd
 # Copy built app and node_modules from builder
 COPY --from=builder /app .
 
-# Create non-root user and set permissions
-RUN addgroup -g 1001 -S strapi \
-    && adduser -S strapi -u 1001 \
-    && chown -R strapi:strapi /app
-USER strapi
+# Run as root to avoid permission issues with TrueNAS bind mounts
+USER root
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=15s --start-period=180s --retries=3 \

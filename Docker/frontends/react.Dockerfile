@@ -53,6 +53,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 # hadolint ignore=DL3018
 RUN npm install -g serve@14.2.0 && apk add --no-cache curl
+
+# Run as root to avoid permission issues with TrueNAS bind mounts
+USER root
+
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 CMD curl -f http://localhost:3000 || exit 1
 EXPOSE 3000
 CMD ["serve", "-s", "dist", "-l", "3000"]

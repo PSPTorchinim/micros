@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 # Copy Promtail configuration
 COPY Docker/init/promtail/promtail-config.yml /etc/promtail/config.yml
 
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# (keeping USER root from above)
+
 EXPOSE 9080
 
 # Robust healthcheck using the readiness endpoint

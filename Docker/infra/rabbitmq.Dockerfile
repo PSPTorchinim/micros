@@ -24,8 +24,8 @@ RUN mkdir -p /var/lib/rabbitmq \
   && printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chown rabbitmq:rabbitmq "$COOKIE" || true\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie \
   && chmod +x /usr/local/bin/fix-cookie
 
-# Back to the non-root user used by the official image
-USER rabbitmq
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# (keeping USER root from above)
 
 # Do NOT bake secrets into the image. Provide at runtime:
 #   - RABBITMQ_ERLANG_COOKIE
