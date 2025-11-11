@@ -36,10 +36,13 @@ COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboards-templates/
 COPY Docker/init/grafana/generate-dashboards.sh /etc/grafana/provisioning/
 
+
+# Set working directory for provisioning
+WORKDIR /etc/grafana/provisioning
 # Generate dashboards from templates during build (single RUN)
-RUN cd /etc/grafana/provisioning \
-    && chmod +x generate-dashboards.sh \
-    && ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" \
+# Use || true to continue even if dashboard generation fails (non-critical)
+RUN chmod +x generate-dashboards.sh \
+    && ( ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" || true ) \
     && rm -rf /etc/grafana/provisioning/dashboards-templates \
     && rm -f /etc/grafana/provisioning/generate-dashboards.sh
 

@@ -13,16 +13,23 @@ on:
 
 jobs:
   determine_environment:
-    runs-on: ubuntu-latest
     name: Determine Environment
+    runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+
+      - name: Compute env slug
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
   determine_docker_tag:
     name: Determine Docker Tag
@@ -86,7 +93,7 @@ jobs:
 
   validate_dockerfiles:
     name: Validate Dockerfiles
-    needs: determine_environment
+    needs: [determine_environment, determine_docker_tag]
     runs-on: ubuntu-latest
     environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 10
@@ -113,23 +120,58 @@ jobs:
       GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
       GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
       GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
+      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
+      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
+      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
+      REDIS_HOST: ${{ vars.REDIS_HOST }}
+      REDIS_PORT: ${{ vars.REDIS_PORT }}
+      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
+      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
+      SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      IDENTITY_BE_ADDRESS: ${{ vars.IDENTITY_BE_ADDRESS }}
+      MUSIC_BE_ADDRESS: ${{ vars.MUSIC_BE_ADDRESS }}
+      GEAR_BE_ADDRESS: ${{ vars.GEAR_BE_ADDRESS }}
+      DOCUMENTS_BE_ADDRESS: ${{ vars.DOCUMENTS_BE_ADDRESS }}
+      BRAND_BE_ADDRESS: ${{ vars.BRAND_BE_ADDRESS }}
+      PARTY_BE_ADDRESS: ${{ vars.PARTY_BE_ADDRESS }}
+      MAILING_BE_ADDRESS: ${{ vars.MAILING_BE_ADDRESS }}
+      DATABASE_CATALOG: ${{ matrix.image.name }}
+      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
+      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
+      API_GATEWAY: ${{ vars.API_GATEWAY }}
+      API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+      CMS_HOST: ${{ vars.CMS_HOST }}
+      CMS_PORT: ${{ vars.CMS_PORT }}
+      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
+      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
     strategy:
       matrix:
-        file:
-          [
-            "services/dotnet",
-            "frontends/react",
-            "infra/mongodb",
-            "infra/postgres",
-            "infra/redis",
-            "infra/rabbitmq",
-            "infra/sqlserver",
-            "infra/strapi",
-            "infra/storybook",
-            "infra/grafana",
-            "infra/promtail",
-            "infra/loki",
-          ]
+        image:
+          - { name: "mongodb", service_type: 'infra', dockerfile: "Docker/infra/mongodb.Dockerfile" }
+          - { name: "postgres", service_type: 'infra', dockerfile: "Docker/infra/postgres.Dockerfile" }
+          - { name: "redis", service_type: 'infra', dockerfile: "Docker/infra/redis.Dockerfile" }
+          - { name: "rabbitmq", service_type: 'infra', dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
+          - {
+              name: "sqlserver",
+              service_type: 'infra',
+              dockerfile: "Docker/infra/sqlserver.Dockerfile",
+            }
+          - { name: "strapi", service_type: 'infra', dockerfile: "Docker/infra/strapi.Dockerfile" }
+          - { name: "loki", service_type: 'infra', dockerfile: "Docker/infra/loki.Dockerfile" }
+          - { name: "promtail", service_type: 'infra', dockerfile: "Docker/infra/promtail.Dockerfile" }
+          - { name: "grafana", service_type: 'infra', dockerfile: "Docker/infra/grafana.Dockerfile" }
+          - {
+              name: "storybook",
+              service_type: 'infra',
+              dockerfile: "Docker/infra/storybook.Dockerfile",
+            }
+          - { name: "dj-panel", service_type: 'frontends', dockerfile: "Docker/frontends/react.Dockerfile" }
+          - { name: "CompanyAPI", service_type: 'services', dockerfile: "Docker/services/dotnet.Dockerfile" } 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -137,19 +179,18 @@ jobs:
       - name: Hadolint Dockerfiles
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Docker/${{ matrix.file }}.Dockerfile
+          dockerfile: ${{ matrix.image.dockerfile }}
 
       - name: Build and Push Docker Image
         uses: ./.github/templates/docker-build-push
         with:
           service-name: ${{ matrix.image.name }}
-          service-type: infra
+          service-type: ${{ matrix.image.service_type }}
           docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
           latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository-owner: ${{ github.repository_owner }}
-          # Pass ALL possible args; Docker will ignore ones not declared via ARG
           build-args: |
             DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
             DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
@@ -172,6 +213,43 @@ jobs:
             GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
             PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
             REPLICA_INDEX=1
+            MICROSERVICE_NAME=${{ matrix.image.name }}
+            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
+            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
+            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
+            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            REDIS_HOST=${{ env.REDIS_HOST }}
+            REDIS_PORT=${{ env.REDIS_PORT }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
+            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            SECURE_KEY=${{ env.SECURE_KEY }}
+            JWT_KEY=${{ env.JWT_KEY }}
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            IDENTITY_BE_ADDRESS=${{ env.IDENTITY_BE_ADDRESS }}
+            MUSIC_BE_ADDRESS=${{ env.MUSIC_BE_ADDRESS }}
+            GEAR_BE_ADDRESS=${{ env.GEAR_BE_ADDRESS }}
+            DOCUMENTS_BE_ADDRESS=${{ env.DOCUMENTS_BE_ADDRESS }}
+            BRAND_BE_ADDRESS=${{ env.BRAND_BE_ADDRESS }}
+            PARTY_BE_ADDRESS=${{ env.PARTY_BE_ADDRESS }}
+            MAILING_BE_ADDRESS=${{ env.MAILING_BE_ADDRESS }}
+            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
+            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
+            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
+            API_GATEWAY=${{ env.API_GATEWAY }}
+            SECURE_KEY=${{ env.API_SECURE_KEY }}
+            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
+            CMS_HOST=${{ env.CMS_HOST }}
+            CMS_PORT=${{ env.CMS_PORT }}
+            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
+            CMS_API_PATH=${{ env.CMS_API_PATH }}
 
   validate_composers:
     name: Validate Docker Compose files

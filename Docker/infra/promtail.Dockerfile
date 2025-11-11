@@ -3,15 +3,13 @@ FROM grafana/promtail:3.5
 
 
 # Install curl for healthcheck (Debian/Ubuntu-based image)
+# hadolint ignore=DL3002
 USER root
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Copy Promtail configuration
 COPY Docker/init/promtail/promtail-config.yml /etc/promtail/config.yml
-
-# Run as root to avoid permission issues with TrueNAS bind mounts
-# hadolint ignore=DL3002
-# (keeping USER root from above)
 
 EXPOSE 9080
 

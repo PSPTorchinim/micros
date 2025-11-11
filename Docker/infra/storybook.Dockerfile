@@ -10,6 +10,7 @@ RUN npm ci && npm run build-storybook && npm cache clean --force
 FROM node:25-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/storybook-static ./storybook-static
+# hadolint ignore=DL3018
 RUN npm install -g serve@14.2.0 && apk add --no-cache wget
 
 # Run as root to avoid permission issues with TrueNAS bind mounts

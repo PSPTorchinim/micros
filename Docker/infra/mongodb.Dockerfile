@@ -7,16 +7,16 @@ ENV MONGO_INITDB_ROOT_USERNAME=$DATABASE_USER_MONGODB
 ENV MONGO_INITDB_ROOT_PASSWORD=$DATABASE_PASSWORD_MONGODB
 ENV MONGO_INITDB_DATABASE=admin
 
-# Create initialization script directory
-RUN mkdir -p /docker-entrypoint-initdb.d
 
+# Create initialization script directory and mount point directories in one layer
+RUN mkdir -p /docker-entrypoint-initdb.d \
+  && mkdir -p /data/db /data/configdb
 
-# Copy only the initialization script and set permissions in one layer
+# Copy initialization script
 COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js
-RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 
-# Create mount point directories for direct bind mounts
-RUN mkdir -p /data/db /data/configdb
+# Set permissions for initialization script
+RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002
