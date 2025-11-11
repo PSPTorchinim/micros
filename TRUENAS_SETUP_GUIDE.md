@@ -108,14 +108,17 @@ The workflow will automatically:
 
 1. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/Images` directory
 2. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/Images/backups` directory
-3. ✅ Set proper permissions (755)
-4. ✅ Generate Docker Compose file
-5. ✅ Upload compose to TrueNAS
-6. ✅ Create TrueNAS app: `dj-panel-{env-slug}`
-7. ✅ Start the application
-8. ✅ Wait for health checks
-9. ✅ Update Cloudflare tunnel
-10. ✅ Update DNS records
+3. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/data` directory
+4. ✅ Set proper permissions (755)
+5. ✅ Generate Docker Compose file
+6. ✅ Upload compose to TrueNAS
+7. ✅ Extract volume names from compose and create volume subdirectories
+8. ✅ Create TrueNAS app: `dj-panel-{env-slug}`
+9. ✅ Start the application
+10. ✅ Wait for health checks
+11. ✅ Update Cloudflare tunnel
+12. ✅ Update DNS records
+
 
 ## Manual Setup (If Needed)
 
@@ -133,12 +136,9 @@ mkdir -p /mnt/Files/Apps/DJPanel/Staging/Images/backups
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images/backups
 
-# Create directory structure for persistent data volumes
+# Create base data directory (volume subdirectories are created automatically during deployment)
 for env in Development Staging Production; do
   mkdir -p /mnt/Files/Apps/DJPanel/${env}/data
-  for volume in mongo_config mongo_data mssql_data pg_data rabbitmq_data redis_data strapi_app loki_data promtail_positions grafana_data; do
-    mkdir -p /mnt/Files/Apps/DJPanel/${env}/data/${volume}
-  done
 done
 
 # Set permissions

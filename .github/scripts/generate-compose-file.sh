@@ -351,21 +351,9 @@ while IFS= read -r service; do
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
   # Preserve critical service blocks, but **intentionally skip networks**
-  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
-
-  # Inject PGDATA iff service mounts /var/lib/postgresql/data and doesn't already define PGDATA
-  pg_wanted=$(yq eval ".services.${service}.volumes[]? | select(test(\":/var/lib/postgresql/data(:(ro|rw))?$\"))" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-  if [[ -n "$pg_wanted" ]]; then
-    has_env=$(yq eval ".services.${service} | has(\"environment\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-    if [[ "$has_env" != "true" ]] || [[ "$(yq -r ".services.${service}.environment.PGDATA // \"\"" "$SOURCE_COMPOSE")" == "" ]]; then
-      echo "    environment:" >> "$OUTPUT_FILE"
-      [[ "$has_env" == "true" ]] && yq eval ".services.${service}.environment" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
-      echo "      PGDATA: /var/lib/postgresql/data" >> "$OUTPUT_FILE"
-      log_info "Injected PGDATA for ${service}"
-    fi
-  fi
 
   # depends_on (force all to map with condition: service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")

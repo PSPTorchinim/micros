@@ -106,7 +106,7 @@ jobs:
             ENV="${{ needs.determine_environment.outputs.current_env }}"
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
 
-            echo "Setting up directories for environment: ${ENV}"
+            echo "Setting up base directories for environment: ${ENV}"
 
             # Create main directories (mkdir -p is idempotent)
             mkdir -p "${BASE_DIR}/Images"
@@ -117,15 +117,11 @@ jobs:
             echo "✅ Created: ${BASE_DIR}/Images/backups"
             echo "✅ Created: ${BASE_DIR}/data"
 
-            # Create data subdirectories for each volume
-            for volume in mongo_config mongo_data mssql_data pg_data rabbitmq_data redis_data strapi_app loki_data promtail_positions grafana_data; do
-              mkdir -p "${BASE_DIR}/data/${volume}"
-              echo "✅ Created: ${BASE_DIR}/data/${volume}"
-            done
-
             # Set permissions on newly created directories (non-fatal)
             chmod -R 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
             chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data (may already exist with correct permissions)"
+
+            echo "ℹ️  Volume subdirectories will be created after compose file generation"
 
             echo "✅ Directory setup verified"
             echo "=========================================="
@@ -347,6 +343,71 @@ jobs:
           
           echo "✅ Compose uploaded to: $abs"
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
+
+      - name: Create volume directories from generated compose
+        id: create_volume_dirs
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔧 Creating Volume Directories"
+            echo "=========================================="
+            
+            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+            COMPOSE_FILE="${{ steps.parse_upload.outputs.new_compose_abs }}"
+            
+            echo "Extracting volume names from: ${COMPOSE_FILE}"
+            
+            # Check if yq is available, if not use alternative parsing
+            if command -v yq >/dev/null 2>&1; then
+              echo "Using yq to extract volume names"
+              volume_names=$(yq eval '.volumes | keys | .[]' "$COMPOSE_FILE" 2>/dev/null || echo "")
+            else
+              echo "Using awk to extract volume names (yq not available)"
+              # Alternative: extract volume names using awk
+              volume_names=$(awk '
+                /^volumes:$/ { in_volumes=1; next }
+                in_volumes && /^[a-z]/ && !/^volumes:/ { in_volumes=0 }
+                in_volumes && /^  [a-z_]+:$/ {
+                  gsub(/^  /, "")
+                  gsub(/:$/, "")
+                  print
+                }
+              ' "$COMPOSE_FILE" || echo "")
+            fi
+            
+            if [ -z "$volume_names" ]; then
+              echo "⚠️  No volumes found in compose file, skipping volume directory creation"
+              exit 0
+            fi
+            
+            echo "Found volumes:"
+            echo "$volume_names"
+            echo ""
+            
+            # Create subdirectories for each volume
+            volume_count=0
+            for volume in $volume_names; do
+              mkdir -p "${BASE_DIR}/data/${volume}"
+              echo "✅ Created: ${BASE_DIR}/data/${volume}"
+              volume_count=$((volume_count + 1))
+            done
+            
+            # Set permissions
+            chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ Created ${volume_count} volume directories"
+            echo "=========================================="
 
   enable_maintenance_page:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
