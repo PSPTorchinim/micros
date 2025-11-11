@@ -25,10 +25,7 @@ ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
 ENV GF_SERVER_HTTP_PORT=3001
 
 # Create directories for provisioning and mount points
-
-USER root
-RUN mkdir -p /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /var/lib/grafana \
-    && chown -R grafana:grafana /var/lib/grafana
+RUN mkdir -p /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /var/lib/grafana
 
 # Copy datasource configuration
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/

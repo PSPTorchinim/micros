@@ -16,7 +16,7 @@ COPY Docker/init/mongo-init.js /docker-entrypoint-initdb.d/01-init-user.js
 RUN chmod +r /docker-entrypoint-initdb.d/01-init-user.js
 
 # Create mount point directories for direct bind mounts
-RUN mkdir -p /data/db /data/configdb && chown -R mongodb:mongodb /data
+RUN mkdir -p /data/db /data/configdb
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002

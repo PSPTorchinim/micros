@@ -2,8 +2,7 @@ FROM grafana/loki:3.5
 
 
 # Create mount point directory for direct bind mounts
-USER root
-RUN mkdir -p /loki && chown -R 10001:10001 /loki
+RUN mkdir -p /loki
 
 # Copy only Loki configuration
 COPY Docker/init/loki/loki-config.yml /etc/loki/local-config.yaml

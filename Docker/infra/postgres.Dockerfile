@@ -11,7 +11,7 @@ ENV POSTGRES_USER=$DATABASE_USERNAME_POSTGRES
 ENV POSTGRES_PASSWORD=$DATABASE_PASSWORD_POSTGRES
 
 # Create mount point directory for direct bind mounts
-RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
+RUN mkdir -p /var/lib/postgresql/data
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002
