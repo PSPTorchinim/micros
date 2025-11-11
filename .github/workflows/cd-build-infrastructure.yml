@@ -394,12 +394,15 @@ jobs:
             volume_count=0
             for vol_path in $volume_paths; do
               mkdir -p "$vol_path"
+              # Set permissions to allow container users to write
+              # Containers may run as non-root users (e.g., mssql UID 10001)
+              chmod 777 "$vol_path" 2>/dev/null || echo "⚠️  Could not set permissions on $vol_path"
               echo "✅ Created: $vol_path"
               volume_count=$((volume_count + 1))
             done
             
-            # Set permissions on data directory
-            chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
+            # Ensure parent data directory also has correct permissions
+            chmod 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
             
             echo ""
             echo "=========================================="

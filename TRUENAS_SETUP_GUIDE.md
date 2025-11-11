@@ -142,7 +142,10 @@ for env in Development Staging Production; do
 done
 
 # Set permissions
+# Base directories can be 755, but volume directories need 777 for container users
 chmod -R 755 /mnt/Files/Apps/DJPanel
+# Note: Volume subdirectories are created automatically with 777 permissions during deployment
+# to allow non-root container users (e.g., SQL Server's mssql user) to write data
 
 # Verify
 ls -la /mnt/Files/Apps/DJPanel/
