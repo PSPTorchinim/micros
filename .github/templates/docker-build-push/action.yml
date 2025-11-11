@@ -25,6 +25,10 @@ inputs:
   repository-owner:
     description: GitHub repository owner
     required: true
+  push:
+    description: Whether to push the built image
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
