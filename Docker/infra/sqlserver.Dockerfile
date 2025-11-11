@@ -5,6 +5,9 @@ ARG DATABASE_PASSWORD_SQLSERVER
 ENV ACCEPT_EULA=Y
 ENV MSSQL_SA_PASSWORD=$DATABASE_PASSWORD_SQLSERVER
 
+# Create mount point directory for direct bind mounts
+RUN mkdir -p /var/opt/mssql && chown -R mssql:0 /var/opt/mssql
+
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002
 USER root

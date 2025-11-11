@@ -4,6 +4,9 @@ ARG REDIS_PASSWORD
 
 ENV REDIS_PASSWORD=$REDIS_PASSWORD
 
+# Create mount point directory for direct bind mounts
+RUN mkdir -p /data && chown -R redis:redis /data
+
 # Run as root to avoid permission issues with TrueNAS bind mounts
 # hadolint ignore=DL3002
 USER root
