@@ -1,0 +1,6 @@
+# Hadolint configuration for Docker linting
+# Ignores DL3002 warning about USER root being the last user
+# This is intentional for TrueNAS bind mount compatibility
+
+ignored:
+  - DL3002
