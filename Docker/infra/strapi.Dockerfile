@@ -90,6 +90,7 @@ RUN apk add --no-cache libc6-compat vips wget netcat-openbsd
 COPY --from=builder /app .
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 # Health check

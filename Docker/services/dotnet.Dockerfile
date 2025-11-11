@@ -77,6 +77,7 @@ ENV APP_EXE=${MICROSERVICE_NAME}.dll \
 	DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 ENTRYPOINT ["sh", "-c", "dotnet $APP_EXE"]

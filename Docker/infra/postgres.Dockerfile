@@ -11,6 +11,7 @@ ENV POSTGRES_USER=$DATABASE_USERNAME_POSTGRES
 ENV POSTGRES_PASSWORD=$DATABASE_PASSWORD_POSTGRES
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 # A more patient healthcheck:

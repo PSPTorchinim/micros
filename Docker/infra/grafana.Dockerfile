@@ -47,6 +47,7 @@ RUN cd /etc/grafana/provisioning \
 
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 # Expose Grafana port

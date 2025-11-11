@@ -13,6 +13,7 @@ COPY --from=builder /app/storybook-static ./storybook-static
 RUN npm install -g serve@14.2.0 && apk add --no-cache wget
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 EXPOSE 6006

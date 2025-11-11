@@ -5,6 +5,7 @@ FROM grafana/loki:3.5
 COPY Docker/init/loki/loki-config.yml /etc/loki/local-config.yaml
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 EXPOSE 3100

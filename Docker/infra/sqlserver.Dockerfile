@@ -6,6 +6,7 @@ ENV ACCEPT_EULA=Y
 ENV MSSQL_SA_PASSWORD=$DATABASE_PASSWORD_SQLSERVER
 
 # Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
 USER root
 
 HEALTHCHECK --interval=10s --timeout=15s --retries=10 CMD /opt/mssql-tools18/bin/sqlcmd -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1

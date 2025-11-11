@@ -12,6 +12,7 @@ ENV RABBITMQ_DEFAULT_USER=$RABBITMQ_USER
 ENV RABBITMQ_DEFAULT_PASS=$RABBITMQ_PASSWORD
 
 # Use root to set up data dir and a tiny runtime fix script
+# hadolint ignore=DL3002
 USER root
 
 # Use explicit shell for shell form commands (DL4000)
