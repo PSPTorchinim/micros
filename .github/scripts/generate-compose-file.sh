@@ -400,6 +400,19 @@ while IFS= read -r service; do
   # Transform and copy volumes with TrueNAS bind mounts
   transform_and_copy_volumes "$service"
 
+  # Force root user for infrastructure services with volume permission issues
+  # Services like sqlserver, rabbitmq, loki, grafana often have permission issues
+  # when running as non-root with bind mounts
+  has_user=$(yq eval ".services.${service} | has(\"user\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  if [[ "$has_user" == "false" ]]; then
+    case "$service" in
+      sqlserver|rabbitmq|loki|grafana|mongodb_container)
+        echo "    user: \"0:0\"" >> "$OUTPUT_FILE"
+        log_info "Set user to root (0:0) for ${service} to avoid bind mount permission issues"
+        ;;
+    esac
+  fi
+
   # depends_on (force all to map with condition: service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
   if [[ "$has_depends_on" == "true" ]]; then
