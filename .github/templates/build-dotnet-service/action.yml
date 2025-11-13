@@ -20,8 +20,10 @@ runs:
       run: dotnet --version
       shell: bash
 
-    - name: Update dotnet-ef Tool
-      run: dotnet tool update --global dotnet-ef
+    - name: Install/Update dotnet-ef Tool
+      run: |
+        # Try to install first, if it exists, update will be attempted
+        dotnet tool install --global dotnet-ef --ignore-failed-sources || dotnet tool update --global dotnet-ef --ignore-failed-sources || true
       shell: bash
 
     - name: Restore Dependencies

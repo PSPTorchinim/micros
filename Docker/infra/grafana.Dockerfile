@@ -1,6 +1,7 @@
 # Grafana Dockerfile for DJ Beat Blaster Platform
 # Provides visualization dashboard for logs and metrics
 
+# hadolint global ignore=DL3059
 
 # Use official Grafana image (already minimal), but combine RUN commands for efficiency
 FROM grafana/grafana:12.2.1
@@ -25,26 +26,23 @@ ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
 ENV GF_SERVER_HTTP_PORT=3001
 
 # Create directories for provisioning
-
 USER root
-RUN mkdir -p /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards
+RUN mkdir -p /etc/grafana/provisioning/datasources
+RUN mkdir -p /etc/grafana/provisioning/dashboards
 
 # Copy datasource configuration
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
 COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 
-
 # Copy dashboard templates and generator script
 COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboards-templates/
 COPY Docker/init/grafana/generate-dashboards.sh /etc/grafana/provisioning/
 
-# Generate dashboards from templates during build (single RUN)
-RUN cd /etc/grafana/provisioning \
-    && chmod +x generate-dashboards.sh \
-    && ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" \
-    && rm -rf /etc/grafana/provisioning/dashboards-templates \
-    && rm -f /etc/grafana/provisioning/generate-dashboards.sh
-
+# Generate dashboards from templates during build
+RUN cd /etc/grafana/provisioning
+RUN chmod +x generate-dashboards.sh
+RUN ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}"
+RUN echo "Generated dashboards for project: ${PROJECT_NAME}, replica: ${REPLICA_INDEX}"
 
 USER grafana
 

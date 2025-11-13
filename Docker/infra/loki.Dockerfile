@@ -1,8 +1,15 @@
 FROM grafana/loki:3.5
 
 
+# Create mount point directory for direct bind mounts
+RUN mkdir -p /loki
+
 # Copy only Loki configuration
 COPY Docker/init/loki/loki-config.yml /etc/loki/local-config.yaml
+
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
+USER root
 
 EXPOSE 3100
 

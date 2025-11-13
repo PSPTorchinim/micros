@@ -106,18 +106,22 @@ jobs:
             ENV="${{ needs.determine_environment.outputs.current_env }}"
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
 
-            echo "Setting up directories for environment: ${ENV}"
+            echo "Setting up base directories for environment: ${ENV}"
 
             # Create main directories (mkdir -p is idempotent)
             mkdir -p "${BASE_DIR}/Images"
             mkdir -p "${BASE_DIR}/Images/backups"
+            mkdir -p "${BASE_DIR}/data"
 
             echo "✅ Created: ${BASE_DIR}/Images"
             echo "✅ Created: ${BASE_DIR}/Images/backups"
+            echo "✅ Created: ${BASE_DIR}/data"
 
             # Set permissions on newly created directories (non-fatal)
-            chmod 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
-            chmod 755 "${BASE_DIR}/Images/backups" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images/backups (may already exist with correct permissions)"
+            chmod -R 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
+            chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data (may already exist with correct permissions)"
+
+            echo "ℹ️  Volume subdirectories will be created after compose file generation"
 
             echo "✅ Directory setup verified"
             echo "=========================================="
@@ -248,6 +252,61 @@ jobs:
           sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
+      - name: Verify Docker images exist before generating compose
+        id: verify_images
+        run: |
+          set -euo pipefail
+          echo "🔍 Verifying Docker images exist in registry..."
+          
+          DOCKER_TAG="${{ needs.determine_docker_tag.outputs.docker_tag }}"
+          OWNER="${{ github.repository_owner }}"
+          REPO="micros"  # Hardcoded as per the generate script
+          
+          # List of key images to check
+          images=(
+            "ghcr.io/${OWNER,,}/${REPO,,}/services/djhostgateway:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/services/companyapi:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/frontends/dj-panel:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/infra/mongodb:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/infra/sqlserver:${DOCKER_TAG}"
+          )
+          
+          missing_images=()
+          for image in "${images[@]}"; do
+            echo "Checking: $image"
+            if ! docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "❌ Missing: $image"
+              missing_images+=("$image")
+            else
+              echo "✅ Found: $image"
+            fi
+          done
+          
+          if [ ${#missing_images[@]} -gt 0 ]; then
+            echo ""
+            echo "======================================================================"
+            echo "❌ DEPLOYMENT FAILED: Missing Docker Images"
+            echo "======================================================================"
+            echo ""
+            echo "The following Docker images are missing from the registry:"
+            printf '   • %s\n' "${missing_images[@]}"
+            echo ""
+            echo "🔧 TO FIX THIS ISSUE:"
+            echo "   1. Go to GitHub Actions in your repository"
+            echo "   2. Select 'Build Artifacts' workflow"
+            echo "   3. Click 'Run workflow' and select your branch: ${{ github.ref_name }}"
+            echo "   4. Wait for the build to complete successfully"
+            echo "   5. Re-run this deployment workflow"
+            echo ""
+            echo "💡 TIP: The Build Artifacts workflow builds and pushes all Docker"
+            echo "   images to GHCR with the tag: ${DOCKER_TAG}"
+            echo ""
+            echo "======================================================================"
+            exit 1
+          else
+            echo "✅ All required Docker images exist in registry"
+          fi
+
       - name: Generate compose from template and free ports
         id: generate_compose_file
         shell: bash
@@ -340,6 +399,162 @@ jobs:
           echo "✅ Compose uploaded to: $abs"
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
+      - name: Create volume directories from generated compose
+        id: create_volume_dirs
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔧 Creating Volume Directories"
+            echo "=========================================="
+            
+            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+            COMPOSE_FILE="${{ steps.parse_upload.outputs.new_compose_abs }}"
+            
+            echo "Extracting volume paths from: ${COMPOSE_FILE}"
+            
+            # Verify compose file exists and is readable
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "❌ Compose file not found: $COMPOSE_FILE"
+              exit 1
+            fi
+            
+            # Extract unique volume paths from service bind mounts
+            # Pattern: /mnt/Files/Apps/DJPanel/{ENV}/data/{service}/{volume}:/container/path
+            if command -v yq >/dev/null 2>&1; then
+              echo "Using yq to extract volume paths from service bind mounts"
+              yq_version=$(yq --version || echo "unknown version")
+              echo "yq version: $yq_version"
+              
+              # First, let's see all volume entries for debugging
+              echo "🔍 All volume entries in compose file:"
+              yq eval '.services.*.volumes[]?' "$COMPOSE_FILE" 2>/dev/null | head -20 || echo "No volumes found with yq"
+              
+              # Try multiple methods to extract volume paths
+              # Method 1: Use yq with test function
+              volume_paths=$(yq eval '.services.*.volumes[]? | select(test("^/mnt/Files"))' "$COMPOSE_FILE" 2>/dev/null | \
+                sed -E 's/^([^:]+):.*$/\1/' | sort -u || echo "")
+              
+              # Method 2: If that fails, try a simpler yq approach
+              if [ -z "$volume_paths" ]; then
+                echo "⚠️  Method 1 failed, trying simpler yq approach..."
+                volume_paths=$(yq eval '.services.[].volumes[]?' "$COMPOSE_FILE" 2>/dev/null | \
+                  grep '^/mnt/Files' | sed -E 's/^([^:]+):.*$/\1/' | sort -u || echo "")
+              fi
+            else
+              echo "Using grep to extract volume paths (yq not available)"
+              
+              # Show what we're working with for debugging
+              echo "🔍 Lines containing volumes in compose file:"
+              grep -n "volumes:" "$COMPOSE_FILE" | head -5 || echo "No volumes sections found"
+              echo "🔍 Lines with /mnt/Files bind mounts:"
+              grep -E '^\s*-\s*/mnt/Files' "$COMPOSE_FILE" | head -5 || echo "No /mnt/Files mounts found"
+              
+              # Extract paths that start with /mnt/Files and end before :
+              volume_paths=$(grep -E '^\s*-\s*/mnt/Files/Apps/DJPanel/' "$COMPOSE_FILE" | \
+                sed -E 's/.*-\s*([^:]+):.*/\1/' | sort -u || echo "")
+            fi
+            
+            # Final fallback: Use plain grep if still no paths found
+            if [ -z "$volume_paths" ]; then
+              echo "⚠️  No paths found with primary methods, trying fallback grep..."
+              volume_paths=$(grep -o '/mnt/Files/Apps/DJPanel/[^:]*' "$COMPOSE_FILE" | sort -u || echo "")
+            fi
+            
+            if [ -z "$volume_paths" ]; then
+              echo "⚠️  No TrueNAS volume paths found in compose file"
+              echo "ℹ️  This might be expected if no services use TrueNAS volumes"
+              echo "ℹ️  Checking compose file content for debugging..."
+              
+              # Show some context from the compose file
+              if [ -f "$COMPOSE_FILE" ]; then
+                echo "📄 First 20 lines of compose file:"
+                head -20 "$COMPOSE_FILE" || echo "Could not read compose file"
+                echo ""
+                echo "📄 All volume references in compose:"
+                grep -n "volumes:" "$COMPOSE_FILE" || echo "No volumes section found"
+                echo ""
+              else
+                echo "❌ Compose file not found: $COMPOSE_FILE"
+              fi
+              
+              # This is not necessarily an error - continue successfully
+              echo "✅ Volume directory creation completed (no volumes to create)"
+              exit 0
+            fi
+            
+            echo "Found volume paths:"
+            echo "$volume_paths"
+            echo ""
+            
+            # Create directories for each unique path
+            volume_count=0
+            # Count the number of paths
+            path_count=$(echo "$volume_paths" | wc -w)
+            echo "Processing $path_count unique volume paths..."
+            
+            for vol_path in $volume_paths; do
+              # Skip only truly empty paths
+              if [ -z "$vol_path" ]; then
+                continue
+              fi
+              
+              echo "Processing volume path: $vol_path"
+              
+              # Create directory if it doesn't exist - no validation, just create
+              if [ ! -d "$vol_path" ]; then
+                if mkdir -p "$vol_path" 2>/dev/null; then
+                  echo "📁 Created: $vol_path"
+                else
+                  echo "❌ Failed to create: $vol_path"
+                  continue
+                fi
+              else
+                echo "ℹ️  Exists: $vol_path"
+              fi
+              
+              # Set universal permissions for all containers
+              # No special handling - just make it accessible
+              if chmod -R 777 "$vol_path" 2>/dev/null; then
+                echo "✅ Set permissions: $vol_path (777)"
+              else
+                echo "⚠️  Could not set permissions on: $vol_path"
+              fi
+              
+              # Optional: Create common subdirectories that some services might expect
+              # This is done opportunistically - if it fails, we continue anyway
+              for subdir in "pgdata" "data" "logs"; do
+                mkdir -p "$vol_path/$subdir" 2>/dev/null && echo "📁 Created optional subdirectory: $vol_path/$subdir" || true
+              done
+              
+              # Verify permissions (non-critical)
+              actual_perms=$(stat -c '%a' "$vol_path" 2>/dev/null || stat -f '%Lp' "$vol_path" 2>/dev/null || echo "unknown")
+              if [ "$actual_perms" = "777" ]; then
+                echo "✅ Verified permissions: $vol_path (777)"
+              else
+                echo "ℹ️  Permissions: $vol_path ($actual_perms)"
+              fi
+              
+              volume_count=$((volume_count + 1))
+            done
+            
+            # Ensure parent directories have execute permissions for traversal
+            chmod 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
+            chmod 755 "${BASE_DIR}" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}"
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ Created ${volume_count} volume directories"
+            echo "=========================================="
+
   enable_maintenance_page:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
@@ -427,6 +642,7 @@ jobs:
       ]
     outputs:
       start_stdout: ${{ steps.rolling_update.outputs.stdout }}
+      app_logs: ${{ steps.capture_logs.outputs.stdout }}
     steps:
       - name: Perform rolling update (databases stay up, services update)
         id: rolling_update
@@ -562,10 +778,72 @@ jobs:
             health_check=0
             max_health_checks=200
             app_state="UNKNOWN"
+            last_detailed_check=0
+            previous_state="UNKNOWN"
+            
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
+              
+              # Reset counter when state changes to DEPLOYING
+              if [ "$app_state" = "DEPLOYING" ] && [ "$previous_state" != "DEPLOYING" ]; then
+                echo "  🔄 State changed to DEPLOYING - resetting health check counter"
+                health_check=0
+                max_health_checks=200
+              fi
+              
               echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              previous_state="$app_state"
+              
+              # Every 30 seconds (6 iterations), show more detailed information
+              if [ $((health_check % 6)) -eq 0 ] && [ $health_check -ne $last_detailed_check ]; then
+                last_detailed_check=$health_check
+                echo ""
+                echo "📊 Detailed Status Check ($(date '+%H:%M:%S')):"
+                
+                # Get detailed app information
+                app_details="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+                if [ "$app_details" != "[]" ] && [ -n "$app_details" ]; then
+                  if has_jq; then
+                    # Extract key information using jq
+                    app_version=$(echo "$app_details" | jq -r '.[0].version // "unknown"' 2>/dev/null || echo "unknown")
+                    app_update_available=$(echo "$app_details" | jq -r '.[0].update_available // false' 2>/dev/null || echo "false")
+                    echo "    App Version: $app_version"
+                    echo "    Update Available: $app_update_available"
+                    
+                    # Try to get container status if available
+                    container_status=$(echo "$app_details" | jq -r '.[0].status // empty' 2>/dev/null || echo "")
+                    [ -n "$container_status" ] && echo "    Container Status: $container_status"
+                  else
+                    echo "    Raw app details available (jq not available for parsing)"
+                  fi
+                else
+                  echo "    ⚠️  Could not retrieve detailed app information"
+                fi
+                
+                # Show recent system logs related to the app (last 10 lines)
+                echo ""
+                echo "📋 Recent TrueNAS App Logs:"
+                
+                # Get container-specific logs if available
+                container_logs=$(docker logs --tail 10 --timestamps $(docker ps -q --filter "label=com.docker.compose.project=ix-$app") 2>/dev/null | head -20 || echo "No container logs available")
+                if [ "$container_logs" != "No container logs available" ]; then
+                  echo "Container Logs:"
+                  echo "$container_logs"
+                else
+                  echo "No recent container logs available"
+                fi
+                
+                # Check for specific PostgreSQL issues
+                postgres_logs=$(docker logs $(docker ps -q --filter "label=com.docker.compose.service=strapi_db" --filter "label=com.docker.compose.project=ix-$app") 2>/dev/null | tail -15 || echo "")
+                if [ -n "$postgres_logs" ]; then
+                  echo ""
+                  echo "🐘 PostgreSQL (strapi_db) Logs:"
+                  echo "$postgres_logs"
+                fi
+                echo ""
+              fi
+              
               if is_good_state "$app_state"; then
                 echo "✅ App is healthy and running"
                 break
@@ -575,16 +853,175 @@ jobs:
             done
 
             if ! is_good_state "$app_state"; then
+              echo ""
               echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
+              echo ""
+              echo "🔍 TROUBLESHOOTING INFORMATION:"
+              echo "================================"
+              
+              # Get final detailed status for troubleshooting
+              final_details="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+              if [ "$final_details" != "[]" ] && [ -n "$final_details" ]; then
+                echo "App exists in TrueNAS system"
+                if has_jq; then
+                  error_msg=$(echo "$final_details" | jq -r '.[0].error // empty' 2>/dev/null || echo "")
+                  [ -n "$error_msg" ] && echo "Error Message: $error_msg"
+                fi
+              else
+                echo "⚠️  App not found in TrueNAS system"
+              fi
+              
+              # Show compose file location for manual inspection
+              echo "Compose file location: $new"
+              echo "App name in TrueNAS: $app"
+              echo ""
+              echo "💡 MANUAL DEBUGGING STEPS:"
+              echo "1. SSH to TrueNAS and run: midclt call app.query '[["name","=","'"$app"'"]]'"
+              echo "2. Check TrueNAS UI: Apps > Installed Apps > $app"
+              echo "3. Review app logs in TrueNAS interface"
+              echo "4. Verify compose file: cat $new"
+              echo ""
               echo "⚠️  Rollback recommended - backup is available in backups directory"
               exit 1
             fi
 
+            echo ""
+            echo "📋 Final App Status Summary:"
+            echo "============================"
+            final_summary="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+            if [ "$final_summary" != "[]" ] && [ -n "$final_summary" ]; then
+              if has_jq; then
+                app_version=$(echo "$final_summary" | jq -r '.[0].version // "unknown"' 2>/dev/null || echo "unknown")
+                human_version=$(echo "$final_summary" | jq -r '.[0].human_version // "unknown"' 2>/dev/null || echo "unknown")
+                echo "App Version: $app_version"
+                echo "Human Version: $human_version"
+                echo "State: $app_state"
+              else
+                echo "State: $app_state"
+                echo "Detailed info available via TrueNAS UI"
+              fi
+            fi
+            echo "============================"
+            echo ""
+            
             echo "=========================================="
             echo "✅ Rolling update completed successfully!"
             echo "✅ Zero downtime maintained"
             echo "=========================================="
             echo "APP_STATE=${app_state}"
+
+      - name: Capture final app logs and container status
+        id: capture_logs
+        if: always()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "📋 Final Application Logs & Status"
+            echo "=========================================="
+            
+            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+            
+            # Get comprehensive app information
+            echo "🔍 Retrieving app details..."
+            app_info="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+            
+            if [ "$app_info" != "[]" ] && [ -n "$app_info" ]; then
+              echo "✅ App found in system"
+              
+              # Parse app information
+              if command -v jq >/dev/null 2>&1; then
+                state=$(echo "$app_info" | jq -r '.[0].state // "unknown"' 2>/dev/null || echo "unknown")
+                status=$(echo "$app_info" | jq -r '.[0].status // "unknown"' 2>/dev/null || echo "unknown")
+                version=$(echo "$app_info" | jq -r '.[0].version // "unknown"' 2>/dev/null || echo "unknown")
+                active=$(echo "$app_info" | jq -r '.[0].active // false' 2>/dev/null || echo "false")
+                
+                echo "State: $state"
+                echo "Status: $status"
+                echo "Version: $version"
+                echo "Active: $active"
+                
+                # Try to get error information if any
+                error_info=$(echo "$app_info" | jq -r '.[0].error // empty' 2>/dev/null || echo "")
+                [ -n "$error_info" ] && echo "Error: $error_info"
+                
+                # Get container information if available
+                containers=$(echo "$app_info" | jq -r '.[0].containers // empty' 2>/dev/null || echo "")
+                if [ -n "$containers" ] && [ "$containers" != "null" ]; then
+                  echo ""
+                  echo "📦 Container Information:"
+                  echo "$containers" | jq -r 'to_entries[] | "  \(.key): \(.value.state // "unknown")"' 2>/dev/null || echo "  Container details available but not parseable"
+                fi
+              else
+                echo "App information available (jq not available for detailed parsing)"
+              fi
+              
+              echo ""
+              echo "🐳 Docker Container Status (on TrueNAS):"
+              
+              # Try to get docker container status
+              containers_status=$(docker ps -a --filter "label=com.docker.compose.project=ix-$app" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "Could not retrieve container status")
+              if [ "$containers_status" != "Could not retrieve container status" ]; then
+                echo "$containers_status"
+              else
+                echo "❌ Could not retrieve Docker container information"
+                echo "Attempting alternative method..."
+                docker ps -a | grep "$app" | head -10 || echo "No containers found with app name filter"
+              fi
+              
+              # Specific PostgreSQL debugging
+              echo ""
+              echo "🐘 PostgreSQL (strapi_db) Debug Info:"
+              postgres_container=$(docker ps -aq --filter "label=com.docker.compose.service=strapi_db" --filter "label=com.docker.compose.project=ix-$app" | head -1)
+              
+              if [ -n "$postgres_container" ]; then
+                echo "Container ID: $postgres_container"
+                postgres_status=$(docker inspect --format='{{.State.Status}}' "$postgres_container" 2>/dev/null || echo "unknown")
+                echo "Status: $postgres_status"
+                
+                if [ "$postgres_status" = "exited" ]; then
+                  echo "Exit Code: $(docker inspect --format='{{.State.ExitCode}}' "$postgres_container" 2>/dev/null || echo "unknown")"
+                  echo ""
+                  echo "Last 25 lines of PostgreSQL logs:"
+                  docker logs --tail 25 "$postgres_container" 2>&1 || echo "Could not retrieve logs"
+                elif [ "$postgres_status" = "running" ]; then
+                  echo "✅ PostgreSQL is running"
+                  echo "Recent logs (last 10 lines):"
+                  docker logs --tail 10 "$postgres_container" 2>&1 || echo "Could not retrieve logs"
+                else
+                  echo "⚠️  PostgreSQL status: $postgres_status"
+                  echo "Recent logs:"
+                  docker logs --tail 15 "$postgres_container" 2>&1 || echo "Could not retrieve logs"
+                fi
+                
+                # Check volume mounts
+                echo ""
+                echo "Volume Mounts:"
+                docker inspect --format='{{range .Mounts}}{{.Source}} -> {{.Destination}} ({{.Type}}){{"\n"}}{{end}}' "$postgres_container" 2>/dev/null || echo "Could not retrieve mount info"
+              else
+                echo "❌ PostgreSQL container not found"
+              fi
+              
+              echo ""
+              echo "📊 Resource Usage:"
+              docker stats --no-stream --filter "label=com.docker.compose.project=ix-$app" 2>/dev/null | head -10 || echo "Could not retrieve resource stats"
+              
+            else
+              echo "❌ App not found in TrueNAS system"
+              echo "This may indicate a deployment failure"
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "📋 Log Capture Complete"
+            echo "=========================================="
 
   automatic_rollback_on_failure:
     if: ${{ always() && needs.rolling_update_deployment.result == 'failure' }}
@@ -686,10 +1123,20 @@ jobs:
             health_check=0
             max_health_checks=60
             app_state="UNKNOWN"
+            previous_state="UNKNOWN"
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
+              
+              # Reset counter when state changes to DEPLOYING (rollback scenario)
+              if [ "$app_state" = "DEPLOYING" ] && [ "$previous_state" != "DEPLOYING" ]; then
+                echo "  🔄 State changed to DEPLOYING - resetting rollback health check counter"
+                health_check=0
+                max_health_checks=60
+              fi
+              
               echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              previous_state="$app_state"
               if is_good_state "$app_state"; then
                 echo ""
                 echo "✅ Rollback successful - app is healthy"

@@ -296,6 +296,47 @@ copy_service_key_if_present() {
   fi
 }
 
+# ---- Transform volumes to direct TrueNAS bind mounts ----
+transform_and_copy_volumes() {
+  local service="$1"
+  local has_volumes; has_volumes=$(yq eval ".services.${service} | has(\"volumes\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  
+  if [[ "$has_volumes" != "true" ]]; then
+    return 0
+  fi
+  
+  echo "    volumes:" >> "$OUTPUT_FILE"
+  
+  local volume_entries; volume_entries=$(yq eval ".services.${service}.volumes[]" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  
+  while IFS= read -r volume_entry; do
+    [[ -z "$volume_entry" || "$volume_entry" == "null" ]] && continue
+    
+    # Check if this is a named volume (e.g., "pg_data:/var/lib/postgresql/data")
+    # or already a bind mount (starts with /)
+    if [[ "$volume_entry" =~ ^/ ]] || [[ "$volume_entry" =~ ^\./ ]] || [[ "$volume_entry" =~ ^\.\. ]]; then
+      # Already a bind mount or relative path, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_info "Keeping bind mount as-is for ${service}: $volume_entry"
+    elif [[ "$volume_entry" =~ ^([a-zA-Z0-9_-]+):(.+)$ ]]; then
+      # Named volume reference (e.g., "pg_data:/var/lib/postgresql/data")
+      local volume_name="${BASH_REMATCH[1]}"
+      local container_path="${BASH_REMATCH[2]}"
+      
+      # Transform to direct TrueNAS bind mount (unified handling for all services)
+      local truenas_path="${BASE_DATA_DIR}/data/${service}/${volume_name}"
+      local transformed="${truenas_path}:${container_path}"
+      
+      echo "      - ${transformed}" >> "$OUTPUT_FILE"
+      log_info "Transformed volume for ${service}: ${volume_name} -> ${truenas_path}"
+    else
+      # Unknown format, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_warn "Unknown volume format for ${service}: $volume_entry"
+    fi
+  done <<< "$volume_entries"
+}
+
 # ======================== Compose Generation ==========================
 log_section "Compose File Generation"
 log_info "Output file: $OUTPUT_FILE"
@@ -350,22 +391,14 @@ while IFS= read -r service; do
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
-  # Preserve critical service blocks, but **intentionally skip networks**
-  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  # Preserve critical service blocks, but **intentionally skip networks and volumes**
+  # Volumes are handled separately with transformation
+  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
-
-  # Inject PGDATA iff service mounts /var/lib/postgresql/data and doesn't already define PGDATA
-  pg_wanted=$(yq eval ".services.${service}.volumes[]? | select(test(\":/var/lib/postgresql/data(:(ro|rw))?$\"))" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-  if [[ -n "$pg_wanted" ]]; then
-    has_env=$(yq eval ".services.${service} | has(\"environment\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-    if [[ "$has_env" != "true" ]] || [[ "$(yq -r ".services.${service}.environment.PGDATA // \"\"" "$SOURCE_COMPOSE")" == "" ]]; then
-      echo "    environment:" >> "$OUTPUT_FILE"
-      [[ "$has_env" == "true" ]] && yq eval ".services.${service}.environment" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
-      echo "      PGDATA: /var/lib/postgresql/data" >> "$OUTPUT_FILE"
-      log_info "Injected PGDATA for ${service}"
-    fi
-  fi
+  
+  # Transform and copy volumes with TrueNAS bind mounts
+  transform_and_copy_volumes "$service"
 
   # depends_on (force all to map with condition: service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
@@ -389,17 +422,12 @@ while IFS= read -r service; do
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (volumes only; networks skipped) ==========================
-log_subsection "Copy top-level volumes (networks intentionally skipped)"
+# ======================== Top-level sections (networks intentionally skipped) ==========================
+log_subsection "Skipping top-level volumes and networks (using direct bind mounts)"
 log_info "Skipping top-level networks import by design"
-for top in volumes; do
-  has=$(yq eval "has(\"$top\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-  if [[ "$has" == "true" ]]; then
-    echo "$top:" >> "$OUTPUT_FILE"
-    yq eval ".$top" "$SOURCE_COMPOSE" | sed 's/^/  /' >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
-  fi
-done
+log_info "Volumes are now direct TrueNAS bind mounts in service definitions"
+# No top-level volumes section needed - all volumes are direct bind mounts in services
+
 
 # ======================== Summary & Sanity Reports ==========================
 log_section "Generation Summary"

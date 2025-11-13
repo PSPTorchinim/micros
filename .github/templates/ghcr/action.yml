@@ -13,6 +13,10 @@ inputs:
   github-token:
     description: GitHub token for registry login
     required: true
+  push:
+    description: Whether to push the built image
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
@@ -36,4 +40,4 @@ runs:
         file: ${{ inputs.dockerfile }}
         build-args: ${{ inputs.build-args }}
         tags: ${{ steps.tag_lowercase.outputs.tag }}
-        push: true
+        push: ${{ inputs.push }}

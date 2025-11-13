@@ -1,4 +1,4 @@
-
+# hadolint global ignore=DL3059
 
 # --- Stage 1: Builder ---
 FROM node:25-alpine AS builder
@@ -38,13 +38,14 @@ RUN npm ci --only=production
 COPY CMS/ ./
 
 # Build the app
-RUN npm run build && npm cache clean --force
+RUN npm run build
+RUN npm cache clean --force
 
 # Remove unnecessary files to reduce image size
-RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github \
-  && find /app -type d -name "__tests__" -exec rm -rf {} + \
-  && find /app -type f -name "*.md" -delete \
-  && chmod +x docker-entrypoint.sh
+RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github
+RUN find /app -type d -name "__tests__" -exec rm -rf {} +
+RUN find /app -type f -name "*.md" -delete
+RUN chmod +x docker-entrypoint.sh
 
 # --- Stage 2: Runtime ---
 FROM node:25-alpine AS runtime
@@ -89,11 +90,9 @@ RUN apk add --no-cache libc6-compat vips wget netcat-openbsd
 # Copy built app and node_modules from builder
 COPY --from=builder /app .
 
-# Create non-root user and set permissions
-RUN addgroup -g 1001 -S strapi \
-    && adduser -S strapi -u 1001 \
-    && chown -R strapi:strapi /app
-USER strapi
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
+USER root
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=15s --start-period=180s --retries=3 \

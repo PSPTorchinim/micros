@@ -108,14 +108,17 @@ The workflow will automatically:
 
 1. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/Images` directory
 2. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/Images/backups` directory
-3. ✅ Set proper permissions (755)
-4. ✅ Generate Docker Compose file
-5. ✅ Upload compose to TrueNAS
-6. ✅ Create TrueNAS app: `dj-panel-{env-slug}`
-7. ✅ Start the application
-8. ✅ Wait for health checks
-9. ✅ Update Cloudflare tunnel
-10. ✅ Update DNS records
+3. ✅ Create `/mnt/Files/Apps/DJPanel/{Environment}/data` directory
+4. ✅ Set proper permissions (755)
+5. ✅ Generate Docker Compose file
+6. ✅ Upload compose to TrueNAS
+7. ✅ Extract volume names from compose and create volume subdirectories
+8. ✅ Create TrueNAS app: `dj-panel-{env-slug}`
+9. ✅ Start the application
+10. ✅ Wait for health checks
+11. ✅ Update Cloudflare tunnel
+12. ✅ Update DNS records
+
 
 ## Manual Setup (If Needed)
 
@@ -125,7 +128,7 @@ If you prefer to set up directories manually before the first deployment:
 # SSH to TrueNAS
 ssh admin@truenas-ip
 
-# Create directory structure
+# Create directory structure for compose files and backups
 mkdir -p /mnt/Files/Apps/DJPanel/Development/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Development/Images/backups
 mkdir -p /mnt/Files/Apps/DJPanel/Staging/Images
@@ -133,8 +136,16 @@ mkdir -p /mnt/Files/Apps/DJPanel/Staging/Images/backups
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images
 mkdir -p /mnt/Files/Apps/DJPanel/Production/Images/backups
 
+# Create base data directory (volume subdirectories are created automatically during deployment)
+for env in Development Staging Production; do
+  mkdir -p /mnt/Files/Apps/DJPanel/${env}/data
+done
+
 # Set permissions
+# Base directories can be 755, but volume directories need 777 for container users
 chmod -R 755 /mnt/Files/Apps/DJPanel
+# Note: Volume subdirectories are created automatically with 777 permissions during deployment
+# to allow non-root container users (e.g., SQL Server's mssql user) to write data
 
 # Verify
 ls -la /mnt/Files/Apps/DJPanel/
@@ -146,14 +157,46 @@ ls -la /mnt/Files/Apps/DJPanel/
 
 ```bash
 ssh admin@truenas-ip
-ls -la /mnt/Files/Apps/DJPanel/Development/Images/
+ls -la /mnt/Files/Apps/DJPanel/Development/
 ```
 
 Expected output:
 ```
-drwxr-xr-x  3 root  wheel   3 Nov  2 10:00 .
-drwxr-xr-x  3 root  wheel   3 Nov  2 10:00 ..
-drwxr-xr-x  2 root  wheel   2 Nov  2 10:00 backups
+drwxr-xr-x  4 root  wheel   4 Nov 11 10:00 .
+drwxr-xr-x  3 root  wheel   3 Nov 11 10:00 ..
+drwxr-xr-x  2 root  wheel   2 Nov 11 10:00 Images
+drwxr-xr-x 12 root  wheel  12 Nov 11 10:00 data
+```
+
+### Check Data Volumes
+
+```bash
+ssh admin@truenas-ip
+ls -la /mnt/Files/Apps/DJPanel/Development/data/
+```
+
+Expected output showing service-organized data directories:
+```
+drwxr-xr-x 12 root  wheel  12 Nov 11 12:00 .
+drwxr-xr-x  4 root  wheel   4 Nov 11 12:00 ..
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 grafana
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 loki
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 mongodb_container
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 promtail
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 rabbitmq
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 redis
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 sqlserver
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 strapi
+drwxr-xr-x  2 root  wheel   2 Nov 11 12:00 strapi_db
+```
+
+Each service directory contains its volume data:
+```bash
+ls -la /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/
+# Shows: mongo_config, mongo_data
+
+ls -la /mnt/Files/Apps/DJPanel/Development/data/strapi_db/
+# Shows: pg_data
 ```
 
 ### Check TrueNAS App
@@ -167,19 +210,33 @@ midclt call app.query '[["name","=","dj-panel-dev"]]'
 
 Should show app details with state: `RUNNING`
 
-### Check Docker Volumes
+### Check Volume Mounts
 
-```bash
-ssh admin@truenas-ip
-docker volume ls | grep dj
+The generated Docker Compose file uses **direct bind mounts** to TrueNAS datasets. Each service's volumes are mapped directly to service-specific directories under `/mnt/Files/Apps/DJPanel/{Environment}/data/{service_name}/`.
+
+Example service configuration:
+```yaml
+services:
+  strapi_db:
+    image: ghcr.io/.../postgres:tag
+    volumes:
+      - /mnt/Files/Apps/DJPanel/Development/data/strapi_db/pg_data:/var/lib/postgresql/data
+  
+  mongodb_container:
+    image: ghcr.io/.../mongodb:tag
+    volumes:
+      - /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/mongo_data:/data/db
+      - /mnt/Files/Apps/DJPanel/Development/data/mongodb_container/mongo_config:/data/configdb
 ```
 
-Should show volumes for databases:
-- `djpanel_mongo_data`
-- `djpanel_mssql_data`
-- `djpanel_pg_data`
-- `djpanel_redis_data`
-- `djpanel_rabbitmq_data`
+**Note:** There is **no top-level `volumes:` section** - all mounts are direct bind mounts in the service definitions.
+
+This ensures:
+- Data persists across container restarts
+- Data is organized by service for easy management
+- Data is stored on TrueNAS datasets for easy backup
+- Each environment (Development/Staging/Production) has isolated data
+- Simpler configuration without named volume indirection
 
 ## Troubleshooting
 
