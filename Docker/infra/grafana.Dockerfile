@@ -2,6 +2,8 @@
 # Provides visualization dashboard for logs and metrics
 
 # hadolint global ignore=DL3059
+# hadolint global ignore=DL3002
+# hadolint global ignore=DL3018
 
 # Use official Grafana image (already minimal), but combine RUN commands for efficiency
 FROM grafana/grafana:12.2.1
@@ -24,11 +26,24 @@ ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_ANALYTICS_REPORTING_ENABLED=false
 ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
 ENV GF_SERVER_HTTP_PORT=3001
+ENV GF_PATHS_DATA=/var/lib/grafana
+ENV GF_PATHS_LOGS=/var/lib/grafana/logs
+ENV GF_PATHS_PLUGINS=/var/lib/grafana/plugins
 
-# Create directories for provisioning
+# Install su-exec for safe user switching and ensure proper permissions
 USER root
-RUN mkdir -p /etc/grafana/provisioning/datasources
-RUN mkdir -p /etc/grafana/provisioning/dashboards
+RUN apk add --no-cache su-exec && \
+    mkdir -p /etc/grafana/provisioning/datasources && \
+    mkdir -p /etc/grafana/provisioning/dashboards && \
+    mkdir -p /var/lib/grafana && \
+    mkdir -p /var/lib/grafana/plugins && \
+    mkdir -p /var/lib/grafana/dashboards && \
+    chown -R grafana:root /var/lib/grafana && \
+    chmod -R 755 /var/lib/grafana
+
+# Copy custom entrypoint script
+COPY Docker/init/grafana/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Copy datasource configuration
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
@@ -39,12 +54,12 @@ COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboar
 COPY Docker/init/grafana/generate-dashboards.sh /etc/grafana/provisioning/
 
 # Generate dashboards from templates during build
-RUN cd /etc/grafana/provisioning
-RUN chmod +x generate-dashboards.sh
-RUN ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}"
-RUN echo "Generated dashboards for project: ${PROJECT_NAME}, replica: ${REPLICA_INDEX}"
+WORKDIR /etc/grafana/provisioning
+RUN chmod +x generate-dashboards.sh && \
+    ./generate-dashboards.sh "${PROJECT_NAME}" "${REPLICA_INDEX}" && \
+    echo "Generated dashboards for project: ${PROJECT_NAME}, replica: ${REPLICA_INDEX}"
 
-USER grafana
+# Keep as root for entrypoint script to fix permissions, then it will switch to grafana user
 
 # Expose Grafana port
 EXPOSE 3001
@@ -53,5 +68,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
 
-# Run Grafana
-CMD ["/run.sh"]
+# Use custom entrypoint that fixes permissions and then runs Grafana
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
