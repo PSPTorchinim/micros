@@ -176,7 +176,7 @@ jobs:
         image:
           - {
               name: "dj-panel",
-              dockerfile: "Docker/frontends/react.Dockerfile",
+              dockerfile: "Docker/frontends/react.Dockerfile"
             }
     env:
       API_GATEWAY: ${{ vars.API_GATEWAY }}
@@ -195,7 +195,7 @@ jobs:
         with:
           service: ${{ matrix.image.name }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Frontend Docker Image
         uses: ./.github/templates/docker-build-push
         with:
           service-name: ${{ matrix.image.name }}
@@ -214,6 +214,19 @@ jobs:
             CMS_PORT=${{ env.CMS_PORT }}
             CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
             CMS_API_PATH=${{ env.CMS_API_PATH }}
+
+      - name: Build and Push Storybook Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: "storybook-${{ matrix.image.name }}"
+          service-type: frontends
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          dockerfile: "Docker/frontends/storybook.Dockerfile"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
 
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
@@ -262,10 +275,6 @@ jobs:
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
-          - {
-              name: "storybook",
-              dockerfile: "Docker/infra/storybook.Dockerfile",
-            }
 
     steps:
       - name: Checkout Source Code

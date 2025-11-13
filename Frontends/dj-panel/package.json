@@ -2,7 +2,7 @@
   "name": "dj-panel",
   "version": "1.0.0",
   "scripts": {
-    "build": "webpack --mode production",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" webpack --mode production",
     "build:dev": "webpack --mode development",
     "build:start": "cd dist && npx serve",
     "dev": "webpack serve --mode development --live-reload --hot --port 3080",
@@ -21,7 +21,7 @@
     "map:api": "node scripts/map-api.js",
     "map:strapi": "node scripts/map-strapi.js",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "cross-env NODE_OPTIONS=\"--localstorage-file=./node_modules/.cache/storybook-localstorage\" storybook build"
   },
   "license": "MIT",
   "author": {

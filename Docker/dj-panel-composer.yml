@@ -148,7 +148,7 @@ services:
       - apigw_fe_net
       - public
 
-  host_fe:
+  dj-panel:
     build:
       context: ../
       dockerfile: Docker/frontends/react.Dockerfile
@@ -176,10 +176,12 @@ services:
       strapi:
         condition: service_healthy
 
-  storybook:
+  storybook-dj-panel:
     build:
       context: ../
-      dockerfile: Docker/infra/storybook.Dockerfile
+      dockerfile: Docker/frontends/storybook.Dockerfile
+      args:
+        MICROFRONTEND_NAME: dj-panel
     restart: unless-stopped
     pull_policy: always
     ports:

@@ -189,7 +189,7 @@ jobs:
         with:
           service: ${{ matrix.image.name }}
 
-      - name: Build Docker Image (No Push)
+      - name: Build Frontend Docker Image (No Push)
         uses: ./.github/templates/docker-build-push
         with:
           service-name: ${{ matrix.image.name }}
@@ -209,6 +209,20 @@ jobs:
             CMS_PORT=${{ env.CMS_PORT }}
             CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
             CMS_API_PATH=${{ env.CMS_API_PATH }}
+
+      - name: Build Storybook Docker Image (No Push)
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: "storybook-${{ matrix.image.name }}"
+          service-type: frontends
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          dockerfile: "Docker/frontends/storybook.Dockerfile"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          push: 'false'
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
 
   validate_infrastructure_docker:
     name: Validate & Build Infrastructure Images
@@ -256,10 +270,6 @@ jobs:
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
-          - {
-              name: "storybook",
-              dockerfile: "Docker/infra/storybook.Dockerfile",
-            }
 
     steps:
       - name: Checkout Source Code

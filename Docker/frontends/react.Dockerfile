@@ -25,7 +25,7 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 
 COPY Frontends/${MICROFRONTEND_NAME}/package.json ./
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
-RUN npm ci
+RUN npm install
 RUN npm run build
 RUN npm cache clean --force
 

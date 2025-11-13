@@ -323,7 +323,7 @@ transform_and_copy_volumes() {
       local volume_name="${BASH_REMATCH[1]}"
       local container_path="${BASH_REMATCH[2]}"
       
-      # Transform to direct TrueNAS bind mount
+      # Transform to direct TrueNAS bind mount (unified handling for all services)
       local truenas_path="${BASE_DATA_DIR}/data/${service}/${volume_name}"
       local transformed="${truenas_path}:${container_path}"
       
