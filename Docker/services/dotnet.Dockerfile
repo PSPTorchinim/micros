@@ -81,8 +81,8 @@ COPY Services/Shared/ ./Services/Shared/
 # Use absolute WORKDIR (DL3000)
 WORKDIR /Services/${MICROSERVICE_NAME}/
 
-# Install EF Core tools
-RUN dotnet tool install --global dotnet-ef
+# Install EF Core tools (skip if already installed)
+RUN dotnet tool install --global dotnet-ef || dotnet tool update --global dotnet-ef || true
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Generate migrations if DbContext exists (optional step)
