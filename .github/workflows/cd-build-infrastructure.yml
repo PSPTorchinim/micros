@@ -779,11 +779,21 @@ jobs:
             max_health_checks=200
             app_state="UNKNOWN"
             last_detailed_check=0
+            previous_state="UNKNOWN"
             
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
+              
+              # Reset counter when state changes to DEPLOYING
+              if [ "$app_state" = "DEPLOYING" ] && [ "$previous_state" != "DEPLOYING" ]; then
+                echo "  🔄 State changed to DEPLOYING - resetting health check counter"
+                health_check=0
+                max_health_checks=200
+              fi
+              
               echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              previous_state="$app_state"
               
               # Every 30 seconds (6 iterations), show more detailed information
               if [ $((health_check % 6)) -eq 0 ] && [ $health_check -ne $last_detailed_check ]; then
@@ -1113,10 +1123,20 @@ jobs:
             health_check=0
             max_health_checks=60
             app_state="UNKNOWN"
+            previous_state="UNKNOWN"
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
+              
+              # Reset counter when state changes to DEPLOYING (rollback scenario)
+              if [ "$app_state" = "DEPLOYING" ] && [ "$previous_state" != "DEPLOYING" ]; then
+                echo "  🔄 State changed to DEPLOYING - resetting rollback health check counter"
+                health_check=0
+                max_health_checks=60
+              fi
+              
               echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              previous_state="$app_state"
               if is_good_state "$app_state"; then
                 echo ""
                 echo "✅ Rollback successful - app is healthy"
