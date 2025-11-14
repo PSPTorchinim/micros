@@ -58,7 +58,7 @@ async function isDatabaseEmpty(strapi: StrapiAny): Promise<boolean> {
       strapi.log.info('[BOOT] Database is empty - seeding will be performed');
     } else {
       strapi.log.info(
-        `[BOOT] Database contains data (${configCount} config(s), ${pageCount} page(s)) - seeding tasks will check for existing content`
+        `[BOOT] Database contains data (${configCount} config(s), ${pageCount} page(s)) - seeding will be skipped`
       );
     }
     
