@@ -37,6 +37,39 @@ async function runTask(
   }
 }
 
+// ---- database empty check --------------------------------------------------
+
+/**
+ * Check if the database is empty by looking for core content.
+ * We check for the existence of configuration and pages as indicators.
+ */
+async function isDatabaseEmpty(strapi: StrapiAny): Promise<boolean> {
+  try {
+    // Check for configuration (should exist if seeding has run)
+    const configCount = await strapi.db.query('api::configuration.configuration').count();
+    
+    // Check for pages (should exist if seeding has run)
+    const pageCount = await strapi.db.query('api::page.page').count();
+    
+    // Database is considered empty if both counts are 0
+    const isEmpty = configCount === 0 && pageCount === 0;
+    
+    if (isEmpty) {
+      strapi.log.info('[BOOT] Database is empty - seeding will be performed');
+    } else {
+      strapi.log.info(
+        `[BOOT] Database contains data (${configCount} config(s), ${pageCount} page(s)) - seeding will be skipped`
+      );
+    }
+    
+    return isEmpty;
+  } catch (e: any) {
+    strapi.log.warn(`[BOOT] Could not check if database is empty: ${e?.message ?? e}`);
+    // If we can't check, assume we should proceed with seeding (safe default)
+    return true;
+  }
+}
+
 // ---- task path maps --------------------------------------------------------
 
 const TASKS = {
@@ -55,19 +88,32 @@ const TASKS = {
 // ---- orchestrator ----------------------------------------------------------
 
 export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
-  // 1) Public role → enable all public permissions (unified)
+  // Check if database is empty
+  const dbIsEmpty = await isDatabaseEmpty(strapi);
+  
+  // Always update public role permissions (important for security and access)
   await runTask(
     strapi,
     'set-all-public-permissions',
     TASKS.allPublicPermissions,
   );
 
-  // 2) Seed all content types (Hero Blocks, Feature Sections, etc.)
-  await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
+  // Only run seeding tasks if database is empty
+  // This improves startup performance when data already exists
+  if (dbIsEmpty) {
+    strapi.log.info('[BOOT] Running seeding tasks for empty database...');
+    
+    // 2) Seed all content types (Hero Blocks, Feature Sections, etc.)
+    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
-  // 3) Seed DJ articles
-  await runTask(strapi, 'seed-articles', TASKS.seedArticles);
+    // 3) Seed DJ articles
+    await runTask(strapi, 'seed-articles', TASKS.seedArticles);
 
-  // 4) Seed standard pages (Login, Forgot Password, Home, About)
-  await runTask(strapi, 'seed-pages', TASKS.seedPages);
+    // 4) Seed standard pages (Login, Forgot Password, Home, About)
+    await runTask(strapi, 'seed-pages', TASKS.seedPages);
+    
+    strapi.log.info('[BOOT] Seeding tasks completed successfully');
+  } else {
+    strapi.log.info('[BOOT] Skipping seeding tasks - database already contains data');
+  }
 }
