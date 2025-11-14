@@ -102,12 +102,12 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   // This improves startup performance when data already exists
   if (dbIsEmpty) {
     strapi.log.info('[BOOT] Running seeding tasks for empty database...');
-    
-    // 2) Seed all content types (Hero Blocks, Feature Sections, etc.)
-    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
-    // 3) Seed DJ articles
+    // 2) Seed DJ articles
     await runTask(strapi, 'seed-articles', TASKS.seedArticles);
+    
+    // 3) Seed all content types (Hero Blocks, Feature Sections, etc.)
+    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
     // 4) Seed standard pages (Login, Forgot Password, Home, About)
     await runTask(strapi, 'seed-pages', TASKS.seedPages);
