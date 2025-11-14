@@ -9,7 +9,7 @@ const FORGOT_PASSWORD_BLOCK_UID =
 export async function seedForgotPasswordPage(strapi: any, configId: number) {
   strapi.log.info('[SEED][FORGOT_PASSWORD] Seeding Forgot Password page...');
 
-  const forgotSlug = toUrlSlug('users/forgot-password');
+  const forgotSlug = toUrlSlug('forgot-password');
 
   // Create or get Forgot Password Block
   let forgotPasswordBlock = await strapi.db

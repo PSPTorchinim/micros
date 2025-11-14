@@ -8,7 +8,7 @@ const LOGIN_BLOCK_UID = 'api::login-block.login-block';
 export async function seedLoginPage(strapi: any, configId: number) {
   strapi.log.info('[SEED][LOGIN] Seeding Login page...');
 
-  const loginSlug = toUrlSlug('users/login');
+  const loginSlug = toUrlSlug('login');
 
   // Create or get Login Block
   let loginBlock = await strapi.db.query(LOGIN_BLOCK_UID).findOne({});
