@@ -33,15 +33,16 @@ function buildRoutesAndNav(
     const rawPath = buildPath(page, parentPath).replace(/^\/+/g, '');
     // Special handling for home/root page
     const isHomePage = isRoot && (page as any)?.Slug === '/';
-    
+
     // For nested routes, we need to use relative paths (just the slug)
     // For root routes, use the full path
     const path = isHomePage
       ? ''
       : isRoot
         ? rawPath.replace(/^\/+/g, '')
-        : (page as any)?.Slug?.replace(/^\/+/g, '') || String((page as any)?.id);
-    
+        : (page as any)?.Slug?.replace(/^\/+/g, '') ||
+          String((page as any)?.id);
+
     let childrenRoutes: React.ReactElement[] = [];
     let childrenNav: NavigationItem[] = [];
 
