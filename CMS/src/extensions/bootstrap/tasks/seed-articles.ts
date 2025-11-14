@@ -893,7 +893,9 @@ Remember: A great DJ knows their library inside and out. Organization isn't just
 ];
 
 export default async function seedArticles({ strapi }: { strapi: any }) {
-  strapi.log.info('[SEED][ARTICLES] Starting article seeding...');
+  strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  strapi.log.info('[SEED][ARTICLES] 📝 Starting article seeding');
+  strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   try {
     // Get the default locale
@@ -903,16 +905,24 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
 
     // Seed the parent Articles page
     const { getOrCreateConfiguration } = await import('./seed-configuration');
+    strapi.log.info('[SEED][ARTICLES] 🔧 Getting/creating configuration...');
     const configId = await getOrCreateConfiguration(strapi);
+    strapi.log.info(`[SEED][ARTICLES] ✅ Configuration ID: ${configId}`);
+    
+    strapi.log.info('[SEED][ARTICLES] 📁 Creating parent Articles page...');
     const parentPageId = await seedArticlesParentPage(strapi, configId);
+    strapi.log.info(`[SEED][ARTICLES] ✅ Parent page ID: ${parentPageId}`);
 
     // Track created page IDs to add as subpages at the end
     const createdPageIds: number[] = [];
+    
+    strapi.log.info(`[SEED][ARTICLES] 📚 Processing ${DJING_ARTICLES.length} articles...`);
 
     for (const articleData of DJING_ARTICLES) {
       try {
+        strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         strapi.log.info(
-          `[SEED][ARTICLES] Processing article: "${articleData.Title}"`,
+          `[SEED][ARTICLES] 📖 Processing article: "${articleData.Title}"`,
         );
 
       // Check if article already exists
@@ -1063,14 +1073,18 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
       );
     }
 
+    strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     strapi.log.info(
-      `[SEED][ARTICLES] Article seeding complete! Processed ${DJING_ARTICLES.length} articles, created ${createdPageIds.length} pages.`,
+      `[SEED][ARTICLES] ✅ Article seeding complete! Processed ${DJING_ARTICLES.length} articles, created ${createdPageIds.length} pages.`,
     );
+    strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } catch (error: any) {
+    strapi.log.error('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     strapi.log.error(
-      `[SEED][ARTICLES] Failed to seed articles: ${error.message}`,
+      `[SEED][ARTICLES] ❌ Failed to seed articles: ${error.message}`,
     );
-    strapi.log.error(`[SEED][ARTICLES] Error stack: ${error.stack}`);
+    strapi.log.error(`[SEED][ARTICLES] Stack trace: ${error.stack}`);
+    strapi.log.error('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     throw error;
   }
 }

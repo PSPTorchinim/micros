@@ -25,15 +25,18 @@ async function runTask(
   args: Record<string, unknown> = {},
 ) {
   try {
+    strapi.log.info(`[BOOT] Starting task: ${label}`);
     const task = await loadTask(possiblePaths);
     if (!task) {
-      strapi.log.warn(`[BOOT] ${label} not found.`);
+      strapi.log.warn(`[BOOT] ❌ Task not found: ${label}`);
       return;
     }
     await task({ strapi, ...args });
-    strapi.log.debug(`[BOOT] ${label} done.`);
+    strapi.log.info(`[BOOT] ✅ Task completed: ${label}`);
   } catch (e: any) {
-    strapi.log.warn(`[BOOT] ${label} failed: ${e?.message ?? e}`);
+    strapi.log.error(`[BOOT] ❌ Task failed: ${label} - ${e?.message ?? e}`);
+    strapi.log.error(`[BOOT] Error stack: ${e?.stack ?? 'No stack trace'}`);
+    throw e; // Re-throw to ensure failures are visible
   }
 }
 
@@ -86,6 +89,10 @@ const TASKS = {
 // ---- orchestrator ----------------------------------------------------------
 
 export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
+  strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  strapi.log.info('[BOOT] 🚀 Starting Strapi Bootstrap Process');
+  strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
   // Check if database is empty
   const dbIsEmpty = await isDatabaseEmpty(strapi);
   
@@ -99,19 +106,32 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   // Only run seeding tasks if database is empty
   // This improves startup performance when data already exists
   if (dbIsEmpty) {
-    strapi.log.info('[BOOT] Running seeding tasks for empty database...');
+    strapi.log.info('');
+    strapi.log.info('[BOOT] 📦 Running seeding tasks for empty database...');
+    strapi.log.info('[BOOT] Seeding order: content-types → articles → pages');
+    strapi.log.info('');
     
     // 1) Seed all content types (Hero Blocks, Feature Sections, etc.)
+    strapi.log.info('[BOOT] 🎨 Step 1/3: Seeding content types (dependencies)');
     await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
     // 2) Seed DJ articles
+    strapi.log.info('');
+    strapi.log.info('[BOOT] 📝 Step 2/3: Seeding articles');
     await runTask(strapi, 'seed-articles', TASKS.seedArticles);
 
     // 3) Seed standard pages (Login, Forgot Password, Home, About)
+    strapi.log.info('');
+    strapi.log.info('[BOOT] 📄 Step 3/3: Seeding pages (depends on content-types and articles)');
     await runTask(strapi, 'seed-pages', TASKS.seedPages);
     
-    strapi.log.info('[BOOT] Seeding tasks completed successfully');
+    strapi.log.info('');
+    strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    strapi.log.info('[BOOT] ✅ All seeding tasks completed successfully');
+    strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } else {
-    strapi.log.info('[BOOT] Skipping seeding tasks - database already contains data');
+    strapi.log.info('');
+    strapi.log.info('[BOOT] ⏭️  Skipping seeding tasks - database already contains data');
+    strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 }
