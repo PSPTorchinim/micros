@@ -8,15 +8,7 @@ const LOGIN_BLOCK_UID = 'api::login-block.login-block';
 export async function seedLoginPage(strapi: any, configId: number) {
   strapi.log.info('[SEED][LOGIN] Seeding Login page...');
 
-  // Only seed if there are no login pages in the database
   const loginSlug = toUrlSlug('users/login');
-  const count = await strapi.db
-    .query(PAGE_UID)
-    .count({ where: { Slug: loginSlug } });
-  if (count > 0) {
-    strapi.log.info('[SEED][LOGIN] Skipping: login page already exists.');
-    return;
-  }
 
   // Create or get Login Block
   let loginBlock = await strapi.db.query(LOGIN_BLOCK_UID).findOne({});

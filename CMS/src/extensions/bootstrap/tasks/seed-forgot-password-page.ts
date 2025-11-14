@@ -1,4 +1,3 @@
-
 // Seed Forgot Password page
 import { toUrlSlug } from './utils/slugify';
 
@@ -10,13 +9,7 @@ const FORGOT_PASSWORD_BLOCK_UID =
 export async function seedForgotPasswordPage(strapi: any, configId: number) {
   strapi.log.info('[SEED][FORGOT_PASSWORD] Seeding Forgot Password page...');
 
-  // Only seed if there are no forgot password pages in the database
   const forgotSlug = toUrlSlug('users/forgot-password');
-  const count = await strapi.db.query(PAGE_UID).count({ where: { Slug: forgotSlug } });
-  if (count > 0) {
-    strapi.log.info('[SEED][FORGOT_PASSWORD] Skipping: forgot password page already exists.');
-    return;
-  }
 
   // Create or get Forgot Password Block
   let forgotPasswordBlock = await strapi.db
