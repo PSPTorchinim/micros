@@ -88,22 +88,32 @@ const TASKS = {
 // ---- orchestrator ----------------------------------------------------------
 
 export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
-  // Check if database is empty (for logging purposes)
-  await isDatabaseEmpty(strapi);
+  // Check if database is empty
+  const dbIsEmpty = await isDatabaseEmpty(strapi);
   
-  // 1) Public role → enable all public permissions (unified)
+  // Always update public role permissions (important for security and access)
   await runTask(
     strapi,
     'set-all-public-permissions',
     TASKS.allPublicPermissions,
   );
 
-  // 2) Seed all content types (Hero Blocks, Feature Sections, etc.)
-  await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
+  // Only run seeding tasks if database is empty
+  // This improves startup performance when data already exists
+  if (dbIsEmpty) {
+    strapi.log.info('[BOOT] Running seeding tasks for empty database...');
+    
+    // 2) Seed all content types (Hero Blocks, Feature Sections, etc.)
+    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
-  // 3) Seed DJ articles
-  await runTask(strapi, 'seed-articles', TASKS.seedArticles);
+    // 3) Seed DJ articles
+    await runTask(strapi, 'seed-articles', TASKS.seedArticles);
 
-  // 4) Seed standard pages (Login, Forgot Password, Home, About)
-  await runTask(strapi, 'seed-pages', TASKS.seedPages);
+    // 4) Seed standard pages (Login, Forgot Password, Home, About)
+    await runTask(strapi, 'seed-pages', TASKS.seedPages);
+    
+    strapi.log.info('[BOOT] Seeding tasks completed successfully');
+  } else {
+    strapi.log.info('[BOOT] Skipping seeding tasks - database already contains data');
+  }
 }
