@@ -3,6 +3,7 @@
 import { seedArticlesParentPage } from './seed-articles-parent-page';
 import { toUrlSlug } from './utils/slugify';
 const ARTICLE_UID = 'api::article.article';
+const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 
 interface Article {
   Title: string;
@@ -906,10 +907,14 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
     const configId = await getOrCreateConfiguration(strapi);
     const parentPageId = await seedArticlesParentPage(strapi, configId);
 
+    // Track created page IDs to add as subpages at the end
+    const createdPageIds: number[] = [];
+
     for (const articleData of DJING_ARTICLES) {
-      strapi.log.info(
-        `[SEED][ARTICLES] Processing article: "${articleData.Title}"`,
-      );
+      try {
+        strapi.log.info(
+          `[SEED][ARTICLES] Processing article: "${articleData.Title}"`,
+        );
 
       // Check if article already exists
       const existingArticle = await strapi.db.query(ARTICLE_UID).findOne({
@@ -930,6 +935,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           coverUrl: articleData.coverUrl,
           Body: articleData.Body,
           locale: defaultLocale,
+          publishedAt: new Date().toISOString(),
         };
         strapi.log.debug(
           `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
@@ -948,6 +954,29 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         strapi.log.info(`[SEED][ARTICLES] Article created (ID: ${article.id})`);
       }
 
+      // Create or find article-block for this specific article
+      const articleBlockName = `Article Block: ${article.Title}`;
+      let articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
+        where: { Title: articleBlockName },
+      });
+
+      if (!articleBlock) {
+        articleBlock = await strapi.entityService.create(ARTICLE_BLOCK_UID, {
+          data: {
+            Title: articleBlockName,
+            items: [article.id],
+            publishedAt: new Date().toISOString(),
+          },
+        });
+        strapi.log.info(
+          `[SEED][ARTICLES] Created article block for ${article.Title} (ID: ${articleBlock.id})`,
+        );
+      } else {
+        strapi.log.info(
+          `[SEED][ARTICLES] Article block for ${article.Title} already exists (ID: ${articleBlock.id})`,
+        );
+      }
+
       // Create or find template for this article
       const templateName = `Article: ${article.Title}`;
       let template = await strapi.db.query(TEMPLATE_UID).findOne({
@@ -959,7 +988,12 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           data: {
             Name: templateName,
             TemplateType: 'Standard',
-            Content: [],
+            Content: [
+              {
+                __component: 'article-block-ref.article-block-ref',
+                block: articleBlock.id,
+              },
+            ],
             publishedAt: new Date().toISOString(),
           },
         });
@@ -1007,7 +1041,20 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         );
       }
 
-      // Add this article page as a subpage of the parent Articles page
+      // Track page ID for later subpage assignment
+      createdPageIds.push(page.id);
+      
+      } catch (articleError: any) {
+        strapi.log.error(
+          `[SEED][ARTICLES] Failed to process article "${articleData.Title}": ${articleError.message}`,
+        );
+        strapi.log.error(`[SEED][ARTICLES] Error stack: ${articleError.stack}`);
+        // Continue with next article instead of failing completely
+      }
+    }
+
+    // Update parent page with all article pages as subpages
+    try {
       const parentPage = await strapi.entityService.findOne(
         PAGE_UID,
         parentPageId,
@@ -1019,26 +1066,34 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         (sp: any) => sp.id,
       );
 
-      // Only add if not already a subpage
-      if (!existingSubpageIds.includes(page.id)) {
-        const updatedSubpages = [...existingSubpageIds, page.id];
+      // Add all created pages that aren't already subpages
+      const newSubpageIds = createdPageIds.filter(
+        (id) => !existingSubpageIds.includes(id),
+      );
+
+      if (newSubpageIds.length > 0) {
+        const updatedSubpages = [...existingSubpageIds, ...newSubpageIds];
         await strapi.entityService.update(PAGE_UID, parentPageId, {
           data: {
             subpages: updatedSubpages,
           },
         });
         strapi.log.info(
-          `[SEED][ARTICLES] Added article page as subpage of parent Articles page`,
+          `[SEED][ARTICLES] Added ${newSubpageIds.length} article page(s) as subpages of parent Articles page`,
         );
       } else {
         strapi.log.info(
-          `[SEED][ARTICLES] Article page already a subpage of parent Articles page`,
+          `[SEED][ARTICLES] All article pages already subpages of parent Articles page`,
         );
       }
+    } catch (subpageError: any) {
+      strapi.log.error(
+        `[SEED][ARTICLES] Failed to update parent page subpages: ${subpageError.message}`,
+      );
     }
 
     strapi.log.info(
-      `[SEED][ARTICLES] Article seeding complete! Created ${DJING_ARTICLES.length} articles, templates, and pages.`,
+      `[SEED][ARTICLES] Article seeding complete! Processed ${DJING_ARTICLES.length} articles, created ${createdPageIds.length} pages.`,
     );
   } catch (error: any) {
     strapi.log.error(
