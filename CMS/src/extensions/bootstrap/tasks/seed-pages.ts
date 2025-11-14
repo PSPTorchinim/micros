@@ -5,6 +5,7 @@ import { seedLoginPage } from './seed-login-page';
 import { seedForgotPasswordPage } from './seed-forgot-password-page';
 import { seedHomePage } from './seed-home-page';
 import { seedAboutPage } from './seed-about-page';
+import { seedFooter } from './seed-footer';
 
 export default async function seedStandardPages({ strapi }: { strapi: any }) {
   strapi.log.info('[SEED][STANDARD_PAGES] Starting standard pages seeding...');
@@ -12,6 +13,9 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
   try {
     // Always get or create configuration
     const configId = await getOrCreateConfiguration(strapi);
+
+    // Seed footer (site-wide content)
+    await seedFooter(strapi, configId);
 
     // Always run all page seeders; each handles its own existence check
     await seedLoginPage(strapi, configId);
