@@ -959,12 +959,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           data: {
             Name: templateName,
             TemplateType: 'Standard',
-            Content: [
-              {
-                __component: 'article-block-ref.article-block-ref',
-                block: article.id,
-              },
-            ],
+            Content: [],
             publishedAt: new Date().toISOString(),
           },
         });
@@ -990,6 +985,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             Title: article.Title,
             Slug: slug,
             Visible: true,
+            configuration: configId,
             template: template.id,
             publishedAt: new Date().toISOString(),
           },
@@ -1002,6 +998,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         await strapi.entityService.update(PAGE_UID, page.id, {
           data: {
             Slug: slug,
+            configuration: configId,
             template: template.id,
           },
         });
