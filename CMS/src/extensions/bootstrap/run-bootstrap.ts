@@ -37,6 +37,39 @@ async function runTask(
   }
 }
 
+// ---- database empty check --------------------------------------------------
+
+/**
+ * Check if the database is empty by looking for core content.
+ * We check for the existence of configuration and pages as indicators.
+ */
+async function isDatabaseEmpty(strapi: StrapiAny): Promise<boolean> {
+  try {
+    // Check for configuration (should exist if seeding has run)
+    const configCount = await strapi.db.query('api::configuration.configuration').count();
+    
+    // Check for pages (should exist if seeding has run)
+    const pageCount = await strapi.db.query('api::page.page').count();
+    
+    // Database is considered empty if both counts are 0
+    const isEmpty = configCount === 0 && pageCount === 0;
+    
+    if (isEmpty) {
+      strapi.log.info('[BOOT] Database is empty - seeding will be performed');
+    } else {
+      strapi.log.info(
+        `[BOOT] Database contains data (${configCount} config(s), ${pageCount} page(s)) - seeding tasks will check for existing content`
+      );
+    }
+    
+    return isEmpty;
+  } catch (e: any) {
+    strapi.log.warn(`[BOOT] Could not check if database is empty: ${e?.message ?? e}`);
+    // If we can't check, assume we should proceed with seeding (safe default)
+    return true;
+  }
+}
+
 // ---- task path maps --------------------------------------------------------
 
 const TASKS = {
@@ -55,6 +88,9 @@ const TASKS = {
 // ---- orchestrator ----------------------------------------------------------
 
 export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
+  // Check if database is empty (for logging purposes)
+  await isDatabaseEmpty(strapi);
+  
   // 1) Public role → enable all public permissions (unified)
   await runTask(
     strapi,
