@@ -3,7 +3,6 @@
 import { seedArticlesParentPage } from './seed-articles-parent-page';
 import { toUrlSlug } from './utils/slugify';
 const ARTICLE_UID = 'api::article.article';
-const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 
 interface Article {
   Title: string;
@@ -954,29 +953,6 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         strapi.log.info(`[SEED][ARTICLES] Article created (ID: ${article.id})`);
       }
 
-      // Create or find article-block for this specific article
-      const articleBlockName = `Article Block: ${article.Title}`;
-      let articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
-        where: { Title: articleBlockName },
-      });
-
-      if (!articleBlock) {
-        articleBlock = await strapi.entityService.create(ARTICLE_BLOCK_UID, {
-          data: {
-            Title: articleBlockName,
-            items: [article.id],
-            publishedAt: new Date().toISOString(),
-          },
-        });
-        strapi.log.info(
-          `[SEED][ARTICLES] Created article block for ${article.Title} (ID: ${articleBlock.id})`,
-        );
-      } else {
-        strapi.log.info(
-          `[SEED][ARTICLES] Article block for ${article.Title} already exists (ID: ${articleBlock.id})`,
-        );
-      }
-
       // Create or find template for this article
       const templateName = `Article: ${article.Title}`;
       let template = await strapi.db.query(TEMPLATE_UID).findOne({
@@ -988,12 +964,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           data: {
             Name: templateName,
             TemplateType: 'Standard',
-            Content: [
-              {
-                __component: 'article-block-ref.article-block-ref',
-                block: articleBlock.id,
-              },
-            ],
+            Content: [],
             publishedAt: new Date().toISOString(),
           },
         });
