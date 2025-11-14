@@ -92,7 +92,7 @@ export async function seedHomePage(strapi: any, configId: number) {
           },
           {
             __component: 'steps-container-ref.steps-container-ref',
-            steps_container: stepsContainer.id,
+            container: stepsContainer.id,
           },
         ],
         publishedAt: new Date().toISOString(),

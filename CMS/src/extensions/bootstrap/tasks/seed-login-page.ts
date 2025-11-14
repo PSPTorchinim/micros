@@ -1,4 +1,3 @@
-
 // Seed Login page
 import { toUrlSlug } from './utils/slugify';
 
@@ -11,7 +10,9 @@ export async function seedLoginPage(strapi: any, configId: number) {
 
   // Only seed if there are no login pages in the database
   const loginSlug = toUrlSlug('users/login');
-  const count = await strapi.db.query(PAGE_UID).count({ where: { Slug: loginSlug } });
+  const count = await strapi.db
+    .query(PAGE_UID)
+    .count({ where: { Slug: loginSlug } });
   if (count > 0) {
     strapi.log.info('[SEED][LOGIN] Skipping: login page already exists.');
     return;
@@ -74,6 +75,7 @@ export async function seedLoginPage(strapi: any, configId: number) {
         Title: 'Login',
         Slug: loginSlug,
         Visible: true,
+        Menu: 'Login',
         configuration: configId,
         template: loginTemplate.id,
         publishedAt: new Date().toISOString(),
@@ -86,6 +88,7 @@ export async function seedLoginPage(strapi: any, configId: number) {
     await strapi.entityService.update(PAGE_UID, existingLoginPage.id, {
       data: {
         Title: 'Login',
+        Menu: 'Login',
         template: loginTemplate.id,
         configuration: configId,
       },
