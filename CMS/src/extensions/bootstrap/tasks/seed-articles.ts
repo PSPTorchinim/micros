@@ -896,13 +896,6 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
   strapi.log.info('[SEED][ARTICLES] Starting article seeding...');
 
   try {
-    // Only seed if there are no articles in the database
-    const existingCount = await strapi.db.query(ARTICLE_UID).count();
-    if (existingCount > 0) {
-      strapi.log.info('[SEED][ARTICLES] Skipping article seeding: database is not empty.');
-      return;
-    }
-
     // Get the default locale
     const defaultLocale = 'en';
     const PAGE_UID = 'api::page.page';
@@ -918,62 +911,133 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         `[SEED][ARTICLES] Processing article: "${articleData.Title}"`,
       );
 
-      // Create article using entityService
-      const createData = {
-        Title: articleData.Title,
-        Summary: articleData.Summary,
-        coverUrl: articleData.coverUrl,
-        Body: articleData.Body,
-        locale: defaultLocale,
-      };
-      strapi.log.debug(
-        `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
-          Title: createData.Title,
-          Summary: createData.Summary?.substring(0, 50) + '...',
-          coverUrl: createData.coverUrl,
-          BodyLength: createData.Body?.length,
-          locale: createData.locale
-        })}`,
-      );
-
-      const article = await strapi.entityService.create(ARTICLE_UID, {
-        data: createData,
+      // Check if article already exists
+      const existingArticle = await strapi.db.query(ARTICLE_UID).findOne({
+        where: { Title: articleData.Title },
       });
 
-      strapi.log.info(
-        `[SEED][ARTICLES] Article created (ID: ${article.id}), now publishing...`,
-      );
+      let article;
+      if (existingArticle) {
+        strapi.log.info(
+          `[SEED][ARTICLES] Article "${articleData.Title}" already exists (ID: ${existingArticle.id})`,
+        );
+        article = existingArticle;
+      } else {
+        // Create article using entityService
+        const createData = {
+          Title: articleData.Title,
+          Summary: articleData.Summary,
+          coverUrl: articleData.coverUrl,
+          Body: articleData.Body,
+          locale: defaultLocale,
+        };
+        strapi.log.debug(
+          `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
+            Title: createData.Title,
+            Summary: createData.Summary?.substring(0, 50) + '...',
+            coverUrl: createData.coverUrl,
+            BodyLength: createData.Body?.length,
+            locale: createData.locale,
+          })}`,
+        );
 
-      // Create a template for this article
+        article = await strapi.entityService.create(ARTICLE_UID, {
+          data: createData,
+        });
+
+        strapi.log.info(`[SEED][ARTICLES] Article created (ID: ${article.id})`);
+      }
+
+      // Create or find template for this article
       const templateName = `Article: ${article.Title}`;
-      const template = await strapi.entityService.create(TEMPLATE_UID, {
-        data: {
-          Name: templateName,
-          TemplateType: 'Standard',
-          Content: [
-            {
-              __component: 'article-block-ref.article-block-ref',
-              article: article.id,
-            },
-          ],
-          publishedAt: new Date().toISOString(),
-        },
+      let template = await strapi.db.query(TEMPLATE_UID).findOne({
+        where: { Name: templateName },
       });
-      strapi.log.info(`[SEED][ARTICLES] Created template for article ${article.Title} (ID: ${template.id})`);
 
-      // Create a page for this article, as a child of the parent Articles page
-      const slug = toUrlSlug(`articles/${article.Title}`);
-      const page = await strapi.entityService.create(PAGE_UID, {
-        data: {
-          Title: article.Title,
-          Slug: slug,
-          Visible: true,
-          template: template.id,
-          parent: parentPageId,
-          publishedAt: new Date().toISOString(),
-        },
+      if (!template) {
+        template = await strapi.entityService.create(TEMPLATE_UID, {
+          data: {
+            Name: templateName,
+            TemplateType: 'Standard',
+            Content: [
+              {
+                __component: 'article-block-ref.article-block-ref',
+                block: article.id,
+              },
+            ],
+            publishedAt: new Date().toISOString(),
+          },
+        });
+        strapi.log.info(
+          `[SEED][ARTICLES] Created template for article ${article.Title} (ID: ${template.id})`,
+        );
+      } else {
+        strapi.log.info(
+          `[SEED][ARTICLES] Template for article ${article.Title} already exists (ID: ${template.id})`,
+        );
+      }
+
+      // Create or update page for this article
+      const slug = toUrlSlug(article.Title);
+      let page = await strapi.db.query(PAGE_UID).findOne({
+        where: { Title: article.Title },
       });
-      strapi.log.info(`[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`);
+
+      if (!page) {
+        // Create new page
+        page = await strapi.entityService.create(PAGE_UID, {
+          data: {
+            Title: article.Title,
+            Slug: slug,
+            Visible: true,
+            template: template.id,
+            publishedAt: new Date().toISOString(),
+          },
+        });
+        strapi.log.info(
+          `[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
+        );
+      } else {
+        // Update existing page with correct slug and template
+        await strapi.entityService.update(PAGE_UID, page.id, {
+          data: {
+            Slug: slug,
+            template: template.id,
+          },
+        });
+        strapi.log.info(
+          `[SEED][ARTICLES] Updated page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
+        );
+      }
+
+      // Add this article page as a subpage of the parent Articles page
+      const parentPage = await strapi.entityService.findOne(
+        PAGE_UID,
+        parentPageId,
+        {
+          populate: ['subpages'],
+        },
+      );
+      const existingSubpageIds = (parentPage.subpages || []).map(
+        (sp: any) => sp.id,
+      );
+
+      // Only add if not already a subpage
+      if (!existingSubpageIds.includes(page.id)) {
+        const updatedSubpages = [...existingSubpageIds, page.id];
+        await strapi.entityService.update(PAGE_UID, parentPageId, {
+          data: {
+            subpages: updatedSubpages,
+          },
+        });
+        strapi.log.info(
+          `[SEED][ARTICLES] Added article page as subpage of parent Articles page`,
+        );
+      } else {
+        strapi.log.info(
+          `[SEED][ARTICLES] Article page already a subpage of parent Articles page`,
+        );
+      }
     }
 
     strapi.log.info(

@@ -1,4 +1,3 @@
-
 // Seed About page
 import { toUrlSlug } from './utils/slugify';
 
@@ -9,13 +8,7 @@ const CONTACT_SECTION_UID = 'api::contact-section.contact-section';
 export async function seedAboutPage(strapi: any, configId: number) {
   strapi.log.info('[SEED][ABOUT] Seeding About page...');
 
-  // Only seed if there are no about pages in the database
   const aboutSlug = toUrlSlug('about');
-  const count = await strapi.db.query(PAGE_UID).count({ where: { Slug: aboutSlug } });
-  if (count > 0) {
-    strapi.log.info('[SEED][ABOUT] Skipping: about page already exists.');
-    return;
-  }
 
   // Get existing Contact Section
   const contactSection = await strapi.db.query(CONTACT_SECTION_UID).findOne({

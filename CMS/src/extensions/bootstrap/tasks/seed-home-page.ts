@@ -10,13 +10,6 @@ const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 export async function seedHomePage(strapi: any, configId: number) {
   strapi.log.info('[SEED][HOME] Seeding Home page...');
 
-  // Only seed if there are no home pages in the database
-  const count = await strapi.db.query(PAGE_UID).count({ where: { Slug: '/' } });
-  if (count > 0) {
-    strapi.log.info('[SEED][HOME] Skipping: home page already exists.');
-    return;
-  }
-
   // Get existing Hero Block
   const heroBlock = await strapi.db.query(HERO_BLOCK_UID).findOne({
     where: { heading: 'Welcome to DJ Beat Blaster' },
@@ -92,7 +85,7 @@ export async function seedHomePage(strapi: any, configId: number) {
           },
           {
             __component: 'steps-container-ref.steps-container-ref',
-            steps_container: stepsContainer.id,
+            container: stepsContainer.id,
           },
         ],
         publishedAt: new Date().toISOString(),
