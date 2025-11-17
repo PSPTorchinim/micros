@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
-import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
+import {
+  ConfigurationMenuEnum,
+  PageMenuEnum1,
+} from '../../../../models/strapi/strapiMap';
+import { NavigationItem } from '../../../../models/strapi/navigation-item';
 
 export const DesktopMenu = (props: any) => {
   const { token, user, logout } = useAuth();
@@ -36,7 +40,7 @@ export const DesktopMenu = (props: any) => {
     }
   };
 
-  const renderLinks = (links: any[]) => {
+  const renderLinks = (links: NavigationItem[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
@@ -84,15 +88,14 @@ export const DesktopMenu = (props: any) => {
   };
 
   // If menu property is missing, treat all as main
-  const mainLinks = props.links?.filter
+  const mainLinks = props.links
     ? props.links.filter(
         (element: any) =>
-          (element.Menu === ConfigurationMenuEnum.Main ||
-            element.Menu === undefined) &&
-          element.url,
+          element.Menu === ConfigurationMenuEnum.Main ||
+          element.Menu === undefined,
       )
-    : props.links;
-  const loginLinks = props.links?.filter
+    : [];
+  const loginLinks = props.links
     ? props.links.filter(
         (element: any) =>
           element.Menu === ConfigurationMenuEnum.Login && element.url,
@@ -102,21 +105,7 @@ export const DesktopMenu = (props: any) => {
   return (
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
-      <div className="navbar-buttons">
-        {renderLinks(loginLinks)}
-        {isAuthenticated() && (
-          <Link
-            to="#"
-            className="thq-link thq-body-small"
-            onClick={(e) => {
-              e.preventDefault();
-              logout();
-            }}
-          >
-            Logout
-          </Link>
-        )}
-      </div>
+      <div className="navbar-links">{renderLinks(loginLinks)}</div>
     </div>
   );
 };
