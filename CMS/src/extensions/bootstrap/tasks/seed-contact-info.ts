@@ -8,9 +8,13 @@ export async function seedContactInfo(strapi: any): Promise<number[]> {
   // Only seed if there are no contact info entries in the database
   const count = await strapi.db.query(CONTACT_INFO_UID).count();
   if (count > 0) {
-    strapi.log.info('[SEED][CONTACT_INFO] Skipping: contact info already exists.');
+    strapi.log.info(
+      '[SEED][CONTACT_INFO] Skipping: contact info already exists.',
+    );
     // Return existing IDs for downstream logic
-    const all = await strapi.db.query(CONTACT_INFO_UID).findMany({ select: ['id'] });
+    const all = await strapi.db
+      .query(CONTACT_INFO_UID)
+      .findMany({ select: ['id'] });
     return all.map((c: any) => c.id);
   }
 

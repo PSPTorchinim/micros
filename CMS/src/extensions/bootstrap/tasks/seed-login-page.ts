@@ -5,7 +5,11 @@ const PAGE_UID = 'api::page.page';
 const TEMPLATE_UID = 'api::template.template';
 const LOGIN_BLOCK_UID = 'api::login-block.login-block';
 
-export async function seedLoginPage(strapi: any, configId: number, parentPageId?: number) {
+export async function seedLoginPage(
+  strapi: any,
+  configId: number,
+  parentPageId?: number,
+) {
   strapi.log.info('[SEED][LOGIN] Seeding Login page...');
 
   const loginSlug = toUrlSlug('login');
@@ -66,8 +70,8 @@ export async function seedLoginPage(strapi: any, configId: number, parentPageId?
       data: {
         Title: 'Login',
         Slug: loginSlug,
-        Visible: true,
         Menu: 'Login',
+        AuthState: 'OnlyUnauthenticated',
         configuration: configId,
         template: loginTemplate.id,
         Parents: parentPageId ? [parentPageId] : undefined,
@@ -82,6 +86,7 @@ export async function seedLoginPage(strapi: any, configId: number, parentPageId?
       data: {
         Title: 'Login',
         Menu: 'Login',
+        AuthState: 'OnlyUnauthenticated',
         template: loginTemplate.id,
         configuration: configId,
         Parents: parentPageId ? [parentPageId] : undefined,

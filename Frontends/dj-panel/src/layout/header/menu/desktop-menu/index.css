@@ -2,23 +2,24 @@
   flex: 1;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-desktop-menu > *:first-child {
+  margin-left: 0;
+}
+
+.navbar-desktop-menu > *:last-child {
+  margin-right: var(--dl-space-space-twounits);
 }
 
 .navbar-links {
   gap: var(--dl-space-space-twounits);
-  flex: 1;
   display: flex;
   align-items: center;
   margin-left: var(--dl-space-space-twounits);
   flex-direction: row;
   justify-content: flex-start;
-}
-
-.navbar-buttons {
-  gap: var(--dl-space-space-twounits);
-  display: flex;
-  align-items: center;
-  margin-left: var(--dl-space-space-twounits);
 }
 
 .thq-link {

@@ -23,7 +23,6 @@ export interface Error {
 export interface ArticleRequest {
   data: {
     Title: string;
-    Slug: string;
     Summary?: string;
     coverUrl?: string;
     Body?: string;
@@ -50,7 +49,6 @@ export interface Article {
   id?: number;
   documentId?: string;
   Title: string;
-  Slug: string;
   Summary?: string;
   coverUrl?: string;
   Body?: string;
@@ -164,7 +162,6 @@ export interface Article {
     id?: number;
     documentId?: string;
     Title?: string;
-    Slug?: string;
     Summary?: string;
     coverUrl?: string;
     Body?: string;
@@ -434,7 +431,6 @@ export interface Configuration {
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -593,6 +589,7 @@ export interface Configuration {
       }[];
     };
     Menu?: ConfigurationMenuEnum;
+    AuthState?: ConfigurationAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: ConfigurationNavigationActionEnum;
     template?: {
@@ -1643,7 +1640,6 @@ export interface Footer {
       documentId?: string;
       Title?: string;
       Slug?: string;
-      Visible?: boolean;
       subpages?: {
         id?: number;
         documentId?: string;
@@ -1657,6 +1653,7 @@ export interface Footer {
         documentId?: string;
       };
       Menu?: FooterMenuEnum;
+      AuthState?: FooterAuthStateEnum;
       NavigationOrder?: number;
       NavigationAction?: FooterNavigationActionEnum;
       template?: {
@@ -1668,41 +1665,41 @@ export interface Footer {
           id?: number;
           documentId?: string;
         };
-        Content?: DiscriminatorNull1 &
+        Content?: BaseNull1 &
           (
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "image-slider-ref.image-slider-ref",
                 ImageSliderRefImageSliderRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "article-block-ref.article-block-ref",
                 ArticleBlockRefArticleBlockRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "steps-container-ref.steps-container-ref",
                 StepsContainerRefStepsContainerRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "cta-ref.cta-ref",
                 CtaRefCtaRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "contact-info-ref.contact-info-ref",
                 ContactInfoRefContactInfoRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "contact-section-ref.contact-section-ref",
                 ContactSectionRefContactSectionRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "feature-section-ref.feature-section-ref",
                 FeatureSectionRefFeatureSectionRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "feature-tab-ref.feature-tab-ref",
                 FeatureTabRefFeatureTabRefComponent
               >
-            | DiscriminatorNull1ComponentMapping<
+            | BaseNull1ComponentMapping<
                 "hero-block-ref.hero-block-ref",
                 HeroBlockRefHeroBlockRefComponent
               >
@@ -2048,41 +2045,41 @@ export interface HeroBlock {
     Label?: string;
     url?: string;
     OpenInNewTab?: boolean;
-    article?: InternalNull1 &
+    article?: AbstractNull1 &
       (
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | InternalNull1ComponentMapping<
+        | AbstractNull1ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2139,41 +2136,41 @@ export interface ImageSliderRequest {
     reversed?: boolean;
     AutoPlay?: boolean;
     IntervalMs?: number;
-    Slides?: PolymorphNull1 &
+    Slides?: InternalNull1 &
       (
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | InternalNull1ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2204,38 +2201,41 @@ export interface ImageSlider {
   reversed?: boolean;
   AutoPlay?: boolean;
   IntervalMs?: number;
-  Slides?: InternalNull2 &
+  Slides?: DiscriminatorNull1 &
     (
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNull2ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
+          "cta-ref.cta-ref",
+          CtaRefCtaRefComponent
+        >
+      | DiscriminatorNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -2463,12 +2463,12 @@ export interface PageRequest {
   data: {
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: (number | string)[];
     Parents?: (number | string)[];
     /** @example "string or id" */
     configuration?: number | string;
     Menu?: PageRequestMenuEnum;
+    AuthState?: PageRequestAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: PageRequestNavigationActionEnum;
     /** @example "string or id" */
@@ -2497,13 +2497,11 @@ export interface Page {
   documentId?: string;
   Title?: string;
   Slug?: string;
-  Visible?: boolean;
   subpages?: {
     id?: number;
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -2662,6 +2660,7 @@ export interface Page {
       }[];
     };
     Menu?: PageMenuEnum;
+    AuthState?: PageAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: PageNavigationActionEnum;
     template?: {
@@ -2673,41 +2672,41 @@ export interface Page {
         id?: number;
         documentId?: string;
       };
-      Content?: PolymorphNull2 &
+      Content?: InternalNull2 &
         (
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | PolymorphNull2ComponentMapping<
+          | InternalNull2ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -2761,6 +2760,7 @@ export interface Page {
     documentId?: string;
   };
   Menu?: PageMenuEnum1;
+  AuthState?: PageAuthStateEnum1;
   NavigationOrder?: number;
   NavigationAction?: PageNavigationActionEnum1;
   template?: {
@@ -2797,80 +2797,80 @@ export interface StepsContainerRequest {
   data: {
     heading?: string;
     content?: string;
-    action?: DiscriminatorNull2 &
+    action?: InternalNull3 &
       (
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | DiscriminatorNull2ComponentMapping<
+        | InternalNull3ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
       );
-    steps?: DiscriminatorNull3 &
+    steps?: AbstractNull2 &
       (
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | DiscriminatorNull3ComponentMapping<
+        | AbstractNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -2899,74 +2899,74 @@ export interface StepsContainer {
   documentId?: string;
   heading?: string;
   content?: string;
-  action?: AbstractNull1 &
+  action?: InternalNull4 &
     (
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | AbstractNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull4ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | InternalNull4ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
     );
-  steps?: InternalNull3 &
+  steps?: InternalNull5 &
     (
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNull3ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull5ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNull3ComponentMapping<
+      | InternalNull5ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -3003,41 +3003,41 @@ export interface TemplateRequest {
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
-    Content?: AbstractNull2 &
+    Content?: DiscriminatorNull2 &
       (
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | AbstractNull2ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -3071,7 +3071,6 @@ export interface Template {
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -3230,6 +3229,7 @@ export interface Template {
       }[];
     };
     Menu?: TemplateMenuEnum;
+    AuthState?: TemplateAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: TemplateNavigationActionEnum;
     template?: {
@@ -3241,41 +3241,41 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: AbstractNull3 &
+      Content?: PolymorphNull1 &
         (
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | AbstractNull3ComponentMapping<
+          | PolymorphNull1ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -3320,38 +3320,38 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: InternalNull4 &
+  Content?: InternalNull6 &
     (
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNull4ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull6ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNull4ComponentMapping<
+      | InternalNull6ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -3537,6 +3537,13 @@ export enum HeroBlockRefHeroBlockRefComponentComponentEnum {
 export enum ConfigurationMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum ConfigurationAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
 }
 
 export enum ConfigurationNavigationActionEnum {
@@ -3601,6 +3608,13 @@ type PolymorphNullComponentMapping<Key, Type> = {
 export enum FooterMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum FooterAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
 }
 
 export enum FooterNavigationActionEnum {
@@ -3614,7 +3628,7 @@ export enum FooterTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
 }
 
-type DiscriminatorNull1 = (
+type BaseNull1 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
   | StepsContainerRefStepsContainerRefComponent
@@ -3626,139 +3640,7 @@ type DiscriminatorNull1 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type DiscriminatorNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-type InternalNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type InternalNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-type PolymorphNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type PolymorphNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-type InternalNull2 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type InternalNull2ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum PageRequestMenuEnum {
-  Main = "Main",
-  Login = "Login",
-}
-
-export enum PageRequestNavigationActionEnum {
-  Link = "Link",
-  Action = "Action",
-}
-
-export enum PageMenuEnum {
-  Main = "Main",
-  Login = "Login",
-}
-
-export enum PageNavigationActionEnum {
-  Link = "Link",
-  Action = "Action",
-}
-
-export enum PageTemplateTypeEnum {
-  Standard = "Standard",
-  Login = "Login",
-  ForgotPassword = "ForgotPassword",
-}
-
-type PolymorphNull2 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type PolymorphNull2ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum PageMenuEnum1 {
-  Main = "Main",
-  Login = "Login",
-}
-
-export enum PageNavigationActionEnum1 {
-  Link = "Link",
-  Action = "Action",
-}
-
-type DiscriminatorNull2 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type DiscriminatorNull2ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-type DiscriminatorNull3 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type DiscriminatorNull3ComponentMapping<Key, Type> = {
+type BaseNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -3778,6 +3660,111 @@ type AbstractNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
+type InternalNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type DiscriminatorNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum PageRequestMenuEnum {
+  Main = "Main",
+  Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum PageRequestAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
+
+export enum PageRequestNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum PageMenuEnum {
+  Main = "Main",
+  Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum PageAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
+
+export enum PageNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum PageTemplateTypeEnum {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+}
+
+type InternalNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum PageMenuEnum1 {
+  Main = "Main",
+  Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum PageAuthStateEnum1 {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
+
+export enum PageNavigationActionEnum1 {
+  Link = "Link",
+  Action = "Action",
+}
+
 type InternalNull3 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -3793,12 +3780,6 @@ type InternalNull3 = (
 type InternalNull3ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
-
-export enum TemplateRequestTemplateTypeEnum {
-  Standard = "Standard",
-  Login = "Login",
-  ForgotPassword = "ForgotPassword",
-}
 
 type AbstractNull2 = (
   | ImageSliderRefImageSliderRefComponent
@@ -3816,44 +3797,6 @@ type AbstractNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-export enum TemplateTemplateTypeEnum {
-  Standard = "Standard",
-  Login = "Login",
-  ForgotPassword = "ForgotPassword",
-}
-
-export enum TemplateMenuEnum {
-  Main = "Main",
-  Login = "Login",
-}
-
-export enum TemplateNavigationActionEnum {
-  Link = "Link",
-  Action = "Action",
-}
-
-export enum TemplateTemplateTypeEnum1 {
-  Standard = "Standard",
-  Login = "Login",
-  ForgotPassword = "ForgotPassword",
-}
-
-type AbstractNull3 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type AbstractNull3ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
 type InternalNull4 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -3867,6 +3810,105 @@ type InternalNull4 = (
 )[];
 
 type InternalNull4ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type InternalNull5 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull5ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum TemplateRequestTemplateTypeEnum {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+}
+
+type DiscriminatorNull2 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull2ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum TemplateTemplateTypeEnum {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+}
+
+export enum TemplateMenuEnum {
+  Main = "Main",
+  Login = "Login",
+  NotVisible = "NotVisible",
+}
+
+export enum TemplateAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
+
+export enum TemplateNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum TemplateTemplateTypeEnum1 {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+}
+
+type PolymorphNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type PolymorphNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type InternalNull6 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type InternalNull6ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 

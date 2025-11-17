@@ -62,7 +62,6 @@ export async function seedAboutPage(strapi: any, configId: number) {
       data: {
         Title: 'About',
         Slug: aboutSlug,
-        Visible: true,
         configuration: configId,
         template: aboutTemplate.id,
         publishedAt: new Date().toISOString(),

@@ -908,15 +908,17 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
     strapi.log.info('[SEED][ARTICLES] 🔧 Getting/creating configuration...');
     const configId = await getOrCreateConfiguration(strapi);
     strapi.log.info(`[SEED][ARTICLES] ✅ Configuration ID: ${configId}`);
-    
+
     strapi.log.info('[SEED][ARTICLES] 📁 Creating parent Articles page...');
     const parentPageId = await seedArticlesParentPage(strapi, configId);
     strapi.log.info(`[SEED][ARTICLES] ✅ Parent page ID: ${parentPageId}`);
 
     // Track created page IDs to add as subpages at the end
     const createdPageIds: number[] = [];
-    
-    strapi.log.info(`[SEED][ARTICLES] 📚 Processing ${DJING_ARTICLES.length} articles...`);
+
+    strapi.log.info(
+      `[SEED][ARTICLES] 📚 Processing ${DJING_ARTICLES.length} articles...`,
+    );
 
     for (const articleData of DJING_ARTICLES) {
       try {
@@ -925,106 +927,106 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           `[SEED][ARTICLES] 📖 Processing article: "${articleData.Title}"`,
         );
 
-      // Check if article already exists
-      const existingArticle = await strapi.db.query(ARTICLE_UID).findOne({
-        where: { Title: articleData.Title },
-      });
-
-      let article;
-      if (existingArticle) {
-        strapi.log.info(
-          `[SEED][ARTICLES] Article "${articleData.Title}" already exists (ID: ${existingArticle.id})`,
-        );
-        article = existingArticle;
-      } else {
-        // Create article using entityService
-        const createData = {
-          Title: articleData.Title,
-          Summary: articleData.Summary,
-          coverUrl: articleData.coverUrl,
-          Body: articleData.Body,
-          locale: defaultLocale,
-          publishedAt: new Date().toISOString(),
-        };
-        strapi.log.debug(
-          `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
-            Title: createData.Title,
-            Summary: createData.Summary?.substring(0, 50) + '...',
-            coverUrl: createData.coverUrl,
-            BodyLength: createData.Body?.length,
-            locale: createData.locale,
-          })}`,
-        );
-
-        article = await strapi.entityService.create(ARTICLE_UID, {
-          data: createData,
+        // Check if article already exists
+        const existingArticle = await strapi.db.query(ARTICLE_UID).findOne({
+          where: { Title: articleData.Title },
         });
 
-        strapi.log.info(`[SEED][ARTICLES] Article created (ID: ${article.id})`);
-      }
-
-      // Create or find template for this article
-      const templateName = `Article: ${article.Title}`;
-      let template = await strapi.db.query(TEMPLATE_UID).findOne({
-        where: { Name: templateName },
-      });
-
-      if (!template) {
-        template = await strapi.entityService.create(TEMPLATE_UID, {
-          data: {
-            Name: templateName,
-            TemplateType: 'Standard',
-            Content: [],
+        let article;
+        if (existingArticle) {
+          strapi.log.info(
+            `[SEED][ARTICLES] Article "${articleData.Title}" already exists (ID: ${existingArticle.id})`,
+          );
+          article = existingArticle;
+        } else {
+          // Create article using entityService
+          const createData = {
+            Title: articleData.Title,
+            Summary: articleData.Summary,
+            coverUrl: articleData.coverUrl,
+            Body: articleData.Body,
+            locale: defaultLocale,
             publishedAt: new Date().toISOString(),
-          },
-        });
-        strapi.log.info(
-          `[SEED][ARTICLES] Created template for article ${article.Title} (ID: ${template.id})`,
-        );
-      } else {
-        strapi.log.info(
-          `[SEED][ARTICLES] Template for article ${article.Title} already exists (ID: ${template.id})`,
-        );
-      }
+          };
+          strapi.log.debug(
+            `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
+              Title: createData.Title,
+              Summary: createData.Summary?.substring(0, 50) + '...',
+              coverUrl: createData.coverUrl,
+              BodyLength: createData.Body?.length,
+              locale: createData.locale,
+            })}`,
+          );
 
-      // Create or update page for this article
-      const slug = toUrlSlug(article.Title);
-      let page = await strapi.db.query(PAGE_UID).findOne({
-        where: { Title: article.Title },
-      });
+          article = await strapi.entityService.create(ARTICLE_UID, {
+            data: createData,
+          });
 
-      if (!page) {
-        // Create new page
-        page = await strapi.entityService.create(PAGE_UID, {
-          data: {
-            Title: article.Title,
-            Slug: slug,
-            Visible: true,
-            configuration: configId,
-            template: template.id,
-            publishedAt: new Date().toISOString(),
-          },
-        });
-        strapi.log.info(
-          `[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
-        );
-      } else {
-        // Update existing page with correct slug and template
-        await strapi.entityService.update(PAGE_UID, page.id, {
-          data: {
-            Slug: slug,
-            configuration: configId,
-            template: template.id,
-          },
-        });
-        strapi.log.info(
-          `[SEED][ARTICLES] Updated page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
-        );
-      }
+          strapi.log.info(
+            `[SEED][ARTICLES] Article created (ID: ${article.id})`,
+          );
+        }
 
-      // Track page ID for later subpage assignment
-      createdPageIds.push(page.id);
-      
+        // Create or find template for this article
+        const templateName = `Article: ${article.Title}`;
+        let template = await strapi.db.query(TEMPLATE_UID).findOne({
+          where: { Name: templateName },
+        });
+
+        if (!template) {
+          template = await strapi.entityService.create(TEMPLATE_UID, {
+            data: {
+              Name: templateName,
+              TemplateType: 'Standard',
+              Content: [],
+              publishedAt: new Date().toISOString(),
+            },
+          });
+          strapi.log.info(
+            `[SEED][ARTICLES] Created template for article ${article.Title} (ID: ${template.id})`,
+          );
+        } else {
+          strapi.log.info(
+            `[SEED][ARTICLES] Template for article ${article.Title} already exists (ID: ${template.id})`,
+          );
+        }
+
+        // Create or update page for this article
+        const slug = toUrlSlug(article.Title);
+        let page = await strapi.db.query(PAGE_UID).findOne({
+          where: { Title: article.Title },
+        });
+
+        if (!page) {
+          // Create new page
+          page = await strapi.entityService.create(PAGE_UID, {
+            data: {
+              Title: article.Title,
+              Slug: slug,
+              configuration: configId,
+              template: template.id,
+              publishedAt: new Date().toISOString(),
+            },
+          });
+          strapi.log.info(
+            `[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
+          );
+        } else {
+          // Update existing page with correct slug and template
+          await strapi.entityService.update(PAGE_UID, page.id, {
+            data: {
+              Slug: slug,
+              configuration: configId,
+              template: template.id,
+            },
+          });
+          strapi.log.info(
+            `[SEED][ARTICLES] Updated page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
+          );
+        }
+
+        // Track page ID for later subpage assignment
+        createdPageIds.push(page.id);
       } catch (articleError: any) {
         strapi.log.error(
           `[SEED][ARTICLES] Failed to process article "${articleData.Title}": ${articleError.message}`,

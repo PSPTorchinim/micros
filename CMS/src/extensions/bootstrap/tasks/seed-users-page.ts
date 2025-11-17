@@ -45,8 +45,7 @@ export async function seedUsersPage(strapi: any, configId: number) {
       data: {
         Title: 'Users',
         Slug: usersSlug,
-        Visible: false, // Users page is not directly visible in navigation
-        Menu: 'Main',
+        Menu: 'NotVisible', // Users page is not directly visible in navigation
         configuration: configId,
         template: usersTemplate.id,
         publishedAt: new Date().toISOString(),
@@ -56,14 +55,18 @@ export async function seedUsersPage(strapi: any, configId: number) {
       `[SEED][USERS] Created Users Page (ID: ${usersPage.id}, Slug: /${usersSlug})`,
     );
   } else {
-    usersPage = await strapi.entityService.update(PAGE_UID, existingUsersPage.id, {
-      data: {
-        Title: 'Users',
-        Menu: 'Main',
-        template: usersTemplate.id,
-        configuration: configId,
+    usersPage = await strapi.entityService.update(
+      PAGE_UID,
+      existingUsersPage.id,
+      {
+        data: {
+          Title: 'Users',
+          Menu: 'Main',
+          template: usersTemplate.id,
+          configuration: configId,
+        },
       },
-    });
+    );
     strapi.log.info(
       `[SEED][USERS] Updated existing Users Page (ID: ${existingUsersPage.id})`,
     );

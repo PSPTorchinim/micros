@@ -9,7 +9,9 @@ export async function seedFeatureSections(strapi: any) {
   // Only seed if there are no feature sections in the database
   const count = await strapi.db.query(FEATURE_SECTION_UID).count();
   if (count > 0) {
-    strapi.log.info('[SEED][FEATURE_SECTIONS] Skipping: feature sections already exist.');
+    strapi.log.info(
+      '[SEED][FEATURE_SECTIONS] Skipping: feature sections already exist.',
+    );
     return;
   }
 

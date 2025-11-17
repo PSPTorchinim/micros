@@ -15,7 +15,9 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
 
   try {
     // Always get or create configuration
-    strapi.log.info('[SEED][STANDARD_PAGES] 🔧 Getting/creating configuration...');
+    strapi.log.info(
+      '[SEED][STANDARD_PAGES] 🔧 Getting/creating configuration...',
+    );
     const configId = await getOrCreateConfiguration(strapi);
     strapi.log.info(`[SEED][STANDARD_PAGES] ✅ Configuration ID: ${configId}`);
 
@@ -30,18 +32,22 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     // Always run all page seeders; each handles its own existence check
     strapi.log.info('[SEED][STANDARD_PAGES] 🔐 Seeding Login page...');
     await seedLoginPage(strapi, configId, usersPageId);
-    
-    strapi.log.info('[SEED][STANDARD_PAGES] 🔑 Seeding Forgot Password page...');
+
+    strapi.log.info(
+      '[SEED][STANDARD_PAGES] 🔑 Seeding Forgot Password page...',
+    );
     await seedForgotPasswordPage(strapi, configId, usersPageId);
-    
+
     strapi.log.info('[SEED][STANDARD_PAGES] 🏠 Seeding Home page...');
     await seedHomePage(strapi, configId);
-    
+
     strapi.log.info('[SEED][STANDARD_PAGES] ℹ️  Seeding About page...');
     await seedAboutPage(strapi, configId);
 
     strapi.log.info('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    strapi.log.info('[SEED][STANDARD_PAGES] ✅ Standard pages seeding complete!');
+    strapi.log.info(
+      '[SEED][STANDARD_PAGES] ✅ Standard pages seeding complete!',
+    );
     strapi.log.info('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } catch (error: any) {
     strapi.log.error('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

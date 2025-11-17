@@ -11,7 +11,9 @@ export async function seedContactSections(
   // Only seed if there are no contact sections in the database
   const count = await strapi.db.query(CONTACT_SECTION_UID).count();
   if (count > 0) {
-    strapi.log.info('[SEED][CONTACT_SECTIONS] Skipping: contact sections already exist.');
+    strapi.log.info(
+      '[SEED][CONTACT_SECTIONS] Skipping: contact sections already exist.',
+    );
     return;
   }
 

@@ -1,20 +1,20 @@
 // Shared permission helpers for Strapi bootstrap tasks
-import { StrapiLike } from "../types/strapi-like";
+import { StrapiLike } from '../types/strapi-like';
 
-const ROLE_UID = "plugin::users-permissions.role";
-const PERMISSION_UID = "plugin::users-permissions.permission";
+const ROLE_UID = 'plugin::users-permissions.role';
+const PERMISSION_UID = 'plugin::users-permissions.permission';
 
 export async function getRoleByType(strapi: StrapiLike, type: string) {
   return strapi.query(ROLE_UID).findOne({
     where: { type },
-    populate: ["permissions"],
+    populate: ['permissions'],
   });
 }
 
 export async function findPermission(
   strapi: StrapiLike,
   roleId: number,
-  action: string
+  action: string,
 ) {
   return strapi.query(PERMISSION_UID).findOne({
     where: { role: roleId, action },
@@ -24,16 +24,16 @@ export async function findPermission(
 export async function createPermission(
   strapi: StrapiLike,
   roleId: number,
-  action: string
+  action: string,
 ) {
   return strapi.query(PERMISSION_UID).create({
-    data: { action, role: roleId, enabled: true, policy: "" },
+    data: { action, role: roleId, enabled: true, policy: '' },
   });
 }
 
 export async function enablePermission(
   strapi: StrapiLike,
-  permissionId: number
+  permissionId: number,
 ) {
   return strapi.query(PERMISSION_UID).update({
     where: { id: permissionId },
@@ -45,7 +45,7 @@ export async function ensureActionEnabled(
   strapi: StrapiLike,
   roleId: number,
   action: string,
-  logPrefix: string = "PERM"
+  logPrefix: string = 'PERM',
 ) {
   const existing = await findPermission(strapi, roleId, action);
 

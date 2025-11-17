@@ -10,7 +10,9 @@ export default async function seedImageSliders({ strapi }: { strapi: any }) {
     // Only seed if there are no image sliders in the database
     const count = await strapi.db.query(IMAGE_SLIDER_UID).count();
     if (count > 0) {
-      strapi.log.info('[SEED][IMAGE_SLIDERS] Skipping: image sliders already exist.');
+      strapi.log.info(
+        '[SEED][IMAGE_SLIDERS] Skipping: image sliders already exist.',
+      );
       return;
     }
 
