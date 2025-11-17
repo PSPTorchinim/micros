@@ -51,7 +51,7 @@ export function renderBlock(block: any, index: number) {
       const summary = block.Summary || block.attributes?.Summary;
       const coverUrl = block.coverUrl || block.attributes?.coverUrl;
       const body = block.Body || block.attributes?.Body;
-      
+
       return (
         <div key={index} className="article-detail">
           {coverUrl && (
