@@ -46,12 +46,18 @@ export function renderBlock(block: any, index: number) {
       return <ForgotPasswordBlock key={index} {...block} />;
     case 'article':
       // Direct article rendering for article pages
+      // Handle both Strapi v5 format (with attributes) and direct format
+      const title = block.Title || block.attributes?.Title;
+      const summary = block.Summary || block.attributes?.Summary;
+      const coverUrl = block.coverUrl || block.attributes?.coverUrl;
+      const body = block.Body || block.attributes?.Body;
+      
       return (
         <div key={index} className="article-detail">
-          {block.coverUrl && (
+          {coverUrl && (
             <img
-              src={block.coverUrl}
-              alt={block.Title}
+              src={coverUrl}
+              alt={title}
               style={{
                 width: '100%',
                 maxHeight: '400px',
@@ -61,8 +67,8 @@ export function renderBlock(block: any, index: number) {
               }}
             />
           )}
-          <h1>{block.Title}</h1>
-          {block.Summary && (
+          <h1>{title}</h1>
+          {summary && (
             <p
               style={{
                 fontSize: '1.2em',
@@ -71,12 +77,12 @@ export function renderBlock(block: any, index: number) {
                 color: '#666',
               }}
             >
-              {block.Summary}
+              {summary}
             </p>
           )}
-          {block.Body && (
+          {body && (
             <div
-              dangerouslySetInnerHTML={{ __html: block.Body }}
+              dangerouslySetInnerHTML={{ __html: body }}
               style={{ lineHeight: '1.6' }}
             />
           )}
