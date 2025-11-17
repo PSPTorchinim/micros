@@ -1,4 +1,5 @@
 import React from 'react';
+import { marked } from 'marked';
 import {
   HeroBlock,
   ImageSliderBlock,
@@ -52,6 +53,9 @@ export function renderBlock(block: any, index: number) {
       const coverUrl = block.coverUrl || block.attributes?.coverUrl;
       const body = block.Body || block.attributes?.Body;
 
+      // Convert markdown to HTML if body contains markdown
+      const htmlBody = body ? marked.parse(body) : '';
+
       return (
         <div key={index} className="article-detail">
           {coverUrl && (
@@ -80,9 +84,9 @@ export function renderBlock(block: any, index: number) {
               {summary}
             </p>
           )}
-          {body && (
+          {htmlBody && (
             <div
-              dangerouslySetInnerHTML={{ __html: body }}
+              dangerouslySetInnerHTML={{ __html: htmlBody }}
               style={{ lineHeight: '1.6' }}
             />
           )}
