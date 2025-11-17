@@ -43,6 +43,7 @@ const TEMPLATE_CONTENT_POPULATE = {
       'Title',
       'Slug',
       'Menu',
+      'AuthState',
       'NavigationOrder',
       'NavigationAction',
     ],

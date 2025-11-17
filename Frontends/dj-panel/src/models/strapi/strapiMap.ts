@@ -2466,6 +2466,7 @@ export interface PageRequest {
     /** @example "string or id" */
     configuration?: number | string;
     Menu?: PageRequestMenuEnum;
+    AuthState?: PageRequestAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: PageRequestNavigationActionEnum;
     /** @example "string or id" */
@@ -2657,6 +2658,7 @@ export interface Page {
       }[];
     };
     Menu?: PageMenuEnum;
+    AuthState?: PageAuthStateEnum;
     NavigationOrder?: number;
     NavigationAction?: PageNavigationActionEnum;
     template?: {
@@ -3680,6 +3682,12 @@ export enum PageRequestMenuEnum {
   NotVisible = "NotVisible",
 }
 
+export enum PageRequestAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
+
 export enum PageRequestNavigationActionEnum {
   Link = "Link",
   Action = "Action",
@@ -3689,6 +3697,12 @@ export enum PageMenuEnum {
   Main = "Main",
   Login = "Login",
   NotVisible = "NotVisible",
+}
+
+export enum PageAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
 }
 
 export enum PageNavigationActionEnum {
@@ -3722,6 +3736,12 @@ export enum PageMenuEnum1 {
   Main = "Main",
   Login = "Login",
   NotVisible = "NotVisible",
+}
+
+export enum PageAuthStateEnum1 {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
 }
 
 export enum PageNavigationActionEnum1 {
