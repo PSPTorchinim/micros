@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
+import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
 
 export const DesktopMenu = (props: any) => {
   const { token, user, logout } = useAuth();
@@ -83,17 +84,15 @@ export const DesktopMenu = (props: any) => {
   const mainLinks = props.links?.filter
     ? props.links.filter(
         (element: any) =>
-          (element.Menu === 'Main' || element.Menu === undefined) &&
-          element.url &&
-          element.Menu !== 'NotVisible',
+          (element.Menu === ConfigurationMenuEnum.Main || element.Menu === undefined) &&
+          element.url
       )
     : props.links;
   const loginLinks = props.links?.filter
     ? props.links.filter(
         (element: any) =>
-          element.Menu === 'Login' &&
+          element.Menu === ConfigurationMenuEnum.Login &&
           element.url &&
-          element.Menu !== 'NotVisible',
       )
     : [];
 
@@ -101,7 +100,7 @@ export const DesktopMenu = (props: any) => {
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
       <div className="navbar-buttons">
-        {!isAuthenticated() && renderLinks(loginLinks)}
+        {renderLinks(loginLinks)}
         {isAuthenticated() && (
           <Link
             to="#"
