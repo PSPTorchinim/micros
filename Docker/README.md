@@ -547,3 +547,7 @@ docker-compose -f dj-panel-composer.yml exec identity-api /bin/bash
 ```
 
 For additional support, refer to the main [README](../README.md) and [troubleshooting section](../README.md#troubleshooting).
+
+---
+
+**Developed by PSPTorchinim**

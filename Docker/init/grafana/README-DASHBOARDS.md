@@ -226,3 +226,7 @@ PROJECT_NAME=ix-dj-panel-production
 REPLICA_INDEX=1
 # Generates: service_name="ix-dj-panel-production-apigateway-1"
 ```
+
+---
+
+**Developed by PSPTorchinim**

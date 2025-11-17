@@ -221,3 +221,7 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   await runTask(strapi, 'seed-my-task', TASKS.myTask);
 }
 ```
+
+---
+
+**Developed by PSPTorchinim**

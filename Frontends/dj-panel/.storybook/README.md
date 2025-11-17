@@ -101,3 +101,7 @@ Currently documented components:
 
 - [Storybook Documentation](https://storybook.js.org/docs)
 - [React Storybook Guide](https://storybook.js.org/docs/react/get-started/introduction)
+
+---
+
+**Developed by PSPTorchinim**

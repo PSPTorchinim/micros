@@ -96,3 +96,7 @@ docker exec -it mongodb_container mongosh /tmp/manual-mongo-setup.js
 ```powershell
 docker compose -f Docker/dj-panel-composer.yml build --no-cache mongodb_container
 ```
+
+---
+
+**Developed by PSPTorchinim**
