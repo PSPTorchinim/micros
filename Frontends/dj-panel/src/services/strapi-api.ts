@@ -42,7 +42,6 @@ const TEMPLATE_CONTENT_POPULATE = {
       'documentId',
       'Title',
       'Slug',
-      'Visible',
       'Menu',
       'NavigationOrder',
       'NavigationAction',

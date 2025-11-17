@@ -111,7 +111,6 @@ export async function seedHomePage(strapi: any, configId: number) {
       data: {
         Title: 'Home',
         Slug: '/',
-        Visible: true,
         configuration: configId,
         template: homeTemplate.id,
         publishedAt: new Date().toISOString(),

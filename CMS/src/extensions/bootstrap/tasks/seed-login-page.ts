@@ -70,7 +70,6 @@ export async function seedLoginPage(
       data: {
         Title: 'Login',
         Slug: loginSlug,
-        Visible: true,
         Menu: 'Login',
         configuration: configId,
         template: loginTemplate.id,

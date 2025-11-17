@@ -434,7 +434,6 @@ export interface Configuration {
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -1643,7 +1642,6 @@ export interface Footer {
       documentId?: string;
       Title?: string;
       Slug?: string;
-      Visible?: boolean;
       subpages?: {
         id?: number;
         documentId?: string;
@@ -2463,7 +2461,6 @@ export interface PageRequest {
   data: {
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: (number | string)[];
     Parents?: (number | string)[];
     /** @example "string or id" */
@@ -2497,13 +2494,11 @@ export interface Page {
   documentId?: string;
   Title?: string;
   Slug?: string;
-  Visible?: boolean;
   subpages?: {
     id?: number;
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -3071,7 +3066,6 @@ export interface Template {
     documentId?: string;
     Title?: string;
     Slug?: string;
-    Visible?: boolean;
     subpages?: {
       id?: number;
       documentId?: string;
@@ -3537,6 +3531,7 @@ export enum HeroBlockRefHeroBlockRefComponentComponentEnum {
 export enum ConfigurationMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum ConfigurationNavigationActionEnum {
@@ -3601,6 +3596,7 @@ type PolymorphNullComponentMapping<Key, Type> = {
 export enum FooterMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum FooterNavigationActionEnum {
@@ -3681,6 +3677,7 @@ type InternalNull2ComponentMapping<Key, Type> = {
 export enum PageRequestMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum PageRequestNavigationActionEnum {
@@ -3691,6 +3688,7 @@ export enum PageRequestNavigationActionEnum {
 export enum PageMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum PageNavigationActionEnum {
@@ -3723,6 +3721,7 @@ type PolymorphNull2ComponentMapping<Key, Type> = {
 export enum PageMenuEnum1 {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum PageNavigationActionEnum1 {
@@ -3825,6 +3824,7 @@ export enum TemplateTemplateTypeEnum {
 export enum TemplateMenuEnum {
   Main = "Main",
   Login = "Login",
+  NotVisible = "NotVisible",
 }
 
 export enum TemplateNavigationActionEnum {

@@ -9,7 +9,9 @@ export async function seedStepsContainers(strapi: any) {
   // Only seed if there are no steps containers in the database
   const count = await strapi.db.query(STEPS_CONTAINER_UID).count();
   if (count > 0) {
-    strapi.log.info('[SEED][STEPS_CONTAINERS] Skipping: steps containers already exist.');
+    strapi.log.info(
+      '[SEED][STEPS_CONTAINERS] Skipping: steps containers already exist.',
+    );
     return;
   }
 

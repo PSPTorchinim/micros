@@ -27,7 +27,9 @@ export async function seedArticleBlocks(strapi: any) {
   }
 
   // Update the article block to include all articles
-  const articles = await strapi.db.query('api::article.article').findMany({ select: ['id'] });
+  const articles = await strapi.db
+    .query('api::article.article')
+    .findMany({ select: ['id'] });
   const articleIds = articles.map((a: any) => a.id);
   await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
     data: { items: articleIds },

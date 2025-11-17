@@ -85,7 +85,7 @@ export const DesktopMenu = (props: any) => {
         (element: any) =>
           (element.Menu === 'Main' || element.Menu === undefined) &&
           element.url &&
-          (element.Visible === undefined || element.Visible === true),
+          element.Menu !== 'NotVisible',
       )
     : props.links;
   const loginLinks = props.links?.filter
@@ -93,7 +93,7 @@ export const DesktopMenu = (props: any) => {
         (element: any) =>
           element.Menu === 'Login' &&
           element.url &&
-          (element.Visible === undefined || element.Visible === true),
+          element.Menu !== 'NotVisible',
       )
     : [];
 

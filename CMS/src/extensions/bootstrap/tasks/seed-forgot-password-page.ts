@@ -6,7 +6,11 @@ const TEMPLATE_UID = 'api::template.template';
 const FORGOT_PASSWORD_BLOCK_UID =
   'api::forgot-password-block.forgot-password-block';
 
-export async function seedForgotPasswordPage(strapi: any, configId: number, parentPageId?: number) {
+export async function seedForgotPasswordPage(
+  strapi: any,
+  configId: number,
+  parentPageId?: number,
+) {
   strapi.log.info('[SEED][FORGOT_PASSWORD] Seeding Forgot Password page...');
 
   const forgotSlug = toUrlSlug('forgot-password');
@@ -74,7 +78,7 @@ export async function seedForgotPasswordPage(strapi: any, configId: number, pare
       data: {
         Title: 'Forgot Password',
         Slug: forgotSlug,
-        Visible: false,
+        Menu: 'NotVisible',
         configuration: configId,
         template: forgotTemplate.id,
         Parents: parentPageId ? [parentPageId] : undefined,

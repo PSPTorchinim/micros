@@ -10,9 +10,13 @@ export async function seedArticlesParentPage(strapi: any, configId: number) {
 
   // Check if the parent Articles page already exists
   const articlesSlug = toUrlSlug('articles');
-  const existing = await strapi.db.query(PAGE_UID).findOne({ where: { Slug: articlesSlug } });
+  const existing = await strapi.db
+    .query(PAGE_UID)
+    .findOne({ where: { Slug: articlesSlug } });
   if (existing) {
-    strapi.log.info('[SEED][ARTICLES_PARENT] Parent Articles page already exists. Skipping.');
+    strapi.log.info(
+      '[SEED][ARTICLES_PARENT] Parent Articles page already exists. Skipping.',
+    );
     return existing.id;
   }
 
@@ -21,12 +25,13 @@ export async function seedArticlesParentPage(strapi: any, configId: number) {
     data: {
       Title: 'Articles',
       Slug: articlesSlug,
-      Visible: true,
       configuration: configId,
       publishedAt: new Date().toISOString(),
     },
   });
 
-  strapi.log.info(`[SEED][ARTICLES_PARENT] Created parent Articles page (ID: ${page.id})`);
+  strapi.log.info(
+    `[SEED][ARTICLES_PARENT] Created parent Articles page (ID: ${page.id})`,
+  );
   return page.id;
 }
