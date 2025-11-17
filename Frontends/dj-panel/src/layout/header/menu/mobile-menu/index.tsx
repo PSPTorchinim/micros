@@ -107,8 +107,8 @@ export const MobileMenu = (props: any) => {
                 ? props.links
                     .filter(
                       (element: any) =>
-                        (element.menu === 'main' ||
-                          element.menu === undefined) &&
+                        (element.Menu === 'Main' ||
+                          element.Menu === undefined) &&
                         element.url &&
                         (element.Visible === undefined ||
                           element.Visible === true),
@@ -124,7 +124,7 @@ export const MobileMenu = (props: any) => {
               ? props.links
                   .filter(
                     (element: any) =>
-                      element.menu === 'login' &&
+                      element.Menu === 'Login' &&
                       element.url &&
                       (element.Visible === undefined ||
                         element.Visible === true),

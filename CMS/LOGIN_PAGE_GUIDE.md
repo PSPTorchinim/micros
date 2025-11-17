@@ -10,7 +10,7 @@ The Login Page feature allows you to create customizable login pages through the
 
 **NEW**: Standard pages are now automatically created when Strapi starts up. The seeder will:
 
-- **Login and Forgot Password Pages**: Create Login Block and Forgot Password Block with default values, templates, and pages at `/users/login` and `/users/forgot-password`
+- **Login and Forgot Password Pages**: Create Login Block and Forgot Password Block with default values, templates, and pages at `/users/login` and `/users/forgot-password` (both hidden from navigation menus)
 - **Home Page**: Create Home page at `/` with hero block, feature section, and steps container
 - **About Page**: Create About page at `/about` with contact section and company information
 - **User Profile Page**: Create User Profile page at `/profile` that displays user data from IdentityAPI (available after login)
@@ -59,9 +59,9 @@ If you want to create additional login pages or customize the automatically crea
 3. Configure the page:
    - **Title**: The page title (e.g., "Login")
    - **Slug**: URL path for the page (e.g., "login")
-   - **Visible**: Check to make the page visible
-   - **Menu**: Select "Login" or "Main" depending on where you want it
-   - **Navigation Order**: Set the order in the menu
+   - **Visible**: Uncheck to hide the page from navigation menus (recommended for login pages)
+   - **Menu**: Leave unset or select "Main" - Login pages should not be in navigation menus
+   - **Navigation Order**: Set the order in the menu (only relevant if Visible is checked)
    - **Template**: Select the Login template you created in Step 2
 4. Click **Save** and **Publish**
 

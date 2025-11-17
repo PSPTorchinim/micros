@@ -66,8 +66,7 @@ export async function seedLoginPage(strapi: any, configId: number, parentPageId?
       data: {
         Title: 'Login',
         Slug: loginSlug,
-        Visible: true,
-        Menu: 'Login',
+        Visible: false,
         configuration: configId,
         template: loginTemplate.id,
         Parents: parentPageId ? [parentPageId] : undefined,
@@ -81,7 +80,7 @@ export async function seedLoginPage(strapi: any, configId: number, parentPageId?
     await strapi.entityService.update(PAGE_UID, existingLoginPage.id, {
       data: {
         Title: 'Login',
-        Menu: 'Login',
+        Visible: false,
         template: loginTemplate.id,
         configuration: configId,
         Parents: parentPageId ? [parentPageId] : undefined,
