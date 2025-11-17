@@ -45,7 +45,7 @@ export function renderBlock(block: any, index: number) {
       return <LoginBlock key={index} {...block} />;
     case 'forgot-password-block':
       return <ForgotPasswordBlock key={index} {...block} />;
-    case 'article':
+    case 'article': {
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format
       const title = block.Title || block.attributes?.Title;
@@ -92,6 +92,7 @@ export function renderBlock(block: any, index: number) {
           )}
         </div>
       );
+    }
   }
 
   // LEGACY/FALLBACK: gdyby trafił tu oryginalny komponent kolekcji z __component
