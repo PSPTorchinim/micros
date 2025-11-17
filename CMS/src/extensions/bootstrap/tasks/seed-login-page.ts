@@ -5,7 +5,11 @@ const PAGE_UID = 'api::page.page';
 const TEMPLATE_UID = 'api::template.template';
 const LOGIN_BLOCK_UID = 'api::login-block.login-block';
 
-export async function seedLoginPage(strapi: any, configId: number, parentPageId?: number) {
+export async function seedLoginPage(
+  strapi: any,
+  configId: number,
+  parentPageId?: number,
+) {
   strapi.log.info('[SEED][LOGIN] Seeding Login page...');
 
   const loginSlug = toUrlSlug('login');
