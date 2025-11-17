@@ -11,7 +11,7 @@ export async function seedUsersPage(strapi: any, configId: number) {
 
   // Create Users Template
   const existingUsersTemplate = await strapi.db.query(TEMPLATE_UID).findOne({
-    where: { TemplateType: 'Users' },
+    where: { name: 'Users Page Template' },
   });
 
   let usersTemplate;
@@ -19,7 +19,7 @@ export async function seedUsersPage(strapi: any, configId: number) {
     usersTemplate = await strapi.entityService.create(TEMPLATE_UID, {
       data: {
         Name: 'Users Page Template',
-        TemplateType: 'Users',
+        TemplateType: 'Standard',
         Content: [],
         publishedAt: new Date().toISOString(),
       },
