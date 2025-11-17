@@ -1,14 +1,8 @@
 # DJ Beat Blaster CMS - Strapi Headless CMS
 
-## 📋 Overview
-
 This is the content management system for the DJ Beat Blaster platform, built with Strapi v5. It provides a powerful headless CMS for managing content across the DJ platform, including DJ profiles, event management, music metadata, and administrative content.
 
-**Port**: 1337  
-**Database**: PostgreSQL  
-**Framework**: Strapi 5.23.6 + Node.js
-
-## 🎯 Purpose
+## 📋 Overview
 
 The CMS serves as the central content management hub for:
 
@@ -321,26 +315,11 @@ chmod 755 public/uploads
 
 ## 📖 Learn More
 
-### Strapi Resources
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation
-- [Strapi tutorials](https://strapi.io/tutorials) - Tutorials by core team and community
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog
-- [Changelog](https://strapi.io/changelog) - Product updates and improvements
-
-### Community
-
-- [Discord](https://discord.strapi.io) - Chat with the Strapi community
-- [Forum](https://forum.strapi.io/) - Discussion and Q&A
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - Curated list of Strapi resources
-
-### DJ Beat Blaster Documentation
-
+- [Strapi Documentation](https://docs.strapi.io) - Official Strapi documentation
 - [Main Project README](../README.md) - DJ Beat Blaster platform overview
 - [Docker Setup](../Docker/README.md) - Container deployment guide
 - [API Documentation](../Services/README.md) - Microservices integration
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+For support and contributions, please refer to the main project repository.

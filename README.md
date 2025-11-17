@@ -342,9 +342,8 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📊 Project Status
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?style=flat-square)
-![Coverage](https://img.shields.io/badge/Coverage-85%25-yellowgreen?style=flat-square)
+This is an active development project. Check the [GitHub Actions](https://github.com/PSPTorchinim/micros/actions) page for current build and test status.
+
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square)
 
 ## 🌟 Features Roadmap
@@ -360,12 +359,7 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📞 Support
 
-For support and questions:
-
-- 📧 Email: contact@djbeatblaster.com
-- 💬 Discord: [DJ Beat Blaster Community](https://discord.gg/djbeatblaster)
-- 📱 Facebook: [@djbeatblaster2024](https://facebook.com/djbeatblaster2024)
-- 📸 Instagram: [@dj.beat.blaster](https://instagram.com/dj.beat.blaster)
+For support and questions, please use the [GitHub Issues](https://github.com/PSPTorchinim/micros/issues) page.
 
 ---
 
