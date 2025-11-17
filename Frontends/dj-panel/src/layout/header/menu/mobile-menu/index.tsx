@@ -119,19 +119,20 @@ export const MobileMenu = (props: any) => {
           </nav>
         </div>
         <div className="navbar-mobile-buttons">
-          {renderLinks(
-            props.links?.filter
-              ? props.links
-                  .filter(
-                    (element: any) =>
-                      element.Menu === 'Login' &&
-                      element.url &&
-                      (element.Visible === undefined ||
-                        element.Visible === true),
-                  )
-                  .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
-              : [],
-          )}
+          {!isAuthenticated() &&
+            renderLinks(
+              props.links?.filter
+                ? props.links
+                    .filter(
+                      (element: any) =>
+                        element.Menu === 'Login' &&
+                        element.url &&
+                        (element.Visible === undefined ||
+                          element.Visible === true),
+                    )
+                    .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
+                : [],
+            )}
           {isAuthenticated() && (
             <Link
               to="#"
