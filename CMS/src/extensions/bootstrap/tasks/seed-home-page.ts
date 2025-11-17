@@ -64,30 +64,32 @@ export async function seedHomePage(strapi: any, configId: number) {
     where: { Name: 'Home Page Template' },
   });
 
+  const templateContent = [
+    {
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: heroBlock.id,
+    },
+    {
+      __component: 'feature-section-ref.feature-section-ref',
+      feature_section: featureSection.id,
+    },
+    {
+      __component: 'article-block-ref.article-block-ref',
+      block: articleBlock.id,
+    },
+    {
+      __component: 'steps-container-ref.steps-container-ref',
+      container: stepsContainer.id,
+    },
+  ];
+
   let homeTemplate;
   if (!existingHomeTemplate) {
     homeTemplate = await strapi.entityService.create(TEMPLATE_UID, {
       data: {
         Name: 'Home Page Template',
         TemplateType: 'Standard',
-        Content: [
-          {
-            __component: 'hero-block-ref.hero-block-ref',
-            hero_block: heroBlock.id,
-          },
-          {
-            __component: 'feature-section-ref.feature-section-ref',
-            feature_section: featureSection.id,
-          },
-          {
-            __component: 'article-block-ref.article-block-ref',
-            block: articleBlock.id,
-          },
-          {
-            __component: 'steps-container-ref.steps-container-ref',
-            container: stepsContainer.id,
-          },
-        ],
+        Content: templateContent,
         publishedAt: new Date().toISOString(),
       },
     });
@@ -95,9 +97,20 @@ export async function seedHomePage(strapi: any, configId: number) {
       `[SEED][HOME] Created Home Template (ID: ${homeTemplate.id})`,
     );
   } else {
-    homeTemplate = existingHomeTemplate;
-    strapi.log.debug(
-      `[SEED][HOME] Home Template already exists (ID: ${homeTemplate.id})`,
+    // Update existing template to ensure Content is populated
+    homeTemplate = await strapi.entityService.update(
+      TEMPLATE_UID,
+      existingHomeTemplate.id,
+      {
+        data: {
+          Name: 'Home Page Template',
+          TemplateType: 'Standard',
+          Content: templateContent,
+        },
+      },
+    );
+    strapi.log.info(
+      `[SEED][HOME] Updated Home Template (ID: ${homeTemplate.id}) with Content`,
     );
   }
 
