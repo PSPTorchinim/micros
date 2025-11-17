@@ -40,6 +40,11 @@
       "default": "Main",
       "enum": ["Main", "Login", "NotVisible"]
     },
+    "AuthState": {
+      "type": "enumeration",
+      "default": "All",
+      "enum": ["All", "OnlyAuthenticated", "OnlyUnauthenticated"]
+    },
     "NavigationOrder": {
       "type": "integer"
     },

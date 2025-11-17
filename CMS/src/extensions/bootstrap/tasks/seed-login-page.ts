@@ -71,6 +71,7 @@ export async function seedLoginPage(
         Title: 'Login',
         Slug: loginSlug,
         Menu: 'Login',
+        AuthState: 'OnlyUnauthenticated',
         configuration: configId,
         template: loginTemplate.id,
         Parents: parentPageId ? [parentPageId] : undefined,
@@ -85,6 +86,7 @@ export async function seedLoginPage(
       data: {
         Title: 'Login',
         Menu: 'Login',
+        AuthState: 'OnlyUnauthenticated',
         template: loginTemplate.id,
         configuration: configId,
         Parents: parentPageId ? [parentPageId] : undefined,

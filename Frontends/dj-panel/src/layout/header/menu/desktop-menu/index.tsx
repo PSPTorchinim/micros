@@ -39,11 +39,14 @@ export const DesktopMenu = (props: any) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        if (
-          element.isAuth === undefined || // Display for all users
-          (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
-          (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
-        ) {
+        // Check AuthState field to determine if link should be shown based on authentication
+        const authState = element.AuthState || 'All';
+        const shouldShow =
+          authState === 'All' ||
+          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
+          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
+
+        if (shouldShow) {
           return (
             <div
               key={element.text}
@@ -101,7 +104,7 @@ export const DesktopMenu = (props: any) => {
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
       <div className="navbar-buttons">
-        {!isAuthenticated() && renderLinks(loginLinks)}
+        {renderLinks(loginLinks)}
         {isAuthenticated() && (
           <Link
             to="#"

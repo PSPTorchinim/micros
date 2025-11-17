@@ -33,11 +33,14 @@ export const MobileMenu = (props: any) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        if (
-          element.isAuth === undefined || // Display for all users
-          (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
-          (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
-        ) {
+        // Check AuthState field to determine if link should be shown based on authentication
+        const authState = element.AuthState || 'All';
+        const shouldShow =
+          authState === 'All' ||
+          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
+          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
+
+        if (shouldShow) {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
           return (
@@ -118,19 +121,18 @@ export const MobileMenu = (props: any) => {
           </nav>
         </div>
         <div className="navbar-mobile-buttons">
-          {!isAuthenticated() &&
-            renderLinks(
-              props.links?.filter
-                ? props.links
-                    .filter(
-                      (element: any) =>
-                        element.Menu === 'Login' &&
-                        element.url &&
-                        element.Menu !== 'NotVisible',
-                    )
-                    .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
-                : [],
-            )}
+          {renderLinks(
+            props.links?.filter
+              ? props.links
+                  .filter(
+                    (element: any) =>
+                      element.Menu === 'Login' &&
+                      element.url &&
+                      element.Menu !== 'NotVisible',
+                  )
+                  .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
+              : [],
+          )}
           {isAuthenticated() && (
             <Link
               to="#"
