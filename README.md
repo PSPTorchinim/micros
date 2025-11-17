@@ -314,7 +314,7 @@ npm run format:fix  # Auto-format code
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is proprietary and confidential. Unauthorized copying, distribution, or use of this software is strictly prohibited. See the [LICENSE](LICENSE) file for details.
 
 ## 🔧 Configuration
 
@@ -364,5 +364,5 @@ For support and questions, please use the [GitHub Issues](https://github.com/PSP
 ---
 
 <div align="center">
-  <strong>Built with ❤️ by the DJ Beat Blaster Team</strong>
+  <strong>Developed by PSPTorchinim</strong>
 </div>

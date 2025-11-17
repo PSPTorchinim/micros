@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "description": "DJ Beat Blaster Microservices Platform - Monorepo Root",
+  "author": "PSPTorchinim",
+  "license": "UNLICENSED",
   "scripts": {
     "prepare": "husky"
   },

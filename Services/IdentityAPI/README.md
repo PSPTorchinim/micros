@@ -252,4 +252,4 @@ For issues related to IdentityAPI, please refer to the main project repository o
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

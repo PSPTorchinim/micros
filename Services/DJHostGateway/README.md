@@ -390,4 +390,4 @@ For issues related to DJHostGateway, please refer to the main project repository
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

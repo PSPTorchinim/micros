@@ -471,4 +471,4 @@ For issues related to the DJ Panel frontend, please refer to the main project re
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

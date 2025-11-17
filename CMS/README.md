@@ -322,4 +322,4 @@ chmod 755 public/uploads
 
 ---
 
-For support and contributions, please refer to the main project repository.
+**Developed by PSPTorchinim**
