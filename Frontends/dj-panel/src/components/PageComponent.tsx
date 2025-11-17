@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Page, Template } from '../models/strapi/strapiMap';
+import { Page } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';
