@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
+import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
 
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -110,10 +111,9 @@ export const MobileMenu = (props: any) => {
                 ? props.links
                     .filter(
                       (element: any) =>
-                        (element.Menu === 'Main' ||
+                        (element.Menu === ConfigurationMenuEnum.Main ||
                           element.Menu === undefined) &&
-                        element.url &&
-                        element.Menu !== 'NotVisible',
+                        element.url,
                     )
                     .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
                 : props.links,
@@ -126,9 +126,8 @@ export const MobileMenu = (props: any) => {
               ? props.links
                   .filter(
                     (element: any) =>
-                      element.Menu === 'Login' &&
-                      element.url &&
-                      element.Menu !== 'NotVisible',
+                      element.Menu === ConfigurationMenuEnum.Login &&
+                      element.url,
                   )
                   .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
               : [],

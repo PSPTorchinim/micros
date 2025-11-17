@@ -87,15 +87,15 @@ export const DesktopMenu = (props: any) => {
   const mainLinks = props.links?.filter
     ? props.links.filter(
         (element: any) =>
-          (element.Menu === ConfigurationMenuEnum.Main || element.Menu === undefined) &&
-          element.url
+          (element.Menu === ConfigurationMenuEnum.Main ||
+            element.Menu === undefined) &&
+          element.url,
       )
     : props.links;
   const loginLinks = props.links?.filter
     ? props.links.filter(
         (element: any) =>
-          element.Menu === ConfigurationMenuEnum.Login &&
-          element.url &&
+          element.Menu === ConfigurationMenuEnum.Login && element.url,
       )
     : [];
 
