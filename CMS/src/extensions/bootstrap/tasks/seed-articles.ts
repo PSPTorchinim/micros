@@ -893,7 +893,9 @@ Remember: A great DJ knows their library inside and out. Organization isn't just
 ];
 
 export default async function seedArticles({ strapi }: { strapi: any }) {
-  strapi.log.info('[SEED][ARTICLES] Starting article seeding...');
+  strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  strapi.log.info('[SEED][ARTICLES] 📝 Starting article seeding');
+  strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   try {
     // Get the default locale
@@ -903,13 +905,25 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
 
     // Seed the parent Articles page
     const { getOrCreateConfiguration } = await import('./seed-configuration');
+    strapi.log.info('[SEED][ARTICLES] 🔧 Getting/creating configuration...');
     const configId = await getOrCreateConfiguration(strapi);
+    strapi.log.info(`[SEED][ARTICLES] ✅ Configuration ID: ${configId}`);
+    
+    strapi.log.info('[SEED][ARTICLES] 📁 Creating parent Articles page...');
     const parentPageId = await seedArticlesParentPage(strapi, configId);
+    strapi.log.info(`[SEED][ARTICLES] ✅ Parent page ID: ${parentPageId}`);
+
+    // Track created page IDs to add as subpages at the end
+    const createdPageIds: number[] = [];
+    
+    strapi.log.info(`[SEED][ARTICLES] 📚 Processing ${DJING_ARTICLES.length} articles...`);
 
     for (const articleData of DJING_ARTICLES) {
-      strapi.log.info(
-        `[SEED][ARTICLES] Processing article: "${articleData.Title}"`,
-      );
+      try {
+        strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        strapi.log.info(
+          `[SEED][ARTICLES] 📖 Processing article: "${articleData.Title}"`,
+        );
 
       // Check if article already exists
       const existingArticle = await strapi.db.query(ARTICLE_UID).findOne({
@@ -930,6 +944,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           coverUrl: articleData.coverUrl,
           Body: articleData.Body,
           locale: defaultLocale,
+          publishedAt: new Date().toISOString(),
         };
         strapi.log.debug(
           `[SEED][ARTICLES] Creating article with data: ${JSON.stringify({
@@ -959,12 +974,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           data: {
             Name: templateName,
             TemplateType: 'Standard',
-            Content: [
-              {
-                __component: 'article-block-ref.article-block-ref',
-                block: article.id,
-              },
-            ],
+            Content: [],
             publishedAt: new Date().toISOString(),
           },
         });
@@ -990,6 +1000,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             Title: article.Title,
             Slug: slug,
             Visible: true,
+            configuration: configId,
             template: template.id,
             publishedAt: new Date().toISOString(),
           },
@@ -1002,6 +1013,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         await strapi.entityService.update(PAGE_UID, page.id, {
           data: {
             Slug: slug,
+            configuration: configId,
             template: template.id,
           },
         });
@@ -1010,7 +1022,20 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         );
       }
 
-      // Add this article page as a subpage of the parent Articles page
+      // Track page ID for later subpage assignment
+      createdPageIds.push(page.id);
+      
+      } catch (articleError: any) {
+        strapi.log.error(
+          `[SEED][ARTICLES] Failed to process article "${articleData.Title}": ${articleError.message}`,
+        );
+        strapi.log.error(`[SEED][ARTICLES] Error stack: ${articleError.stack}`);
+        // Continue with next article instead of failing completely
+      }
+    }
+
+    // Update parent page with all article pages as subpages
+    try {
       const parentPage = await strapi.entityService.findOne(
         PAGE_UID,
         parentPageId,
@@ -1022,32 +1047,44 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         (sp: any) => sp.id,
       );
 
-      // Only add if not already a subpage
-      if (!existingSubpageIds.includes(page.id)) {
-        const updatedSubpages = [...existingSubpageIds, page.id];
+      // Add all created pages that aren't already subpages
+      const newSubpageIds = createdPageIds.filter(
+        (id) => !existingSubpageIds.includes(id),
+      );
+
+      if (newSubpageIds.length > 0) {
+        const updatedSubpages = [...existingSubpageIds, ...newSubpageIds];
         await strapi.entityService.update(PAGE_UID, parentPageId, {
           data: {
             subpages: updatedSubpages,
           },
         });
         strapi.log.info(
-          `[SEED][ARTICLES] Added article page as subpage of parent Articles page`,
+          `[SEED][ARTICLES] Added ${newSubpageIds.length} article page(s) as subpages of parent Articles page`,
         );
       } else {
         strapi.log.info(
-          `[SEED][ARTICLES] Article page already a subpage of parent Articles page`,
+          `[SEED][ARTICLES] All article pages already subpages of parent Articles page`,
         );
       }
+    } catch (subpageError: any) {
+      strapi.log.error(
+        `[SEED][ARTICLES] Failed to update parent page subpages: ${subpageError.message}`,
+      );
     }
 
+    strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     strapi.log.info(
-      `[SEED][ARTICLES] Article seeding complete! Created ${DJING_ARTICLES.length} articles, templates, and pages.`,
+      `[SEED][ARTICLES] ✅ Article seeding complete! Processed ${DJING_ARTICLES.length} articles, created ${createdPageIds.length} pages.`,
     );
+    strapi.log.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } catch (error: any) {
+    strapi.log.error('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     strapi.log.error(
-      `[SEED][ARTICLES] Failed to seed articles: ${error.message}`,
+      `[SEED][ARTICLES] ❌ Failed to seed articles: ${error.message}`,
     );
-    strapi.log.error(`[SEED][ARTICLES] Error stack: ${error.stack}`);
+    strapi.log.error(`[SEED][ARTICLES] Stack trace: ${error.stack}`);
+    strapi.log.error('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     throw error;
   }
 }

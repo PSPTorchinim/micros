@@ -399,6 +399,57 @@ jobs:
           echo "✅ Compose uploaded to: $abs"
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
+      - name: Create static compose file symlink
+        id: create_static_symlink
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔗 Creating Static Compose File Symlink"
+            echo "=========================================="
+            
+            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
+            ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+            TIMESTAMPED_COMPOSE='${{ steps.parse_upload.outputs.new_compose_abs }}'
+            
+            # Determine directory and static filename
+            COMPOSE_DIR=$(dirname "$TIMESTAMPED_COMPOSE")
+            STATIC_COMPOSE="$COMPOSE_DIR/dj-panel-${ENV_SLUG}.yml"
+            
+            echo "📁 Compose directory: $COMPOSE_DIR"
+            echo "⏰ Timestamped file: $TIMESTAMPED_COMPOSE"
+            echo "📌 Static symlink: $STATIC_COMPOSE"
+            
+            # Remove existing symlink or file if it exists
+            if [ -L "$STATIC_COMPOSE" ] || [ -f "$STATIC_COMPOSE" ]; then
+              echo "🗑️  Removing existing file/symlink: $STATIC_COMPOSE"
+              rm -f "$STATIC_COMPOSE"
+            fi
+            
+            # Create symlink to timestamped compose file
+            ln -s "$(basename "$TIMESTAMPED_COMPOSE")" "$STATIC_COMPOSE"
+            
+            # Verify symlink was created successfully
+            if [ -L "$STATIC_COMPOSE" ]; then
+              echo "✅ Symlink created successfully"
+              echo "   Points to: $(readlink "$STATIC_COMPOSE")"
+              echo "   Full path: $STATIC_COMPOSE"
+            else
+              echo "❌ Failed to create symlink"
+              exit 1
+            fi
+            
+            echo ""
+            echo "📋 Compose file listing:"
+            ls -lh "$COMPOSE_DIR" | grep "dj-panel" || echo "No dj-panel files found"
+
       - name: Create volume directories from generated compose
         id: create_volume_dirs
         uses: appleboy/ssh-action@v1

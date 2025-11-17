@@ -16,7 +16,7 @@ export default async function seedImageSliders({ strapi }: { strapi: any }) {
 
     // Get existing hero block for slide reference
     const heroBlock = await strapi.db.query(HERO_BLOCK_UID).findOne({
-      where: { Heading: 'Welcome to DJ Beat Blaster' },
+      where: { heading: 'Welcome to DJ Beat Blaster' },
     });
 
     // Create CTAs for slides

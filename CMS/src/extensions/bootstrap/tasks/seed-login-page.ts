@@ -5,10 +5,10 @@ const PAGE_UID = 'api::page.page';
 const TEMPLATE_UID = 'api::template.template';
 const LOGIN_BLOCK_UID = 'api::login-block.login-block';
 
-export async function seedLoginPage(strapi: any, configId: number) {
+export async function seedLoginPage(strapi: any, configId: number, parentPageId?: number) {
   strapi.log.info('[SEED][LOGIN] Seeding Login page...');
 
-  const loginSlug = toUrlSlug('users/login');
+  const loginSlug = toUrlSlug('login');
 
   // Create or get Login Block
   let loginBlock = await strapi.db.query(LOGIN_BLOCK_UID).findOne({});
@@ -70,6 +70,7 @@ export async function seedLoginPage(strapi: any, configId: number) {
         Menu: 'Login',
         configuration: configId,
         template: loginTemplate.id,
+        Parents: parentPageId ? [parentPageId] : undefined,
         publishedAt: new Date().toISOString(),
       },
     });
@@ -83,6 +84,7 @@ export async function seedLoginPage(strapi: any, configId: number) {
         Menu: 'Login',
         template: loginTemplate.id,
         configuration: configId,
+        Parents: parentPageId ? [parentPageId] : undefined,
       },
     });
     strapi.log.info(
