@@ -136,26 +136,25 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     TASKS.allPublicPermissions,
   );
 
-  // Only run seeding tasks if database is empty
-  // This improves startup performance when data already exists
+  // Always update content types (they handle their own existence checks)
+  // This ensures content blocks are properly configured even in existing databases
+  strapi.log.info('');
+  strapi.log.info('[BOOT] 🎨 Updating content types (hero blocks, feature sections, etc.)...');
+  await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
+
+  // Only run full seeding if database is empty
   if (dbIsEmpty) {
     strapi.log.info('');
-    strapi.log.info('[BOOT] 📦 Running seeding tasks for empty database...');
-    strapi.log.info('[BOOT] Seeding order: content-types → articles → pages');
+    strapi.log.info('[BOOT] 📦 Database is empty - running full seeding...');
     strapi.log.info('');
-    
-    // 1) Seed all content types (Hero Blocks, Feature Sections, etc.)
-    strapi.log.info('[BOOT] 🎨 Step 1/3: Seeding content types (dependencies)');
-    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
-    // 2) Seed DJ articles
-    strapi.log.info('');
-    strapi.log.info('[BOOT] 📝 Step 2/3: Seeding articles');
+    // 1) Seed DJ articles
+    strapi.log.info('[BOOT] 📝 Step 1/2: Seeding articles');
     await runTask(strapi, 'seed-articles', TASKS.seedArticles);
 
-    // 3) Seed standard pages (Login, Forgot Password, Home, About)
+    // 2) Seed standard pages (Login, Forgot Password, Home, About)
     strapi.log.info('');
-    strapi.log.info('[BOOT] 📄 Step 3/3: Seeding pages (depends on content-types and articles)');
+    strapi.log.info('[BOOT] 📄 Step 2/2: Seeding pages');
     await runTask(strapi, 'seed-pages', TASKS.seedPages);
     
     strapi.log.info('');
@@ -163,9 +162,13 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     strapi.log.info('[BOOT] ✅ All seeding tasks completed successfully');
     strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } else {
+    // Database exists - update page templates to ensure they have correct content
     strapi.log.info('');
-    strapi.log.info('[BOOT] ⏭️  Skipping seeding tasks - database already contains data');
-    strapi.log.info('[BOOT] 💡 To force reseed content blocks, set FORCE_RESEED_CONTENT=true and restart');
+    strapi.log.info('[BOOT] 📄 Updating page templates...');
+    await runTask(strapi, 'seed-pages', TASKS.seedPages);
+    
+    strapi.log.info('');
+    strapi.log.info('[BOOT] ✅ Content types and page templates updated successfully');
     strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 }
