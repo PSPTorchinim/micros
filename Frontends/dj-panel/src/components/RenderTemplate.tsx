@@ -15,11 +15,14 @@ type Props = {
   template?: string;
   /** głębokość populate przy bezpośrednim renderowaniu bez dereferencji (opcjonalne) */
   populateDeep?: number;
+  /** Page title to help resolve article content */
+  pageTitle?: string;
 };
 
 export const RenderTemplate: React.FC<Props> = ({
   template,
   populateDeep = 5,
+  pageTitle,
 }) => {
   const [tpl, setTpl] = React.useState<TemplateEntity | null>(null);
   const [blocks, setBlocks] = React.useState<any[]>([]);
@@ -112,6 +115,24 @@ export const RenderTemplate: React.FC<Props> = ({
           ? (tpl as any).Content
           : [];
 
+      // If this is a Standard template with no content and we have a page title,
+      // try to fetch and render the article directly
+      if (
+        templateType === 'Standard' &&
+        contentBlocks.length === 0 &&
+        pageTitle
+      ) {
+        try {
+          const article = await strapiAPI.getArticleByTitle(pageTitle);
+          if (mounted && article) {
+            setBlocks([{ __kind: 'article', ...article }]);
+            return;
+          }
+        } catch (e) {
+          console.error('Error fetching article by title:', e);
+        }
+      }
+
       if (!contentBlocks.length) {
         if (mounted) setBlocks([]);
         return;
@@ -126,7 +147,7 @@ export const RenderTemplate: React.FC<Props> = ({
     return () => {
       mounted = false;
     };
-  }, [tpl, populateDeep]);
+  }, [tpl, populateDeep, pageTitle]);
 
   return (
     <div>

@@ -31,7 +31,10 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
 
   return (
     <div>
-      <RenderTemplate template={page?.template?.documentId} />
+      <RenderTemplate
+        template={page?.template?.documentId}
+        pageTitle={page?.Title}
+      />
     </div>
   );
 };

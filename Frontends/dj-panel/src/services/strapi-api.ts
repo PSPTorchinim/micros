@@ -411,6 +411,36 @@ class StrapiAPI {
       return null;
     }
   }
+
+  // --------------------------------------
+  // ARTICLES
+  // --------------------------------------
+
+  async getArticleBySlug(slug: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Slug: { $eq: slug } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by slug ${slug}:`, e);
+      return null;
+    }
+  }
+
+  async getArticleByTitle(title: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Title: { $eq: title } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by title ${title}:`, e);
+      return null;
+    }
+  }
 }
 
 export const strapiAPI = new StrapiAPI();

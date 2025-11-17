@@ -44,6 +44,44 @@ export function renderBlock(block: any, index: number) {
       return <LoginBlock key={index} {...block} />;
     case 'forgot-password-block':
       return <ForgotPasswordBlock key={index} {...block} />;
+    case 'article':
+      // Direct article rendering for article pages
+      return (
+        <div key={index} className="article-detail">
+          {block.coverUrl && (
+            <img
+              src={block.coverUrl}
+              alt={block.Title}
+              style={{
+                width: '100%',
+                maxHeight: '400px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                marginBottom: '24px',
+              }}
+            />
+          )}
+          <h1>{block.Title}</h1>
+          {block.Summary && (
+            <p
+              style={{
+                fontSize: '1.2em',
+                fontStyle: 'italic',
+                marginBottom: '24px',
+                color: '#666',
+              }}
+            >
+              {block.Summary}
+            </p>
+          )}
+          {block.Body && (
+            <div
+              dangerouslySetInnerHTML={{ __html: block.Body }}
+              style={{ lineHeight: '1.6' }}
+            />
+          )}
+        </div>
+      );
   }
 
   // LEGACY/FALLBACK: gdyby trafił tu oryginalny komponent kolekcji z __component
