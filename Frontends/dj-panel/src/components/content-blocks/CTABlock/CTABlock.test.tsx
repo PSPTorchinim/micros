@@ -101,7 +101,7 @@ describe('CTABlock', () => {
     // Label appears in heading and button (both rendered)
     const elements = screen.getAllByText('Get Started Today');
     expect(elements.length).toBe(2); // One in heading, one in button
-    
+
     // Label also appears in button
     const link = screen.getByRole('link', { name: 'Get Started Today' });
     expect(link.textContent).toBe('Get Started Today');

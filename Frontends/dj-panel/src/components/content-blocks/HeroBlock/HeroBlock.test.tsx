@@ -14,7 +14,9 @@ describe('HeroBlock', () => {
     render(<HeroBlock {...props} />);
 
     expect(screen.getByText('Welcome to DJ Beat Blaster')).toBeInTheDocument();
-    expect(screen.getByText('Your complete platform for managing DJ gigs')).toBeInTheDocument();
+    expect(
+      screen.getByText('Your complete platform for managing DJ gigs'),
+    ).toBeInTheDocument();
   });
 
   it('renders CTA actions with correct labels and URLs', () => {
@@ -41,7 +43,9 @@ describe('HeroBlock', () => {
 
     render(<HeroBlock {...props} />);
 
-    const getStartedLink = screen.getByRole('link', { name: 'Get Started Free' });
+    const getStartedLink = screen.getByRole('link', {
+      name: 'Get Started Free',
+    });
     expect(getStartedLink).toBeInTheDocument();
     expect(getStartedLink).toHaveAttribute('href', '/users/register');
 
@@ -153,11 +157,23 @@ describe('HeroBlock', () => {
 
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(3);
-    
-    expect(screen.getByRole('link', { name: 'CTA 1' })).toHaveAttribute('href', '/link1');
-    expect(screen.getByRole('link', { name: 'CTA 2' })).toHaveAttribute('href', '/link2');
-    expect(screen.getByRole('link', { name: 'CTA 3' })).toHaveAttribute('href', '/link3');
-    expect(screen.getByRole('link', { name: 'CTA 3' })).toHaveAttribute('target', '_blank');
+
+    expect(screen.getByRole('link', { name: 'CTA 1' })).toHaveAttribute(
+      'href',
+      '/link1',
+    );
+    expect(screen.getByRole('link', { name: 'CTA 2' })).toHaveAttribute(
+      'href',
+      '/link2',
+    );
+    expect(screen.getByRole('link', { name: 'CTA 3' })).toHaveAttribute(
+      'href',
+      '/link3',
+    );
+    expect(screen.getByRole('link', { name: 'CTA 3' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
   });
 
   it('renders with only heading', () => {

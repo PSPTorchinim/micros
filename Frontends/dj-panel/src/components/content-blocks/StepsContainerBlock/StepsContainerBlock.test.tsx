@@ -44,7 +44,9 @@ describe('StepsContainerBlock', () => {
 
     render(<StepsContainerBlock {...props} />);
 
-    expect(screen.getByText('Get Started in 3 Simple Steps')).toBeInTheDocument();
+    expect(
+      screen.getByText('Get Started in 3 Simple Steps'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Join thousands of DJs')).toBeInTheDocument();
   });
 
@@ -77,7 +79,7 @@ describe('StepsContainerBlock', () => {
     // Check that step numbers are rendered (1, 2, 3)
     const stepLabels = container.querySelectorAll('.steps-card-label');
     expect(stepLabels).toHaveLength(3);
-    
+
     mockSteps.forEach((_, index) => {
       expect(stepLabels[index].textContent).toBe((index + 1).toString());
     });
