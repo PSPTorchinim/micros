@@ -8,61 +8,68 @@ const STEPS_CONTAINER_UID = 'api::steps-container.steps-container';
 const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 
 export async function seedHomePage(strapi: any, configId: number) {
-  console.info('[SEED][HOME] Seeding Home page...');
+  console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.info('[SEED][HOME] 🏠 Starting Home page seeding...');
+  console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   // Get existing Hero Block
+  console.info('[SEED][HOME] 🔍 Looking for Hero Block...');
   const heroBlock = await strapi.db.query(HERO_BLOCK_UID).findOne({
     where: { heading: 'Welcome to DJ Beat Blaster' },
   });
 
   if (!heroBlock) {
     console.warn(
-      '[SEED][HOME] Hero Block not found. Run seed-content-types first.',
+      '[SEED][HOME] ⚠️  Hero Block not found. Run seed-content-types first.',
     );
     return;
   }
-  console.info(`[SEED][HOME] Found Hero Block (ID: ${heroBlock.id})`);
+  console.info(`[SEED][HOME] ✓ Found Hero Block (ID: ${heroBlock.id})`);
 
   // Get existing Article Block
+  console.info('[SEED][HOME] 🔍 Looking for Article Block...');
   const articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
     where: { Title: 'Latest DJ Tips & Guides' },
   });
 
   if (!articleBlock) {
     console.warn(
-      '[SEED][HOME] Article Block not found. Run seed-content-types first.',
+      '[SEED][HOME] ⚠️  Article Block not found. Run seed-content-types first.',
     );
     return;
   }
-  console.info(`[SEED][HOME] Found Article Block (ID: ${articleBlock.id})`);
+  console.info(`[SEED][HOME] ✓ Found Article Block (ID: ${articleBlock.id})`);
 
   // Get existing Feature Section
+  console.info('[SEED][HOME] 🔍 Looking for Feature Section...');
   const featureSection = await strapi.db.query(FEATURE_SECTION_UID).findOne({
     where: { Title: 'Everything You Need to Manage Your DJ Business' },
   });
 
   if (!featureSection) {
     console.warn(
-      '[SEED][HOME] Feature Section not found. Run seed-content-types first.',
+      '[SEED][HOME] ⚠️  Feature Section not found. Run seed-content-types first.',
     );
     return;
   }
-  console.info(`[SEED][HOME] Found Feature Section (ID: ${featureSection.id})`);
+  console.info(`[SEED][HOME] ✓ Found Feature Section (ID: ${featureSection.id})`);
 
   // Get existing Steps Container
+  console.info('[SEED][HOME] 🔍 Looking for Steps Container...');
   const stepsContainer = await strapi.db.query(STEPS_CONTAINER_UID).findOne({
     where: { heading: 'Get Started in 3 Simple Steps' },
   });
 
   if (!stepsContainer) {
     console.warn(
-      '[SEED][HOME] Steps Container not found. Run seed-content-types first.',
+      '[SEED][HOME] ⚠️  Steps Container not found. Run seed-content-types first.',
     );
     return;
   }
-  console.info(`[SEED][HOME] Found Steps Container (ID: ${stepsContainer.id})`);
+  console.info(`[SEED][HOME] ✓ Found Steps Container (ID: ${stepsContainer.id})`);
 
   // Create Home Template with all components
+  console.info('[SEED][HOME] 🔨 Building template content with 4 components...');
   const existingHomeTemplate = await strapi.db.query(TEMPLATE_UID).findOne({
     where: { Name: 'Home Page Template' },
   });
@@ -86,11 +93,18 @@ export async function seedHomePage(strapi: any, configId: number) {
     },
   ];
 
-  console.info('[SEED][HOME] Template Content to be set:');
-  console.info(JSON.stringify(templateContent, null, 2));
+  console.info('[SEED][HOME] 📋 Template Content structure:');
+  templateContent.forEach((item, index) => {
+    console.info(`[SEED][HOME]    ${index + 1}. ${item.__component}`);
+    const refKey = Object.keys(item).find(key => key !== '__component');
+    if (refKey) {
+      console.info(`[SEED][HOME]       → ${refKey}: ${item[refKey]}`);
+    }
+  });
 
   let homeTemplate;
   if (!existingHomeTemplate) {
+    console.info('[SEED][HOME] ➕ Creating new Home Page Template...');
     homeTemplate = await strapi.entityService.create(TEMPLATE_UID, {
       data: {
         Name: 'Home Page Template',
@@ -100,9 +114,11 @@ export async function seedHomePage(strapi: any, configId: number) {
       },
     });
     console.info(
-      `[SEED][HOME] Created Home Template (ID: ${homeTemplate.id})`,
+      `[SEED][HOME] ✓ Created Home Template (ID: ${homeTemplate.id})`,
     );
   } else {
+    console.info(`[SEED][HOME] ✓ Found existing Home Template (ID: ${existingHomeTemplate.id})`);
+    console.info('[SEED][HOME] 🔄 Updating template Content...');
     // Update existing template to ensure Content is populated
     homeTemplate = await strapi.entityService.update(
       TEMPLATE_UID,
@@ -116,11 +132,12 @@ export async function seedHomePage(strapi: any, configId: number) {
       },
     );
     console.info(
-      `[SEED][HOME] Updated Home Template (ID: ${homeTemplate.id}) with Content`,
+      `[SEED][HOME] ✓ Updated Home Template (ID: ${homeTemplate.id})`,
     );
   }
 
   // Verify the template was updated correctly - use entityService for better population
+  console.info('[SEED][HOME] 🔍 Verifying template Content...');
   const verifyTemplate = await strapi.entityService.findOne(
     TEMPLATE_UID,
     homeTemplate.id,
@@ -128,21 +145,25 @@ export async function seedHomePage(strapi: any, configId: number) {
       populate: ['Content'],
     },
   );
-  console.info(`[SEED][HOME] Verification - Template Content length: ${verifyTemplate?.Content?.length || 0}`);
-  if (verifyTemplate?.Content) {
-    console.info('[SEED][HOME] Verification - Content components:');
+  console.info(`[SEED][HOME] ✓ Template Content count: ${verifyTemplate?.Content?.length || 0}`);
+  if (verifyTemplate?.Content && verifyTemplate.Content.length > 0) {
+    console.info('[SEED][HOME] ✓ Content components verified:');
     verifyTemplate.Content.forEach((item: any, index: number) => {
-      console.info(`  [${index}] ${item.__component}`);
+      console.info(`[SEED][HOME]    ${index + 1}. ${item.__component}`);
     });
+  } else {
+    console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty after creation/update!');
   }
 
   // Create or update Home Page
+  console.info('[SEED][HOME] 🏠 Creating/updating Home Page...');
   const existingHomePage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: '/' },
   });
 
   let homePageId;
   if (!existingHomePage) {
+    console.info('[SEED][HOME] ➕ Creating new Home Page...');
     const homePage = await strapi.entityService.create(PAGE_UID, {
       data: {
         Title: 'Home',
@@ -154,9 +175,11 @@ export async function seedHomePage(strapi: any, configId: number) {
     });
     homePageId = homePage.id;
     console.info(
-      `[SEED][HOME] Created Home Page (ID: ${homePage.id}, Slug: /)`,
+      `[SEED][HOME] ✅ Created Home Page (ID: ${homePage.id}, Slug: /, Template: ${homeTemplate.id})`,
     );
   } else {
+    console.info(`[SEED][HOME] ✓ Found existing Home Page (ID: ${existingHomePage.id})`);
+    console.info('[SEED][HOME] 🔄 Updating Home Page...');
     await strapi.entityService.update(PAGE_UID, existingHomePage.id, {
       data: {
         Title: 'Home',
@@ -166,11 +189,12 @@ export async function seedHomePage(strapi: any, configId: number) {
     });
     homePageId = existingHomePage.id;
     console.info(
-      `[SEED][HOME] Updated existing Home Page (ID: ${existingHomePage.id})`,
+      `[SEED][HOME] ✅ Updated Home Page (ID: ${existingHomePage.id}, Template: ${homeTemplate.id})`,
     );
   }
 
   // Final verification - check the page has the template
+  console.info('[SEED][HOME] 🔍 Final verification...');
   const verifyPage = await strapi.entityService.findOne(
     PAGE_UID,
     homePageId,
@@ -178,9 +202,12 @@ export async function seedHomePage(strapi: any, configId: number) {
       populate: ['template'],
     },
   );
-  console.info(`[SEED][HOME] Final verification - Page has template: ${!!verifyPage?.template}`);
+  console.info(`[SEED][HOME] ✓ Page has template: ${!!verifyPage?.template ? 'Yes' : 'No'}`);
   if (verifyPage?.template) {
-    console.info(`[SEED][HOME] Final verification - Template ID: ${verifyPage.template.id || verifyPage.template}`);
+    const templateId = verifyPage.template.id || verifyPage.template;
+    console.info(`[SEED][HOME] ✓ Template ID: ${templateId}`);
+  } else {
+    console.warn('[SEED][HOME] ⚠️  WARNING: Page does not have template relation!');
   }
 
   // Additional verification - query template directly to confirm Content is saved
@@ -191,10 +218,10 @@ export async function seedHomePage(strapi: any, configId: number) {
       populate: { Content: { populate: '*' } },
     },
   );
-  console.info(`[SEED][HOME] Final template check - Content count: ${finalTemplateCheck?.Content?.length || 0}`);
+  console.info(`[SEED][HOME] ✓ Final template Content count: ${finalTemplateCheck?.Content?.length || 0}`);
   if (!finalTemplateCheck?.Content || finalTemplateCheck.Content.length === 0) {
-    console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty after creation!');
-    console.warn('[SEED][HOME] This may be a Strapi dynamic zone issue. Attempting to recreate...');
+    console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty!');
+    console.warn('[SEED][HOME] 🔄 Attempting retry with Content...');
     
     // Try to update the template again with Content
     await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
@@ -210,6 +237,17 @@ export async function seedHomePage(strapi: any, configId: number) {
         populate: { Content: { populate: '*' } },
       },
     );
-    console.info(`[SEED][HOME] After retry - Content count: ${recheckTemplate?.Content?.length || 0}`);
+    console.info(`[SEED][HOME] ✓ After retry - Content count: ${recheckTemplate?.Content?.length || 0}`);
+    if (recheckTemplate?.Content?.length > 0) {
+      console.info('[SEED][HOME] ✅ Retry successful! Content saved.');
+    } else {
+      console.error('[SEED][HOME] ❌ Retry failed - Content still empty!');
+    }
+  } else {
+    console.info('[SEED][HOME] ✅ Template Content verified successfully!');
   }
+  
+  console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.info('[SEED][HOME] ✅ Home page seeding complete!');
+  console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
