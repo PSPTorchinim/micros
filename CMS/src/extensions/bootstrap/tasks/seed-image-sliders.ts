@@ -24,27 +24,27 @@ export default async function seedImageSliders({ strapi }: { strapi: any }) {
     // Create CTAs for slides
     const ctaBooking = await strapi.entityService.create(CTA_UID, {
       data: {
-        Text: 'Book Your Event',
-        URL: '/contact',
-        Variant: 'primary',
+        Label: 'Book Your Event',
+        url: '/contact',
+        OpenInNewTab: false,
         publishedAt: new Date().toISOString(),
       },
     });
 
     const ctaLearnMore = await strapi.entityService.create(CTA_UID, {
       data: {
-        Text: 'Learn More',
-        URL: '/about',
-        Variant: 'secondary',
+        Label: 'Learn More',
+        url: '/about',
+        OpenInNewTab: false,
         publishedAt: new Date().toISOString(),
       },
     });
 
     const ctaViewPackages = await strapi.entityService.create(CTA_UID, {
       data: {
-        Text: 'View Packages',
-        URL: '/services',
-        Variant: 'primary',
+        Label: 'View Packages',
+        url: '/services',
+        OpenInNewTab: false,
         publishedAt: new Date().toISOString(),
       },
     });
@@ -52,33 +52,27 @@ export default async function seedImageSliders({ strapi }: { strapi: any }) {
     // Create hero blocks for additional slides
     const heroWedding = await strapi.entityService.create(HERO_BLOCK_UID, {
       data: {
-        Heading: 'Wedding DJ Services',
-        Subheading: 'Make Your Special Day Unforgettable',
-        BackgroundUrl:
-          'https://images.unsplash.com/photo-1519741497674-611481863552',
-        cta: [ctaBooking.id],
+        heading: 'Wedding DJ Services',
+        content: 'Make Your Special Day Unforgettable',
+        actions: [ctaBooking.id],
         publishedAt: new Date().toISOString(),
       },
     });
 
     const heroCorporate = await strapi.entityService.create(HERO_BLOCK_UID, {
       data: {
-        Heading: 'Corporate Event Entertainment',
-        Subheading: 'Professional DJ Services for Your Business Events',
-        BackgroundUrl:
-          'https://images.unsplash.com/photo-1511578314322-379afb476865',
-        cta: [ctaLearnMore.id],
+        heading: 'Corporate Event Entertainment',
+        content: 'Professional DJ Services for Your Business Events',
+        actions: [ctaLearnMore.id],
         publishedAt: new Date().toISOString(),
       },
     });
 
     const heroClub = await strapi.entityService.create(HERO_BLOCK_UID, {
       data: {
-        Heading: 'Club & Party DJ',
-        Subheading: 'Keep the Dance Floor Packed All Night Long',
-        BackgroundUrl:
-          'https://images.unsplash.com/photo-1574391884720-bbc3740c59d1',
-        cta: [ctaViewPackages.id],
+        heading: 'Club & Party DJ',
+        content: 'Keep the Dance Floor Packed All Night Long',
+        actions: [ctaViewPackages.id],
         publishedAt: new Date().toISOString(),
       },
     });
