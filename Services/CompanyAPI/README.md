@@ -311,4 +311,4 @@ For issues related to CompanyAPI, please refer to the main project repository or
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

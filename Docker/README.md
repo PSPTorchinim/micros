@@ -546,4 +546,104 @@ docker-compose -f dj-panel-composer.yml build --no-cache identity-api
 docker-compose -f dj-panel-composer.yml exec identity-api /bin/bash
 ```
 
+## 🔧 MongoDB Troubleshooting
+
+### MongoDB Authentication Issues
+
+If you experience MongoDB authentication failures, follow these steps:
+
+#### Quick Fix Steps
+
+1. **Stop and Remove Current Setup**
+   ```bash
+   docker compose -f dj-panel-composer.yml down -v
+   docker container prune -f
+   ```
+
+2. **Rebuild with Updated Configuration**
+   ```bash
+   docker compose -f dj-panel-composer.yml build --no-cache mongodb_container
+   docker compose -f dj-panel-composer.yml up -d mongodb_container
+   ```
+
+3. **Monitor Initialization**
+   ```bash
+   docker compose -f dj-panel-composer.yml logs -f mongodb_container
+   ```
+   
+   Look for success messages:
+   - `✓ Root user created successfully`
+   - `✓ Authentication test result: true`
+   - `✓ MongoDB initialization completed successfully`
+
+4. **Verify Setup**
+   ```bash
+   # Test basic connectivity
+   docker exec mongodb_container mongosh --eval "db.adminCommand('ping')"
+   
+   # Test authenticated connection
+   docker exec mongodb_container mongosh --username "PSPTorchinim" --password "your_password" --authenticationDatabase admin --eval "db.adminCommand('ping')"
+   ```
+
+#### Manual Recovery Options
+
+If automatic initialization fails, you can manually create users:
+
+```bash
+# Connect to MongoDB shell
+docker exec -it mongodb_container mongosh
+
+# In the MongoDB shell, run:
+use admin
+db.createUser({
+  user: "PSPTorchinim",
+  pwd: "your_password_here",
+  roles: [
+    { role: "root", db: "admin" },
+    { role: "readWriteAnyDatabase", db: "admin" },
+    { role: "dbAdminAnyDatabase", db: "admin" }
+  ]
+})
+```
+
+#### Environment Variables
+
+Ensure your `.env` file contains:
+```env
+DATABASE_USER_MONGODB=PSPTorchinim
+DATABASE_PASSWORD_MONGODB=your_secure_password_here
+DATABASE_HOST_MONGODB=mongodb_container
+DATABASE_PORT_MONGODB=27017
+```
+
+#### MongoDB Scripts Organization
+
+MongoDB-related scripts are organized as follows:
+
+**Initialization Scripts:**
+- `Docker/init/mongo-init.js` - Automatic initialization during container startup
+
+**Troubleshooting Scripts:**
+- `Docker/scripts/mongo/manual-mongo-setup.js` - Manual user creation script
+- `Docker/scripts/mongo/mongodb-troubleshoot.ps1` - PowerShell diagnostics
+- `Docker/scripts/mongo/mongodb-troubleshoot.sh` - Bash diagnostics
+
+**Usage Examples:**
+
+```bash
+# Run troubleshooting script (PowerShell)
+.\Docker\scripts\mongo\mongodb-troubleshoot.ps1
+
+# Run troubleshooting script (Bash)
+./Docker/scripts/mongo/mongodb-troubleshoot.sh
+
+# Manual setup
+docker cp Docker/scripts/mongo/manual-mongo-setup.js mongodb_container:/tmp/
+docker exec -it mongodb_container mongosh /tmp/manual-mongo-setup.js
+```
+
 For additional support, refer to the main [README](../README.md) and [troubleshooting section](../README.md#troubleshooting).
+
+---
+
+**Developed by PSPTorchinim**

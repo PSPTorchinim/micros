@@ -434,3 +434,7 @@ Each service README includes:
 - Testing guidelines
 - Docker deployment instructions
 - Integration information
+
+---
+
+**Developed by PSPTorchinim**

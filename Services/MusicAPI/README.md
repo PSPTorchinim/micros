@@ -293,4 +293,4 @@ For issues related to MusicAPI, please refer to the main project repository or c
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

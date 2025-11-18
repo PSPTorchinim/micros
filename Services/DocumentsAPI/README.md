@@ -294,4 +294,4 @@ For issues related to DocumentsAPI, please refer to the main project repository 
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**

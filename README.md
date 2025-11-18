@@ -314,7 +314,7 @@ npm run format:fix  # Auto-format code
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is proprietary and confidential. Unauthorized copying, distribution, or use of this software is strictly prohibited. See the [LICENSE](LICENSE) file for details.
 
 ## 🔧 Configuration
 
@@ -342,9 +342,8 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📊 Project Status
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?style=flat-square)
-![Coverage](https://img.shields.io/badge/Coverage-85%25-yellowgreen?style=flat-square)
+This is an active development project. Check the [GitHub Actions](https://github.com/PSPTorchinim/micros/actions) page for current build and test status.
+
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square)
 
 ## 🌟 Features Roadmap
@@ -360,15 +359,10 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📞 Support
 
-For support and questions:
-
-- 📧 Email: contact@djbeatblaster.com
-- 💬 Discord: [DJ Beat Blaster Community](https://discord.gg/djbeatblaster)
-- 📱 Facebook: [@djbeatblaster2024](https://facebook.com/djbeatblaster2024)
-- 📸 Instagram: [@dj.beat.blaster](https://instagram.com/dj.beat.blaster)
+For support and questions, please use the [GitHub Issues](https://github.com/PSPTorchinim/micros/issues) page.
 
 ---
 
 <div align="center">
-  <strong>Built with ❤️ by the DJ Beat Blaster Team</strong>
+  <strong>Developed by PSPTorchinim</strong>
 </div>

@@ -1,14 +1,8 @@
 # DJ Beat Blaster CMS - Strapi Headless CMS
 
-## 📋 Overview
-
 This is the content management system for the DJ Beat Blaster platform, built with Strapi v5. It provides a powerful headless CMS for managing content across the DJ platform, including DJ profiles, event management, music metadata, and administrative content.
 
-**Port**: 1337  
-**Database**: PostgreSQL  
-**Framework**: Strapi 5.23.6 + Node.js
-
-## 🎯 Purpose
+## 📋 Overview
 
 The CMS serves as the central content management hub for:
 
@@ -319,28 +313,93 @@ npm run build
 chmod 755 public/uploads
 ```
 
+## 🚀 Bootstrap Tasks
+
+### Overview
+
+The CMS includes bootstrap tasks that run automatically when Strapi starts up. These tasks set up essential content and configurations.
+
+### Task Organization
+
+Bootstrap tasks are organized in `src/extensions/bootstrap/tasks/` into focused, single-purpose files:
+
+**Content Type Seeders:**
+- `seed-hero-blocks.ts` - Seeds hero blocks
+- `seed-feature-sections.ts` - Seeds feature sections
+- `seed-article-blocks.ts` - Seeds article blocks
+- `seed-steps-containers.ts` - Seeds steps containers
+- `seed-contact-info.ts` - Seeds contact info entries
+- `seed-contact-sections.ts` - Seeds contact sections
+
+**Page Seeders:**
+- `seed-login-page.ts` - Seeds the Login page
+- `seed-forgot-password-page.ts` - Seeds the Forgot Password page
+- `seed-home-page.ts` - Seeds the Home page (references content blocks)
+- `seed-about-page.ts` - Seeds the About page (references content blocks)
+
+**Content Seeders:**
+- `seed-articles.ts` - Seeds DJ articles
+- `seed-footer.ts` - Seeds the footer
+
+**Orchestrators:**
+- `seed-content-types.ts` - Orchestrates all content type seeding
+- `seed-pages.ts` - Orchestrates all page seeding tasks
+
+### Main Tasks
+
+**Content Types Seeder** (`seed-content-types.ts`)
+
+Coordinates seeding of all reusable content types created first and referenced by pages:
+
+1. Hero Blocks - "Welcome to DJ Beat Blaster" with CTAs
+2. Feature Sections - 6 DJ business features (Music Library, Events, Clients, Equipment, Contracts, Email Marketing)
+3. Article Blocks - "Latest DJ Tips & Guides" container
+4. Steps Containers - "Get Started in 3 Simple Steps"
+5. Contact Info - Email, Phone, Location entries
+6. Contact Sections - About page content with contact details
+
+**Pages Seeder** (`seed-pages.ts`)
+
+Main entry point that coordinates seeding of all standard pages:
+
+1. Gets or creates default configuration
+2. Seeds Login page
+3. Seeds Forgot Password page
+4. Seeds Home page (uses Hero Block, Feature Section, Article Block, Steps Container)
+5. Seeds About page (uses Contact Section)
+
+### Adding New Tasks
+
+1. **Create task file** in `src/extensions/bootstrap/tasks/`:
+   ```typescript
+   // seed-my-task.ts
+   export default async function seedMyTask({ strapi }: { strapi: any }) {
+     strapi.log.info('[SEED][MY_TASK] Starting...');
+     // Your seeding logic here
+     strapi.log.info('[SEED][MY_TASK] Done!');
+   }
+   ```
+
+2. **Register task** in `run-bootstrap.ts`:
+   ```typescript
+   const TASKS = {
+     // ... existing tasks
+     myTask: ['./tasks/seed-my-task', './seed-my-task'] as const,
+   } as const;
+
+   export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
+     // ... existing tasks
+     await runTask(strapi, 'seed-my-task', TASKS.myTask);
+   }
+   ```
+
 ## 📖 Learn More
 
-### Strapi Resources
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation
-- [Strapi tutorials](https://strapi.io/tutorials) - Tutorials by core team and community
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog
-- [Changelog](https://strapi.io/changelog) - Product updates and improvements
-
-### Community
-
-- [Discord](https://discord.strapi.io) - Chat with the Strapi community
-- [Forum](https://forum.strapi.io/) - Discussion and Q&A
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - Curated list of Strapi resources
-
-### DJ Beat Blaster Documentation
-
+- [Strapi Documentation](https://docs.strapi.io) - Official Strapi documentation
 - [Main Project README](../README.md) - DJ Beat Blaster platform overview
 - [Docker Setup](../Docker/README.md) - Container deployment guide
 - [API Documentation](../Services/README.md) - Microservices integration
 
 ---
 
-**Built with ❤️ by the DJ Beat Blaster Team**
+**Developed by PSPTorchinim**
