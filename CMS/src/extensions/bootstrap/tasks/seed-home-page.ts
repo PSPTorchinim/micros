@@ -178,7 +178,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     Title: 'Home',
     Slug: '/',
     configuration: configId,
-    template: { connect: [homeTemplate.id] },
+    template: homeTemplate.id,
     Parents: [],
     subpages: [],
     publishedAt: new Date().toISOString(),
