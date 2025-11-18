@@ -134,7 +134,11 @@ export async function seedStepsContainers(strapi: any) {
   
   console.info(`[SEED][STEPS_CONTAINERS] ✅ Created Steps Container (ID: ${stepsContainer.id})`);
   console.info(`[SEED][STEPS_CONTAINERS] ✅ Heading: "${verified.heading}"`);
-  console.info(`[SEED][STEPS_CONTAINERS] ✅ Action attached: "${verified.action.Label}" → ${verified.action.url}`);
+  if (verified.action) {
+    console.info(`[SEED][STEPS_CONTAINERS] ✅ Action attached: "${verified.action.Label}" → ${verified.action.url}`);
+  } else {
+    console.info(`[SEED][STEPS_CONTAINERS] ✅ Action attached: None`);
+  }
   console.info(`[SEED][STEPS_CONTAINERS] ✅ Steps count: ${verified.steps?.length || 0}`);
   verified.steps?.forEach((step: any, index: number) => {
     console.info(`[SEED][STEPS_CONTAINERS]    ${index + 1}. "${step.title}" (icon: ${step.icon})`);
