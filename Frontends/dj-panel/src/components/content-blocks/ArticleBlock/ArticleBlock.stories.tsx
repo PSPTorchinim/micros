@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ArticleBlock } from '../components/content-blocks/ArticleBlock';
+import { ArticleBlock } from './index';
 
 const meta = {
   title: 'Content Blocks/ArticleBlock',

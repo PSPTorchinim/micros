@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ForgotPasswordForm } from '../components/molecules/ForgotPasswordForm';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 const meta = {
   title: 'Molecules/ForgotPasswordForm',

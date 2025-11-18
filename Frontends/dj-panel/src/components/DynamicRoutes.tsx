@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type {
+import {
   Page,
   PageAuthStateEnum1,
   PageMenuEnum1,
