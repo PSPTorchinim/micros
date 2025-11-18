@@ -120,12 +120,21 @@ export async function seedHomePage(strapi: any, configId: number) {
     );
   }
 
-  // Verify the template was updated correctly
-  const verifyTemplate = await strapi.db.query(TEMPLATE_UID).findOne({
-    where: { id: homeTemplate.id },
-    populate: ['Content'],
-  });
+  // Verify the template was updated correctly - use entityService for better population
+  const verifyTemplate = await strapi.entityService.findOne(
+    TEMPLATE_UID,
+    homeTemplate.id,
+    {
+      populate: ['Content'],
+    },
+  );
   console.info(`[SEED][HOME] Verification - Template Content length: ${verifyTemplate?.Content?.length || 0}`);
+  if (verifyTemplate?.Content) {
+    console.info('[SEED][HOME] Verification - Content components:');
+    verifyTemplate.Content.forEach((item: any, index: number) => {
+      console.info(`  [${index}] ${item.__component}`);
+    });
+  }
 
   // Create or update Home Page
   const existingHomePage = await strapi.db.query(PAGE_UID).findOne({
@@ -156,5 +165,18 @@ export async function seedHomePage(strapi: any, configId: number) {
     console.info(
       `[SEED][HOME] Updated existing Home Page (ID: ${existingHomePage.id})`,
     );
+  }
+
+  // Final verification - check the page has the template
+  const verifyPage = await strapi.entityService.findOne(
+    PAGE_UID,
+    existingHomePage?.id || (await strapi.db.query(PAGE_UID).findOne({ where: { Slug: '/' } })).id,
+    {
+      populate: ['template'],
+    },
+  );
+  console.info(`[SEED][HOME] Final verification - Page has template: ${!!verifyPage?.template}`);
+  if (verifyPage?.template) {
+    console.info(`[SEED][HOME] Final verification - Template ID: ${verifyPage.template.id || verifyPage.template}`);
   }
 }
