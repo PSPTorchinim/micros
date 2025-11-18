@@ -65,6 +65,13 @@ These tests validate:
 - API Gateway starts and is accessible
 - All services run together as a complete system
 - System can be cleanly stopped and cleaned up
+- **Service logs can be retrieved and analyzed**
+
+**New Log Retrieval Features:**
+- Tests automatically capture and display service logs on failure
+- Dedicated tests for retrieving logs from individual services
+- Ability to get logs from all services at once
+- Useful for debugging issues in the Docker environment
 
 **⚠️ Warning:** These tests are marked as `Skip` by default because they:
 - Take 5-15 minutes to complete
@@ -145,13 +152,51 @@ dotnet test --filter "FullyQualifiedName~FullSystemTests"
 dotnet test --filter "FullyQualifiedName~DockerComposeFile_Exists"
 ```
 
+## Retrieving Docker Container Logs
+
+The integration tests include functionality to retrieve logs from running Docker containers, which is invaluable for debugging issues.
+
+### Log Retrieval Methods
+
+The `FullSystemTests` class provides helper methods for log retrieval:
+
+- **`GetServiceLogs(serviceName, tailLines)`** - Get logs from a specific service
+- **`GetAllServiceLogs(tailLines)`** - Get logs from all running services
+
+### Dedicated Log Tests
+
+Two tests demonstrate log retrieval capabilities:
+
+1. **`FullSystem_CanRetrieveServiceLogs`** - Demonstrates retrieving logs from a single service
+2. **`FullSystem_CanRetrieveAllServiceLogs`** - Demonstrates retrieving logs from all services
+
+### Automatic Log Capture on Failure
+
+When system tests fail, they automatically capture and display service logs in the error output, making it easier to diagnose issues without manual log retrieval.
+
+### Manual Log Retrieval
+
+You can also retrieve logs manually using Docker Compose commands:
+
+```bash
+# Get logs from a specific service
+cd Docker
+docker compose -f dj-panel-composer.yml logs --tail=100 redis
+
+# Get logs from all services
+docker compose -f dj-panel-composer.yml logs --tail=50
+
+# Follow logs in real-time
+docker compose -f dj-panel-composer.yml logs -f redis
+```
+
 ## Test Results Interpretation
 
 ### Successful Test Run (Quick Tests)
 ```
-Total tests: 19
+Total tests: 21
      Passed: 9
-    Skipped: 10
+    Skipped: 12
 ```
 
 - **Passed**: Quick validation tests that ran successfully

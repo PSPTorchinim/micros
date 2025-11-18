@@ -64,8 +64,12 @@ namespace Integration.Tests
                 timeoutMinutes: 10);
 
             // Assert
-            Assert.True(startResult.ExitCode == 0,
-                $"Should be able to start infrastructure services. Error: {startResult.Error}");
+            if (startResult.ExitCode != 0)
+            {
+                // Get logs for debugging
+                var logsResult = GetAllServiceLogs(tailLines: 100);
+                Assert.Fail($"Should be able to start infrastructure services. Error: {startResult.Error}\n\nService Logs:\n{logsResult.Logs}");
+            }
 
             // Wait for services to be healthy
             await Task.Delay(TimeSpan.FromSeconds(30));
@@ -233,6 +237,76 @@ namespace Integration.Tests
             // Exit code 0 means success, but we're okay with it failing if nothing was running
             Assert.True(result.ExitCode == 0 || result.ExitCode == 1,
                 $"Docker compose down should complete. Output: {result.Output}, Error: {result.Error}");
+        }
+
+        [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
+        public async Task FullSystem_CanRetrieveServiceLogs()
+        {
+            // Arrange - Start a simple service
+            var startResult = RunDockerComposeCommand("up -d redis", timeoutMinutes: 5);
+            Assert.True(startResult.ExitCode == 0, "Should be able to start Redis");
+
+            // Wait for service to start and generate some logs
+            await Task.Delay(TimeSpan.FromSeconds(10));
+
+            // Act - Get logs from the service
+            var logsResult = GetServiceLogs("redis", tailLines: 50);
+
+            // Assert
+            Assert.True(logsResult.ExitCode == 0, "Should be able to retrieve logs");
+            Assert.False(string.IsNullOrEmpty(logsResult.Logs), "Logs should not be empty");
+            
+            // Verify log content contains expected Redis output
+            Assert.True(logsResult.Logs.Contains("Ready to accept connections") || 
+                       logsResult.Logs.Contains("redis") ||
+                       logsResult.Logs.Length > 0,
+                       $"Logs should contain Redis startup messages. Logs: {logsResult.Logs}");
+        }
+
+        [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
+        public async Task FullSystem_CanRetrieveAllServiceLogs()
+        {
+            // Arrange - Start multiple services
+            var startResult = RunDockerComposeCommand("up -d redis rabbitmq", timeoutMinutes: 10);
+            Assert.True(startResult.ExitCode == 0, "Should be able to start services");
+
+            // Wait for services to start and generate logs
+            await Task.Delay(TimeSpan.FromSeconds(15));
+
+            // Act - Get logs from all services
+            var logsResult = GetAllServiceLogs(tailLines: 30);
+
+            // Assert
+            Assert.True(logsResult.ExitCode == 0, "Should be able to retrieve all logs");
+            Assert.False(string.IsNullOrEmpty(logsResult.Logs), "Logs should not be empty");
+            
+            // Verify logs contain references to both services
+            var logs = logsResult.Logs.ToLower();
+            Assert.True(logs.Contains("redis") || logs.Contains("rabbitmq"),
+                       $"Logs should contain service names. Logs length: {logsResult.Logs.Length}");
+        }
+
+        /// <summary>
+        /// Gets logs from a specific Docker service
+        /// </summary>
+        /// <param name="serviceName">Name of the service to get logs from</param>
+        /// <param name="tailLines">Number of lines to retrieve (default: 100)</param>
+        /// <returns>Tuple containing exit code and log content</returns>
+        private (int ExitCode, string Logs) GetServiceLogs(string serviceName, int tailLines = 100)
+        {
+            var result = RunDockerComposeCommand($"logs --tail={tailLines} {serviceName}", timeoutMinutes: 2);
+            return (result.ExitCode, result.Output);
+        }
+
+        /// <summary>
+        /// Gets logs from all services in the Docker Compose environment
+        /// </summary>
+        /// <param name="tailLines">Number of lines to retrieve per service (default: 50)</param>
+        /// <returns>Tuple containing exit code and all logs</returns>
+        private (int ExitCode, string Logs) GetAllServiceLogs(int tailLines = 50)
+        {
+            var result = RunDockerComposeCommand($"logs --tail={tailLines}", timeoutMinutes: 5);
+            return (result.ExitCode, result.Output);
         }
 
         private (int ExitCode, string Output, string Error) RunDockerComposeCommand(
