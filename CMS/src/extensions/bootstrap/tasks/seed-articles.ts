@@ -1073,7 +1073,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         const updatedSubpages = [...existingSubpageIds, ...newSubpageIds];
         await strapi.entityService.update(PAGE_UID, parentPageId, {
           data: {
-            subpages: updatedSubpages,
+            subpages: { set: updatedSubpages },
           },
         });
         console.info(
