@@ -65,6 +65,16 @@ export async function seedLoginPage(
     where: { Slug: loginSlug },
   });
 
+  if (parentPageId) {
+    // Log parent page data
+    const parentPage = await strapi.db.query(PAGE_UID).findOne({ where: { id: parentPageId } });
+    if (parentPage) {
+      console.info(`[SEED][LOGIN][PARENT] Will set parent: ID=${parentPageId}, Data=${JSON.stringify(parentPage)}`);
+    } else {
+      console.warn(`[SEED][LOGIN][PARENT] Skipping non-existent parent page ID: ${parentPageId}`);
+    }
+  }
+  let loginPageId;
   if (!existingLoginPage) {
     const loginPage = await strapi.entityService.create(PAGE_UID, {
       data: {
@@ -78,6 +88,7 @@ export async function seedLoginPage(
         publishedAt: new Date().toISOString(),
       },
     });
+    loginPageId = loginPage.id;
     console.info(
       `[SEED][LOGIN] Created Login Page (ID: ${loginPage.id}, Slug: /${loginSlug})`,
     );
@@ -92,8 +103,21 @@ export async function seedLoginPage(
         Parents: parentPageId ? [parentPageId] : undefined,
       },
     });
+    loginPageId = existingLoginPage.id;
     console.info(
       `[SEED][LOGIN] Updated existing Login Page (ID: ${existingLoginPage.id})`,
     );
+  }
+
+  // Ensure parent page's subpages includes this login page
+  if (parentPageId && loginPageId) {
+    const parentPage = await strapi.entityService.findOne(PAGE_UID, parentPageId, { populate: ['subpages'] });
+    const subpages = (parentPage.subpages || []).map((sp: any) => sp.id);
+    if (!subpages.includes(loginPageId)) {
+      await strapi.entityService.update(PAGE_UID, parentPageId, {
+        data: { subpages: [...subpages, loginPageId] },
+      });
+      console.info(`[SEED][LOGIN] Added Login Page (ID: ${loginPageId}) to parent page's subpages.`);
+    }
   }
 }

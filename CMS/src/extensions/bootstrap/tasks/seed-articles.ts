@@ -1049,8 +1049,23 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         (sp: any) => sp.id,
       );
 
+      // Only include createdPageIds that actually exist in the DB
+      const allPages = await strapi.db.query(PAGE_UID).findMany();
+      const validPageIds = new Set(allPages.map((p: any) => p.id));
+      const filteredCreatedPageIds = createdPageIds.filter(id => validPageIds.has(id));
+
+      // Log details for each page ID
+      for (const id of createdPageIds) {
+        if (validPageIds.has(id)) {
+          const pageData = allPages.find((p: any) => p.id === id);
+          console.info(`[SEED][ARTICLES][SUBPAGE] Will set as subpage: ID=${id}, Data=${JSON.stringify(pageData)}`);
+        } else {
+          console.warn(`[SEED][ARTICLES][SUBPAGE] Skipping non-existent page ID: ${id}`);
+        }
+      }
+
       // Add all created pages that aren't already subpages
-      const newSubpageIds = createdPageIds.filter(
+      const newSubpageIds = filteredCreatedPageIds.filter(
         (id) => !existingSubpageIds.includes(id),
       );
 
@@ -1075,7 +1090,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
       );
     }
 
-    // Update article block with all published articles
+    // Update article block with all published articles (correct relation format)
     try {
       const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
       const articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
@@ -1090,18 +1105,17 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             select: ['id'],
             where: { publishedAt: { $notNull: true } },
           });
-        const articleIds = publishedArticles.map((a: any) => a.id);
+        const articleIdObjects = publishedArticles.map((a: any) => ({ id: a.id }));
 
         await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
           data: {
-            articles: articleIds,
+            articles: { set: articleIdObjects },
             publishedAt: new Date().toISOString(),
           },
         });
         console.info(
-          `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles: [${articleIds.join(', ')}]`,
+          `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIdObjects.length} articles: [${articleIdObjects.map(a => a.id).join(', ')}]`,
         );
-        
         // Verify the update
         const verifyArticleBlock = await strapi.entityService.findOne(
           ARTICLE_BLOCK_UID,

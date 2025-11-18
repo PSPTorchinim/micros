@@ -15,9 +15,7 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
 
   try {
     // Always get or create configuration
-    console.info(
-      '[SEED][STANDARD_PAGES] 🔧 Getting/creating configuration...',
-    );
+    console.info('[SEED][STANDARD_PAGES] 🔧 Getting/creating configuration...');
     const configId = await getOrCreateConfiguration(strapi);
     console.info(`[SEED][STANDARD_PAGES] ✅ Configuration ID: ${configId}`);
 
@@ -29,14 +27,16 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     console.info('[SEED][STANDARD_PAGES] 👥 Seeding Users parent page...');
     const usersPageId = await seedUsersPage(strapi, configId);
 
-    // Always run all page seeders; each handles its own existence check
-    console.info('[SEED][STANDARD_PAGES] 🔐 Seeding Login page...');
-    await seedLoginPage(strapi, configId, usersPageId);
+    if (!usersPageId || typeof usersPageId !== 'number') {
+      console.error('[SEED][STANDARD_PAGES] ❌ Users Page ID is invalid. Skipping dependent pages (Login, Forgot Password).');
+    } else {
+      // Only run dependent page seeders if usersPageId is valid
+      console.info('[SEED][STANDARD_PAGES] 🔐 Seeding Login page...');
+      await seedLoginPage(strapi, configId, usersPageId);
 
-    console.info(
-      '[SEED][STANDARD_PAGES] 🔑 Seeding Forgot Password page...',
-    );
-    await seedForgotPasswordPage(strapi, configId, usersPageId);
+      console.info('[SEED][STANDARD_PAGES] 🔑 Seeding Forgot Password page...');
+      await seedForgotPasswordPage(strapi, configId, usersPageId);
+    }
 
     console.info('[SEED][STANDARD_PAGES] 🏠 Seeding Home page...');
     await seedHomePage(strapi, configId);
@@ -45,15 +45,11 @@ export default async function seedStandardPages({ strapi }: { strapi: any }) {
     await seedAboutPage(strapi, configId);
 
     console.info('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.info(
-      '[SEED][STANDARD_PAGES] ✅ Standard pages seeding complete!',
-    );
+    console.info('[SEED][STANDARD_PAGES] ✅ Standard pages seeding complete!');
     console.info('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } catch (error: any) {
     console.error('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error(
-      `[SEED][STANDARD_PAGES] ❌ Failed to seed standard pages: ${error.message}`,
-    );
+    console.error(`[SEED][STANDARD_PAGES] ❌ Failed to seed standard pages: ${error.message}`);
     console.error(`[SEED][STANDARD_PAGES] Stack trace: ${error.stack}`);
     console.error('[SEED][STANDARD_PAGES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     throw error;

@@ -26,7 +26,7 @@ export async function seedHomePage(strapi: any, configId: number) {
   }
   console.info(`[SEED][HOME] ✓ Found Hero Block (ID: ${heroBlock.id})`);
 
-  // Get existing Article Block
+  // Get existing Article Block by title (dynamic fetch)
   console.info('[SEED][HOME] 🔍 Looking for Article Block...');
   const articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
     where: { Title: 'Latest DJ Tips & Guides' },
@@ -85,7 +85,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     },
     {
       __component: 'article-block-ref.article-block-ref',
-      block: articleBlock.id,
+      block: articleBlock.id, // Always use the dynamically fetched ID
     },
     {
       __component: 'steps-container-ref.steps-container-ref',
@@ -162,16 +162,32 @@ export async function seedHomePage(strapi: any, configId: number) {
   });
 
   let homePageId;
+  // Ensure template exists and is published
+  const templateCheck = await strapi.db.query(TEMPLATE_UID).findOne({ where: { id: homeTemplate.id } });
+  if (!templateCheck) {
+    console.error(`[SEED][HOME] ❌ Home Template with ID ${homeTemplate.id} does not exist! Cannot create Home Page.`);
+    return;
+  }
+  if (!templateCheck.publishedAt) {
+    await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
+      data: { publishedAt: new Date().toISOString() },
+    });
+    console.info(`[SEED][HOME] Published Home Template (ID: ${homeTemplate.id})`);
+  }
+  const homePageData = {
+    Title: 'Home',
+    Slug: '/',
+    configuration: configId,
+    template: homeTemplate.id,
+    Parents: [],
+    subpages: [],
+    publishedAt: new Date().toISOString(),
+  };
+  console.info('[SEED][HOME] Home Page creation data:', JSON.stringify(homePageData));
   if (!existingHomePage) {
     console.info('[SEED][HOME] ➕ Creating new Home Page...');
     const homePage = await strapi.entityService.create(PAGE_UID, {
-      data: {
-        Title: 'Home',
-        Slug: '/',
-        configuration: configId,
-        template: homeTemplate.id,
-        publishedAt: new Date().toISOString(),
-      },
+      data: homePageData,
     });
     homePageId = homePage.id;
     console.info(
@@ -181,11 +197,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     console.info(`[SEED][HOME] ✓ Found existing Home Page (ID: ${existingHomePage.id})`);
     console.info('[SEED][HOME] 🔄 Updating Home Page...');
     await strapi.entityService.update(PAGE_UID, existingHomePage.id, {
-      data: {
-        Title: 'Home',
-        template: homeTemplate.id,
-        configuration: configId,
-      },
+      data: homePageData,
     });
     homePageId = existingHomePage.id;
     console.info(
@@ -194,20 +206,23 @@ export async function seedHomePage(strapi: any, configId: number) {
   }
 
   // Final verification - check the page has the template
-  console.info('[SEED][HOME] 🔍 Final verification...');
-  const verifyPage = await strapi.entityService.findOne(
-    PAGE_UID,
-    homePageId,
-    {
-      populate: ['template'],
-    },
-  );
-  console.info(`[SEED][HOME] ✓ Page has template: ${!!verifyPage?.template ? 'Yes' : 'No'}`);
-  if (verifyPage?.template) {
-    const templateId = verifyPage.template.id || verifyPage.template;
-    console.info(`[SEED][HOME] ✓ Template ID: ${templateId}`);
+  // Final verification and force bidirectional relation
+  console.info('[SEED][HOME] 🔍 Final verification and forcing bidirectional relation...');
+  // 1. Force update Home page's template field
+  await strapi.entityService.update(PAGE_UID, homePageId, {
+    data: { template: homeTemplate.id },
+  });
+  // 2. Force update template's page field
+  await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
+    data: { page: homePageId },
+  });
+  // 3. Verify both directions
+  const verifyPage = await strapi.entityService.findOne(PAGE_UID, homePageId, { populate: ['template'] });
+  const verifyTemplateRelation = await strapi.entityService.findOne(TEMPLATE_UID, homeTemplate.id, { populate: ['page'] });
+  if (verifyPage?.template && verifyTemplateRelation?.page) {
+    console.info(`[SEED][HOME] ✅ Bidirectional relation established: Home page.template = ${verifyPage.template.id}, Template.page = ${verifyTemplateRelation.page.id}`);
   } else {
-    console.warn('[SEED][HOME] ⚠️  WARNING: Page does not have template relation!');
+    console.error('[SEED][HOME] ❌ Failed to establish bidirectional relation between Home page and template!');
   }
 
   // Additional verification - query template directly to confirm Content is saved
