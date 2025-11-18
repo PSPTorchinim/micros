@@ -84,10 +84,6 @@ const TASKS = {
   ] as const,
   seedPages: ['./tasks/seed-pages', './seed-pages'] as const,
   seedArticles: ['./tasks/seed-articles', './seed-articles'] as const,
-  reseedContentBlocks: [
-    './tasks/reseed-content-blocks',
-    './reseed-content-blocks',
-  ] as const,
 } as const;
 
 // ---- orchestrator ----------------------------------------------------------
@@ -96,35 +92,6 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   strapi.log.info('[BOOT] 🚀 Starting Strapi Bootstrap Process');
   strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  // Check for force reseed environment variable
-  const forceReseed = process.env.FORCE_RESEED_CONTENT === 'true';
-  
-  if (forceReseed) {
-    strapi.log.info('[BOOT] 🔄 FORCE_RESEED_CONTENT detected - running content reseed...');
-    strapi.log.info('');
-    
-    // Always update public role permissions first
-    await runTask(
-      strapi,
-      'set-all-public-permissions',
-      TASKS.allPublicPermissions,
-    );
-    
-    // Run reseed task
-    await runTask(
-      strapi,
-      'reseed-content-blocks',
-      TASKS.reseedContentBlocks,
-    );
-    
-    strapi.log.info('');
-    strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    strapi.log.info('[BOOT] ✅ Force reseed completed successfully');
-    strapi.log.info('[BOOT] 💡 Set FORCE_RESEED_CONTENT=false to disable on next restart');
-    strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return;
-  }
   
   // Check if database is empty
   const dbIsEmpty = await isDatabaseEmpty(strapi);
@@ -165,7 +132,7 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
   } else {
     strapi.log.info('');
     strapi.log.info('[BOOT] ⏭️  Skipping seeding tasks - database already contains data');
-    strapi.log.info('[BOOT] 💡 To force reseed content blocks, set FORCE_RESEED_CONTENT=true and restart');
+    strapi.log.info('[BOOT] 💡 To reseed, delete the database and restart Strapi');
     strapi.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 }

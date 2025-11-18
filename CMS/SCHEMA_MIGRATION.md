@@ -132,13 +132,7 @@ If you need to preserve existing data:
    npm run develop
    ```
 
-4. **Reseed content**
-   ```bash
-   export FORCE_RESEED_CONTENT=true
-   # Restart Strapi
-   ```
-
-5. **Manual fixes** (if needed)
+4. **Manual fixes** (if needed)
    - Open Strapi Admin
    - For each Steps Container:
      - Replace dynamic zone `action` with direct CTA relation
