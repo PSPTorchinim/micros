@@ -141,6 +141,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     where: { Slug: '/' },
   });
 
+  let homePageId;
   if (!existingHomePage) {
     const homePage = await strapi.entityService.create(PAGE_UID, {
       data: {
@@ -151,6 +152,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
+    homePageId = homePage.id;
     console.info(
       `[SEED][HOME] Created Home Page (ID: ${homePage.id}, Slug: /)`,
     );
@@ -162,6 +164,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         configuration: configId,
       },
     });
+    homePageId = existingHomePage.id;
     console.info(
       `[SEED][HOME] Updated existing Home Page (ID: ${existingHomePage.id})`,
     );
@@ -170,7 +173,7 @@ export async function seedHomePage(strapi: any, configId: number) {
   // Final verification - check the page has the template
   const verifyPage = await strapi.entityService.findOne(
     PAGE_UID,
-    existingHomePage?.id || (await strapi.db.query(PAGE_UID).findOne({ where: { Slug: '/' } })).id,
+    homePageId,
     {
       populate: ['template'],
     },
@@ -178,5 +181,35 @@ export async function seedHomePage(strapi: any, configId: number) {
   console.info(`[SEED][HOME] Final verification - Page has template: ${!!verifyPage?.template}`);
   if (verifyPage?.template) {
     console.info(`[SEED][HOME] Final verification - Template ID: ${verifyPage.template.id || verifyPage.template}`);
+  }
+
+  // Additional verification - query template directly to confirm Content is saved
+  const finalTemplateCheck = await strapi.entityService.findOne(
+    TEMPLATE_UID,
+    homeTemplate.id,
+    {
+      populate: { Content: { populate: '*' } },
+    },
+  );
+  console.info(`[SEED][HOME] Final template check - Content count: ${finalTemplateCheck?.Content?.length || 0}`);
+  if (!finalTemplateCheck?.Content || finalTemplateCheck.Content.length === 0) {
+    console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty after creation!');
+    console.warn('[SEED][HOME] This may be a Strapi dynamic zone issue. Attempting to recreate...');
+    
+    // Try to update the template again with Content
+    await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
+      data: {
+        Content: templateContent,
+      },
+    });
+    
+    const recheckTemplate = await strapi.entityService.findOne(
+      TEMPLATE_UID,
+      homeTemplate.id,
+      {
+        populate: { Content: { populate: '*' } },
+      },
+    );
+    console.info(`[SEED][HOME] After retry - Content count: ${recheckTemplate?.Content?.length || 0}`);
   }
 }
