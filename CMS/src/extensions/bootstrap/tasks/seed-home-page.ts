@@ -206,16 +206,8 @@ export async function seedHomePage(strapi: any, configId: number) {
   }
 
   // Final verification - check the page has the template
-  // Final verification and force bidirectional relation
-  console.info('[SEED][HOME] 🔍 Final verification and forcing bidirectional relation...');
-  // 1. Force update Home page's template field using set for update
-  await strapi.entityService.update(PAGE_UID, homePageId, {
-    data: { template: { set: [homeTemplate.id] } },
-  });
-  // 2. Force update template's page field using set for update
-  await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
-    data: { page: { set: [homePageId] } },
-  });
+  // Final verification - the relation is managed by the page side (template.page is mappedBy)
+  console.info('[SEED][HOME] 🔍 Final verification of page-template relation...');
   // 3. Verify both directions
   const verifyPage = await strapi.entityService.findOne(PAGE_UID, homePageId, { populate: ['template'] });
   const verifyTemplateRelation = await strapi.entityService.findOne(TEMPLATE_UID, homeTemplate.id, { populate: ['page'] });
