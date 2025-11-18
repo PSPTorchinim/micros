@@ -6,7 +6,7 @@ const TEMPLATE_UID = 'api::template.template';
 const CONTACT_SECTION_UID = 'api::contact-section.contact-section';
 
 export async function seedAboutPage(strapi: any, configId: number) {
-  strapi.log.info('[SEED][ABOUT] Seeding About page...');
+  console.info('[SEED][ABOUT] Seeding About page...');
 
   const aboutSlug = toUrlSlug('about');
 
@@ -16,7 +16,7 @@ export async function seedAboutPage(strapi: any, configId: number) {
   });
 
   if (!contactSection) {
-    strapi.log.warn(
+    console.warn(
       '[SEED][ABOUT] Contact Section not found. Run seed-content-types first.',
     );
     return;
@@ -44,7 +44,7 @@ export async function seedAboutPage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][ABOUT] Created About Template (ID: ${aboutTemplate.id})`,
     );
   } else {
@@ -60,7 +60,7 @@ export async function seedAboutPage(strapi: any, configId: number) {
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][ABOUT] Updated About Template (ID: ${aboutTemplate.id}) with Content`,
     );
   }
@@ -80,7 +80,7 @@ export async function seedAboutPage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][ABOUT] Created About Page (ID: ${aboutPage.id}, Slug: /${aboutSlug})`,
     );
   } else {
@@ -91,7 +91,7 @@ export async function seedAboutPage(strapi: any, configId: number) {
         configuration: configId,
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][ABOUT] Updated existing About Page (ID: ${existingAboutPage.id})`,
     );
   }

@@ -89,7 +89,7 @@ export default async function setAllPublicPermissions({
   const publicRole = await getRoleByType(strapi, PUBLIC_ROLE_TYPE);
 
   if (!publicRole) {
-    strapi.log.warn('[PERM] Public role not found. Skipping.');
+    console.warn('[PERM] Public role not found. Skipping.');
     return;
   }
 
@@ -103,5 +103,5 @@ export default async function setAllPublicPermissions({
       logPrefix = 'CTB-PERM';
     await ensureActionEnabled(strapi, publicRole.id, action, logPrefix);
   }
-  strapi.log.info('[PERM] All public permissions updated.');
+  console.info('[PERM] All public permissions updated.');
 }

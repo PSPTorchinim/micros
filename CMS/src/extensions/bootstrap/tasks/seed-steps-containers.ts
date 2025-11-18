@@ -4,7 +4,7 @@ const STEPS_CONTAINER_UID = 'api::steps-container.steps-container';
 const CTA_UID = 'api::cta.cta';
 
 export async function seedStepsContainers(strapi: any) {
-  strapi.log.info('[SEED][STEPS_CONTAINERS] Seeding Steps Containers...');
+  console.info('[SEED][STEPS_CONTAINERS] Seeding Steps Containers...');
 
   // Check if steps container already exists
   const existingSteps = await strapi.db.query(STEPS_CONTAINER_UID).findOne({
@@ -12,7 +12,7 @@ export async function seedStepsContainers(strapi: any) {
   });
 
   if (existingSteps) {
-    strapi.log.info('[SEED][STEPS_CONTAINERS] Steps container exists, updating...');
+    console.info('[SEED][STEPS_CONTAINERS] Steps container exists, updating...');
     
     // Find or create CTA
     let actionCta = await strapi.db.query(CTA_UID).findOne({
@@ -55,7 +55,7 @@ export async function seedStepsContainers(strapi: any) {
         ],
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][STEPS_CONTAINERS] Updated Steps Container (ID: ${existingSteps.id})`,
     );
     return;
@@ -101,7 +101,7 @@ export async function seedStepsContainers(strapi: any) {
       },
     },
   );
-  strapi.log.info(
+  console.info(
     `[SEED][STEPS_CONTAINERS] Created Steps Container (ID: ${stepsContainer.id})`,
   );
 }

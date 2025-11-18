@@ -6,7 +6,7 @@ export async function seedFooter(strapi: any, configurationId: number) {
   // Only seed if there is no footer in the database
   const count = await strapi.db.query(FOOTER_UID).count();
   if (count > 0) {
-    strapi.log.info('[SEED][FOOTER] Skipping: footer already exists.');
+    console.info('[SEED][FOOTER] Skipping: footer already exists.');
     return;
   }
   // Example footer data

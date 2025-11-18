@@ -9,7 +9,7 @@ import { seedContactSections } from './seed-contact-sections';
 import seedImageSliders from './seed-image-sliders';
 
 export default async function seedContentTypes({ strapi }: { strapi: any }) {
-  strapi.log.info('[SEED][CONTENT_TYPES] Starting content types seeding...');
+  console.info('[SEED][CONTENT_TYPES] Starting content types seeding...');
 
   try {
     // Always run all seeders; each handles its own existence check
@@ -25,9 +25,9 @@ export default async function seedContentTypes({ strapi }: { strapi: any }) {
     // Seed Image Sliders (after hero blocks are created)
     await seedImageSliders({ strapi });
 
-    strapi.log.info('[SEED][CONTENT_TYPES] Content types seeding complete!');
+    console.info('[SEED][CONTENT_TYPES] Content types seeding complete!');
   } catch (error: any) {
-    strapi.log.error(
+    console.error(
       `[SEED][CONTENT_TYPES] Failed to seed content types: ${error.message}`,
     );
     throw error;

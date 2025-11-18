@@ -12,7 +12,7 @@ export async function getOrCreateConfiguration(strapi: any): Promise<number> {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][CONFIG] Created default configuration (ID: ${config.id})`,
     );
   }

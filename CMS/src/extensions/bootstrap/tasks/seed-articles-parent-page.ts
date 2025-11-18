@@ -6,7 +6,7 @@ import { toUrlSlug } from './utils/slugify';
 const PAGE_UID = 'api::page.page';
 
 export async function seedArticlesParentPage(strapi: any, configId: number) {
-  strapi.log.info('[SEED][ARTICLES_PARENT] Seeding parent Articles page...');
+  console.info('[SEED][ARTICLES_PARENT] Seeding parent Articles page...');
 
   // Check if the parent Articles page already exists
   const articlesSlug = toUrlSlug('articles');
@@ -14,7 +14,7 @@ export async function seedArticlesParentPage(strapi: any, configId: number) {
     .query(PAGE_UID)
     .findOne({ where: { Slug: articlesSlug } });
   if (existing) {
-    strapi.log.info(
+    console.info(
       '[SEED][ARTICLES_PARENT] Parent Articles page already exists. Skipping.',
     );
     return existing.id;
@@ -30,7 +30,7 @@ export async function seedArticlesParentPage(strapi: any, configId: number) {
     },
   });
 
-  strapi.log.info(
+  console.info(
     `[SEED][ARTICLES_PARENT] Created parent Articles page (ID: ${page.id})`,
   );
   return page.id;

@@ -3,12 +3,12 @@
 const CONTACT_INFO_UID = 'api::contact-info.contact-info';
 
 export async function seedContactInfo(strapi: any): Promise<number[]> {
-  strapi.log.info('[SEED][CONTACT_INFO] Seeding Contact Info...');
+  console.info('[SEED][CONTACT_INFO] Seeding Contact Info...');
 
   // Only seed if there are no contact info entries in the database
   const count = await strapi.db.query(CONTACT_INFO_UID).count();
   if (count > 0) {
-    strapi.log.info(
+    console.info(
       '[SEED][CONTACT_INFO] Skipping: contact info already exists.',
     );
     // Return existing IDs for downstream logic
@@ -53,12 +53,12 @@ export async function seedContactInfo(strapi: any): Promise<number[]> {
         },
       });
       contactInfoIds.push(contactInfo.id);
-      strapi.log.info(
+      console.info(
         `[SEED][CONTACT_INFO] Created Contact Info: ${info.title} (ID: ${contactInfo.id})`,
       );
     } else {
       contactInfoIds.push(existing.id);
-      strapi.log.debug(
+      console.debug(
         `[SEED][CONTACT_INFO] Contact Info "${info.title}" already exists (ID: ${existing.id})`,
       );
     }

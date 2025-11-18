@@ -11,7 +11,7 @@ export async function seedForgotPasswordPage(
   configId: number,
   parentPageId?: number,
 ) {
-  strapi.log.info('[SEED][FORGOT_PASSWORD] Seeding Forgot Password page...');
+  console.info('[SEED][FORGOT_PASSWORD] Seeding Forgot Password page...');
 
   const forgotSlug = toUrlSlug('forgot-password');
 
@@ -38,7 +38,7 @@ export async function seedForgotPasswordPage(
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][FORGOT_PASSWORD] Created Forgot Password Block (ID: ${forgotPasswordBlock.id})`,
     );
   }
@@ -58,12 +58,12 @@ export async function seedForgotPasswordPage(
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][FORGOT_PASSWORD] Created Forgot Password Template (ID: ${forgotTemplate.id})`,
     );
   } else {
     forgotTemplate = existingForgotTemplate;
-    strapi.log.debug(
+    console.debug(
       `[SEED][FORGOT_PASSWORD] Forgot Password Template already exists (ID: ${forgotTemplate.id})`,
     );
   }
@@ -85,7 +85,7 @@ export async function seedForgotPasswordPage(
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][FORGOT_PASSWORD] Created Forgot Password Page (ID: ${forgotPage.id}, Slug: /${forgotSlug})`,
     );
   } else {
@@ -97,7 +97,7 @@ export async function seedForgotPasswordPage(
         Parents: parentPageId ? [parentPageId] : undefined,
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][FORGOT_PASSWORD] Updated existing Forgot Password Page (ID: ${existingForgotPage.id})`,
     );
   }

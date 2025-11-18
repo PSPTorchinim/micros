@@ -5,7 +5,7 @@ const PAGE_UID = 'api::page.page';
 const TEMPLATE_UID = 'api::template.template';
 
 export async function seedUsersPage(strapi: any, configId: number) {
-  strapi.log.info('[SEED][USERS] Seeding Users parent page...');
+  console.info('[SEED][USERS] Seeding Users parent page...');
 
   const usersSlug = toUrlSlug('users');
 
@@ -24,12 +24,12 @@ export async function seedUsersPage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][USERS] Created Users Template (ID: ${usersTemplate.id})`,
     );
   } else {
     usersTemplate = existingUsersTemplate;
-    strapi.log.debug(
+    console.debug(
       `[SEED][USERS] Users Template already exists (ID: ${usersTemplate.id})`,
     );
   }
@@ -51,7 +51,7 @@ export async function seedUsersPage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][USERS] Created Users Page (ID: ${usersPage.id}, Slug: /${usersSlug})`,
     );
   } else {
@@ -67,7 +67,7 @@ export async function seedUsersPage(strapi: any, configId: number) {
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][USERS] Updated existing Users Page (ID: ${existingUsersPage.id})`,
     );
   }

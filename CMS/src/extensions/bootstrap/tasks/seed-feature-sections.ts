@@ -4,7 +4,7 @@ const FEATURE_SECTION_UID = 'api::feature-section.feature-section';
 const FEATURE_TAB_UID = 'api::feature-tab.feature-tab';
 
 export async function seedFeatureSections(strapi: any) {
-  strapi.log.info('[SEED][FEATURE_SECTIONS] Seeding Feature Sections...');
+  console.info('[SEED][FEATURE_SECTIONS] Seeding Feature Sections...');
 
   // Create or update feature tabs
   const featureTabsData = [
@@ -63,12 +63,12 @@ export async function seedFeatureSections(strapi: any) {
         data: tabData,
       });
       featureTabIds.push(tab.id);
-      strapi.log.info(
+      console.info(
         `[SEED][FEATURE_SECTIONS] Created Feature Tab: ${tabData.title} (ID: ${tab.id})`,
       );
     } else {
       featureTabIds.push(existing.id);
-      strapi.log.debug(
+      console.debug(
         `[SEED][FEATURE_SECTIONS] Feature Tab "${tabData.title}" already exists (ID: ${existing.id})`,
       );
     }
@@ -90,7 +90,7 @@ export async function seedFeatureSections(strapi: any) {
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][FEATURE_SECTIONS] Created Feature Section (ID: ${featureSection.id})`,
     );
   } else {
@@ -106,7 +106,7 @@ export async function seedFeatureSections(strapi: any) {
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][FEATURE_SECTIONS] Updated Feature Section (ID: ${existingFeatures[0].id})`,
     );
   }

@@ -4,7 +4,7 @@ const HERO_BLOCK_UID = 'api::hero-block.hero-block';
 const CTA_UID = 'api::cta.cta';
 
 export async function seedHeroBlocks(strapi: any) {
-  strapi.log.info('[SEED][HERO_BLOCKS] Seeding Hero Blocks...');
+  console.info('[SEED][HERO_BLOCKS] Seeding Hero Blocks...');
 
   // Check if hero block already exists
   const existingHero = await strapi.db.query(HERO_BLOCK_UID).findOne({
@@ -12,7 +12,7 @@ export async function seedHeroBlocks(strapi: any) {
   });
 
   if (existingHero) {
-    strapi.log.info('[SEED][HERO_BLOCKS] Hero block already exists, updating...');
+    console.info('[SEED][HERO_BLOCKS] Hero block already exists, updating...');
     
     // Find or create CTAs
     let heroSignupCta = await strapi.db.query(CTA_UID).findOne({
@@ -52,7 +52,7 @@ export async function seedHeroBlocks(strapi: any) {
         actions: [heroSignupCta.id, heroLearnCta.id],
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][HERO_BLOCKS] Updated Hero Block: Welcome to DJ Beat Blaster (ID: ${existingHero.id})`,
     );
     return;
@@ -85,7 +85,7 @@ export async function seedHeroBlocks(strapi: any) {
       actions: [heroSignupCta.id, heroLearnCta.id],
     },
   });
-  strapi.log.info(
+  console.info(
     `[SEED][HERO_BLOCKS] Created Hero Block: Welcome to DJ Beat Blaster (ID: ${heroBlock.id})`,
   );
 }

@@ -10,7 +10,7 @@ export async function seedLoginPage(
   configId: number,
   parentPageId?: number,
 ) {
-  strapi.log.info('[SEED][LOGIN] Seeding Login page...');
+  console.info('[SEED][LOGIN] Seeding Login page...');
 
   const loginSlug = toUrlSlug('login');
 
@@ -32,7 +32,7 @@ export async function seedLoginPage(
         customStyles: {},
       },
     });
-    strapi.log.info(`[SEED][LOGIN] Created Login Block (ID: ${loginBlock.id})`);
+    console.info(`[SEED][LOGIN] Created Login Block (ID: ${loginBlock.id})`);
   }
 
   // Create Login Template
@@ -50,12 +50,12 @@ export async function seedLoginPage(
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][LOGIN] Created Login Template (ID: ${loginTemplate.id})`,
     );
   } else {
     loginTemplate = existingLoginTemplate;
-    strapi.log.debug(
+    console.debug(
       `[SEED][LOGIN] Login Template already exists (ID: ${loginTemplate.id})`,
     );
   }
@@ -78,7 +78,7 @@ export async function seedLoginPage(
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][LOGIN] Created Login Page (ID: ${loginPage.id}, Slug: /${loginSlug})`,
     );
   } else {
@@ -92,7 +92,7 @@ export async function seedLoginPage(
         Parents: parentPageId ? [parentPageId] : undefined,
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][LOGIN] Updated existing Login Page (ID: ${existingLoginPage.id})`,
     );
   }

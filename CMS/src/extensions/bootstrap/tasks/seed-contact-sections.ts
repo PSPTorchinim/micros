@@ -6,12 +6,12 @@ export async function seedContactSections(
   strapi: any,
   contactInfoIds: number[],
 ) {
-  strapi.log.info('[SEED][CONTACT_SECTIONS] Seeding Contact Sections...');
+  console.info('[SEED][CONTACT_SECTIONS] Seeding Contact Sections...');
 
   // Only seed if there are no contact sections in the database
   const count = await strapi.db.query(CONTACT_SECTION_UID).count();
   if (count > 0) {
-    strapi.log.info(
+    console.info(
       '[SEED][CONTACT_SECTIONS] Skipping: contact sections already exist.',
     );
     return;
@@ -30,7 +30,7 @@ export async function seedContactSections(
       },
     },
   );
-  strapi.log.info(
+  console.info(
     `[SEED][CONTACT_SECTIONS] Created Contact Section (ID: ${contactSection.id})`,
   );
 }

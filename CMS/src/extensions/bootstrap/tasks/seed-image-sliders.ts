@@ -4,13 +4,13 @@ const HERO_BLOCK_UID = 'api::hero-block.hero-block';
 const CTA_UID = 'api::cta.cta';
 
 export default async function seedImageSliders({ strapi }: { strapi: any }) {
-  strapi.log.info('[SEED][IMAGE_SLIDERS] Seeding Image Sliders...');
+  console.info('[SEED][IMAGE_SLIDERS] Seeding Image Sliders...');
 
   try {
     // Only seed if there are no image sliders in the database
     const count = await strapi.db.query(IMAGE_SLIDER_UID).count();
     if (count > 0) {
-      strapi.log.info(
+      console.info(
         '[SEED][IMAGE_SLIDERS] Skipping: image sliders already exist.',
       );
       return;
@@ -119,11 +119,11 @@ export default async function seedImageSliders({ strapi }: { strapi: any }) {
       },
     });
 
-    strapi.log.info(
+    console.info(
       `[SEED][IMAGE_SLIDERS] Created Image Slider: DJ Services Showcase (ID: ${imageSlider.id})`,
     );
   } catch (error: any) {
-    strapi.log.error(
+    console.error(
       `[SEED][IMAGE_SLIDERS] Failed to seed image sliders: ${error.message}`,
     );
     throw error;

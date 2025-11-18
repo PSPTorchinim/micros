@@ -8,7 +8,7 @@ const STEPS_CONTAINER_UID = 'api::steps-container.steps-container';
 const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 
 export async function seedHomePage(strapi: any, configId: number) {
-  strapi.log.info('[SEED][HOME] Seeding Home page...');
+  console.info('[SEED][HOME] Seeding Home page...');
 
   // Get existing Hero Block
   const heroBlock = await strapi.db.query(HERO_BLOCK_UID).findOne({
@@ -16,12 +16,12 @@ export async function seedHomePage(strapi: any, configId: number) {
   });
 
   if (!heroBlock) {
-    strapi.log.warn(
+    console.warn(
       '[SEED][HOME] Hero Block not found. Run seed-content-types first.',
     );
     return;
   }
-  strapi.log.info(`[SEED][HOME] Found Hero Block (ID: ${heroBlock.id})`);
+  console.info(`[SEED][HOME] Found Hero Block (ID: ${heroBlock.id})`);
 
   // Get existing Article Block
   const articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
@@ -29,12 +29,12 @@ export async function seedHomePage(strapi: any, configId: number) {
   });
 
   if (!articleBlock) {
-    strapi.log.warn(
+    console.warn(
       '[SEED][HOME] Article Block not found. Run seed-content-types first.',
     );
     return;
   }
-  strapi.log.info(`[SEED][HOME] Found Article Block (ID: ${articleBlock.id})`);
+  console.info(`[SEED][HOME] Found Article Block (ID: ${articleBlock.id})`);
 
   // Get existing Feature Section
   const featureSection = await strapi.db.query(FEATURE_SECTION_UID).findOne({
@@ -42,12 +42,12 @@ export async function seedHomePage(strapi: any, configId: number) {
   });
 
   if (!featureSection) {
-    strapi.log.warn(
+    console.warn(
       '[SEED][HOME] Feature Section not found. Run seed-content-types first.',
     );
     return;
   }
-  strapi.log.info(`[SEED][HOME] Found Feature Section (ID: ${featureSection.id})`);
+  console.info(`[SEED][HOME] Found Feature Section (ID: ${featureSection.id})`);
 
   // Get existing Steps Container
   const stepsContainer = await strapi.db.query(STEPS_CONTAINER_UID).findOne({
@@ -55,12 +55,12 @@ export async function seedHomePage(strapi: any, configId: number) {
   });
 
   if (!stepsContainer) {
-    strapi.log.warn(
+    console.warn(
       '[SEED][HOME] Steps Container not found. Run seed-content-types first.',
     );
     return;
   }
-  strapi.log.info(`[SEED][HOME] Found Steps Container (ID: ${stepsContainer.id})`);
+  console.info(`[SEED][HOME] Found Steps Container (ID: ${stepsContainer.id})`);
 
   // Create Home Template with all components
   const existingHomeTemplate = await strapi.db.query(TEMPLATE_UID).findOne({
@@ -86,8 +86,8 @@ export async function seedHomePage(strapi: any, configId: number) {
     },
   ];
 
-  strapi.log.info('[SEED][HOME] Template Content to be set:');
-  strapi.log.info(JSON.stringify(templateContent, null, 2));
+  console.info('[SEED][HOME] Template Content to be set:');
+  console.info(JSON.stringify(templateContent, null, 2));
 
   let homeTemplate;
   if (!existingHomeTemplate) {
@@ -99,7 +99,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][HOME] Created Home Template (ID: ${homeTemplate.id})`,
     );
   } else {
@@ -115,7 +115,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         },
       },
     );
-    strapi.log.info(
+    console.info(
       `[SEED][HOME] Updated Home Template (ID: ${homeTemplate.id}) with Content`,
     );
   }
@@ -125,7 +125,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     where: { id: homeTemplate.id },
     populate: ['Content'],
   });
-  strapi.log.info(`[SEED][HOME] Verification - Template Content length: ${verifyTemplate?.Content?.length || 0}`);
+  console.info(`[SEED][HOME] Verification - Template Content length: ${verifyTemplate?.Content?.length || 0}`);
 
   // Create or update Home Page
   const existingHomePage = await strapi.db.query(PAGE_UID).findOne({
@@ -142,7 +142,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][HOME] Created Home Page (ID: ${homePage.id}, Slug: /)`,
     );
   } else {
@@ -153,7 +153,7 @@ export async function seedHomePage(strapi: any, configId: number) {
         configuration: configId,
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][HOME] Updated existing Home Page (ID: ${existingHomePage.id})`,
     );
   }

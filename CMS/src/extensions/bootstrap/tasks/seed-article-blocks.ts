@@ -3,7 +3,7 @@
 const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
 
 export async function seedArticleBlocks(strapi: any) {
-  strapi.log.info('[SEED][ARTICLE_BLOCKS] Seeding Article Blocks...');
+  console.info('[SEED][ARTICLE_BLOCKS] Seeding Article Blocks...');
 
   // Find or create the main Article Block for Home Page
   let articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
@@ -27,7 +27,7 @@ export async function seedArticleBlocks(strapi: any) {
         publishedAt: new Date().toISOString(),
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][ARTICLE_BLOCKS] Created Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles`,
     );
   } else {
@@ -37,7 +37,7 @@ export async function seedArticleBlocks(strapi: any) {
         articles: articleIds,
       },
     });
-    strapi.log.info(
+    console.info(
       `[SEED][ARTICLE_BLOCKS] Updated Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles: [${articleIds.join(', ')}]`,
     );
   }
