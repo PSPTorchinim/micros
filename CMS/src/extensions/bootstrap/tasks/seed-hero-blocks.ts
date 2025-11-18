@@ -16,28 +16,28 @@ export async function seedHeroBlocks(strapi: any) {
     
     // Find or create CTAs
     let heroSignupCta = await strapi.db.query(CTA_UID).findOne({
-      where: { text: 'Get Started Free' },
+      where: { Label: 'Get Started Free' },
     });
     if (!heroSignupCta) {
       heroSignupCta = await strapi.entityService.create(CTA_UID, {
         data: {
-          text: 'Get Started Free',
-          href: '/users/register',
-          variant: 'primary',
+          Label: 'Get Started Free',
+          url: '/users/register',
+          OpenInNewTab: false,
           publishedAt: new Date().toISOString(),
         },
       });
     }
 
     let heroLearnCta = await strapi.db.query(CTA_UID).findOne({
-      where: { text: 'Learn More' },
+      where: { Label: 'Learn More' },
     });
     if (!heroLearnCta) {
       heroLearnCta = await strapi.entityService.create(CTA_UID, {
         data: {
-          text: 'Learn More',
-          href: '/about',
-          variant: 'secondary',
+          Label: 'Learn More',
+          url: '/about',
+          OpenInNewTab: false,
           publishedAt: new Date().toISOString(),
         },
       });
@@ -61,18 +61,18 @@ export async function seedHeroBlocks(strapi: any) {
   // Main Hero Block for Home Page
   const heroSignupCta = await strapi.entityService.create(CTA_UID, {
     data: {
-      text: 'Get Started Free',
-      href: '/users/register',
-      variant: 'primary',
+      Label: 'Get Started Free',
+      url: '/users/register',
+      OpenInNewTab: false,
       publishedAt: new Date().toISOString(),
     },
   });
 
   const heroLearnCta = await strapi.entityService.create(CTA_UID, {
     data: {
-      text: 'Learn More',
-      href: '/about',
-      variant: 'secondary',
+      Label: 'Learn More',
+      url: '/about',
+      OpenInNewTab: false,
       publishedAt: new Date().toISOString(),
     },
   });
