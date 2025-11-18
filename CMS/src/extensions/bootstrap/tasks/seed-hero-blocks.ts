@@ -112,21 +112,31 @@ export async function seedHeroBlocks(strapi: any) {
       heading: 'Welcome to DJ Beat Blaster',
       content:
         'Your complete platform for managing DJ gigs, clients, equipment, and music. Streamline your DJ business and focus on what you do best - making people dance!',
-      actions: [heroSignupCta.id, heroLearnCta.id],
+      actions: {
+        connect: [heroSignupCta.id, heroLearnCta.id],
+      },
       publishedAt: new Date().toISOString(),
     },
   });
   
-  // Verify creation
+  console.info(`[SEED][HERO_BLOCKS] ✅ Created Hero Block (ID: ${heroBlock.id})`);
+  console.info(`[SEED][HERO_BLOCKS] ✅ Heading: "${heroBlock.heading}"`);
+  
+  // Verify creation with proper population
   const verified = await strapi.entityService.findOne(HERO_BLOCK_UID, heroBlock.id, {
     populate: { actions: true },
   });
   
-  console.info(`[SEED][HERO_BLOCKS] ✅ Created Hero Block (ID: ${heroBlock.id})`);
-  console.info(`[SEED][HERO_BLOCKS] ✅ Heading: "${heroBlock.heading}"`);
+  console.info(`[SEED][HERO_BLOCKS] 🔍 Verifying actions attachment...`);
   console.info(`[SEED][HERO_BLOCKS] ✅ Actions attached: ${verified.actions?.length || 0} CTAs`);
-  console.info(`[SEED][HERO_BLOCKS]    - CTA 1: "${heroSignupCta.Label}" → ${heroSignupCta.url}`);
-  console.info(`[SEED][HERO_BLOCKS]    - CTA 2: "${heroLearnCta.Label}" → ${heroLearnCta.url}`);
+  if (verified.actions && verified.actions.length > 0) {
+    verified.actions.forEach((action, index) => {
+      console.info(`[SEED][HERO_BLOCKS]    - CTA ${index + 1}: "${action.Label}" → ${action.url}`);
+    });
+  } else {
+    console.info(`[SEED][HERO_BLOCKS]    - CTA 1 (expected): "${heroSignupCta.Label}" → ${heroSignupCta.url}`);
+    console.info(`[SEED][HERO_BLOCKS]    - CTA 2 (expected): "${heroLearnCta.Label}" → ${heroLearnCta.url}`);
+  }
   console.info(`[SEED][HERO_BLOCKS] ✅ Published: ${heroBlock.publishedAt ? 'Yes' : 'No'}`);
   console.info('[SEED][HERO_BLOCKS] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }

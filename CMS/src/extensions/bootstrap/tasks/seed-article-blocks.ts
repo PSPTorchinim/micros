@@ -32,20 +32,30 @@ export async function seedArticleBlocks(strapi: any) {
     articleBlock = await strapi.entityService.create(ARTICLE_BLOCK_UID, {
       data: {
         Title: 'Latest DJ Tips & Guides',
-        articles: articleIds,
+        articles: {
+          connect: articleIds,
+        },
         publishedAt: new Date().toISOString(),
       },
     });
+    
+    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Created Article Block (ID: ${articleBlock.id})`);
+    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Title: "${articleBlock.Title}"`);
     
     // Verify creation
     const verified = await strapi.entityService.findOne(ARTICLE_BLOCK_UID, articleBlock.id, {
       populate: { articles: { fields: ['id', 'Title'] } },
     });
     
-    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Created Article Block (ID: ${articleBlock.id})`);
-    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Title: "${articleBlock.Title}"`);
+    console.info(`[SEED][ARTICLE_BLOCKS] 🔍 Verifying articles attachment...`);
     console.info(`[SEED][ARTICLE_BLOCKS] ✅ Articles attached: ${verified.articles?.length || 0}`);
-    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Article IDs: [${articleIds.join(', ')}]`);
+    if (verified.articles && verified.articles.length > 0) {
+      verified.articles.forEach((article: any, index: number) => {
+        console.info(`[SEED][ARTICLE_BLOCKS]    ${index + 1}. "${article.Title}" (ID: ${article.id})`);
+      });
+    } else {
+      console.info(`[SEED][ARTICLE_BLOCKS] ⚠️  Expected ${articleIds.length} articles: [${articleIds.join(', ')}]`);
+    }
     console.info(`[SEED][ARTICLE_BLOCKS] ✅ Published: ${articleBlock.publishedAt ? 'Yes' : 'No'}`);
   } else {
     console.info(`[SEED][ARTICLE_BLOCKS] ✓ Found existing article block (ID: ${articleBlock.id})`);
@@ -54,7 +64,9 @@ export async function seedArticleBlocks(strapi: any) {
     // Update existing article block with articles
     await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
       data: { 
-        articles: articleIds,
+        articles: {
+          set: articleIds,
+        },
         publishedAt: new Date().toISOString(),
       },
     });
@@ -65,8 +77,13 @@ export async function seedArticleBlocks(strapi: any) {
     });
     
     console.info(`[SEED][ARTICLE_BLOCKS] ✅ Updated Article Block (ID: ${articleBlock.id})`);
+    console.info(`[SEED][ARTICLE_BLOCKS] 🔍 Verifying articles attachment...`);
     console.info(`[SEED][ARTICLE_BLOCKS] ✅ Articles attached: ${verified.articles?.length || 0}`);
-    console.info(`[SEED][ARTICLE_BLOCKS] ✅ Article IDs: [${articleIds.join(', ')}]`);
+    if (verified.articles && verified.articles.length > 0) {
+      verified.articles.forEach((article: any, index: number) => {
+        console.info(`[SEED][ARTICLE_BLOCKS]    ${index + 1}. "${article.Title}" (ID: ${article.id})`);
+      });
+    }
     if (verified.articles?.length !== articleIds.length) {
       console.warn(`[SEED][ARTICLE_BLOCKS] ⚠️  WARNING: Expected ${articleIds.length} articles but found ${verified.articles?.length}`);
     }
