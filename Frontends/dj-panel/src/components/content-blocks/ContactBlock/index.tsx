@@ -1,23 +1,21 @@
 import React from 'react';
 import './index.css';
+import { ContactInfo, ContactSection } from '../../../models/strapi/strapiMap';
 
-export const ContactBlock = ({
-  introText,
-  heading,
-  description,
-  contactInfo,
-}: any) => (
+export const ContactBlock = (contactBlock: ContactSection) => (
   <div className="contact-container thq-section-padding">
     <div className="contact-max-width thq-section-max-width">
       <div className="contact-section-title">
-        <span className="thq-body-small">{introText}</span>
+        <span className="thq-body-small">{contactBlock.introText}</span>
         <div className="contact-content">
-          <h2 className="thq-heading-2">{heading}</h2>
-          <p className="contact-text thq-body-large">{description}</p>
+          <h2 className="thq-heading-2">{contactBlock.heading}</h2>
+          <p className="contact-text thq-body-large">
+            {contactBlock.description}
+          </p>
         </div>
       </div>
       <div className="contact-row">
-        {contactInfo?.map((info: any, index: number) => (
+        {contactBlock.contactInfo?.map((info: ContactInfo, index: number) => (
           <div className="contact-info" key={index}>
             {/* Render icon by name using a dynamic import or a mapping in your app */}
             <span className="thq-icon-medium">{info.iconName}</span>
