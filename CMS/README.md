@@ -313,6 +313,86 @@ npm run build
 chmod 755 public/uploads
 ```
 
+## 🚀 Bootstrap Tasks
+
+### Overview
+
+The CMS includes bootstrap tasks that run automatically when Strapi starts up. These tasks set up essential content and configurations.
+
+### Task Organization
+
+Bootstrap tasks are organized in `src/extensions/bootstrap/tasks/` into focused, single-purpose files:
+
+**Content Type Seeders:**
+- `seed-hero-blocks.ts` - Seeds hero blocks
+- `seed-feature-sections.ts` - Seeds feature sections
+- `seed-article-blocks.ts` - Seeds article blocks
+- `seed-steps-containers.ts` - Seeds steps containers
+- `seed-contact-info.ts` - Seeds contact info entries
+- `seed-contact-sections.ts` - Seeds contact sections
+
+**Page Seeders:**
+- `seed-login-page.ts` - Seeds the Login page
+- `seed-forgot-password-page.ts` - Seeds the Forgot Password page
+- `seed-home-page.ts` - Seeds the Home page (references content blocks)
+- `seed-about-page.ts` - Seeds the About page (references content blocks)
+
+**Content Seeders:**
+- `seed-articles.ts` - Seeds DJ articles
+- `seed-footer.ts` - Seeds the footer
+
+**Orchestrators:**
+- `seed-content-types.ts` - Orchestrates all content type seeding
+- `seed-pages.ts` - Orchestrates all page seeding tasks
+
+### Main Tasks
+
+**Content Types Seeder** (`seed-content-types.ts`)
+
+Coordinates seeding of all reusable content types created first and referenced by pages:
+
+1. Hero Blocks - "Welcome to DJ Beat Blaster" with CTAs
+2. Feature Sections - 6 DJ business features (Music Library, Events, Clients, Equipment, Contracts, Email Marketing)
+3. Article Blocks - "Latest DJ Tips & Guides" container
+4. Steps Containers - "Get Started in 3 Simple Steps"
+5. Contact Info - Email, Phone, Location entries
+6. Contact Sections - About page content with contact details
+
+**Pages Seeder** (`seed-pages.ts`)
+
+Main entry point that coordinates seeding of all standard pages:
+
+1. Gets or creates default configuration
+2. Seeds Login page
+3. Seeds Forgot Password page
+4. Seeds Home page (uses Hero Block, Feature Section, Article Block, Steps Container)
+5. Seeds About page (uses Contact Section)
+
+### Adding New Tasks
+
+1. **Create task file** in `src/extensions/bootstrap/tasks/`:
+   ```typescript
+   // seed-my-task.ts
+   export default async function seedMyTask({ strapi }: { strapi: any }) {
+     strapi.log.info('[SEED][MY_TASK] Starting...');
+     // Your seeding logic here
+     strapi.log.info('[SEED][MY_TASK] Done!');
+   }
+   ```
+
+2. **Register task** in `run-bootstrap.ts`:
+   ```typescript
+   const TASKS = {
+     // ... existing tasks
+     myTask: ['./tasks/seed-my-task', './seed-my-task'] as const,
+   } as const;
+
+   export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
+     // ... existing tasks
+     await runTask(strapi, 'seed-my-task', TASKS.myTask);
+   }
+   ```
+
 ## 📖 Learn More
 
 - [Strapi Documentation](https://docs.strapi.io) - Official Strapi documentation

@@ -304,7 +304,85 @@ curl http://localhost:9080/ready
 curl http://localhost:3001/api/health
 ```
 
+## 🎨 Dashboard Generation
+
+### Automatic Dashboard Generation
+
+Dashboards are automatically generated during the Grafana Docker image build process to use exact container names for each environment.
+
+#### How It Works
+
+1. **Build Arguments**: Set `PROJECT_NAME` and `REPLICA_INDEX` when building Grafana
+2. **Template Processing**: The build process runs `generate-dashboards.sh`
+3. **Dashboard Creation**: Exact container names are substituted into queries
+4. **Image Creation**: Generated dashboards are baked into the Grafana image
+
+#### Directory Structure
+
+```
+Docker/init/grafana/
+├── dashboards/              # Generated dashboards (gitignored, generated at build time)
+├── dashboards-templates/    # Dashboard template files
+└── generate-dashboards.sh   # Generator script
+```
+
+#### Docker Compose Integration
+
+The `dj-panel-composer.yml` passes build arguments to Grafana:
+
+```yaml
+grafana:
+  build:
+    context: ../
+    dockerfile: Docker/infra/grafana.Dockerfile
+    args:
+      PROJECT_NAME: ${PROJECT_NAME:-ix-dj-panel-development}
+      REPLICA_INDEX: ${REPLICA_INDEX:-1}
+```
+
+**Default Values:**
+- `PROJECT_NAME`: `ix-dj-panel-development`
+- `REPLICA_INDEX`: `1`
+
+#### Setting Environment Variables
+
+**Option 1: `.env` file**
+```env
+PROJECT_NAME=ix-dj-panel-production
+REPLICA_INDEX=1
+```
+
+**Option 2: Command line**
+```bash
+PROJECT_NAME=ix-dj-panel-production REPLICA_INDEX=1 docker compose -f dj-panel-composer.yml build grafana
+```
+
+#### Container Name Format
+
+Dashboards query containers using this naming pattern:
+```
+service_name="${PROJECT_NAME}-${service}-${REPLICA_INDEX}"
+```
+
+Example for `apigateway` service:
+```bash
+PROJECT_NAME=ix-dj-panel-production
+REPLICA_INDEX=1
+# Generates: service_name="ix-dj-panel-production-apigateway-1"
+```
+
+#### Rebuilding Dashboards
+
+When changing environments:
+
+```bash
+# Set new environment variables in .env file
+# Then rebuild Grafana with new dashboard configuration
+docker compose -f dj-panel-composer.yml build --no-cache grafana
+docker compose -f dj-panel-composer.yml up -d grafana
+```
+
 ---
 
 **Last Updated**: 2024-11-02  
-**Maintained by**: DJ Beat Blaster Team
+**Developed by PSPTorchinim**
