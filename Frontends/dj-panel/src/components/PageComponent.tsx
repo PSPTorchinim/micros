@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Page } from '../models/strapi/strapiMap';
+import type { Page } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';
@@ -31,7 +31,10 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
 
   return (
     <div>
-      <RenderTemplate template={page?.template?.documentId} />
+      <RenderTemplate
+        template={page?.template?.documentId}
+        pageTitle={page?.Title}
+      />
     </div>
   );
 };

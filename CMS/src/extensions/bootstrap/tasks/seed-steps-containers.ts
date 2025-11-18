@@ -6,11 +6,46 @@ const CTA_UID = 'api::cta.cta';
 export async function seedStepsContainers(strapi: any) {
   strapi.log.info('[SEED][STEPS_CONTAINERS] Seeding Steps Containers...');
 
-  // Only seed if there are no steps containers in the database
-  const count = await strapi.db.query(STEPS_CONTAINER_UID).count();
-  if (count > 0) {
+  // Check if steps container already exists
+  const existingSteps = await strapi.db.query(STEPS_CONTAINER_UID).findOne({
+    where: { heading: 'Get Started in 3 Simple Steps' },
+  });
+
+  if (existingSteps) {
+    strapi.log.info('[SEED][STEPS_CONTAINERS] Steps container exists, updating...');
+    
+    // Find or create CTA
+    let step1Cta = await strapi.db.query(CTA_UID).findOne({
+      where: { text: 'Create Account' },
+    });
+    if (!step1Cta) {
+      step1Cta = await strapi.entityService.create(CTA_UID, {
+        data: {
+          text: 'Create Account',
+          href: '/users/register',
+          variant: 'primary',
+          publishedAt: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Update steps container with CTA
+    await strapi.entityService.update(STEPS_CONTAINER_UID, existingSteps.id, {
+      data: {
+        heading: 'Get Started in 3 Simple Steps',
+        content:
+          'Join thousands of DJs already using DJ Beat Blaster to manage their business',
+        action: [
+          {
+            __component: 'cta-ref.cta-ref',
+            cta: step1Cta.id,
+          },
+        ],
+        steps: [],
+      },
+    });
     strapi.log.info(
-      '[SEED][STEPS_CONTAINERS] Skipping: steps containers already exist.',
+      `[SEED][STEPS_CONTAINERS] Updated Steps Container (ID: ${existingSteps.id})`,
     );
     return;
   }

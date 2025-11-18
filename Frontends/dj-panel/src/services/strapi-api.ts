@@ -1,4 +1,5 @@
-import { Api, Page } from '../models/strapi/strapiMap';
+import { Api } from '../models/strapi/strapiMap';
+import type { Page } from '../models/strapi/strapiMap';
 
 type StrapiFilters = Record<string, unknown>;
 
@@ -408,6 +409,36 @@ class StrapiAPI {
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching forgot-password-block singleton:', e);
+      return null;
+    }
+  }
+
+  // --------------------------------------
+  // ARTICLES
+  // --------------------------------------
+
+  async getArticleBySlug(slug: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Slug: { $eq: slug } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by slug ${slug}:`, e);
+      return null;
+    }
+  }
+
+  async getArticleByTitle(title: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Title: { $eq: title } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by title ${title}:`, e);
       return null;
     }
   }

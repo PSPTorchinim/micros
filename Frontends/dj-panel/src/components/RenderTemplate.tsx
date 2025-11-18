@@ -1,28 +1,32 @@
 // components/RenderTemplate.tsx
 import React from 'react';
-
-// typ opcjonalny; jeśli masz swój Template z modeli, możesz go tu podmienić
-type TemplateEntity = any;
-
 import { strapiAPI } from '../services/strapi-api';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
+import type {
+  TemplateEntity,
+  ContentBlock,
+  RefComponent,
+} from '../types/content-blocks';
 
 type Props = {
   /** documentId templatek (Strapi v5) */
   template?: string;
   /** głębokość populate przy bezpośrednim renderowaniu bez dereferencji (opcjonalne) */
   populateDeep?: number;
+  /** Page title to help resolve article content */
+  pageTitle?: string;
 };
 
 export const RenderTemplate: React.FC<Props> = ({
   template,
   populateDeep = 5,
+  pageTitle,
 }) => {
   const [tpl, setTpl] = React.useState<TemplateEntity | null>(null);
-  const [blocks, setBlocks] = React.useState<any[]>([]);
+  const [blocks, setBlocks] = React.useState<ContentBlock[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -50,11 +54,12 @@ export const RenderTemplate: React.FC<Props> = ({
 
         if (!mounted) return;
         setTpl(t ?? null);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!mounted) return;
+        const error = e as Error;
         setTpl(null);
         setBlocks([]);
-        setError(e?.message || 'Failed to fetch template');
+        setError(error?.message || 'Failed to fetch template');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -72,15 +77,16 @@ export const RenderTemplate: React.FC<Props> = ({
 
     const run = async () => {
       // Get template type
-      const templateType =
-        tpl?.attributes?.TemplateType || (tpl as any)?.TemplateType;
+      const templateType = tpl?.attributes?.TemplateType || tpl?.TemplateType;
 
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
           const loginBlock = await strapiAPI.getLoginBlockSingleton();
           if (mounted && loginBlock) {
-            setBlocks([{ __kind: 'login-block', ...loginBlock }]);
+            setBlocks([
+              { __kind: 'login-block', ...loginBlock } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
@@ -95,7 +101,10 @@ export const RenderTemplate: React.FC<Props> = ({
             await strapiAPI.getForgotPasswordBlockSingleton();
           if (mounted && forgotPasswordBlock) {
             setBlocks([
-              { __kind: 'forgot-password-block', ...forgotPasswordBlock },
+              {
+                __kind: 'forgot-password-block',
+                ...forgotPasswordBlock,
+              } as ContentBlock,
             ]);
           }
         } catch (e) {
@@ -106,11 +115,31 @@ export const RenderTemplate: React.FC<Props> = ({
       }
 
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
-      const contentBlocks: any[] = Array.isArray(tpl?.attributes?.Content)
+      const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
+        tpl?.attributes?.Content,
+      )
         ? tpl!.attributes!.Content
-        : Array.isArray((tpl as any)?.Content)
-          ? (tpl as any).Content
+        : Array.isArray(tpl?.Content)
+          ? tpl.Content
           : [];
+
+      // If this is a Standard template with no content and we have a page title,
+      // try to fetch and render the article directly
+      if (
+        templateType === 'Standard' &&
+        contentBlocks.length === 0 &&
+        pageTitle
+      ) {
+        try {
+          const article = await strapiAPI.getArticleByTitle(pageTitle);
+          if (mounted && article) {
+            setBlocks([{ __kind: 'article', ...article } as ContentBlock]);
+            return;
+          }
+        } catch (e) {
+          console.error('Error fetching article by title:', e);
+        }
+      }
 
       if (!contentBlocks.length) {
         if (mounted) setBlocks([]);
@@ -119,14 +148,14 @@ export const RenderTemplate: React.FC<Props> = ({
 
       // Rekurencyjna dereferencja:
       const resolved = await mapStrapiContentToFrontend(contentBlocks);
-      if (mounted) setBlocks(resolved);
+      if (mounted) setBlocks(resolved as ContentBlock[]);
     };
 
     run();
     return () => {
       mounted = false;
     };
-  }, [tpl, populateDeep]);
+  }, [tpl, populateDeep, pageTitle]);
 
   return (
     <div>
@@ -164,10 +193,16 @@ export const RenderTemplate: React.FC<Props> = ({
         !error &&
         blocks.map((block, index) => {
           // jeżeli coś jeszcze zostało jako ref-komponent, dobij to RefBlockRendererem
-          if (block?.__component?.endsWith?.('-ref')) {
-            return <RefBlockRenderer key={index} block={block} index={index} />;
+          if (block.__component?.endsWith?.('-ref')) {
+            return (
+              <RefBlockRenderer
+                key={index}
+                block={block as unknown as RefComponent}
+                index={index}
+              />
+            );
           }
-          // „zwykły” blok kolekcji (już zdereferencjonowany)
+          // „zwykły" blok kolekcji (już zdereferencjonowany)
           return renderBlock(block, index);
         })}
     </div>

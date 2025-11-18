@@ -27,18 +27,20 @@ export async function seedAboutPage(strapi: any, configId: number) {
     where: { Name: 'About Page Template' },
   });
 
+  const templateContent = [
+    {
+      __component: 'contact-section-ref.contact-section-ref',
+      contact_section: contactSection.id,
+    },
+  ];
+
   let aboutTemplate;
   if (!existingAboutTemplate) {
     aboutTemplate = await strapi.entityService.create(TEMPLATE_UID, {
       data: {
         Name: 'About Page Template',
         TemplateType: 'Standard',
-        Content: [
-          {
-            __component: 'contact-section-ref.contact-section-ref',
-            contact_section: contactSection.id,
-          },
-        ],
+        Content: templateContent,
         publishedAt: new Date().toISOString(),
       },
     });
@@ -46,9 +48,20 @@ export async function seedAboutPage(strapi: any, configId: number) {
       `[SEED][ABOUT] Created About Template (ID: ${aboutTemplate.id})`,
     );
   } else {
-    aboutTemplate = existingAboutTemplate;
-    strapi.log.debug(
-      `[SEED][ABOUT] About Template already exists (ID: ${aboutTemplate.id})`,
+    // Update existing template to ensure Content is populated
+    aboutTemplate = await strapi.entityService.update(
+      TEMPLATE_UID,
+      existingAboutTemplate.id,
+      {
+        data: {
+          Name: 'About Page Template',
+          TemplateType: 'Standard',
+          Content: templateContent,
+        },
+      },
+    );
+    strapi.log.info(
+      `[SEED][ABOUT] Updated About Template (ID: ${aboutTemplate.id}) with Content`,
     );
   }
 

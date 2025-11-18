@@ -6,16 +6,7 @@ const FEATURE_TAB_UID = 'api::feature-tab.feature-tab';
 export async function seedFeatureSections(strapi: any) {
   strapi.log.info('[SEED][FEATURE_SECTIONS] Seeding Feature Sections...');
 
-  // Only seed if there are no feature sections in the database
-  const count = await strapi.db.query(FEATURE_SECTION_UID).count();
-  if (count > 0) {
-    strapi.log.info(
-      '[SEED][FEATURE_SECTIONS] Skipping: feature sections already exist.',
-    );
-    return;
-  }
-
-  // Create feature tabs first
+  // Create or update feature tabs
   const featureTabsData = [
     {
       title: 'Music Library Management',
@@ -83,7 +74,7 @@ export async function seedFeatureSections(strapi: any) {
     }
   }
 
-  // Main Feature Section for Home Page - check by ID instead of non-existent field
+  // Main Feature Section for Home Page
   const existingFeatures = await strapi.db.query(FEATURE_SECTION_UID).findMany({
     limit: 1,
   });
@@ -93,6 +84,7 @@ export async function seedFeatureSections(strapi: any) {
       FEATURE_SECTION_UID,
       {
         data: {
+          Title: 'Everything You Need to Manage Your DJ Business',
           reversed: false,
           tabs: featureTabIds,
         },
@@ -102,8 +94,20 @@ export async function seedFeatureSections(strapi: any) {
       `[SEED][FEATURE_SECTIONS] Created Feature Section (ID: ${featureSection.id})`,
     );
   } else {
-    strapi.log.debug(
-      `[SEED][FEATURE_SECTIONS] Feature Section already exists (ID: ${existingFeatures[0].id})`,
+    // Update existing feature section
+    await strapi.entityService.update(
+      FEATURE_SECTION_UID,
+      existingFeatures[0].id,
+      {
+        data: {
+          Title: 'Everything You Need to Manage Your DJ Business',
+          reversed: false,
+          tabs: featureTabIds,
+        },
+      },
+    );
+    strapi.log.info(
+      `[SEED][FEATURE_SECTIONS] Updated Feature Section (ID: ${existingFeatures[0].id})`,
     );
   }
 }

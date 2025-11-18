@@ -2,6 +2,7 @@ import React from 'react';
 import { strapiAPI } from '../services/strapi-api';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
+import type { RefComponent, ContentBlock } from '../types/content-blocks';
 
 /**
  * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
@@ -29,39 +30,51 @@ const FIELD_BY_REF: Record<string, string> = {
 };
 
 // uniwersalny ekstraktor documentId z różnych kształtów populate
-function getDocId(input: any): string | undefined {
-  if (!input) return undefined;
+function getDocId(input: unknown): string | undefined {
+  if (!input || typeof input !== 'object') return undefined;
+
+  const obj = input as Record<string, unknown>;
 
   // Najczęstszy przypadek u Ciebie: obiekt z documentId
-  if (typeof input.documentId === 'string') return input.documentId;
+  if (typeof obj.documentId === 'string') return obj.documentId;
 
   // czasem API zwraca stringa (np. connect: ["docId"])
   if (typeof input === 'string') return input;
 
   // niektóre klienty spłaszczają id jako string
-  if (input?.id && typeof input.id === 'string') return input.id;
+  if (obj.id && typeof obj.id === 'string') return obj.id;
 
   // Strapi v4/v5 warianty z data/attributes
-  if (input?.data?.attributes?.documentId)
-    return input.data.attributes.documentId;
-  if (typeof input?.data?.id === 'string') return input.data.id;
+  const data = obj.data as Record<string, unknown> | undefined;
+  if (
+    data?.attributes &&
+    typeof (data.attributes as Record<string, unknown>).documentId === 'string'
+  ) {
+    return (data.attributes as Record<string, unknown>).documentId as string;
+  }
+  if (data?.id && typeof data.id === 'string') return data.id;
 
   return undefined;
 }
 
-export const RefBlockRenderer: React.FC<{ block: any; index: number }> = ({
-  block,
-  index,
-}) => {
-  const refUID = block?.__component as string;
+interface Props {
+  block: RefComponent;
+  index: number;
+}
+
+export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
+  const refUID = block.__component as string;
   const base = refUID?.split('-ref')[0]; // 'image-slider', 'article-block', ...
   const relField = FIELD_BY_REF[refUID];
 
-  const relObj = relField ? block?.[relField] : undefined;
+  const relObj = relField ? block[relField] : undefined;
   const docId = getDocId(relObj);
-  const numericId = typeof relObj?.id === 'number' ? relObj.id : undefined;
+  const numericId =
+    typeof (relObj as Record<string, unknown>)?.id === 'number'
+      ? ((relObj as Record<string, unknown>).id as number)
+      : undefined;
 
-  const [resolved, setResolved] = React.useState<any>(null);
+  const [resolved, setResolved] = React.useState<ContentBlock | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -77,7 +90,7 @@ export const RefBlockRenderer: React.FC<{ block: any; index: number }> = ({
           return;
         }
 
-        let data: any = null;
+        let data: unknown = null;
 
         // 1) Preferuj documentId (stabilny identyfikator)
         if (docId) {
@@ -167,9 +180,14 @@ export const RefBlockRenderer: React.FC<{ block: any; index: number }> = ({
         }
 
         // Doklej znacznik typu, żeby renderBlock nie musiał zgadywać
-        setResolved({ __kind: base, ...data });
-      } catch (e: any) {
-        if (!cancel) setError(e?.message || 'Failed to fetch referenced block');
+        setResolved({
+          __kind: base,
+          ...(data as Record<string, unknown>),
+        } as ContentBlock);
+      } catch (e: unknown) {
+        const error = e as Error;
+        if (!cancel)
+          setError(error?.message || 'Failed to fetch referenced block');
       }
     };
 

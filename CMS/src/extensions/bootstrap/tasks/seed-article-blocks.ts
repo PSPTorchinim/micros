@@ -9,32 +9,36 @@ export async function seedArticleBlocks(strapi: any) {
   let articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
     where: { Title: 'Latest DJ Tips & Guides' },
   });
+  
+  // Get all published articles
+  const articles = await strapi.db
+    .query('api::article.article')
+    .findMany({ 
+      select: ['id'],
+      where: { publishedAt: { $notNull: true } }
+    });
+  const articleIds = articles.map((a: any) => a.id);
+
   if (!articleBlock) {
     articleBlock = await strapi.entityService.create(ARTICLE_BLOCK_UID, {
       data: {
         Title: 'Latest DJ Tips & Guides',
-        items: [],
+        articles: articleIds,
         publishedAt: new Date().toISOString(),
       },
     });
     strapi.log.info(
-      `[SEED][ARTICLE_BLOCKS] Created Article Block (ID: ${articleBlock.id})`,
+      `[SEED][ARTICLE_BLOCKS] Created Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles`,
     );
   } else {
-    strapi.log.debug(
-      `[SEED][ARTICLE_BLOCKS] Article Block already exists (ID: ${articleBlock.id})`,
+    // Update existing article block with articles
+    await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
+      data: { 
+        articles: articleIds,
+      },
+    });
+    strapi.log.info(
+      `[SEED][ARTICLE_BLOCKS] Updated Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles: [${articleIds.join(', ')}]`,
     );
   }
-
-  // Update the article block to include all articles
-  const articles = await strapi.db
-    .query('api::article.article')
-    .findMany({ select: ['id'] });
-  const articleIds = articles.map((a: any) => a.id);
-  await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
-    data: { items: articleIds },
-  });
-  strapi.log.info(
-    `[SEED][ARTICLE_BLOCKS] Updated Article Block (ID: ${articleBlock.id}) with articles: [${articleIds.join(', ')}]`,
-  );
 }
