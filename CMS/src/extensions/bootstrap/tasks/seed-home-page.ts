@@ -178,7 +178,7 @@ export async function seedHomePage(strapi: any, configId: number) {
     Title: 'Home',
     Slug: '/',
     configuration: configId,
-    template: homeTemplate.id,
+    template: { connect: [homeTemplate.id] },
     Parents: [],
     subpages: [],
     publishedAt: new Date().toISOString(),
@@ -208,13 +208,13 @@ export async function seedHomePage(strapi: any, configId: number) {
   // Final verification - check the page has the template
   // Final verification and force bidirectional relation
   console.info('[SEED][HOME] 🔍 Final verification and forcing bidirectional relation...');
-  // 1. Force update Home page's template field
+  // 1. Force update Home page's template field using set for update
   await strapi.entityService.update(PAGE_UID, homePageId, {
-    data: { template: homeTemplate.id },
+    data: { template: { set: [homeTemplate.id] } },
   });
-  // 2. Force update template's page field
+  // 2. Force update template's page field using set for update
   await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
-    data: { page: homePageId },
+    data: { page: { set: [homePageId] } },
   });
   // 3. Verify both directions
   const verifyPage = await strapi.entityService.findOne(PAGE_UID, homePageId, { populate: ['template'] });
