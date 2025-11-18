@@ -89,17 +89,11 @@ export async function seedHeroBlocks(strapi: any) {
       heading: 'Welcome to DJ Beat Blaster',
       content:
         'Your complete platform for managing DJ gigs, clients, equipment, and music. Streamline your DJ business and focus on what you do best - making people dance!',
+      actions: [heroSignupCta.id, heroLearnCta.id],
       publishedAt: new Date().toISOString(),
     },
   });
-  // Update CTAs to point to this hero block (one-to-many relation)
-  await strapi.entityService.update(CTA_UID, heroSignupCta.id, {
-    data: { hero_block: heroBlock.id }
-  });
-  await strapi.entityService.update(CTA_UID, heroLearnCta.id, {
-    data: { hero_block: heroBlock.id }
-  });
   console.info(
-    `[SEED][HERO_BLOCKS] Created Hero Block: Welcome to DJ Beat Blaster (ID: ${heroBlock.id}) and attached CTAs`,
+    `[SEED][HERO_BLOCKS] Created Hero Block: Welcome to DJ Beat Blaster (ID: ${heroBlock.id}) with ${2} actions`,
   );
 }

@@ -1095,16 +1095,32 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
           data: {
             articles: articleIds,
+            publishedAt: new Date().toISOString(),
           },
         });
         console.info(
-          `[SEED][ARTICLES] ✅ Updated Article Block with ${articleIds.length} articles`,
+          `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIds.length} articles: [${articleIds.join(', ')}]`,
         );
+        
+        // Verify the update
+        const verifyArticleBlock = await strapi.entityService.findOne(
+          ARTICLE_BLOCK_UID,
+          articleBlock.id,
+          {
+            populate: ['articles'],
+          },
+        );
+        console.info(
+          `[SEED][ARTICLES] ✅ Verification - Article Block has ${verifyArticleBlock?.articles?.length || 0} articles attached`,
+        );
+      } else {
+        console.warn('[SEED][ARTICLES] ⚠️  Article Block not found for update');
       }
     } catch (articleBlockError: any) {
       console.error(
         `[SEED][ARTICLES] Failed to update article block: ${articleBlockError.message}`,
       );
+      console.error(`[SEED][ARTICLES] Stack: ${articleBlockError.stack}`);
     }
 
     console.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
