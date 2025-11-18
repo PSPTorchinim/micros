@@ -4,15 +4,13 @@ import type { ContentBlock, RefComponent } from '../types/content-blocks';
 
 // 1) Pomocnik do wyciągania documentId z różnych kształtów populate
 export function getDocId(input: unknown): string | undefined {
+  if (typeof input === 'string') return input;
   if (!input || typeof input !== 'object') return undefined;
 
   const obj = input as Record<string, unknown>;
 
   // Najczęstszy u Ciebie: obiekt relacji zawiera pole documentId
   if (typeof obj.documentId === 'string') return obj.documentId;
-
-  // Czasem przychodzi jako string (np. connect: ["docId"])
-  if (typeof input === 'string') return input;
 
   // Niektóre klienty spłaszczają id jako string
   if (obj.id && typeof obj.id === 'string') return obj.id;
@@ -180,5 +178,5 @@ export async function mapStrapiContentToFrontend(
       );
     }
   }
-  return resolved as ContentBlock;
+  return resolved as unknown as ContentBlock;
 }
