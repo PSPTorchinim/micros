@@ -2,22 +2,20 @@ import React from 'react';
 import './index.css';
 import type { StepsContainer, Cta } from '../../../models/strapi/strapiMap';
 
-interface StepData {
+interface Step {
+  id?: number;
   title?: string;
-  heading?: string;
   description?: string;
-  content?: string;
+  icon?: string;
 }
 
 export const StepsContainerBlock = (props: StepsContainer) => {
-  // Extract action - in Strapi it's a dynamic zone, take first item if it exists
-  const actionArray = Array.isArray(props.action) ? props.action : [];
-  const actionItem =
-    actionArray.length > 0 ? (actionArray[0] as unknown as Cta) : null;
+  // Extract action - now it's a direct relation to CTA (oneToOne)
+  const actionItem = props.action as unknown as Cta | null | undefined;
 
-  // steps is also a dynamic zone in Strapi - convert to simple step data
+  // steps is now a repeatable component array
   const stepsArray = Array.isArray(props.steps)
-    ? (props.steps as unknown as StepData[])
+    ? (props.steps as unknown as Step[])
     : [];
 
   return (
@@ -43,11 +41,11 @@ export const StepsContainerBlock = (props: StepsContainer) => {
             )}
           </div>
           <div className="steps-card-container">
-            {stepsArray.map((step: StepData, index: number) => (
-              <div key={index} className="steps-card thq-card">
-                <h2 className="thq-heading-2">{step.title || step.heading}</h2>
+            {stepsArray.map((step: Step, index: number) => (
+              <div key={step.id || index} className="steps-card thq-card">
+                <h2 className="thq-heading-2">{step.title}</h2>
                 <span className="steps-card-text thq-body-small">
-                  {step.description || step.content}
+                  {step.description}
                 </span>
                 <label className="steps-card-label thq-heading-3">
                   {index + 1}
