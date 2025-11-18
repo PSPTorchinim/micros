@@ -83,6 +83,7 @@ export async function seedHeroBlocks(strapi: any) {
       content:
         'Your complete platform for managing DJ gigs, clients, equipment, and music. Streamline your DJ business and focus on what you do best - making people dance!',
       actions: [heroSignupCta.id, heroLearnCta.id],
+      publishedAt: new Date().toISOString(),
     },
   });
   console.info(

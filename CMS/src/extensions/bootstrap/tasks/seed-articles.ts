@@ -1075,6 +1075,38 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
       );
     }
 
+    // Update article block with all published articles
+    try {
+      const ARTICLE_BLOCK_UID = 'api::article-block.article-block';
+      const articleBlock = await strapi.db.query(ARTICLE_BLOCK_UID).findOne({
+        where: { Title: 'Latest DJ Tips & Guides' },
+      });
+
+      if (articleBlock) {
+        // Get all published article IDs
+        const publishedArticles = await strapi.db
+          .query(ARTICLE_UID)
+          .findMany({
+            select: ['id'],
+            where: { publishedAt: { $notNull: true } },
+          });
+        const articleIds = publishedArticles.map((a: any) => a.id);
+
+        await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
+          data: {
+            articles: articleIds,
+          },
+        });
+        console.info(
+          `[SEED][ARTICLES] ✅ Updated Article Block with ${articleIds.length} articles`,
+        );
+      }
+    } catch (articleBlockError: any) {
+      console.error(
+        `[SEED][ARTICLES] Failed to update article block: ${articleBlockError.message}`,
+      );
+    }
+
     console.info('[SEED][ARTICLES] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.info(
       `[SEED][ARTICLES] ✅ Article seeding complete! Processed ${DJING_ARTICLES.length} articles, created ${createdPageIds.length} pages.`,
