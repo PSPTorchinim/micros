@@ -1,25 +1,26 @@
 import React from 'react';
 import './index.css';
+import type { Cta } from '../../../models/strapi/strapiMap';
 
-export const CTABlock = ({ heading, content, action }: any) => (
-  <div className="thq-section-padding" id={action?.id}>
+export const CTABlock = (props: Cta) => (
+  <div className="thq-section-padding" id={props.id?.toString()}>
     <div className="thq-section-max-width">
       <div className="cta-accent-bg">
         <div className="cta-inner-bg">
           <div className="cta-container">
             <div className="cta-content">
-              <span className="thq-heading-2">{heading}</span>
-              <p className="thq-body-large">{content}</p>
+              <span className="thq-heading-2">{props.Label}</span>
+              {/* CTA doesn't have content field in Strapi, using Label */}
             </div>
-            {action && action.url && (
+            {props.url && (
               <div className="cta-actions">
                 <a
-                  href={action.url}
+                  href={props.url}
                   className="thq-button-filled cta-button"
-                  target={action.OpenInNewTab ? '_blank' : undefined}
-                  rel={action.OpenInNewTab ? 'noopener noreferrer' : undefined}
+                  target={props.OpenInNewTab ? '_blank' : undefined}
+                  rel={props.OpenInNewTab ? 'noopener noreferrer' : undefined}
                 >
-                  {action.text || action.Label}
+                  {props.Label}
                 </a>
               </div>
             )}

@@ -13,14 +13,20 @@ import {
   LoginBlock,
   ForgotPasswordBlock,
 } from './content-blocks';
-import type { ContentBlock, ArticleContentBlock } from '../types/content-blocks';
+import type {
+  ContentBlock,
+  ArticleContentBlock,
+} from '../types/content-blocks';
 
 /**
  * Główny renderer jednego „zwykłego" bloku (już zdereferencjonowanego).
  * Oczekujemy, że block ma `__kind` (np. 'image-slider', 'article-block', ...).
  * Jeżeli `__kind` nie ma – próbujemy zgrubnie dopasować po __component / fallback do <pre>.
  */
-export function renderBlock(block: ContentBlock, index: number): React.ReactElement {
+export function renderBlock(
+  block: ContentBlock,
+  index: number,
+): React.ReactElement {
   const kind: string | undefined = block.__kind;
 
   switch (kind) {
@@ -50,10 +56,16 @@ export function renderBlock(block: ContentBlock, index: number): React.ReactElem
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format
       const articleBlock = block as ArticleContentBlock;
-      const title = articleBlock.Title || articleBlock.attributes?.Title;
-      const summary = articleBlock.Summary || articleBlock.attributes?.Summary;
-      const coverUrl = articleBlock.coverUrl || articleBlock.attributes?.coverUrl;
-      const body = articleBlock.Body || articleBlock.attributes?.Body;
+      const articleData =
+        (articleBlock as { attributes?: Record<string, unknown> }).attributes ||
+        articleBlock;
+      const title =
+        typeof articleData.Title === 'string' ? articleData.Title : '';
+      const summary =
+        typeof articleData.Summary === 'string' ? articleData.Summary : '';
+      const coverUrl =
+        typeof articleData.coverUrl === 'string' ? articleData.coverUrl : '';
+      const body = typeof articleData.Body === 'string' ? articleData.Body : '';
 
       // Convert markdown to HTML if body contains markdown
       const htmlBody = body ? marked.parse(body) : '';

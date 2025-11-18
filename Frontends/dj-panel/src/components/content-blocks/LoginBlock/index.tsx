@@ -5,22 +5,9 @@ import { useServices } from '../../../hooks/use-services';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
+import type { LoginBlock as LoginBlockType } from '../../../models/strapi/strapiMap';
 
-interface LoginBlockProps {
-  title?: string;
-  emailLabel?: string;
-  passwordLabel?: string;
-  submitButtonText?: string;
-  forgotPasswordText?: string;
-  resetPasswordLinkText?: string;
-  emailPlaceholder?: string;
-  passwordPlaceholder?: string;
-  customStyles?: Record<string, any>;
-  redirectPath?: string;
-  forgotPasswordUrl?: string;
-}
-
-export const LoginBlock: React.FC<LoginBlockProps> = ({
+export const LoginBlock: React.FC<LoginBlockType> = ({
   title = 'Login',
   emailLabel = 'Email',
   passwordLabel = 'Password',
@@ -72,8 +59,8 @@ export const LoginBlock: React.FC<LoginBlockProps> = ({
       } else {
         setError(response.message ?? 'An error occurred.');
       }
-    } catch (err: any) {
-      setError(err.message ?? 'An error occurred.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred.');
     } finally {
       setIsSubmitting(false);
     }

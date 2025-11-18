@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
-import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
+import type { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
 
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

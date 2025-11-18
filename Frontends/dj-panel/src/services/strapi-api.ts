@@ -1,4 +1,5 @@
-import { Api, Page } from '../models/strapi/strapiMap';
+import { Api } from '../models/strapi/strapiMap';
+import type { Page } from '../models/strapi/strapiMap';
 
 type StrapiFilters = Record<string, unknown>;
 

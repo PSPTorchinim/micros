@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
-import {
+import type {
   ConfigurationMenuEnum,
   PageMenuEnum1,
 } from '../../../../models/strapi/strapiMap';

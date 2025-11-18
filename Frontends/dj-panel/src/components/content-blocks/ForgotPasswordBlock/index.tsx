@@ -4,21 +4,9 @@ import { UsersService } from '../../../services/users-service';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
+import type { ForgotPasswordBlock as ForgotPasswordBlockType } from '../../../models/strapi/strapiMap';
 
-interface ForgotPasswordBlockProps {
-  title?: string;
-  description?: string;
-  emailLabel?: string;
-  submitButtonText?: string;
-  backToLoginText?: string;
-  loginLinkText?: string;
-  emailPlaceholder?: string;
-  successRedirectPath?: string;
-  loginUrl?: string;
-  customStyles?: Record<string, any>;
-}
-
-export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockProps> = ({
+export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockType> = ({
   title = 'Forgot Password',
   description = 'Enter your email address to reset your password.',
   emailLabel = 'Email',
@@ -47,7 +35,7 @@ export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockProps> = ({
       } else {
         setError(response.message || 'Failed to send password reset link.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to send password reset link. Please try again later.');
     } finally {
       setIsSubmitting(false);

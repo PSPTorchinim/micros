@@ -1,4 +1,4 @@
-import { PageAuthStateEnum1, PageMenuEnum1 } from "./strapiMap";
+import type { PageAuthStateEnum1, PageMenuEnum1 } from "./strapiMap";
 
 export type NavigationItem = {
   id: number;

@@ -19,7 +19,10 @@ export function getDocId(input: unknown): string | undefined {
 
   // Wariant Strapi v4/v5 z data/attributes
   const data = obj.data as Record<string, unknown> | undefined;
-  if (data?.attributes && typeof (data.attributes as Record<string, unknown>).documentId === 'string') {
+  if (
+    data?.attributes &&
+    typeof (data.attributes as Record<string, unknown>).documentId === 'string'
+  ) {
     return (data.attributes as Record<string, unknown>).documentId as string;
   }
   if (data?.id && typeof data.id === 'string') return data.id;
@@ -42,10 +45,12 @@ const FIELD_BY_REF: Record<string, string> = {
 
 // 3) Główna funkcja – rekurencyjnie rozwija refy i zagnieżdżenia
 export async function mapStrapiContentToFrontend(
-  block: ContentBlock | RefComponent | (ContentBlock | RefComponent)[]
+  block: ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
 ): Promise<ContentBlock | ContentBlock[]> {
   if (Array.isArray(block)) {
-    return Promise.all(block.map(mapStrapiContentToFrontend)) as Promise<ContentBlock[]>;
+    return Promise.all(block.map(mapStrapiContentToFrontend)) as Promise<
+      ContentBlock[]
+    >;
   }
 
   if (!block || typeof block !== 'object') {
@@ -53,7 +58,11 @@ export async function mapStrapiContentToFrontend(
   }
 
   // A) Obsługa ref-komponentów (…-ref)
-  if ('__component' in block && block.__component && block.__component.endsWith('-ref')) {
+  if (
+    '__component' in block &&
+    block.__component &&
+    block.__component.endsWith('-ref')
+  ) {
     const refComponent = block as RefComponent;
     const refUID = refComponent.__component; // np. "image-slider-ref.image-slider-ref"
     const base = refUID.split('-ref')[0]; // np. "image-slider"
@@ -66,7 +75,7 @@ export async function mapStrapiContentToFrontend(
     // fallback, gdyby documentId nie przyszło – numeryczne id z obiektu relacji lub samego bloku
     const numericId =
       typeof (relObj as Record<string, unknown>)?.id === 'number'
-        ? (relObj as Record<string, unknown>).id as number
+        ? ((relObj as Record<string, unknown>).id as number)
         : typeof refComponent.id === 'number'
           ? refComponent.id
           : undefined;
@@ -148,18 +157,27 @@ export async function mapStrapiContentToFrontend(
     if (!data) return block as ContentBlock;
 
     // Doklej __kind, by renderer nie musiał zgadywać
-    return { __kind: base, ...(data as Record<string, unknown>) } as ContentBlock;
+    return {
+      __kind: base,
+      ...(data as Record<string, unknown>),
+    } as ContentBlock;
   }
 
   // B) Rekurencyjna obróbka zagnieżdżonych pól (tablice / obiekty z __component)
-  const resolved: Record<string, unknown> = { ...block as Record<string, unknown> };
+  const resolved: Record<string, unknown> = {
+    ...(block as Record<string, unknown>),
+  };
   for (const key of Object.keys(block)) {
     const value = (block as Record<string, unknown>)[key];
     if (
       Array.isArray(value) ||
-      (value && typeof value === 'object' && '__component' in (value as Record<string, unknown>))
+      (value &&
+        typeof value === 'object' &&
+        '__component' in (value as Record<string, unknown>))
     ) {
-      resolved[key] = await mapStrapiContentToFrontend(value as ContentBlock | RefComponent | (ContentBlock | RefComponent)[]);
+      resolved[key] = await mapStrapiContentToFrontend(
+        value as ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
+      );
     }
   }
   return resolved as ContentBlock;

@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
 import { useDynamicRoutes } from './DynamicRoutes';
-import { Page } from '../models/strapi/strapiMap';
+import type { Page } from '../models/strapi/strapiMap';
 
 // Mock the strapi API
 const mockGetRootPages = jest.fn();

@@ -30,49 +30,63 @@ export interface BaseContentBlock {
 /**
  * Article content block
  */
-export interface ArticleContentBlock extends BaseContentBlock, Partial<Article> {
+export interface ArticleContentBlock
+  extends BaseContentBlock,
+    Partial<Article> {
   __kind: 'article';
 }
 
 /**
  * Article block (list of articles)
  */
-export interface ArticleBlockContentBlock extends BaseContentBlock, Partial<ArticleBlock> {
+export interface ArticleBlockContentBlock
+  extends BaseContentBlock,
+    Partial<ArticleBlock> {
   __kind: 'article-block';
 }
 
 /**
  * Hero block
  */
-export interface HeroBlockContentBlock extends BaseContentBlock, Partial<HeroBlock> {
+export interface HeroBlockContentBlock
+  extends BaseContentBlock,
+    Partial<HeroBlock> {
   __kind: 'hero-block';
 }
 
 /**
  * Feature section
  */
-export interface FeatureSectionContentBlock extends BaseContentBlock, Partial<FeatureSection> {
+export interface FeatureSectionContentBlock
+  extends BaseContentBlock,
+    Partial<FeatureSection> {
   __kind: 'feature-section';
 }
 
 /**
  * Feature tab
  */
-export interface FeatureTabContentBlock extends BaseContentBlock, Partial<FeatureTab> {
+export interface FeatureTabContentBlock
+  extends BaseContentBlock,
+    Partial<FeatureTab> {
   __kind: 'feature-tab';
 }
 
 /**
  * Image slider
  */
-export interface ImageSliderContentBlock extends BaseContentBlock, Partial<ImageSlider> {
+export interface ImageSliderContentBlock
+  extends BaseContentBlock,
+    Partial<ImageSlider> {
   __kind: 'image-slider';
 }
 
 /**
  * Steps container
  */
-export interface StepsContainerContentBlock extends BaseContentBlock, Partial<StepsContainer> {
+export interface StepsContainerContentBlock
+  extends BaseContentBlock,
+    Partial<StepsContainer> {
   __kind: 'steps-container';
 }
 
@@ -86,28 +100,36 @@ export interface CTAContentBlock extends BaseContentBlock, Partial<Cta> {
 /**
  * Contact section
  */
-export interface ContactSectionContentBlock extends BaseContentBlock, Partial<ContactSection> {
+export interface ContactSectionContentBlock
+  extends BaseContentBlock,
+    Partial<ContactSection> {
   __kind: 'contact-section';
 }
 
 /**
  * Contact info
  */
-export interface ContactInfoContentBlock extends BaseContentBlock, Partial<ContactInfo> {
+export interface ContactInfoContentBlock
+  extends BaseContentBlock,
+    Partial<ContactInfo> {
   __kind: 'contact-info';
 }
 
 /**
  * Login block
  */
-export interface LoginBlockContentBlock extends BaseContentBlock, Partial<LoginBlock> {
+export interface LoginBlockContentBlock
+  extends BaseContentBlock,
+    Partial<LoginBlock> {
   __kind: 'login-block';
 }
 
 /**
  * Forgot password block
  */
-export interface ForgotPasswordBlockContentBlock extends BaseContentBlock, Partial<ForgotPasswordBlock> {
+export interface ForgotPasswordBlockContentBlock
+  extends BaseContentBlock,
+    Partial<ForgotPasswordBlock> {
   __kind: 'forgot-password-block';
 }
 

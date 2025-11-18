@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
 import './index.css';
-import { FeatureSection, FeatureTab } from '../../../models/strapi/strapiMap';
+import type { FeatureSection } from '../../../models/strapi/strapiMap';
 
-export const FeatureBlock = (block: FeatureSection) => {
+export const FeatureBlock = (props: FeatureSection) => {
   const [activeTab, setActiveTab] = useState(0);
+  const tabs = Array.isArray(props.tabs) ? props.tabs : [];
+
   return (
     <div className="thq-section-padding content-comntainer">
       <div
         className={
-          block.reversed ? 'features-container reversed' : 'features-container'
+          props.reversed ? 'features-container reversed' : 'features-container'
         }
       >
         <div className="features-image-container">
-          {block.tabs?.map(
-            (tab: FeatureTab, index: number) =>
+          {tabs.map(
+            (tab, index: number) =>
               activeTab === index && (
                 <img
                   key={index}
-                  alt={tab.imgAlt}
-                  src={tab.imgSrc}
+                  alt={tab.imgAlt || ''}
+                  src={tab.imgSrc || ''}
                   className="features-image thq-img-ratio-16-9"
                 />
               ),
           )}
         </div>
         <div className="features-tabs-menu">
-          {block.tabs?.map((tab: FeatureTab, index: number) => (
+          {tabs.map((tab, index: number) => (
             <div
               key={index}
               onClick={() => setActiveTab(index)}
               className={
-                block.reversed
+                props.reversed
                   ? 'features-tab-horizontal reversed'
                   : 'features-tab-horizontal'
               }
