@@ -15,46 +15,40 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    heading: 'Ready to Book Your Event?',
-    content:
-      'Contact us today to discuss your event needs and get a custom quote.',
-    action: {
-      text: 'Get Started',
-      url: '#/contact',
-      OpenInNewTab: false,
-    },
-  },
-};
-
-export const WithoutAction: Story = {
-  args: {
-    heading: 'Premium DJ Services',
-    content:
-      'Elevate your event with professional DJ services tailored to your needs.',
+    id: 1,
+    documentId: 'cta-1',
+    Label: 'Get Started Now',
+    url: '#/contact',
+    OpenInNewTab: false,
   },
 };
 
 export const ExternalLink: Story = {
   args: {
-    heading: 'Follow Us on Social Media',
-    content: 'Stay updated with our latest events and special offers.',
-    action: {
-      text: 'Follow on Instagram',
-      url: 'https://instagram.com',
-      OpenInNewTab: true,
-    },
+    id: 2,
+    documentId: 'cta-2',
+    Label: 'Follow on Instagram',
+    url: 'https://instagram.com',
+    OpenInNewTab: true,
   },
 };
 
-export const LongContent: Story = {
+export const LongLabel: Story = {
   args: {
-    heading: 'Transform Your Event',
-    content:
-      'From intimate gatherings to large-scale celebrations, our experienced DJs and state-of-the-art equipment ensure your event is memorable. We work closely with you to understand your vision and deliver an unforgettable experience.',
-    action: {
-      text: 'View Packages',
-      url: '#/packages',
-      OpenInNewTab: false,
-    },
+    id: 3,
+    documentId: 'cta-3',
+    Label: 'View Our Complete Service Packages',
+    url: '#/packages',
+    OpenInNewTab: false,
+  },
+};
+
+export const BookingCTA: Story = {
+  args: {
+    id: 4,
+    documentId: 'cta-4',
+    Label: 'Book Your Event Today',
+    url: '#/book',
+    OpenInNewTab: false,
   },
 };

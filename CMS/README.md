@@ -374,9 +374,9 @@ Main entry point that coordinates seeding of all standard pages:
    ```typescript
    // seed-my-task.ts
    export default async function seedMyTask({ strapi }: { strapi: any }) {
-     strapi.log.info('[SEED][MY_TASK] Starting...');
+     console.info('[SEED][MY_TASK] Starting...');
      // Your seeding logic here
-     strapi.log.info('[SEED][MY_TASK] Done!');
+     console.info('[SEED][MY_TASK] Done!');
    }
    ```
 

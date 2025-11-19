@@ -51,15 +51,15 @@ export async function ensureActionEnabled(
 
   if (!existing) {
     await createPermission(strapi, roleId, action);
-    strapi.log.info(`[${logPrefix}] Created & enabled ${action} for Public`);
+    console.info(`[${logPrefix}] Created & enabled ${action} for Public`);
     return;
   }
 
   if (!existing.enabled) {
     await enablePermission(strapi, existing.id);
-    strapi.log.info(`[${logPrefix}] Enabled ${action} for Public`);
+    console.info(`[${logPrefix}] Enabled ${action} for Public`);
     return;
   }
 
-  strapi.log.debug(`[${logPrefix}] Already enabled: ${action}`);
+  console.debug(`[${logPrefix}] Already enabled: ${action}`);
 }

@@ -20,12 +20,16 @@ export const Default: Story = {
       'Professional DJ services for all your events. From weddings to corporate events, we bring the party to life.',
     actions: [
       {
-        text: 'Get Started',
+        id: 1,
+        documentId: 'cta-1',
+        Label: 'Get Started',
         url: '#/get-started',
         OpenInNewTab: false,
       },
       {
-        text: 'Learn More',
+        id: 2,
+        documentId: 'cta-2',
+        Label: 'Learn More',
         url: '#/learn-more',
         OpenInNewTab: false,
       },
@@ -39,7 +43,9 @@ export const SingleAction: Story = {
     content: 'Create unforgettable moments with our professional DJ services.',
     actions: [
       {
-        text: 'Book Now',
+        id: 1,
+        documentId: 'cta-1',
+        Label: 'Book Now',
         url: '#/book',
         OpenInNewTab: false,
       },
@@ -54,7 +60,9 @@ export const ExternalLink: Story = {
       'Connect with us on social media and stay updated with the latest events.',
     actions: [
       {
-        text: 'Follow Us',
+        id: 1,
+        documentId: 'cta-1',
+        Label: 'Follow Us',
         url: 'https://facebook.com',
         OpenInNewTab: true,
       },
@@ -69,12 +77,16 @@ export const LongContent: Story = {
       "Whether you're planning a wedding, corporate event, birthday party, or any special celebration, our experienced DJs bring professional equipment, extensive music libraries, and the energy to make your event unforgettable. We work with you to create the perfect atmosphere for your guests.",
     actions: [
       {
-        text: 'View Packages',
+        id: 1,
+        documentId: 'cta-1',
+        Label: 'View Packages',
         url: '#/packages',
         OpenInNewTab: false,
       },
       {
-        text: 'Contact Us',
+        id: 2,
+        documentId: 'cta-2',
+        Label: 'Contact Us',
         url: '#/contact',
         OpenInNewTab: false,
       },

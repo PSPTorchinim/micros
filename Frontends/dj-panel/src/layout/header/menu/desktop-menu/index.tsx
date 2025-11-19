@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
-import type {
-  ConfigurationMenuEnum,
-  PageMenuEnum1,
-} from '../../../../models/strapi/strapiMap';
+
 import { NavigationItem } from '../../../../models/strapi/navigation-item';
+import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
 
 export const DesktopMenu = (props: any) => {
   const { token, user, logout } = useAuth();
