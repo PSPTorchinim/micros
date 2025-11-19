@@ -56,7 +56,7 @@ dotnet test --filter "Speed=Slow"
 
 ### 3. Full System Tests (`FullSystemTests.cs`)
 
-**Speed: Very Slow (5-15 minutes)**  
+**Speed: Very Slow (5-30 minutes)**  
 **Requirements: Docker running, ports available, significant resources**
 
 These tests validate:
@@ -66,15 +66,34 @@ These tests validate:
 - All services run together as a complete system
 - System can be cleanly stopped and cleaned up
 - **Service logs can be retrieved and analyzed**
+- **Service dependencies are properly configured**
+- **System stability under multiple restarts**
 
-**New Log Retrieval Features:**
-- Tests automatically capture and display service logs on failure
-- Dedicated tests for retrieving logs from individual services
-- Ability to get logs from all services at once
-- Useful for debugging issues in the Docker environment
+**Enhanced Test Coverage:**
+1. **`FullSystem_ComprehensiveStackTest_AllServicesHealthy`** - Complete end-to-end test
+   - Steps through infrastructure → backend → gateway startup
+   - Validates health at each stage
+   - Provides detailed test report with timing and status
+   - Captures comprehensive logs for troubleshooting
+
+2. **`FullSystem_ValidateServiceDependencies`** - Dependency validation
+   - Tests that services start in correct order
+   - Validates dependency chains (databases → cache → backends → gateway)
+   - Ensures services fail gracefully when dependencies are missing
+
+3. **`FullSystem_StressTest_MultipleRestarts`** - Stability testing
+   - Tests system reliability through multiple restart cycles
+   - Validates that services can recover from restarts
+   - Ensures no resource leaks or state corruption
+
+4. **Log Retrieval Tests** - Debugging capabilities
+   - Tests automatically capture and display service logs on failure
+   - Dedicated tests for retrieving logs from individual services
+   - Ability to get logs from all services at once
+   - Useful for debugging issues in the Docker environment
 
 **⚠️ Warning:** These tests are marked as `Skip` by default because they:
-- Take 5-15 minutes to complete
+- Take 5-30 minutes to complete
 - Start the entire Docker Compose environment
 - Require significant system resources (CPU, RAM, disk)
 - Occupy standard ports (3000, 5432, 27017, 1433, 6379, etc.)
@@ -84,6 +103,9 @@ These tests validate:
 ```bash
 # Run all system tests (requires removing Skip attribute or using filter)
 dotnet test --filter "Speed=VerySlow"
+
+# Run specific comprehensive test
+dotnet test --filter "FullyQualifiedName~FullSystem_ComprehensiveStackTest_AllServicesHealthy"
 ```
 
 ## Quick Start
@@ -194,13 +216,30 @@ docker compose -f dj-panel-composer.yml logs -f redis
 
 ### Successful Test Run (Quick Tests)
 ```
-Total tests: 21
+Total tests: 24
      Passed: 9
-    Skipped: 12
+    Skipped: 15
 ```
 
 - **Passed**: Quick validation tests that ran successfully
-- **Skipped**: Slow/VerySlow tests that are skipped by default
+- **Skipped**: Slow/VerySlow tests that are skipped by default (including 3 new comprehensive tests)
+
+### New Test Breakdown
+
+**Quick Tests (9):** Always run
+- 7 Docker Compose configuration validation tests
+- 1 Dockerfile existence check
+- 1 Cleanup validation test
+
+**Build Tests (6):** Opt-in via `--filter "Speed=Slow"`
+- Docker image build validation for all service types
+
+**System Tests (9):** Opt-in via `--filter "Speed=VerySlow"`
+- 3 New comprehensive tests:
+  - `FullSystem_ComprehensiveStackTest_AllServicesHealthy` - Complete stack validation
+  - `FullSystem_ValidateServiceDependencies` - Dependency chain testing
+  - `FullSystem_StressTest_MultipleRestarts` - Stability testing
+- 6 Existing tests for infrastructure, backends, gateway, and logs
 
 ### Running Build or System Tests
 

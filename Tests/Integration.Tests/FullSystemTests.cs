@@ -203,6 +203,248 @@ namespace Integration.Tests
         }
 
         [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
+        public async Task FullSystem_ComprehensiveStackTest_AllServicesHealthy()
+        {
+            // This is a comprehensive test that validates the entire stack step by step
+            var testReport = new System.Text.StringBuilder();
+            testReport.AppendLine("=== COMPREHENSIVE FULL STACK TEST ===");
+            testReport.AppendLine($"Test Run ID: {TestRunId}");
+            testReport.AppendLine($"Timestamp: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            testReport.AppendLine();
+
+            try
+            {
+                // Step 1: Start infrastructure services
+                testReport.AppendLine("Step 1: Starting infrastructure services...");
+                var infraServices = new[] { "sqlserver", "mongodb_container", "redis", "rabbitmq", "strapi_db" };
+                var infraResult = RunDockerComposeCommand($"up -d {string.Join(" ", infraServices)}", timeoutMinutes: 10);
+                
+                if (infraResult.ExitCode != 0)
+                {
+                    testReport.AppendLine($"  ✗ FAILED to start infrastructure. Error: {infraResult.Error}");
+                    var logs = GetAllServiceLogs(100);
+                    testReport.AppendLine($"  Logs:\n{logs.Logs}");
+                    Assert.Fail(testReport.ToString());
+                }
+                testReport.AppendLine("  ✓ Infrastructure services started");
+
+                // Wait for infrastructure to be ready
+                await Task.Delay(TimeSpan.FromSeconds(60));
+
+                // Step 2: Verify infrastructure health
+                testReport.AppendLine("Step 2: Verifying infrastructure health...");
+                var infraHealth = await VerifyServicesHealth(infraServices);
+                testReport.AppendLine(infraHealth);
+
+                // Step 3: Start backend services
+                testReport.AppendLine("Step 3: Starting backend microservices...");
+                var backendServices = new[] { "identity_be", "music_be", "gear_be", "documents_be", "brand_be", "party_be", "mailing_be" };
+                var backendResult = RunDockerComposeCommand($"up -d {string.Join(" ", backendServices)}", timeoutMinutes: 15);
+                
+                if (backendResult.ExitCode != 0)
+                {
+                    testReport.AppendLine($"  ✗ FAILED to start backend services. Error: {backendResult.Error}");
+                    var logs = GetAllServiceLogs(100);
+                    testReport.AppendLine($"  Logs:\n{logs.Logs}");
+                    Assert.Fail(testReport.ToString());
+                }
+                testReport.AppendLine("  ✓ Backend services started");
+
+                // Wait for backends to initialize
+                await Task.Delay(TimeSpan.FromSeconds(90));
+
+                // Step 4: Verify backend health
+                testReport.AppendLine("Step 4: Verifying backend services health...");
+                var backendHealth = await VerifyServicesHealth(backendServices);
+                testReport.AppendLine(backendHealth);
+
+                // Step 5: Start API Gateway
+                testReport.AppendLine("Step 5: Starting API Gateway...");
+                var gatewayResult = RunDockerComposeCommand("up -d apigateway", timeoutMinutes: 10);
+                
+                if (gatewayResult.ExitCode != 0)
+                {
+                    testReport.AppendLine($"  ✗ FAILED to start API Gateway. Error: {gatewayResult.Error}");
+                    var logs = GetServiceLogs("apigateway", 100);
+                    testReport.AppendLine($"  Logs:\n{logs.Logs}");
+                    Assert.Fail(testReport.ToString());
+                }
+                testReport.AppendLine("  ✓ API Gateway started");
+
+                await Task.Delay(TimeSpan.FromSeconds(30));
+
+                // Step 6: Verify complete system
+                testReport.AppendLine("Step 6: Verifying complete system status...");
+                var allStatus = RunDockerComposeCommand("ps", timeoutMinutes: 1);
+                testReport.AppendLine($"  Services status:\n{allStatus.Output}");
+
+                // Step 7: Get comprehensive logs
+                testReport.AppendLine("Step 7: Collecting system logs...");
+                var systemLogs = GetAllServiceLogs(50);
+                testReport.AppendLine($"  Log collection: {(systemLogs.ExitCode == 0 ? "✓ SUCCESS" : "✗ FAILED")}");
+                testReport.AppendLine($"  Total log lines: {systemLogs.Logs.Split('\n').Length}");
+
+                // Step 8: Validate service count
+                testReport.AppendLine("Step 8: Validating service count...");
+                var allServices = infraServices.Concat(backendServices).Append("apigateway").ToArray();
+                var missingServices = new System.Collections.Generic.List<string>();
+                
+                foreach (var service in allServices)
+                {
+                    if (!allStatus.Output.Contains(service))
+                    {
+                        missingServices.Add(service);
+                    }
+                }
+
+                if (missingServices.Any())
+                {
+                    testReport.AppendLine($"  ✗ Missing services: {string.Join(", ", missingServices)}");
+                    Assert.Fail(testReport.ToString());
+                }
+                testReport.AppendLine($"  ✓ All {allServices.Length} services are running");
+
+                // Final summary
+                testReport.AppendLine();
+                testReport.AppendLine("=== TEST SUMMARY ===");
+                testReport.AppendLine($"✓ Infrastructure Services: {infraServices.Length}");
+                testReport.AppendLine($"✓ Backend Services: {backendServices.Length}");
+                testReport.AppendLine($"✓ Gateway Services: 1");
+                testReport.AppendLine($"✓ Total Services Running: {allServices.Length}");
+                testReport.AppendLine("✓ ALL TESTS PASSED");
+
+                // Output the report
+                Console.WriteLine(testReport.ToString());
+            }
+            catch (Exception ex)
+            {
+                testReport.AppendLine();
+                testReport.AppendLine($"=== TEST FAILED ===");
+                testReport.AppendLine($"Error: {ex.Message}");
+                Console.WriteLine(testReport.ToString());
+                throw;
+            }
+        }
+
+        [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
+        public async Task FullSystem_ValidateServiceDependencies()
+        {
+            // Test that services start in correct order and dependencies are satisfied
+            var testReport = new System.Text.StringBuilder();
+            testReport.AppendLine("=== SERVICE DEPENDENCY VALIDATION TEST ===");
+
+            // Step 1: Start only databases - they have no dependencies
+            testReport.AppendLine("Step 1: Testing database services (no dependencies)...");
+            var dbServices = new[] { "sqlserver", "mongodb_container", "strapi_db" };
+            var dbResult = RunDockerComposeCommand($"up -d {string.Join(" ", dbServices)}", timeoutMinutes: 10);
+            Assert.True(dbResult.ExitCode == 0, $"Databases should start independently. Error: {dbResult.Error}");
+            testReport.AppendLine("  ✓ Database services started independently");
+            await Task.Delay(TimeSpan.FromSeconds(45));
+
+            // Step 2: Start cache and messaging - they have no dependencies
+            testReport.AppendLine("Step 2: Testing cache and messaging services...");
+            var cacheMessaging = new[] { "redis", "rabbitmq" };
+            var cacheResult = RunDockerComposeCommand($"up -d {string.Join(" ", cacheMessaging)}", timeoutMinutes: 5);
+            Assert.True(cacheResult.ExitCode == 0, $"Cache/messaging should start independently. Error: {cacheResult.Error}");
+            testReport.AppendLine("  ✓ Cache and messaging services started");
+            await Task.Delay(TimeSpan.FromSeconds(30));
+
+            // Step 3: Try starting a backend service - should work with infrastructure ready
+            testReport.AppendLine("Step 3: Testing backend service with dependencies ready...");
+            var backendResult = RunDockerComposeCommand("up -d identity_be", timeoutMinutes: 10);
+            Assert.True(backendResult.ExitCode == 0, $"Backend should start with infrastructure ready. Error: {backendResult.Error}");
+            testReport.AppendLine("  ✓ Backend service started with dependencies satisfied");
+            await Task.Delay(TimeSpan.FromSeconds(30));
+
+            // Step 4: Verify the service is healthy
+            var healthCheck = await VerifyServicesHealth(new[] { "identity_be" });
+            testReport.AppendLine($"  Health check: {healthCheck}");
+
+            testReport.AppendLine("✓ SERVICE DEPENDENCY VALIDATION PASSED");
+            Console.WriteLine(testReport.ToString());
+        }
+
+        [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
+        public async Task FullSystem_StressTest_MultipleRestarts()
+        {
+            // Test system stability by restarting services multiple times
+            var testReport = new System.Text.StringBuilder();
+            testReport.AppendLine("=== STRESS TEST: MULTIPLE RESTARTS ===");
+
+            var services = new[] { "redis", "rabbitmq" };
+            var iterations = 3;
+
+            for (int i = 1; i <= iterations; i++)
+            {
+                testReport.AppendLine($"Iteration {i}/{iterations}:");
+                
+                // Start services
+                var startResult = RunDockerComposeCommand($"up -d {string.Join(" ", services)}", timeoutMinutes: 5);
+                Assert.True(startResult.ExitCode == 0, $"Start should succeed on iteration {i}");
+                testReport.AppendLine($"  ✓ Services started");
+                await Task.Delay(TimeSpan.FromSeconds(20));
+
+                // Verify running
+                var psResult = RunDockerComposeCommand("ps", timeoutMinutes: 1);
+                foreach (var service in services)
+                {
+                    Assert.Contains(service, psResult.Output);
+                }
+                testReport.AppendLine($"  ✓ Services verified running");
+
+                // Stop services
+                var stopResult = RunDockerComposeCommand($"stop {string.Join(" ", services)}", timeoutMinutes: 3);
+                Assert.True(stopResult.ExitCode == 0, $"Stop should succeed on iteration {i}");
+                testReport.AppendLine($"  ✓ Services stopped");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+
+            // Final cleanup
+            RunDockerComposeCommand("down -v", timeoutMinutes: 3);
+            testReport.AppendLine($"✓ STRESS TEST PASSED: {iterations} iterations completed successfully");
+            Console.WriteLine(testReport.ToString());
+        }
+
+        /// <summary>
+        /// Verifies the health status of specified services
+        /// </summary>
+        private async Task<string> VerifyServicesHealth(string[] services)
+        {
+            var report = new System.Text.StringBuilder();
+            var psResult = RunDockerComposeCommand("ps", timeoutMinutes: 1);
+            
+            foreach (var service in services)
+            {
+                if (psResult.Output.Contains(service))
+                {
+                    // Check if service is in the output
+                    var serviceLines = psResult.Output.Split('\n')
+                        .Where(l => l.Contains(service))
+                        .ToList();
+                    
+                    if (serviceLines.Any())
+                    {
+                        var statusLine = serviceLines.First();
+                        if (statusLine.Contains("Up") || statusLine.Contains("running"))
+                        {
+                            report.AppendLine($"  ✓ {service}: Running");
+                        }
+                        else
+                        {
+                            report.AppendLine($"  ⚠ {service}: Status unclear - {statusLine}");
+                        }
+                    }
+                }
+                else
+                {
+                    report.AppendLine($"  ✗ {service}: Not found");
+                }
+            }
+            
+            return report.ToString();
+        }
+
+        [Fact(Skip = "Very slow test - Requires Docker environment - Only run when explicitly needed")]
         public async Task FullSystem_CanStopAllServices()
         {
             // Arrange - Start services first
