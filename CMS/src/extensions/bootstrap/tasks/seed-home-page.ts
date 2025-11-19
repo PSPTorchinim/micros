@@ -152,9 +152,9 @@ export async function seedHomePage(strapi: any, configId: number) {
     );
   }
 
-  // Create or update Home Page WITHOUT template relation
+  // Create or update Home Page WITHOUT relations
   console.info(
-    '[SEED][HOME] 🏠 Creating/updating Home Page (without template relation)...',
+    '[SEED][HOME] 🏠 Creating/updating Home Page (without relations)...',
   );
   const existingHomePage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: '/' },
@@ -165,8 +165,6 @@ export async function seedHomePage(strapi: any, configId: number) {
     Title: 'Home',
     Slug: '/',
     configuration: configId,
-    Parents: [],
-    subpages: [],
     publishedAt: new Date().toISOString(),
   };
 
@@ -192,22 +190,23 @@ export async function seedHomePage(strapi: any, configId: number) {
   console.info('');
   console.info('[SEED][HOME] 🔗 PHASE 2: Establishing relations');
 
-  // Set the Page -> Template relation using Strapi's Document Service
+  // Set the Page -> Template relation and other relations
   console.info(
     `[SEED][HOME] 🔗 Connecting Page ${homePageId} to Template ${homeTemplate.id}...`,
   );
 
   try {
-    // Use the relation connect syntax for Strapi v5
     await strapi.db.query(PAGE_UID).update({
       where: { id: homePageId },
       data: {
         template: homeTemplate.id,
+        Parents: [],
+        subpages: [],
       },
     });
-    console.info('[SEED][HOME] ✓ Relation update executed');
+    console.info('[SEED][HOME] ✓ Relations update executed');
   } catch (error: any) {
-    console.error('[SEED][HOME] ❌ Failed to set relation:', error.message);
+    console.error('[SEED][HOME] ❌ Failed to set relations:', error.message);
   }
 
   // ============================================================================

@@ -79,7 +79,6 @@ export async function seedForgotPasswordPage(
     Slug: forgotSlug,
     Menu: 'NotVisible',
     configuration: configId,
-    Parents: parentPageId ? [parentPageId] : undefined,
     publishedAt: new Date().toISOString(),
   };
 
@@ -103,20 +102,26 @@ export async function seedForgotPasswordPage(
   // ============================================================================
   console.info('[SEED][FORGOT_PASSWORD] 🔗 PHASE 2: Establishing relations');
 
-  // Set template relation
+  // Set template and Parents relations
   try {
     await strapi.db.query(PAGE_UID).update({
       where: { id: forgotPageId },
       data: {
         template: forgotTemplate.id,
+        Parents: parentPageId ? [parentPageId] : [],
       },
     });
     console.info(
       `[SEED][FORGOT_PASSWORD] ✓ Connected Page ${forgotPageId} to Template ${forgotTemplate.id}`,
     );
+    if (parentPageId) {
+      console.info(
+        `[SEED][FORGOT_PASSWORD] ✓ Set parent page: ${parentPageId}`,
+      );
+    }
   } catch (error: any) {
     console.error(
-      '[SEED][FORGOT_PASSWORD] ❌ Failed to set relation:',
+      '[SEED][FORGOT_PASSWORD] ❌ Failed to set relations:',
       error.message,
     );
   }

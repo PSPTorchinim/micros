@@ -15,11 +15,15 @@ export async function seedHeroBlocks(strapi: any) {
   });
 
   if (existingHero) {
-    console.info(`[SEED][HERO_BLOCKS] ✓ Found existing hero block (ID: ${existingHero.id})`);
+    console.info(
+      `[SEED][HERO_BLOCKS] ✓ Found existing hero block (ID: ${existingHero.id})`,
+    );
     console.info('[SEED][HERO_BLOCKS] 🔄 Updating existing hero block...');
-    
+
     // Find or create CTAs
-    console.info('[SEED][HERO_BLOCKS] 🔍 Looking for "Get Started Free" CTA...');
+    console.info(
+      '[SEED][HERO_BLOCKS] 🔍 Looking for "Get Started Free" CTA...',
+    );
     let heroSignupCta = await strapi.db.query(CTA_UID).findOne({
       where: { Label: 'Get Started Free' },
     });
@@ -33,9 +37,13 @@ export async function seedHeroBlocks(strapi: any) {
           publishedAt: new Date().toISOString(),
         },
       });
-      console.info(`[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroSignupCta.id})`);
+      console.info(
+        `[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroSignupCta.id})`,
+      );
     } else {
-      console.info(`[SEED][HERO_BLOCKS] ✓ Found existing CTA (ID: ${heroSignupCta.id})`);
+      console.info(
+        `[SEED][HERO_BLOCKS] ✓ Found existing CTA (ID: ${heroSignupCta.id})`,
+      );
     }
 
     console.info('[SEED][HERO_BLOCKS] 🔍 Looking for "Learn More" CTA...');
@@ -52,38 +60,72 @@ export async function seedHeroBlocks(strapi: any) {
           publishedAt: new Date().toISOString(),
         },
       });
-      console.info(`[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroLearnCta.id})`);
+      console.info(
+        `[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroLearnCta.id})`,
+      );
     } else {
-      console.info(`[SEED][HERO_BLOCKS] ✓ Found existing CTA (ID: ${heroLearnCta.id})`);
+      console.info(
+        `[SEED][HERO_BLOCKS] ✓ Found existing CTA (ID: ${heroLearnCta.id})`,
+      );
     }
 
-    // Update hero block with CTAs
-    console.info('[SEED][HERO_BLOCKS] 🔄 Updating hero block with actions...');
+    // Update hero block with CTAs using two-phase approach
+    console.info(
+      '[SEED][HERO_BLOCKS] 🔄 Updating hero block (without actions)...',
+    );
     await strapi.entityService.update(HERO_BLOCK_UID, existingHero.id, {
       data: {
         heading: 'Welcome to DJ Beat Blaster',
         content:
           'Your complete platform for managing DJ gigs, clients, equipment, and music. Streamline your DJ business and focus on what you do best - making people dance!',
-        actions: [heroSignupCta.id, heroLearnCta.id],
         publishedAt: new Date().toISOString(),
       },
     });
-    
+
+    // PHASE 2: Establish actions relation
+    console.info('[SEED][HERO_BLOCKS] 🔗 Connecting actions to hero block...');
+    try {
+      await strapi.db.query(HERO_BLOCK_UID).update({
+        where: { id: existingHero.id },
+        data: {
+          actions: [heroSignupCta.id, heroLearnCta.id],
+        },
+      });
+      console.info(`[SEED][HERO_BLOCKS] ✓ Connected ${2} CTAs to hero block`);
+    } catch (error: any) {
+      console.error(
+        '[SEED][HERO_BLOCKS] ❌ Failed to set actions relation:',
+        error.message,
+      );
+    }
+
     // Verify the update
-    const verified = await strapi.entityService.findOne(HERO_BLOCK_UID, existingHero.id, {
-      populate: { actions: true },
-    });
-    console.info(`[SEED][HERO_BLOCKS] ✅ Updated Hero Block (ID: ${existingHero.id})`);
-    console.info(`[SEED][HERO_BLOCKS] ✅ Actions attached: ${verified.actions?.length || 0} CTAs`);
-    console.info(`[SEED][HERO_BLOCKS]    - CTA 1: ${heroSignupCta.Label} (ID: ${heroSignupCta.id})`);
-    console.info(`[SEED][HERO_BLOCKS]    - CTA 2: ${heroLearnCta.Label} (ID: ${heroLearnCta.id})`);
+    const verified = await strapi.entityService.findOne(
+      HERO_BLOCK_UID,
+      existingHero.id,
+      {
+        populate: { actions: true },
+      },
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS] ✅ Updated Hero Block (ID: ${existingHero.id})`,
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS] ✅ Actions attached: ${verified.actions?.length || 0} CTAs`,
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS]    - CTA 1: ${heroSignupCta.Label} (ID: ${heroSignupCta.id})`,
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS]    - CTA 2: ${heroLearnCta.Label} (ID: ${heroLearnCta.id})`,
+    );
     console.info('[SEED][HERO_BLOCKS] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     return;
   }
 
   // Main Hero Block for Home Page
   console.info('[SEED][HERO_BLOCKS] ➕ Creating new hero block and CTAs...');
-  
+
   console.info('[SEED][HERO_BLOCKS] 🔨 Creating "Get Started Free" CTA...');
   const heroSignupCta = await strapi.entityService.create(CTA_UID, {
     data: {
@@ -93,7 +135,9 @@ export async function seedHeroBlocks(strapi: any) {
       publishedAt: new Date().toISOString(),
     },
   });
-  console.info(`[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroSignupCta.id}, Label: "${heroSignupCta.Label}", URL: ${heroSignupCta.url})`);
+  console.info(
+    `[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroSignupCta.id}, Label: "${heroSignupCta.Label}", URL: ${heroSignupCta.url})`,
+  );
 
   console.info('[SEED][HERO_BLOCKS] 🔨 Creating "Learn More" CTA...');
   const heroLearnCta = await strapi.entityService.create(CTA_UID, {
@@ -104,39 +148,79 @@ export async function seedHeroBlocks(strapi: any) {
       publishedAt: new Date().toISOString(),
     },
   });
-  console.info(`[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroLearnCta.id}, Label: "${heroLearnCta.Label}", URL: ${heroLearnCta.url})`);
+  console.info(
+    `[SEED][HERO_BLOCKS] ✓ Created CTA (ID: ${heroLearnCta.id}, Label: "${heroLearnCta.Label}", URL: ${heroLearnCta.url})`,
+  );
 
-  console.info('[SEED][HERO_BLOCKS] 🔨 Creating hero block with actions...');
+  // PHASE 1: Create hero block WITHOUT actions
+  console.info(
+    '[SEED][HERO_BLOCKS] 🔨 Creating hero block (without actions)...',
+  );
   const heroBlock = await strapi.entityService.create(HERO_BLOCK_UID, {
     data: {
       heading: 'Welcome to DJ Beat Blaster',
       content:
         'Your complete platform for managing DJ gigs, clients, equipment, and music. Streamline your DJ business and focus on what you do best - making people dance!',
-      actions: {
-        connect: [heroSignupCta.id, heroLearnCta.id],
-      },
       publishedAt: new Date().toISOString(),
     },
   });
-  
-  console.info(`[SEED][HERO_BLOCKS] ✅ Created Hero Block (ID: ${heroBlock.id})`);
+
+  console.info(
+    `[SEED][HERO_BLOCKS] ✅ Created Hero Block (ID: ${heroBlock.id})`,
+  );
   console.info(`[SEED][HERO_BLOCKS] ✅ Heading: "${heroBlock.heading}"`);
-  
+
+  // PHASE 2: Establish actions relation
+  console.info(
+    '[SEED][HERO_BLOCKS] 🔗 PHASE 2: Connecting actions to hero block...',
+  );
+  try {
+    await strapi.db.query(HERO_BLOCK_UID).update({
+      where: { id: heroBlock.id },
+      data: {
+        actions: [heroSignupCta.id, heroLearnCta.id],
+      },
+    });
+    console.info(`[SEED][HERO_BLOCKS] ✓ Connected ${2} CTAs to hero block`);
+  } catch (error: any) {
+    console.error(
+      '[SEED][HERO_BLOCKS] ❌ Failed to set actions relation:',
+      error.message,
+    );
+  }
+
   // Verify creation with proper population
-  const verified = await strapi.entityService.findOne(HERO_BLOCK_UID, heroBlock.id, {
-    populate: { actions: true },
-  });
-  
+  const verified = await strapi.entityService.findOne(
+    HERO_BLOCK_UID,
+    heroBlock.id,
+    {
+      populate: { actions: true },
+    },
+  );
+
   console.info(`[SEED][HERO_BLOCKS] 🔍 Verifying actions attachment...`);
-  console.info(`[SEED][HERO_BLOCKS] ✅ Actions attached: ${verified.actions?.length || 0} CTAs`);
+  console.info(
+    `[SEED][HERO_BLOCKS] ✅ Actions attached: ${verified.actions?.length || 0} CTAs`,
+  );
   if (verified.actions && verified.actions.length > 0) {
     verified.actions.forEach((action, index) => {
-      console.info(`[SEED][HERO_BLOCKS]    - CTA ${index + 1}: "${action.Label}" → ${action.url}`);
+      console.info(
+        `[SEED][HERO_BLOCKS]    - CTA ${index + 1}: "${action.Label}" → ${action.url}`,
+      );
     });
   } else {
-    console.info(`[SEED][HERO_BLOCKS]    - CTA 1 (expected): "${heroSignupCta.Label}" → ${heroSignupCta.url}`);
-    console.info(`[SEED][HERO_BLOCKS]    - CTA 2 (expected): "${heroLearnCta.Label}" → ${heroLearnCta.url}`);
+    console.warn(
+      `[SEED][HERO_BLOCKS] ⚠️  Expected 2 CTAs but found ${verified.actions?.length || 0}`,
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS]    - CTA 1 (expected): "${heroSignupCta.Label}" → ${heroSignupCta.url}`,
+    );
+    console.info(
+      `[SEED][HERO_BLOCKS]    - CTA 2 (expected): "${heroLearnCta.Label}" → ${heroLearnCta.url}`,
+    );
   }
-  console.info(`[SEED][HERO_BLOCKS] ✅ Published: ${heroBlock.publishedAt ? 'Yes' : 'No'}`);
+  console.info(
+    `[SEED][HERO_BLOCKS] ✅ Published: ${heroBlock.publishedAt ? 'Yes' : 'No'}`,
+  );
   console.info('[SEED][HERO_BLOCKS] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }

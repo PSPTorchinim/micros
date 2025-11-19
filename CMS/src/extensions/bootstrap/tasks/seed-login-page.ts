@@ -60,7 +60,7 @@ export async function seedLoginPage(
     );
   }
 
-  // Create or update Login Page WITHOUT template relation
+  // Create or update Login Page WITHOUT relations (template, Parents)
   const existingLoginPage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: loginSlug },
   });
@@ -72,7 +72,6 @@ export async function seedLoginPage(
     Menu: 'Login',
     AuthState: 'OnlyUnauthenticated',
     configuration: configId,
-    Parents: parentPageId ? [parentPageId] : undefined,
     publishedAt: new Date().toISOString(),
   };
 
@@ -96,19 +95,23 @@ export async function seedLoginPage(
   // ============================================================================
   console.info('[SEED][LOGIN] 🔗 PHASE 2: Establishing relations');
 
-  // Set template relation
+  // Set template and Parents relations
   try {
     await strapi.db.query(PAGE_UID).update({
       where: { id: loginPageId },
       data: {
         template: loginTemplate.id,
+        Parents: parentPageId ? [parentPageId] : [],
       },
     });
     console.info(
       `[SEED][LOGIN] ✓ Connected Page ${loginPageId} to Template ${loginTemplate.id}`,
     );
+    if (parentPageId) {
+      console.info(`[SEED][LOGIN] ✓ Set parent page: ${parentPageId}`);
+    }
   } catch (error: any) {
-    console.error('[SEED][LOGIN] ❌ Failed to set relation:', error.message);
+    console.error('[SEED][LOGIN] ❌ Failed to set relations:', error.message);
   }
 
   // Ensure parent page's subpages includes this login page
