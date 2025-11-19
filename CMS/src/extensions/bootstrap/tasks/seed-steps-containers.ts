@@ -33,16 +33,19 @@ export default async function seedStepsContainers({ strapi }: { strapi: StrapiIn
         action: getStartedCTA.id,
         steps: [
           {
+            __component: 'steps.step',
             title: 'Create Your Account',
             description: 'Sign up in minutes and set up your DJ profile with your information, branding, and preferences.',
             icon: 'user-plus',
           },
           {
+            __component: 'steps.step',
             title: 'Import Your Music',
             description: 'Upload your music library and let our system organize it with intelligent tagging and categorization.',
             icon: 'music',
           },
           {
+            __component: 'steps.step',
             title: 'Book Your First Gig',
             description: 'Start managing events, accepting bookings, and taking your DJ business to the next level.',
             icon: 'calendar-check',
@@ -55,16 +58,19 @@ export default async function seedStepsContainers({ strapi }: { strapi: StrapiIn
         action: getStartedCTA.id,
         steps: [
           {
+            __component: 'steps.step',
             title: 'Create Event',
             description: 'Set up event details including date, venue, and requirements.',
             icon: 'calendar-plus',
           },
           {
+            __component: 'steps.step',
             title: 'Build Playlist',
             description: 'Curate the perfect setlist from your music library.',
             icon: 'list-music',
           },
           {
+            __component: 'steps.step',
             title: 'Execute Flawlessly',
             description: 'Use our tools during the event for seamless performance.',
             icon: 'check-circle',
@@ -72,6 +78,8 @@ export default async function seedStepsContainers({ strapi }: { strapi: StrapiIn
         ],
       },
     ];
+
+    logger.debug(`Sample data structure: ${JSON.stringify(stepsContainerData[0], null, 2)}`);
 
     const stepsContainers = [];
     for (const data of stepsContainerData) {

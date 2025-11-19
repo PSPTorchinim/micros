@@ -195,8 +195,8 @@ export async function countEntities(
     const count = await strapi.db.query(uid).count();
     logger.debug(`Found ${count} existing entities for ${uid}`);
     return count;
-  } catch (error) {
-    logger.warn(`Failed to count entities for ${uid}`, error);
+  } catch (error: any) {
+    logger.warn(`Failed to count entities for ${uid}: ${error?.message || error}`);
     return 0;
   }
 }

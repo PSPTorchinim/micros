@@ -184,27 +184,16 @@ export default async function seedPages({ strapi }: { strapi: StrapiInstance }) 
     );
 
     // Build template content for home page
-    const homeContent = [];
-    if (heroBlock) {
-      homeContent.push(createComponent('hero-block-ref.hero-block-ref', {
-        hero_block: heroBlock.id,
-      }));
-    }
-    if (featureSection) {
-      homeContent.push(createComponent('feature-section-ref.feature-section-ref', {
-        feature_section: featureSection.id,
-      }));
-    }
-    if (articleBlock) {
-      homeContent.push(createComponent('article-block-ref.article-block-ref', {
-        block: articleBlock.id,
-      }));
-    }
-    if (stepsContainer) {
-      homeContent.push(createComponent('steps-container-ref.steps-container-ref', {
-        steps_container: stepsContainer.id,
-      }));
-    }
+    // Temporarily using empty content due to dynamic zone component relation issues
+    const homeContent: any[] = [];
+    logger.warn('Home page template created with empty content - dynamic zone components need special handling');
+    // TODO: Fix dynamic zone component relations
+    // if (heroBlock) {
+    //   homeContent.push(createComponent('hero-block-ref.hero-block-ref', {
+    //     hero_block: heroBlock.id,
+    //   }));
+    // }
+    // ... etc
 
     const homeTemplate = await createAndPublish(
       strapi,
@@ -248,12 +237,14 @@ export default async function seedPages({ strapi }: { strapi: StrapiInstance }) 
       'About Page'
     );
 
-    const aboutContent = [];
-    if (contactSection) {
-      aboutContent.push(createComponent('contact-section-ref.contact-section-ref', {
-        contact_section: contactSection.id,
-      }));
-    }
+    const aboutContent: any[] = [];
+    logger.warn('About page template created with empty content - dynamic zone components need special handling');
+    // TODO: Fix dynamic zone component relations
+    // if (contactSection) {
+    //   aboutContent.push(createComponent('contact-section-ref.contact-section-ref', {
+    //     contact_section: contactSection.id,
+    //   }));
+    // }
 
     const aboutTemplate = await createAndPublish(
       strapi,

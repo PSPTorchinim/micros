@@ -54,8 +54,10 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiInsta
     await seedContactSections({ strapi });
 
     // Import and run Steps Containers (depends on CTAs)
-    const seedStepsContainers = (await import('./seed-steps-containers')).default;
-    await seedStepsContainers({ strapi });
+    // Temporarily disabled due to component issues - will fix separately
+    logger.warn('Steps Containers seeding temporarily disabled');
+    // const seedStepsContainers = (await import('./seed-steps-containers')).default;
+    // await seedStepsContainers({ strapi });
 
     // Phase 3: Seed single types
     logger.info('');
@@ -71,8 +73,10 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiInsta
     await seedForgotPasswordBlock({ strapi });
 
     // Import and run Footer
-    const seedFooter = (await import('./seed-footer')).default;
-    await seedFooter({ strapi });
+    // Temporarily disabled due to nested component issues - will fix separately
+    logger.warn('Footer seeding temporarily disabled');
+    // const seedFooter = (await import('./seed-footer')).default;
+    // await seedFooter({ strapi });
 
     logger.info('');
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
