@@ -102,50 +102,74 @@ export async function seedForgotPasswordPage(
   // ============================================================================
   console.info('[SEED][FORGOT_PASSWORD] 🔗 PHASE 2: Establishing relations');
 
-  // Set template and Parents relations using entityService
+  // Set template relation first using entityService
   try {
     await strapi.entityService.update(PAGE_UID, forgotPageId, {
       data: {
         template: forgotTemplate.id,
-        Parents: parentPageId ? [parentPageId] : [],
         publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
     console.info(
       `[SEED][FORGOT_PASSWORD] ✓ Connected Page ${forgotPageId} to Template ${forgotTemplate.id}`,
     );
-    if (parentPageId) {
-      console.info(
-        `[SEED][FORGOT_PASSWORD] ✓ Set parent page: ${parentPageId}`,
-      );
-    }
   } catch (error: any) {
     console.error(
-      '[SEED][FORGOT_PASSWORD] ❌ Failed to set relations:',
+      '[SEED][FORGOT_PASSWORD] ❌ Failed to set template:',
       error.message,
     );
   }
 
-  // Ensure parent page's subpages includes this forgot password page
+  // Set parent-child relationships separately if parent exists
   if (parentPageId && forgotPageId) {
+    // First verify parent exists
     const parentPage = await strapi.entityService.findOne(
       PAGE_UID,
       parentPageId,
       { populate: ['subpages'] },
     );
-    if (parentPage && Array.isArray(parentPage.subpages)) {
-      const subpages = parentPage.subpages.map((sp: any) => sp.id);
-      if (!subpages.includes(forgotPageId)) {
-        await strapi.entityService.update(PAGE_UID, parentPageId, {
-          data: { subpages: [...subpages, forgotPageId] },
+
+    if (parentPage) {
+      // Set Parents on forgot password page
+      try {
+        await strapi.entityService.update(PAGE_UID, forgotPageId, {
+          data: {
+            Parents: [parentPageId],
+            publishedAt: new Date().toISOString(),
+          },
         });
         console.info(
-          `[SEED][FORGOT_PASSWORD] Added Forgot Password Page (ID: ${forgotPageId}) to parent page's subpages.`,
+          `[SEED][FORGOT_PASSWORD] ✓ Set parent page: ${parentPageId}`,
         );
+      } catch (error: any) {
+        console.error(
+          '[SEED][FORGOT_PASSWORD] ❌ Failed to set Parents:',
+          error.message,
+        );
+      }
+
+      // Add to parent's subpages
+      if (Array.isArray(parentPage.subpages)) {
+        const subpages = parentPage.subpages.map((sp: any) => sp.id);
+        if (!subpages.includes(forgotPageId)) {
+          try {
+            await strapi.entityService.update(PAGE_UID, parentPageId, {
+              data: { subpages: [...subpages, forgotPageId] },
+            });
+            console.info(
+              `[SEED][FORGOT_PASSWORD] ✓ Added Forgot Password Page (ID: ${forgotPageId}) to parent page's subpages.`,
+            );
+          } catch (error: any) {
+            console.error(
+              '[SEED][FORGOT_PASSWORD] ❌ Failed to update parent subpages:',
+              error.message,
+            );
+          }
+        }
       }
     } else {
       console.warn(
-        `[SEED][FORGOT_PASSWORD] Skipping subpages update: parent page does not exist or has no subpages array.`,
+        `[SEED][FORGOT_PASSWORD] ⚠️  Parent page ${parentPageId} not found, skipping parent-child relations`,
       );
     }
   }

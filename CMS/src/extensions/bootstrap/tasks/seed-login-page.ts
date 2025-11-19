@@ -95,39 +95,64 @@ export async function seedLoginPage(
   // ============================================================================
   console.info('[SEED][LOGIN] 🔗 PHASE 2: Establishing relations');
 
-  // Set template and Parents relations using entityService
+  // Set template relation first using entityService
   try {
     await strapi.entityService.update(PAGE_UID, loginPageId, {
       data: {
         template: loginTemplate.id,
-        Parents: parentPageId ? [parentPageId] : [],
         publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
     console.info(
       `[SEED][LOGIN] ✓ Connected Page ${loginPageId} to Template ${loginTemplate.id}`,
     );
-    if (parentPageId) {
-      console.info(`[SEED][LOGIN] ✓ Set parent page: ${parentPageId}`);
-    }
   } catch (error: any) {
-    console.error('[SEED][LOGIN] ❌ Failed to set relations:', error.message);
+    console.error('[SEED][LOGIN] ❌ Failed to set template:', error.message);
   }
 
-  // Ensure parent page's subpages includes this login page
+  // Set parent-child relationships separately if parent exists
   if (parentPageId && loginPageId) {
+    // First verify parent exists
     const parentPage = await strapi.entityService.findOne(
       PAGE_UID,
       parentPageId,
       { populate: ['subpages'] },
     );
-    const subpages = (parentPage.subpages || []).map((sp: any) => sp.id);
-    if (!subpages.includes(loginPageId)) {
-      await strapi.entityService.update(PAGE_UID, parentPageId, {
-        data: { subpages: [...subpages, loginPageId] },
-      });
-      console.info(
-        `[SEED][LOGIN] Added Login Page (ID: ${loginPageId}) to parent page's subpages.`,
+
+    if (parentPage) {
+      // Set Parents on login page
+      try {
+        await strapi.entityService.update(PAGE_UID, loginPageId, {
+          data: {
+            Parents: [parentPageId],
+            publishedAt: new Date().toISOString(),
+          },
+        });
+        console.info(`[SEED][LOGIN] ✓ Set parent page: ${parentPageId}`);
+      } catch (error: any) {
+        console.error('[SEED][LOGIN] ❌ Failed to set Parents:', error.message);
+      }
+
+      // Add to parent's subpages
+      const subpages = (parentPage.subpages || []).map((sp: any) => sp.id);
+      if (!subpages.includes(loginPageId)) {
+        try {
+          await strapi.entityService.update(PAGE_UID, parentPageId, {
+            data: { subpages: [...subpages, loginPageId] },
+          });
+          console.info(
+            `[SEED][LOGIN] ✓ Added Login Page (ID: ${loginPageId}) to parent page's subpages.`,
+          );
+        } catch (error: any) {
+          console.error(
+            '[SEED][LOGIN] ❌ Failed to update parent subpages:',
+            error.message,
+          );
+        }
+      }
+    } else {
+      console.warn(
+        `[SEED][LOGIN] ⚠️  Parent page ${parentPageId} not found, skipping parent-child relations`,
       );
     }
   }

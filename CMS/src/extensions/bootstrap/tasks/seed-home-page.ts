@@ -198,11 +198,10 @@ export async function seedHomePage(strapi: any, configId: number) {
 
   try {
     // Use entityService.update which properly handles relations in Strapi v5
+    // Only set template - Parents and subpages are already empty arrays by default
     await strapi.entityService.update(PAGE_UID, homePageId, {
       data: {
         template: homeTemplate.id,
-        Parents: [],
-        subpages: [],
         publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
