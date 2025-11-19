@@ -3,7 +3,7 @@
  * Dependencies: Configuration (will be linked when configuration is created)
  */
 
-import { SeederLogger, publishEntity } from './utils/seeder-helpers';
+import { SeederLogger, getOrCreateSingleType, publishEntity } from './utils/seeder-helpers';
 
 type StrapiInstance = any;
 
@@ -12,15 +12,6 @@ export default async function seedFooter({ strapi }: { strapi: StrapiInstance })
   logger.info('Starting Footer seeding...');
 
   try {
-    // Check if footer already exists
-    logger.debug('Checking for existing Footer...');
-    const existing = await strapi.db.query('api::footer.footer').findMany({ limit: 1 });
-    
-    if (existing && existing.length > 0) {
-      logger.debug(`Footer already exists (id: ${existing[0].id})`);
-      return existing[0];
-    }
-
     const footerData = {
       copyright: '© 2024 DJ Beat Blaster. All rights reserved.',
       columns: [
@@ -80,18 +71,17 @@ export default async function seedFooter({ strapi }: { strapi: StrapiInstance })
       ],
     };
 
-    // Create using Document Service API for better component handling
-    logger.info('Creating Footer...');
-    const footer = await strapi.documents('api::footer.footer').create({
-      data: footerData,
-    });
+    const footer = await getOrCreateSingleType(
+      strapi,
+      'api::footer.footer',
+      footerData,
+      logger,
+      'Footer'
+    );
 
-    // Publish footer if created successfully
-    if (footer && footer.documentId) {
-      await strapi.documents('api::footer.footer').publish({
-        documentId: footer.documentId,
-      });
-      logger.success(`Created and published Footer (id: ${footer.id})`);
+    // Publish footer if not already published
+    if (!footer.publishedAt) {
+      await publishEntity(strapi, 'api::footer.footer', footer.id, logger, 'Footer');
     }
 
     logger.success('Successfully seeded Footer');
