@@ -80,16 +80,50 @@ export async function seedFooter(strapi: any, configurationId: number) {
         detail: 'instagram.com/dj.beat.blaster',
       },
     ],
-    configuration: configurationId,
     publishedAt: new Date().toISOString(),
+  };
+
+  // PHASE 1: Create/update footer WITHOUT configuration relation
+  const footerDataWithoutConfig = {
+    copyright: footerData.copyright,
+    columns: footerData.columns,
+    socialLinks: footerData.socialLinks,
+    publishedAt: footerData.publishedAt,
   };
 
   // Upsert Footer single type
   const existing = await strapi.db.query(FOOTER_UID).findOne({});
+  let footerId;
+
   if (existing && existing.id) {
-    return await strapi.entityService.update(FOOTER_UID, existing.id, {
-      data: footerData,
+    await strapi.entityService.update(FOOTER_UID, existing.id, {
+      data: footerDataWithoutConfig,
     });
+    footerId = existing.id;
+    console.info(`[SEED][FOOTER] Updated footer (ID: ${footerId})`);
+  } else {
+    const footer = await strapi.entityService.create(FOOTER_UID, {
+      data: footerDataWithoutConfig,
+    });
+    footerId = footer.id;
+    console.info(`[SEED][FOOTER] Created footer (ID: ${footerId})`);
   }
-  return await strapi.entityService.create(FOOTER_UID, { data: footerData });
+
+  // PHASE 2: Set configuration relation
+  try {
+    await strapi.db.query(FOOTER_UID).update({
+      where: { id: footerId },
+      data: {
+        configuration: configurationId,
+      },
+    });
+    console.info(
+      `[SEED][FOOTER] ✓ Connected footer to configuration ${configurationId}`,
+    );
+  } catch (error: any) {
+    console.error(
+      '[SEED][FOOTER] ❌ Failed to set configuration relation:',
+      error.message,
+    );
+  }
 }

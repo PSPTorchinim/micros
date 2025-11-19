@@ -962,9 +962,7 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             data: createData,
           });
 
-          console.info(
-            `[SEED][ARTICLES] Article created (ID: ${article.id})`,
-          );
+          console.info(`[SEED][ARTICLES] Article created (ID: ${article.id})`);
         }
 
         // Create or find template for this article
@@ -998,31 +996,62 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
         });
 
         if (!page) {
-          // Create new page
+          // PHASE 1: Create new page WITHOUT template relation
           page = await strapi.entityService.create(PAGE_UID, {
             data: {
               Title: article.Title,
               Slug: slug,
               configuration: configId,
-              template: template.id,
               publishedAt: new Date().toISOString(),
             },
           });
           console.info(
             `[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
           );
+
+          // PHASE 2: Set template relation
+          try {
+            await strapi.db.query(PAGE_UID).update({
+              where: { id: page.id },
+              data: {
+                template: template.id,
+              },
+            });
+            console.info(
+              `[SEED][ARTICLES] ✓ Connected page ${page.id} to template ${template.id}`,
+            );
+          } catch (error: any) {
+            console.error(
+              `[SEED][ARTICLES] ❌ Failed to set template for page ${page.id}:`,
+              error.message,
+            );
+          }
         } else {
-          // Update existing page with correct slug and template
+          // Update existing page with correct slug and template using two-phase
           await strapi.entityService.update(PAGE_UID, page.id, {
             data: {
               Slug: slug,
               configuration: configId,
-              template: template.id,
             },
           });
-          console.info(
-            `[SEED][ARTICLES] Updated page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
-          );
+
+          // Set template relation separately
+          try {
+            await strapi.db.query(PAGE_UID).update({
+              where: { id: page.id },
+              data: {
+                template: template.id,
+              },
+            });
+            console.info(
+              `[SEED][ARTICLES] Updated page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
+            );
+          } catch (error: any) {
+            console.error(
+              `[SEED][ARTICLES] ❌ Failed to update template for page ${page.id}:`,
+              error.message,
+            );
+          }
         }
 
         // Track page ID for later subpage assignment
@@ -1052,15 +1081,21 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
       // Only include createdPageIds that actually exist in the DB
       const allPages = await strapi.db.query(PAGE_UID).findMany();
       const validPageIds = new Set(allPages.map((p: any) => p.id));
-      const filteredCreatedPageIds = createdPageIds.filter(id => validPageIds.has(id));
+      const filteredCreatedPageIds = createdPageIds.filter((id) =>
+        validPageIds.has(id),
+      );
 
       // Log details for each page ID
       for (const id of createdPageIds) {
         if (validPageIds.has(id)) {
           const pageData = allPages.find((p: any) => p.id === id);
-          console.info(`[SEED][ARTICLES][SUBPAGE] Will set as subpage: ID=${id}, Data=${JSON.stringify(pageData)}`);
+          console.info(
+            `[SEED][ARTICLES][SUBPAGE] Will set as subpage: ID=${id}, Data=${JSON.stringify(pageData)}`,
+          );
         } else {
-          console.warn(`[SEED][ARTICLES][SUBPAGE] Skipping non-existent page ID: ${id}`);
+          console.warn(
+            `[SEED][ARTICLES][SUBPAGE] Skipping non-existent page ID: ${id}`,
+          );
         }
       }
 
@@ -1071,14 +1106,23 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
 
       if (newSubpageIds.length > 0) {
         const updatedSubpages = [...existingSubpageIds, ...newSubpageIds];
-        await strapi.entityService.update(PAGE_UID, parentPageId, {
-          data: {
-            subpages: { set: updatedSubpages },
-          },
-        });
-        console.info(
-          `[SEED][ARTICLES] Added ${newSubpageIds.length} article page(s) as subpages of parent Articles page`,
-        );
+        // Use db.query for relation update
+        try {
+          await strapi.db.query(PAGE_UID).update({
+            where: { id: parentPageId },
+            data: {
+              subpages: updatedSubpages,
+            },
+          });
+          console.info(
+            `[SEED][ARTICLES] Added ${newSubpageIds.length} article page(s) as subpages of parent Articles page`,
+          );
+        } catch (error: any) {
+          console.error(
+            `[SEED][ARTICLES] ❌ Failed to set subpages:`,
+            error.message,
+          );
+        }
       } else {
         console.info(
           `[SEED][ARTICLES] All article pages already subpages of parent Articles page`,
@@ -1099,23 +1143,32 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
 
       if (articleBlock) {
         // Get all published article IDs
-        const publishedArticles = await strapi.db
-          .query(ARTICLE_UID)
-          .findMany({
-            select: ['id'],
-            where: { publishedAt: { $notNull: true } },
-          });
-        const articleIdObjects = publishedArticles.map((a: any) => ({ id: a.id }));
-
-        await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
-          data: {
-            articles: { set: articleIdObjects },
-            publishedAt: new Date().toISOString(),
-          },
+        const publishedArticles = await strapi.db.query(ARTICLE_UID).findMany({
+          select: ['id'],
+          where: { publishedAt: { $notNull: true } },
         });
-        console.info(
-          `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIdObjects.length} articles: [${articleIdObjects.map(a => a.id).join(', ')}]`,
-        );
+        const articleIdObjects = publishedArticles.map((a: any) => ({
+          id: a.id,
+        }));
+
+        // Use db.query for relation update
+        try {
+          await strapi.db.query(ARTICLE_BLOCK_UID).update({
+            where: { id: articleBlock.id },
+            data: {
+              articles: articleIdObjects,
+            },
+          });
+          console.info(
+            `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIdObjects.length} articles: [${articleIdObjects.map((a) => a.id).join(', ')}]`,
+          );
+        } catch (error: any) {
+          console.error(
+            `[SEED][ARTICLES] ❌ Failed to set articles on block:`,
+            error.message,
+          );
+        }
+
         // Verify the update
         const verifyArticleBlock = await strapi.entityService.findOne(
           ARTICLE_BLOCK_UID,
