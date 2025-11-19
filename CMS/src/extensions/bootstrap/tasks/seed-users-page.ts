@@ -34,22 +34,23 @@ export async function seedUsersPage(strapi: any, configId: number) {
     );
   }
 
-  // Create or update Users Page
+  // Create or update Users Page WITHOUT template relation
   const existingUsersPage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: usersSlug },
   });
 
   let usersPage;
+  const usersPageData = {
+    Title: 'Users',
+    Slug: usersSlug,
+    Menu: 'NotVisible',
+    configuration: configId,
+    publishedAt: new Date().toISOString(),
+  };
+
   if (!existingUsersPage) {
     usersPage = await strapi.entityService.create(PAGE_UID, {
-      data: {
-        Title: 'Users',
-        Slug: usersSlug,
-        Menu: 'NotVisible', // Users page is not directly visible in navigation
-        configuration: configId,
-        template: usersTemplate.id,
-        publishedAt: new Date().toISOString(),
-      },
+      data: usersPageData,
     });
     console.info(
       `[SEED][USERS] Created Users Page (ID: ${usersPage.id}, Slug: /${usersSlug})`,
@@ -59,17 +60,32 @@ export async function seedUsersPage(strapi: any, configId: number) {
       PAGE_UID,
       existingUsersPage.id,
       {
-        data: {
-          Title: 'Users',
-          Menu: 'Main',
-          template: usersTemplate.id,
-          configuration: configId,
-        },
+        data: usersPageData,
       },
     );
     console.info(
       `[SEED][USERS] Updated existing Users Page (ID: ${existingUsersPage.id})`,
     );
+  }
+
+  // ============================================================================
+  // PHASE 2: Establish relations
+  // ============================================================================
+  console.info('[SEED][USERS] 🔗 PHASE 2: Establishing relations');
+
+  // Set template relation
+  try {
+    await strapi.db.query(PAGE_UID).update({
+      where: { id: usersPage.id },
+      data: {
+        template: usersTemplate.id,
+      },
+    });
+    console.info(
+      `[SEED][USERS] ✓ Connected Page ${usersPage.id} to Template ${usersTemplate.id}`,
+    );
+  } catch (error: any) {
+    console.error('[SEED][USERS] ❌ Failed to set relation:', error.message);
   }
 
   return usersPage.id;

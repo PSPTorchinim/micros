@@ -1,4 +1,4 @@
-// Seed About page
+// Seed About page - Two-Phase Approach
 import { toUrlSlug } from './utils/slugify';
 
 const PAGE_UID = 'api::page.page';
@@ -6,9 +6,16 @@ const TEMPLATE_UID = 'api::template.template';
 const CONTACT_SECTION_UID = 'api::contact-section.contact-section';
 
 export async function seedAboutPage(strapi: any, configId: number) {
-  console.info('[SEED][ABOUT] Seeding About page...');
+  console.info('[SEED][ABOUT] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.info('[SEED][ABOUT] Seeding About page (Two-Phase)...');
+  console.info('[SEED][ABOUT] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   const aboutSlug = toUrlSlug('about');
+
+  // ============================================================================
+  // PHASE 1: Create entities without relations
+  // ============================================================================
+  console.info('[SEED][ABOUT] 📦 PHASE 1: Creating entities');
 
   // Get existing Contact Section
   const contactSection = await strapi.db.query(CONTACT_SECTION_UID).findOne({
@@ -45,10 +52,9 @@ export async function seedAboutPage(strapi: any, configId: number) {
       },
     });
     console.info(
-      `[SEED][ABOUT] Created About Template (ID: ${aboutTemplate.id})`,
+      `[SEED][ABOUT] ✓ Created About Template (ID: ${aboutTemplate.id})`,
     );
   } else {
-    // Update existing template to ensure Content is populated
     aboutTemplate = await strapi.entityService.update(
       TEMPLATE_UID,
       existingAboutTemplate.id,
@@ -57,42 +63,61 @@ export async function seedAboutPage(strapi: any, configId: number) {
           Name: 'About Page Template',
           TemplateType: 'Standard',
           Content: templateContent,
+          publishedAt: new Date().toISOString(),
         },
       },
     );
     console.info(
-      `[SEED][ABOUT] Updated About Template (ID: ${aboutTemplate.id}) with Content`,
+      `[SEED][ABOUT] ✓ Updated About Template (ID: ${aboutTemplate.id})`,
     );
   }
 
-  // Create or update About Page
+  // Create or update About Page WITHOUT template relation
   const existingAboutPage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: aboutSlug },
   });
 
+  let aboutPageId;
   if (!existingAboutPage) {
     const aboutPage = await strapi.entityService.create(PAGE_UID, {
       data: {
         Title: 'About',
         Slug: aboutSlug,
         configuration: configId,
-        template: aboutTemplate.id,
         publishedAt: new Date().toISOString(),
       },
     });
+    aboutPageId = aboutPage.id;
     console.info(
-      `[SEED][ABOUT] Created About Page (ID: ${aboutPage.id}, Slug: /${aboutSlug})`,
+      `[SEED][ABOUT] ✓ Created About Page (ID: ${aboutPage.id}, Slug: /${aboutSlug})`,
     );
   } else {
-    await strapi.entityService.update(PAGE_UID, existingAboutPage.id, {
+    aboutPageId = existingAboutPage.id;
+    console.info(
+      `[SEED][ABOUT] ✓ Found existing About Page (ID: ${existingAboutPage.id})`,
+    );
+  }
+
+  // ============================================================================
+  // PHASE 2: Establish relations
+  // ============================================================================
+  console.info('[SEED][ABOUT] 🔗 PHASE 2: Establishing relations');
+
+  try {
+    await strapi.db.query(PAGE_UID).update({
+      where: { id: aboutPageId },
       data: {
-        Title: 'About',
         template: aboutTemplate.id,
-        configuration: configId,
       },
     });
     console.info(
-      `[SEED][ABOUT] Updated existing About Page (ID: ${existingAboutPage.id})`,
+      `[SEED][ABOUT] ✓ Connected Page ${aboutPageId} to Template ${aboutTemplate.id}`,
     );
+  } catch (error: any) {
+    console.error('[SEED][ABOUT] ❌ Failed to set relation:', error.message);
   }
+
+  console.info('[SEED][ABOUT] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.info('[SEED][ABOUT] ✅ About page seeding complete!');
+  console.info('[SEED][ABOUT] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }

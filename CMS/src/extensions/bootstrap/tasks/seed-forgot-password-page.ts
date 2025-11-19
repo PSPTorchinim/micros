@@ -68,67 +68,80 @@ export async function seedForgotPasswordPage(
     );
   }
 
-  // Create or update Forgot Password Page
+  // Create or update Forgot Password Page WITHOUT template relation
   const existingForgotPage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: forgotSlug },
   });
 
-  let parentExists = false;
-  if (parentPageId) {
-    // Log parent page data
-    const parentPage = await strapi.db.query(PAGE_UID).findOne({ where: { id: parentPageId } });
-    if (parentPage) {
-      parentExists = true;
-      console.info(`[SEED][FORGOT_PASSWORD][PARENT] Will set parent: ID=${parentPageId}, Data=${JSON.stringify(parentPage)}`);
-    } else {
-      console.warn(`[SEED][FORGOT_PASSWORD][PARENT] Skipping non-existent parent page ID: ${parentPageId}`);
-    }
-  }
   let forgotPageId;
+  const forgotPageData = {
+    Title: 'Forgot Password',
+    Slug: forgotSlug,
+    Menu: 'NotVisible',
+    configuration: configId,
+    Parents: parentPageId ? [parentPageId] : undefined,
+    publishedAt: new Date().toISOString(),
+  };
+
   if (!existingForgotPage) {
     const forgotPage = await strapi.entityService.create(PAGE_UID, {
-      data: {
-        Title: 'Forgot Password',
-        Slug: forgotSlug,
-        Menu: 'NotVisible',
-        configuration: configId,
-        template: forgotTemplate.id,
-        Parents: parentExists ? [parentPageId] : undefined,
-        publishedAt: new Date().toISOString(),
-      },
+      data: forgotPageData,
     });
     forgotPageId = forgotPage.id;
     console.info(
       `[SEED][FORGOT_PASSWORD] Created Forgot Password Page (ID: ${forgotPage.id}, Slug: /${forgotSlug})`,
     );
   } else {
-    await strapi.entityService.update(PAGE_UID, existingForgotPage.id, {
-      data: {
-        Title: 'Forgot Password',
-        template: forgotTemplate.id,
-        configuration: configId,
-        Parents: parentExists ? [parentPageId] : undefined,
-      },
-    });
     forgotPageId = existingForgotPage.id;
     console.info(
       `[SEED][FORGOT_PASSWORD] Updated existing Forgot Password Page (ID: ${existingForgotPage.id})`,
     );
   }
 
+  // ============================================================================
+  // PHASE 2: Establish relations
+  // ============================================================================
+  console.info('[SEED][FORGOT_PASSWORD] 🔗 PHASE 2: Establishing relations');
+
+  // Set template relation
+  try {
+    await strapi.db.query(PAGE_UID).update({
+      where: { id: forgotPageId },
+      data: {
+        template: forgotTemplate.id,
+      },
+    });
+    console.info(
+      `[SEED][FORGOT_PASSWORD] ✓ Connected Page ${forgotPageId} to Template ${forgotTemplate.id}`,
+    );
+  } catch (error: any) {
+    console.error(
+      '[SEED][FORGOT_PASSWORD] ❌ Failed to set relation:',
+      error.message,
+    );
+  }
+
   // Ensure parent page's subpages includes this forgot password page
   if (parentPageId && forgotPageId) {
-    const parentPage = await strapi.entityService.findOne(PAGE_UID, parentPageId, { populate: ['subpages'] });
+    const parentPage = await strapi.entityService.findOne(
+      PAGE_UID,
+      parentPageId,
+      { populate: ['subpages'] },
+    );
     if (parentPage && Array.isArray(parentPage.subpages)) {
       const subpages = parentPage.subpages.map((sp: any) => sp.id);
       if (!subpages.includes(forgotPageId)) {
         await strapi.entityService.update(PAGE_UID, parentPageId, {
           data: { subpages: [...subpages, forgotPageId] },
         });
-        console.info(`[SEED][FORGOT_PASSWORD] Added Forgot Password Page (ID: ${forgotPageId}) to parent page's subpages.`);
+        console.info(
+          `[SEED][FORGOT_PASSWORD] Added Forgot Password Page (ID: ${forgotPageId}) to parent page's subpages.`,
+        );
       }
     } else {
-      console.warn(`[SEED][FORGOT_PASSWORD] Skipping subpages update: parent page does not exist or has no subpages array.`);
+      console.warn(
+        `[SEED][FORGOT_PASSWORD] Skipping subpages update: parent page does not exist or has no subpages array.`,
+      );
     }
   }
 }

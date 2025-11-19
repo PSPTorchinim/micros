@@ -60,64 +60,72 @@ export async function seedLoginPage(
     );
   }
 
-  // Create or update Login Page
+  // Create or update Login Page WITHOUT template relation
   const existingLoginPage = await strapi.db.query(PAGE_UID).findOne({
     where: { Slug: loginSlug },
   });
 
-  if (parentPageId) {
-    // Log parent page data
-    const parentPage = await strapi.db.query(PAGE_UID).findOne({ where: { id: parentPageId } });
-    if (parentPage) {
-      console.info(`[SEED][LOGIN][PARENT] Will set parent: ID=${parentPageId}, Data=${JSON.stringify(parentPage)}`);
-    } else {
-      console.warn(`[SEED][LOGIN][PARENT] Skipping non-existent parent page ID: ${parentPageId}`);
-    }
-  }
   let loginPageId;
+  const loginPageData = {
+    Title: 'Login',
+    Slug: loginSlug,
+    Menu: 'Login',
+    AuthState: 'OnlyUnauthenticated',
+    configuration: configId,
+    Parents: parentPageId ? [parentPageId] : undefined,
+    publishedAt: new Date().toISOString(),
+  };
+
   if (!existingLoginPage) {
     const loginPage = await strapi.entityService.create(PAGE_UID, {
-      data: {
-        Title: 'Login',
-        Slug: loginSlug,
-        Menu: 'Login',
-        AuthState: 'OnlyUnauthenticated',
-        configuration: configId,
-        template: loginTemplate.id,
-        Parents: parentPageId ? [parentPageId] : undefined,
-        publishedAt: new Date().toISOString(),
-      },
+      data: loginPageData,
     });
     loginPageId = loginPage.id;
     console.info(
       `[SEED][LOGIN] Created Login Page (ID: ${loginPage.id}, Slug: /${loginSlug})`,
     );
   } else {
-    await strapi.entityService.update(PAGE_UID, existingLoginPage.id, {
-      data: {
-        Title: 'Login',
-        Menu: 'Login',
-        AuthState: 'OnlyUnauthenticated',
-        template: loginTemplate.id,
-        configuration: configId,
-        Parents: parentPageId ? [parentPageId] : undefined,
-      },
-    });
     loginPageId = existingLoginPage.id;
     console.info(
       `[SEED][LOGIN] Updated existing Login Page (ID: ${existingLoginPage.id})`,
     );
   }
 
+  // ============================================================================
+  // PHASE 2: Establish relations
+  // ============================================================================
+  console.info('[SEED][LOGIN] 🔗 PHASE 2: Establishing relations');
+
+  // Set template relation
+  try {
+    await strapi.db.query(PAGE_UID).update({
+      where: { id: loginPageId },
+      data: {
+        template: loginTemplate.id,
+      },
+    });
+    console.info(
+      `[SEED][LOGIN] ✓ Connected Page ${loginPageId} to Template ${loginTemplate.id}`,
+    );
+  } catch (error: any) {
+    console.error('[SEED][LOGIN] ❌ Failed to set relation:', error.message);
+  }
+
   // Ensure parent page's subpages includes this login page
   if (parentPageId && loginPageId) {
-    const parentPage = await strapi.entityService.findOne(PAGE_UID, parentPageId, { populate: ['subpages'] });
+    const parentPage = await strapi.entityService.findOne(
+      PAGE_UID,
+      parentPageId,
+      { populate: ['subpages'] },
+    );
     const subpages = (parentPage.subpages || []).map((sp: any) => sp.id);
     if (!subpages.includes(loginPageId)) {
       await strapi.entityService.update(PAGE_UID, parentPageId, {
         data: { subpages: [...subpages, loginPageId] },
       });
-      console.info(`[SEED][LOGIN] Added Login Page (ID: ${loginPageId}) to parent page's subpages.`);
+      console.info(
+        `[SEED][LOGIN] Added Login Page (ID: ${loginPageId}) to parent page's subpages.`,
+      );
     }
   }
 }
