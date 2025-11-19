@@ -1,23 +1,29 @@
 // src/utils/mapStrapiContentToFrontend.ts
 import { strapiAPI } from '../services/strapi-api';
+import type { ContentBlock, RefComponent } from '../types/content-blocks';
 
 // 1) Pomocnik do wyciągania documentId z różnych kształtów populate
-export function getDocId(input: any): string | undefined {
-  if (!input) return undefined;
+export function getDocId(input: unknown): string | undefined {
+  if (typeof input === 'string') return input;
+  if (!input || typeof input !== 'object') return undefined;
+
+  const obj = input as Record<string, unknown>;
 
   // Najczęstszy u Ciebie: obiekt relacji zawiera pole documentId
-  if (typeof input.documentId === 'string') return input.documentId;
-
-  // Czasem przychodzi jako string (np. connect: ["docId"])
-  if (typeof input === 'string') return input;
+  if (typeof obj.documentId === 'string') return obj.documentId;
 
   // Niektóre klienty spłaszczają id jako string
-  if (input?.id && typeof input.id === 'string') return input.id;
+  if (obj.id && typeof obj.id === 'string') return obj.id;
 
   // Wariant Strapi v4/v5 z data/attributes
-  if (input?.data?.attributes?.documentId)
-    return input.data.attributes.documentId;
-  if (typeof input?.data?.id === 'string') return input.data.id;
+  const data = obj.data as Record<string, unknown> | undefined;
+  if (
+    data?.attributes &&
+    typeof (data.attributes as Record<string, unknown>).documentId === 'string'
+  ) {
+    return (data.attributes as Record<string, unknown>).documentId as string;
+  }
+  if (data?.id && typeof data.id === 'string') return data.id;
 
   return undefined;
 }
@@ -36,73 +42,77 @@ const FIELD_BY_REF: Record<string, string> = {
 };
 
 // 3) Główna funkcja – rekurencyjnie rozwija refy i zagnieżdżenia
-export async function mapStrapiContentToFrontend(block: any): Promise<any> {
+export async function mapStrapiContentToFrontend(
+  block: ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
+): Promise<ContentBlock | ContentBlock[]> {
   if (Array.isArray(block)) {
-    return Promise.all(block.map(mapStrapiContentToFrontend));
+    return Promise.all(block.map(mapStrapiContentToFrontend)) as Promise<
+      ContentBlock[]
+    >;
   }
+
   if (!block || typeof block !== 'object') {
-    return block;
+    return block as ContentBlock;
   }
 
   // A) Obsługa ref-komponentów (…-ref)
-  if (block.__component && block.__component.endsWith('-ref')) {
-    const refUID = block.__component as string; // np. "image-slider-ref.image-slider-ref"
+  if (
+    '__component' in block &&
+    block.__component &&
+    block.__component.endsWith('-ref')
+  ) {
+    const refComponent = block as RefComponent;
+    const refUID = refComponent.__component; // np. "image-slider-ref.image-slider-ref"
     const base = refUID.split('-ref')[0]; // np. "image-slider"
     const relField = FIELD_BY_REF[refUID];
 
     // Z payloadu Template.Content masz np. { slider: { id: 26, documentId: '...' } }
-    const relObj = relField ? block[relField] : undefined;
+    const relObj = relField ? refComponent[relField] : undefined;
 
     const docId = getDocId(relObj);
     // fallback, gdyby documentId nie przyszło – numeryczne id z obiektu relacji lub samego bloku
     const numericId =
-      typeof relObj?.id === 'number'
-        ? relObj.id
-        : typeof block.id === 'number'
-          ? block.id
+      typeof (relObj as Record<string, unknown>)?.id === 'number'
+        ? ((relObj as Record<string, unknown>).id as number)
+        : typeof refComponent.id === 'number'
+          ? refComponent.id
           : undefined;
 
-    let data: any = null;
+    let data: unknown = null;
 
     // preferuj documentId (stabilny)
     if (docId) {
       switch (base) {
         case 'article-block':
-          data = await (strapiAPI as any).getArticleBlockByDocumentId(docId);
+          data = await strapiAPI.getArticleBlockByDocumentId(docId);
           break;
         case 'hero-block':
-          data = await (strapiAPI as any).getHeroBlockByDocumentId(docId);
+          data = await strapiAPI.getHeroBlockByDocumentId(docId);
           break;
         case 'image-slider':
-          data = await (strapiAPI as any).getImageSliderBlockByDocumentId(
-            docId,
-          );
+          data = await strapiAPI.getImageSliderBlockByDocumentId(docId);
           break;
         case 'steps-container':
-          data = await (strapiAPI as any).getStepsContainerBlockByDocumentId(
-            docId,
-          );
+          data = await strapiAPI.getStepsContainerBlockByDocumentId(docId);
           break;
         case 'cta':
-          data = await (strapiAPI as any).getCTABlockByDocumentId(docId);
+          data = await strapiAPI.getCTABlockByDocumentId(docId);
           break;
         case 'feature-section':
-          data = await (strapiAPI as any).getFeatureSectionByDocumentId(docId);
+          data = await strapiAPI.getFeatureSectionByDocumentId(docId);
           break;
         case 'contact-section':
-          data = await (strapiAPI as any).getContactSectionByDocumentId(docId);
+          data = await strapiAPI.getContactSectionByDocumentId(docId);
           break;
         case 'feature-tab':
-          data = await (strapiAPI as any).getFeatureTabBlockByDocumentId(docId);
+          data = await strapiAPI.getFeatureTabBlockByDocumentId(docId);
           break;
         case 'contact-info':
-          data = await (strapiAPI as any).getContactInfoBlockByDocumentId(
-            docId,
-          );
+          data = await strapiAPI.getContactInfoBlockByDocumentId(docId);
           break;
         default:
           // nieznany typ — oddaj surowy blok
-          return block;
+          return block as ContentBlock;
       }
     }
 
@@ -110,54 +120,63 @@ export async function mapStrapiContentToFrontend(block: any): Promise<any> {
     if (!data && numericId) {
       switch (base) {
         case 'article-block':
-          data = await (strapiAPI as any).getArticleBlockById(numericId);
+          data = await strapiAPI.getArticleBlockById(numericId);
           break;
         case 'hero-block':
-          data = await (strapiAPI as any).getHeroBlockById(numericId);
+          data = await strapiAPI.getHeroBlockById(numericId);
           break;
         case 'image-slider':
-          data = await (strapiAPI as any).getImageSliderBlockById(numericId);
+          data = await strapiAPI.getImageSliderBlockById(numericId);
           break;
         case 'steps-container':
-          data = await (strapiAPI as any).getStepsContainerBlockById(numericId);
+          data = await strapiAPI.getStepsContainerBlockById(numericId);
           break;
         case 'cta':
-          data = await (strapiAPI as any).getCTABlockById(numericId);
+          data = await strapiAPI.getCTABlockById(numericId);
           break;
         case 'feature-section':
-          data = await (strapiAPI as any).getFeatureSectionById(numericId);
+          data = await strapiAPI.getFeatureSectionById(numericId);
           break;
         case 'contact-section':
-          data = await (strapiAPI as any).getContactSectionById(numericId);
+          data = await strapiAPI.getContactSectionById(numericId);
           break;
         case 'feature-tab':
-          data = await (strapiAPI as any).getFeatureTabBlockById(numericId);
+          data = await strapiAPI.getFeatureTabBlockById(numericId);
           break;
         case 'contact-info':
-          data = await (strapiAPI as any).getContactInfoBlockById(numericId);
+          data = await strapiAPI.getContactInfoBlockById(numericId);
           break;
         default:
-          return block;
+          return block as ContentBlock;
       }
     }
 
     // jeżeli nic nie znaleziono — zwróć oryginał (żeby UI mógł pokazać fallback <pre/>)
-    if (!data) return block;
+    if (!data) return block as ContentBlock;
 
     // Doklej __kind, by renderer nie musiał zgadywać
-    return { __kind: base, ...data };
+    return {
+      __kind: base,
+      ...(data as Record<string, unknown>),
+    } as ContentBlock;
   }
 
   // B) Rekurencyjna obróbka zagnieżdżonych pól (tablice / obiekty z __component)
-  const resolved: any = { ...block };
+  const resolved: Record<string, unknown> = {
+    ...(block as Record<string, unknown>),
+  };
   for (const key of Object.keys(block)) {
-    const value = (block as any)[key];
+    const value = (block as Record<string, unknown>)[key];
     if (
       Array.isArray(value) ||
-      (value && typeof value === 'object' && value.__component)
+      (value &&
+        typeof value === 'object' &&
+        '__component' in (value as Record<string, unknown>))
     ) {
-      resolved[key] = await mapStrapiContentToFrontend(value);
+      resolved[key] = await mapStrapiContentToFrontend(
+        value as ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
+      );
     }
   }
-  return resolved;
+  return resolved as unknown as ContentBlock;
 }

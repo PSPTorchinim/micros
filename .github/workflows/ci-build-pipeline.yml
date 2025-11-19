@@ -1,9 +1,18 @@
 name: Build Artifacts
 
+# This workflow builds and pushes Docker images for all application components:
+# 1. Determines deployment environment and Docker image tags
+# 2. Builds .NET microservices with database migrations
+# 3. Builds React frontends with environment-specific configurations
+# 4. Builds infrastructure images (databases, message brokers, monitoring tools)
+# All images are pushed to GitHub Container Registry (GHCR)
+
 on:
-  push:
-    branches:
-      - "releases/R*"
+  schedule:
+    # Daily at midnight (00:00 UTC) for Development environment
+    - cron: "0 0 * * *"
+    # Monthly on the 1st at midnight (00:00 UTC) for Production environment
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 jobs:
@@ -12,12 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+
+      - name: Compute env slug
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
   determine_target_branch:
     name: Determine Target Branch
@@ -36,6 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      all_tags: ${{ steps.tag_set.outputs.all_tags }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -103,18 +121,16 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
-      - name: Convert service name to lowercase
-        id: lowercase_service
-        run: |
-          LOWERCASE_SERVICE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
-          echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
-
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          service-name: ${{ matrix.service }}
+          service-type: services
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
           dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
             DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
@@ -160,7 +176,7 @@ jobs:
         image:
           - {
               name: "dj-panel",
-              dockerfile: "Docker/frontends/react.Dockerfile",
+              dockerfile: "Docker/frontends/react.Dockerfile"
             }
     env:
       API_GATEWAY: ${{ vars.API_GATEWAY }}
@@ -179,12 +195,16 @@ jobs:
         with:
           service: ${{ matrix.image.name }}
 
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Frontend Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          service-name: ${{ matrix.image.name }}
+          service-type: frontends
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           build-args: |
             MICROFRONTEND_NAME=${{ matrix.image.name }}
             API_GATEWAY=${{ env.API_GATEWAY }}
@@ -194,6 +214,19 @@ jobs:
             CMS_PORT=${{ env.CMS_PORT }}
             CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
             CMS_API_PATH=${{ env.CMS_API_PATH }}
+
+      - name: Build and Push Storybook Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: "storybook-${{ matrix.image.name }}"
+          service-type: frontends
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          dockerfile: "Docker/frontends/storybook.Dockerfile"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
 
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
@@ -222,6 +255,11 @@ jobs:
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
       DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
       CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
+      GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
+      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+      GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
+      GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
+      GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
     strategy:
       matrix:
         image:
@@ -234,17 +272,24 @@ jobs:
               dockerfile: "Docker/infra/sqlserver.Dockerfile",
             }
           - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+          - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
+          - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
+          - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ matrix.image.name }}
+          service-type: infra
+          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
+          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           # Pass ALL possible args; Docker will ignore ones not declared via ARG
           build-args: |
             DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
@@ -264,3 +309,7 @@ jobs:
             RABBITMQ_USER=${{ env.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
             DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+            GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
+            GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
+            REPLICA_INDEX=1

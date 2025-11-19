@@ -1,3 +1,6 @@
+
+# hadolint global ignore=DL3059
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 ARG MICROSERVICE_NAME
@@ -77,11 +80,22 @@ COPY Services/Shared/ ./Services/Shared/
 
 # Use absolute WORKDIR (DL3000)
 WORKDIR /Services/${MICROSERVICE_NAME}/
-RUN dotnet tool install --global dotnet-ef && export PATH="$PATH:/root/.dotnet/tools" \
-    && (dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations") \
-    && dotnet test -c Release --no-restore \
-    && dotnet build -c Release -o /app/build --no-restore \
-    && dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
+
+# Install EF Core tools (skip if already installed)
+RUN dotnet tool install --global dotnet-ef || dotnet tool update --global dotnet-ef || true
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Generate migrations if DbContext exists (optional step)
+RUN dotnet ef dbcontext list && dotnet ef migrations add InitialMigration || echo "No DbContext found, skipping migrations"
+
+# Run tests
+RUN dotnet test -c Release --no-restore
+
+# Build the application
+RUN dotnet build -c Release -o /app/build --no-restore
+
+# Publish the application
+RUN dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base

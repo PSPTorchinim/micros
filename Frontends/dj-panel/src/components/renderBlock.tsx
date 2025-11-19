@@ -1,4 +1,5 @@
 import React from 'react';
+import { marked } from 'marked';
 import {
   HeroBlock,
   ImageSliderBlock,
@@ -9,15 +10,24 @@ import {
   ContactBlock,
   FeatureTabBlock,
   ContactInfoBlock,
+  LoginBlock,
+  ForgotPasswordBlock,
 } from './content-blocks';
+import type {
+  ContentBlock,
+  ArticleContentBlock,
+} from '../types/content-blocks';
 
 /**
- * Główny renderer jednego „zwykłego” bloku (już zdereferencjonowanego).
+ * Główny renderer jednego „zwykłego" bloku (już zdereferencjonowanego).
  * Oczekujemy, że block ma `__kind` (np. 'image-slider', 'article-block', ...).
  * Jeżeli `__kind` nie ma – próbujemy zgrubnie dopasować po __component / fallback do <pre>.
  */
-export function renderBlock(block: any, index: number) {
-  const kind: string | undefined = block?.__kind;
+export function renderBlock(
+  block: ContentBlock,
+  index: number,
+): React.ReactElement {
+  const kind: string | undefined = block.__kind;
 
   switch (kind) {
     case 'hero-block':
@@ -38,10 +48,69 @@ export function renderBlock(block: any, index: number) {
       return <FeatureTabBlock key={index} {...block} />;
     case 'contact-info':
       return <ContactInfoBlock key={index} {...block} />;
+    case 'login-block':
+      return <LoginBlock key={index} {...block} />;
+    case 'forgot-password-block':
+      return <ForgotPasswordBlock key={index} {...block} />;
+    case 'article': {
+      // Direct article rendering for article pages
+      // Handle both Strapi v5 format (with attributes) and direct format
+      const articleBlock = block as ArticleContentBlock;
+      const articleData =
+        (articleBlock as { attributes?: Record<string, unknown> }).attributes ||
+        articleBlock;
+      const title =
+        typeof articleData.Title === 'string' ? articleData.Title : '';
+      const summary =
+        typeof articleData.Summary === 'string' ? articleData.Summary : '';
+      const coverUrl =
+        typeof articleData.coverUrl === 'string' ? articleData.coverUrl : '';
+      const body = typeof articleData.Body === 'string' ? articleData.Body : '';
+
+      // Convert markdown to HTML if body contains markdown
+      const htmlBody = body ? marked.parse(body) : '';
+
+      return (
+        <div key={index} className="article-detail">
+          {coverUrl && (
+            <img
+              src={coverUrl}
+              alt={title}
+              style={{
+                width: '100%',
+                maxHeight: '400px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                marginBottom: '24px',
+              }}
+            />
+          )}
+          <h1>{title}</h1>
+          {summary && (
+            <p
+              style={{
+                fontSize: '1.2em',
+                fontStyle: 'italic',
+                marginBottom: '24px',
+                color: '#666',
+              }}
+            >
+              {summary}
+            </p>
+          )}
+          {htmlBody && (
+            <div
+              dangerouslySetInnerHTML={{ __html: htmlBody }}
+              style={{ lineHeight: '1.6' }}
+            />
+          )}
+        </div>
+      );
+    }
   }
 
   // LEGACY/FALLBACK: gdyby trafił tu oryginalny komponent kolekcji z __component
-  const comp = block?.__component as string | undefined;
+  const comp = block.__component as string | undefined;
   switch (comp) {
     case 'hero.hero-block':
       return <HeroBlock key={index} {...block} />;

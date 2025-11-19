@@ -106,6 +106,15 @@ _enable_shell_xtrace
 # ======================== Globals & Helpers ==========================
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
+# Infrastructure services that need external access (exposed via Cloudflare tunnel)
+# - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
+# - Services in Docker/services/* and Docker/frontends/* get external ports (50000-59999)
+# - List infra services here that need external access exceptions
+# - Format: space-separated list of service names
+# - Example: To expose a new infra service "prometheus", add it to this list:
+#   EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana prometheus"
+EXTERNAL_ACCESS_INFRA_SERVICES="strapi grafana"
+
 log_subsection "Source File Validation"
 if [ ! -f "$SOURCE_COMPOSE" ]; then
   log_error "Source compose file $SOURCE_COMPOSE not found"
@@ -165,8 +174,14 @@ get_next_external_port() {
 
 get_port_function_for_service() {
   local service_name="$1" dockerfile="$2"
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
-    [[ "$service_name" == "strapi" ]] && { echo "get_next_external_port"; return; }
+  # Normalize the dockerfile path for consistent matching
+  local normalized_dockerfile
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
+    # Check if this infra service needs external access
+    for external_svc in $EXTERNAL_ACCESS_INFRA_SERVICES; do
+      [[ "$service_name" == "$external_svc" ]] && { echo "get_next_external_port"; return; }
+    done
     echo "get_next_internal_port"
   else
     echo "get_next_external_port"
@@ -175,10 +190,38 @@ get_port_function_for_service() {
 
 to_lc() { tr '[:upper:]' '[:lower:]' <<<"$1"; }
 
+normalize_dockerfile_path() {
+  local path="$1"
+  # Normalize path by resolving .. and . components
+  # This handles multiple levels of .. properly
+  local result=""
+  local IFS='/'
+  local -a parts
+  read -ra parts <<< "$path"
+  local -a stack=()
+  
+  for part in "${parts[@]}"; do
+    if [[ "$part" == ".." ]]; then
+      # Pop from stack if not empty
+      [[ ${#stack[@]} -gt 0 ]] && unset 'stack[-1]'
+    elif [[ "$part" != "." && -n "$part" ]]; then
+      # Push non-empty, non-current-dir parts
+      stack+=("$part")
+    fi
+  done
+  
+  # Join the stack back into a path
+  result=$(IFS='/'; printf '%s' "${stack[*]}")
+  echo "$result"
+}
+
 dockerfile_to_image() {
   local dockerfile="$1" service_name="$2" microservice_name="$3"
-  local dockerfile_dir; dockerfile_dir=$(dirname "$dockerfile" | sed 's|Docker/||')
-  local dockerfile_base; dockerfile_base=$(basename "$dockerfile" .Dockerfile)
+  # Normalize the dockerfile path to remove .. and .
+  local normalized_dockerfile
+  normalized_dockerfile=$(normalize_dockerfile_path "$dockerfile")
+  local dockerfile_dir; dockerfile_dir=$(dirname "$normalized_dockerfile" | sed 's|Docker/||')
+  local dockerfile_base; dockerfile_base=$(basename "$normalized_dockerfile" .Dockerfile)
 
   local owner_lc repo_lc base_lc msvc_lc mfe_lc service_lc dir_lc
   owner_lc="$(to_lc "${REPO_OWNER}")"
@@ -188,15 +231,15 @@ dockerfile_to_image() {
   service_lc="$(to_lc "${service_name}")"
   msvc_lc="$(to_lc "${microservice_name}")"
 
-  if [[ "$dockerfile" == Docker/infra/* ]]; then
+  if [[ "$normalized_dockerfile" == Docker/infra/* ]]; then
     echo "ghcr.io/${owner_lc}/${repo_lc}/infra/${base_lc}:${DOCKER_TAG}"
-  elif [[ "$dockerfile" == Docker/services/* ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/services/* ]]; then
     if [[ -n "$microservice_name" && "$microservice_name" != "null" ]]; then
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${msvc_lc}:${DOCKER_TAG}"
     else
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${base_lc}:${DOCKER_TAG}"
     fi
-  elif [[ "$dockerfile" == Docker/frontends/* || "$dockerfile" == *react.Dockerfile ]]; then
+  elif [[ "$normalized_dockerfile" == Docker/frontends/* || "$normalized_dockerfile" == *react.Dockerfile ]]; then
     local microfrontend_name
     microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
     if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then
@@ -253,6 +296,47 @@ copy_service_key_if_present() {
   fi
 }
 
+# ---- Transform volumes to direct TrueNAS bind mounts ----
+transform_and_copy_volumes() {
+  local service="$1"
+  local has_volumes; has_volumes=$(yq eval ".services.${service} | has(\"volumes\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  
+  if [[ "$has_volumes" != "true" ]]; then
+    return 0
+  fi
+  
+  echo "    volumes:" >> "$OUTPUT_FILE"
+  
+  local volume_entries; volume_entries=$(yq eval ".services.${service}.volumes[]" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  
+  while IFS= read -r volume_entry; do
+    [[ -z "$volume_entry" || "$volume_entry" == "null" ]] && continue
+    
+    # Check if this is a named volume (e.g., "pg_data:/var/lib/postgresql/data")
+    # or already a bind mount (starts with /)
+    if [[ "$volume_entry" =~ ^/ ]] || [[ "$volume_entry" =~ ^\./ ]] || [[ "$volume_entry" =~ ^\.\. ]]; then
+      # Already a bind mount or relative path, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_info "Keeping bind mount as-is for ${service}: $volume_entry"
+    elif [[ "$volume_entry" =~ ^([a-zA-Z0-9_-]+):(.+)$ ]]; then
+      # Named volume reference (e.g., "pg_data:/var/lib/postgresql/data")
+      local volume_name="${BASH_REMATCH[1]}"
+      local container_path="${BASH_REMATCH[2]}"
+      
+      # Transform to direct TrueNAS bind mount (unified handling for all services)
+      local truenas_path="${BASE_DATA_DIR}/data/${service}/${volume_name}"
+      local transformed="${truenas_path}:${container_path}"
+      
+      echo "      - ${transformed}" >> "$OUTPUT_FILE"
+      log_info "Transformed volume for ${service}: ${volume_name} -> ${truenas_path}"
+    else
+      # Unknown format, keep as-is
+      echo "      - $volume_entry" >> "$OUTPUT_FILE"
+      log_warn "Unknown volume format for ${service}: $volume_entry"
+    fi
+  done <<< "$volume_entries"
+}
+
 # ======================== Compose Generation ==========================
 log_section "Compose File Generation"
 log_info "Output file: $OUTPUT_FILE"
@@ -307,22 +391,14 @@ while IFS= read -r service; do
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
-  # Preserve critical service blocks, but **intentionally skip networks**
-  for key in environment volumes expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  # Preserve critical service blocks, but **intentionally skip networks and volumes**
+  # Volumes are handled separately with transformation
+  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
-
-  # Inject PGDATA iff service mounts /var/lib/postgresql/data and doesn't already define PGDATA
-  pg_wanted=$(yq eval ".services.${service}.volumes[]? | select(test(\":/var/lib/postgresql/data(:(ro|rw))?$\"))" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-  if [[ -n "$pg_wanted" ]]; then
-    has_env=$(yq eval ".services.${service} | has(\"environment\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-    if [[ "$has_env" != "true" ]] || [[ "$(yq -r ".services.${service}.environment.PGDATA // \"\"" "$SOURCE_COMPOSE")" == "" ]]; then
-      echo "    environment:" >> "$OUTPUT_FILE"
-      [[ "$has_env" == "true" ]] && yq eval ".services.${service}.environment" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
-      echo "      PGDATA: /var/lib/postgresql/data" >> "$OUTPUT_FILE"
-      log_info "Injected PGDATA for ${service}"
-    fi
-  fi
+  
+  # Transform and copy volumes with TrueNAS bind mounts
+  transform_and_copy_volumes "$service"
 
   # depends_on (force all to map with condition: service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
@@ -346,17 +422,12 @@ while IFS= read -r service; do
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (volumes only; networks skipped) ==========================
-log_subsection "Copy top-level volumes (networks intentionally skipped)"
+# ======================== Top-level sections (networks intentionally skipped) ==========================
+log_subsection "Skipping top-level volumes and networks (using direct bind mounts)"
 log_info "Skipping top-level networks import by design"
-for top in volumes; do
-  has=$(yq eval "has(\"$top\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
-  if [[ "$has" == "true" ]]; then
-    echo "$top:" >> "$OUTPUT_FILE"
-    yq eval ".$top" "$SOURCE_COMPOSE" | sed 's/^/  /' >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
-  fi
-done
+log_info "Volumes are now direct TrueNAS bind mounts in service definitions"
+# No top-level volumes section needed - all volumes are direct bind mounts in services
+
 
 # ======================== Summary & Sanity Reports ==========================
 log_section "Generation Summary"

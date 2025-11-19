@@ -1,16 +1,16 @@
 import React from 'react';
+import type { FeatureTab } from '../../../models/strapi/strapiMap';
 
-export const FeatureTabBlock = ({
-  imgAlt,
-  imgSrc,
-  title,
-  description,
-}: any) => (
+export const FeatureTabBlock = (props: FeatureTab) => (
   <div className="feature-tab-block">
-    {imgSrc && (
-      <img src={imgSrc} alt={imgAlt || title} style={{ maxWidth: 200 }} />
+    {props.imgSrc && (
+      <img
+        src={props.imgSrc}
+        alt={props.imgAlt || props.title || ''}
+        style={{ maxWidth: 200 }}
+      />
     )}
-    <h3>{title}</h3>
-    <p>{description}</p>
+    <h3>{props.title}</h3>
+    <p>{props.description}</p>
   </div>
 );

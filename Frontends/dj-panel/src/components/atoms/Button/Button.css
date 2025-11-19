@@ -1,0 +1,74 @@
+.atom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dl-space-space-halfunit);
+  font-weight: 600;
+  border-radius: var(--dl-radius-radius-buttonradius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+
+/* Variants */
+.atom-button--filled {
+  background-color: var(--dl-color-theme-primary1);
+  color: var(--dl-color-theme-secondary1);
+  border-color: var(--dl-color-theme-primary1);
+}
+
+.atom-button--filled:hover {
+  background-color: var(--dl-color-theme-primary2);
+  border-color: var(--dl-color-theme-primary2);
+  color: var(--dl-color-theme-secondary2);
+}
+
+.atom-button--outline {
+  background-color: transparent;
+  color: var(--dl-color-theme-primary1);
+  border-color: var(--dl-color-theme-primary1);
+}
+
+.atom-button--outline:hover {
+  background-color: var(--dl-color-theme-primary2);
+  border-color: var(--dl-color-theme-primary2);
+  color: var(--dl-color-theme-secondary2);
+}
+
+.atom-button--flat {
+  background-color: transparent;
+  color: var(--dl-color-theme-primary1);
+  border-color: transparent;
+}
+
+.atom-button--flat:hover {
+  background-color: var(--dl-color-theme-primary2);
+  color: var(--dl-color-theme-secondary1);
+}
+
+/* Sizes */
+.atom-button--small {
+  padding: var(--dl-space-space-halfunit) var(--dl-space-space-unit);
+  font-size: 14px;
+}
+
+.atom-button--medium {
+  padding: var(--dl-space-space-halfunit) var(--dl-space-space-oneandhalfunits);
+  font-size: 16px;
+}
+
+.atom-button--large {
+  padding: var(--dl-space-space-unit) var(--dl-space-space-twounits);
+  font-size: 18px;
+}
+
+.atom-button--full-width {
+  width: 100%;
+}
+
+.atom-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
