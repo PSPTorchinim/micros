@@ -208,12 +208,43 @@ export async function seedHomePage(strapi: any, configId: number) {
   // Final verification - check the page has the template
   // Final verification - the relation is managed by the page side (template.page is mappedBy)
   console.info('[SEED][HOME] 🔍 Final verification of page-template relation...');
-  const verifyPage = await strapi.entityService.findOne(PAGE_UID, homePageId, { populate: ['template'] });
-  if (verifyPage?.template) {
-    console.info(`[SEED][HOME] ✅ Page-Template relation established: Home page.template = ${verifyPage.template.id}`);
-    // Note: template.page (mappedBy side) is automatically managed by Strapi and may not be immediately visible
+  
+  // Use db.query to verify the relation at the database level
+  const verifyPageDB = await strapi.db.query(PAGE_UID).findOne({
+    where: { id: homePageId },
+    populate: { template: true },
+  });
+  
+  if (verifyPageDB?.template) {
+    console.info(`[SEED][HOME] ✅ Page-Template relation established: Home page.template = ${verifyPageDB.template.id}`);
+    // Verify the inverse side as well
+    const verifyTemplateDB = await strapi.db.query(TEMPLATE_UID).findOne({
+      where: { id: homeTemplate.id },
+      populate: { page: true },
+    });
+    if (verifyTemplateDB?.page) {
+      console.info(`[SEED][HOME] ✅ Bidirectional relation confirmed: Template.page = ${verifyTemplateDB.page.id}`);
+    } else {
+      console.warn('[SEED][HOME] ⚠️  Template.page is not set (inverse side). This may be expected in Strapi v5.');
+    }
   } else {
-    console.warn('[SEED][HOME] ⚠️  WARNING: Page template relation not verified (may need database refresh)');
+    console.error('[SEED][HOME] ❌ ERROR: Page template relation not established!');
+    console.error(`[SEED][HOME] Page ID: ${homePageId}, Template ID: ${homeTemplate.id}`);
+    // Try to fix the relation by updating the page again
+    console.info('[SEED][HOME] 🔄 Attempting to fix relation...');
+    await strapi.entityService.update(PAGE_UID, homePageId, {
+      data: { template: homeTemplate.id },
+    });
+    // Verify again
+    const recheckPageDB = await strapi.db.query(PAGE_UID).findOne({
+      where: { id: homePageId },
+      populate: { template: true },
+    });
+    if (recheckPageDB?.template) {
+      console.info('[SEED][HOME] ✅ Relation fixed successfully!');
+    } else {
+      console.error('[SEED][HOME] ❌ Failed to establish relation after retry!');
+    }
   }
 
   // Additional verification - query template directly to confirm Content is saved
