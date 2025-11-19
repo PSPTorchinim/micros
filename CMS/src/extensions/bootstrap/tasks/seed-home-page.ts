@@ -174,36 +174,40 @@ export async function seedHomePage(strapi: any, configId: number) {
     });
     console.info(`[SEED][HOME] Published Home Template (ID: ${homeTemplate.id})`);
   }
-  const homePageData = {
+  // Create page data WITHOUT template first
+  const homePageDataWithoutTemplate = {
     Title: 'Home',
     Slug: '/',
     configuration: configId,
-    template: homeTemplate.id,
     Parents: [],
     subpages: [],
     publishedAt: new Date().toISOString(),
   };
-  console.info('[SEED][HOME] Home Page creation data:', JSON.stringify(homePageData));
+  
+  console.info('[SEED][HOME] Home Page creation data (without template):', JSON.stringify(homePageDataWithoutTemplate));
   if (!existingHomePage) {
     console.info('[SEED][HOME] ➕ Creating new Home Page...');
     const homePage = await strapi.entityService.create(PAGE_UID, {
-      data: homePageData,
+      data: homePageDataWithoutTemplate,
     });
     homePageId = homePage.id;
     console.info(
-      `[SEED][HOME] ✅ Created Home Page (ID: ${homePage.id}, Slug: /, Template: ${homeTemplate.id})`,
+      `[SEED][HOME] ✅ Created Home Page (ID: ${homePage.id}, Slug: /)`,
     );
   } else {
     console.info(`[SEED][HOME] ✓ Found existing Home Page (ID: ${existingHomePage.id})`);
-    console.info('[SEED][HOME] 🔄 Updating Home Page...');
-    await strapi.entityService.update(PAGE_UID, existingHomePage.id, {
-      data: homePageData,
-    });
     homePageId = existingHomePage.id;
-    console.info(
-      `[SEED][HOME] ✅ Updated Home Page (ID: ${existingHomePage.id}, Template: ${homeTemplate.id})`,
-    );
+    console.info('[SEED][HOME] 🔄 Will update Home Page with template...');
   }
+  
+  // Now update the page with the template relation
+  console.info(`[SEED][HOME] 🔗 Setting template relation: Page ${homePageId} -> Template ${homeTemplate.id}`);
+  await strapi.entityService.update(PAGE_UID, homePageId, {
+    data: {
+      template: homeTemplate.id,
+    },
+  });
+  console.info(`[SEED][HOME] ✅ Template relation set successfully`);
 
   // Final verification - check the page has the template
   // Final verification - the relation is managed by the page side (template.page is mappedBy)
