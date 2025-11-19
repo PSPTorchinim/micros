@@ -1009,12 +1009,12 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             `[SEED][ARTICLES] Created page for article ${article.Title} (ID: ${page.id}, Slug: /${slug})`,
           );
 
-          // PHASE 2: Set template relation
+          // PHASE 2: Set template relation using entityService
           try {
-            await strapi.db.query(PAGE_UID).update({
-              where: { id: page.id },
+            await strapi.entityService.update(PAGE_UID, page.id, {
               data: {
                 template: template.id,
+                publishedAt: new Date().toISOString(), // Maintain published status
               },
             });
             console.info(
@@ -1027,20 +1027,14 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             );
           }
         } else {
-          // Update existing page with correct slug and template using two-phase
-          await strapi.entityService.update(PAGE_UID, page.id, {
-            data: {
-              Slug: slug,
-              configuration: configId,
-            },
-          });
-
-          // Set template relation separately
+          // Update existing page with correct slug and template using entityService
           try {
-            await strapi.db.query(PAGE_UID).update({
-              where: { id: page.id },
+            await strapi.entityService.update(PAGE_UID, page.id, {
               data: {
+                Slug: slug,
+                configuration: configId,
                 template: template.id,
+                publishedAt: new Date().toISOString(), // Maintain published status
               },
             });
             console.info(
@@ -1106,10 +1100,9 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
 
       if (newSubpageIds.length > 0) {
         const updatedSubpages = [...existingSubpageIds, ...newSubpageIds];
-        // Use db.query for relation update
+        // Use entityService for relation update
         try {
-          await strapi.db.query(PAGE_UID).update({
-            where: { id: parentPageId },
+          await strapi.entityService.update(PAGE_UID, parentPageId, {
             data: {
               subpages: updatedSubpages,
             },
@@ -1151,14 +1144,18 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
           id: a.id,
         }));
 
-        // Use db.query for relation update
+        // Use entityService for relation update
         try {
-          await strapi.db.query(ARTICLE_BLOCK_UID).update({
-            where: { id: articleBlock.id },
-            data: {
-              articles: articleIdObjects,
+          await strapi.entityService.update(
+            ARTICLE_BLOCK_UID,
+            articleBlock.id,
+            {
+              data: {
+                articles: articleIdObjects,
+                publishedAt: new Date().toISOString(), // Maintain published status
+              },
             },
-          });
+          );
           console.info(
             `[SEED][ARTICLES] ✅ Updated Article Block (ID: ${articleBlock.id}) with ${articleIdObjects.length} articles: [${articleIdObjects.map((a) => a.id).join(', ')}]`,
           );

@@ -73,12 +73,12 @@ export async function seedUsersPage(strapi: any, configId: number) {
   // ============================================================================
   console.info('[SEED][USERS] 🔗 PHASE 2: Establishing relations');
 
-  // Set template relation
+  // Set template relation using entityService
   try {
-    await strapi.db.query(PAGE_UID).update({
-      where: { id: usersPage.id },
+    await strapi.entityService.update(PAGE_UID, usersPage.id, {
       data: {
         template: usersTemplate.id,
+        publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
     console.info(

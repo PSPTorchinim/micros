@@ -102,13 +102,13 @@ export async function seedForgotPasswordPage(
   // ============================================================================
   console.info('[SEED][FORGOT_PASSWORD] 🔗 PHASE 2: Establishing relations');
 
-  // Set template and Parents relations
+  // Set template and Parents relations using entityService
   try {
-    await strapi.db.query(PAGE_UID).update({
-      where: { id: forgotPageId },
+    await strapi.entityService.update(PAGE_UID, forgotPageId, {
       data: {
         template: forgotTemplate.id,
         Parents: parentPageId ? [parentPageId] : [],
+        publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
     console.info(

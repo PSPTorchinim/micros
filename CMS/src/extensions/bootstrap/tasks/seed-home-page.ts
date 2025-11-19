@@ -190,23 +190,26 @@ export async function seedHomePage(strapi: any, configId: number) {
   console.info('');
   console.info('[SEED][HOME] 🔗 PHASE 2: Establishing relations');
 
-  // Set the Page -> Template relation and other relations
+  // Set the Page -> Template relation using entityService (not db.query)
+  // This ensures proper relation handling and maintains published status
   console.info(
     `[SEED][HOME] 🔗 Connecting Page ${homePageId} to Template ${homeTemplate.id}...`,
   );
 
   try {
-    await strapi.db.query(PAGE_UID).update({
-      where: { id: homePageId },
+    // Use entityService.update which properly handles relations in Strapi v5
+    await strapi.entityService.update(PAGE_UID, homePageId, {
       data: {
         template: homeTemplate.id,
         Parents: [],
         subpages: [],
+        publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
-    console.info('[SEED][HOME] ✓ Relations update executed');
+    console.info('[SEED][HOME] ✓ Relations update executed with entityService');
   } catch (error: any) {
     console.error('[SEED][HOME] ❌ Failed to set relations:', error.message);
+    console.error('[SEED][HOME] Error stack:', error.stack);
   }
 
   // ============================================================================

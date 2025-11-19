@@ -109,12 +109,12 @@ export async function seedFooter(strapi: any, configurationId: number) {
     console.info(`[SEED][FOOTER] Created footer (ID: ${footerId})`);
   }
 
-  // PHASE 2: Set configuration relation
+  // PHASE 2: Set configuration relation using entityService
   try {
-    await strapi.db.query(FOOTER_UID).update({
-      where: { id: footerId },
+    await strapi.entityService.update(FOOTER_UID, footerId, {
       data: {
         configuration: configurationId,
+        publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
     console.info(
