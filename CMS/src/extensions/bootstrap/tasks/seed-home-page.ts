@@ -52,7 +52,9 @@ export async function seedHomePage(strapi: any, configId: number) {
     );
     return;
   }
-  console.info(`[SEED][HOME] ✓ Found Feature Section (ID: ${featureSection.id})`);
+  console.info(
+    `[SEED][HOME] ✓ Found Feature Section (ID: ${featureSection.id})`,
+  );
 
   // Get existing Steps Container
   console.info('[SEED][HOME] 🔍 Looking for Steps Container...');
@@ -66,10 +68,14 @@ export async function seedHomePage(strapi: any, configId: number) {
     );
     return;
   }
-  console.info(`[SEED][HOME] ✓ Found Steps Container (ID: ${stepsContainer.id})`);
+  console.info(
+    `[SEED][HOME] ✓ Found Steps Container (ID: ${stepsContainer.id})`,
+  );
 
   // Create Home Template with all components
-  console.info('[SEED][HOME] 🔨 Building template content with 4 components...');
+  console.info(
+    '[SEED][HOME] 🔨 Building template content with 4 components...',
+  );
   const existingHomeTemplate = await strapi.db.query(TEMPLATE_UID).findOne({
     where: { Name: 'Home Page Template' },
   });
@@ -96,7 +102,7 @@ export async function seedHomePage(strapi: any, configId: number) {
   console.info('[SEED][HOME] 📋 Template Content structure:');
   templateContent.forEach((item, index) => {
     console.info(`[SEED][HOME]    ${index + 1}. ${item.__component}`);
-    const refKey = Object.keys(item).find(key => key !== '__component');
+    const refKey = Object.keys(item).find((key) => key !== '__component');
     if (refKey) {
       console.info(`[SEED][HOME]       → ${refKey}: ${item[refKey]}`);
     }
@@ -117,7 +123,9 @@ export async function seedHomePage(strapi: any, configId: number) {
       `[SEED][HOME] ✓ Created Home Template (ID: ${homeTemplate.id})`,
     );
   } else {
-    console.info(`[SEED][HOME] ✓ Found existing Home Template (ID: ${existingHomeTemplate.id})`);
+    console.info(
+      `[SEED][HOME] ✓ Found existing Home Template (ID: ${existingHomeTemplate.id})`,
+    );
     console.info('[SEED][HOME] 🔄 Updating template Content...');
     // Update existing template to ensure Content is populated
     homeTemplate = await strapi.entityService.update(
@@ -145,14 +153,18 @@ export async function seedHomePage(strapi: any, configId: number) {
       populate: ['Content'],
     },
   );
-  console.info(`[SEED][HOME] ✓ Template Content count: ${verifyTemplate?.Content?.length || 0}`);
+  console.info(
+    `[SEED][HOME] ✓ Template Content count: ${verifyTemplate?.Content?.length || 0}`,
+  );
   if (verifyTemplate?.Content && verifyTemplate.Content.length > 0) {
     console.info('[SEED][HOME] ✓ Content components verified:');
     verifyTemplate.Content.forEach((item: any, index: number) => {
       console.info(`[SEED][HOME]    ${index + 1}. ${item.__component}`);
     });
   } else {
-    console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty after creation/update!');
+    console.warn(
+      '[SEED][HOME] ⚠️  WARNING: Template Content is empty after creation/update!',
+    );
   }
 
   // Create or update Home Page
@@ -163,16 +175,22 @@ export async function seedHomePage(strapi: any, configId: number) {
 
   let homePageId;
   // Ensure template exists and is published
-  const templateCheck = await strapi.db.query(TEMPLATE_UID).findOne({ where: { id: homeTemplate.id } });
+  const templateCheck = await strapi.db
+    .query(TEMPLATE_UID)
+    .findOne({ where: { id: homeTemplate.id } });
   if (!templateCheck) {
-    console.error(`[SEED][HOME] ❌ Home Template with ID ${homeTemplate.id} does not exist! Cannot create Home Page.`);
+    console.error(
+      `[SEED][HOME] ❌ Home Template with ID ${homeTemplate.id} does not exist! Cannot create Home Page.`,
+    );
     return;
   }
   if (!templateCheck.publishedAt) {
     await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
       data: { publishedAt: new Date().toISOString() },
     });
-    console.info(`[SEED][HOME] Published Home Template (ID: ${homeTemplate.id})`);
+    console.info(
+      `[SEED][HOME] Published Home Template (ID: ${homeTemplate.id})`,
+    );
   }
   // Create page data WITHOUT template first
   const homePageDataWithoutTemplate = {
@@ -183,8 +201,11 @@ export async function seedHomePage(strapi: any, configId: number) {
     subpages: [],
     publishedAt: new Date().toISOString(),
   };
-  
-  console.info('[SEED][HOME] Home Page creation data (without template):', JSON.stringify(homePageDataWithoutTemplate));
+
+  console.info(
+    '[SEED][HOME] Home Page creation data (without template):',
+    JSON.stringify(homePageDataWithoutTemplate),
+  );
   if (!existingHomePage) {
     console.info('[SEED][HOME] ➕ Creating new Home Page...');
     const homePage = await strapi.entityService.create(PAGE_UID, {
@@ -195,13 +216,17 @@ export async function seedHomePage(strapi: any, configId: number) {
       `[SEED][HOME] ✅ Created Home Page (ID: ${homePage.id}, Slug: /)`,
     );
   } else {
-    console.info(`[SEED][HOME] ✓ Found existing Home Page (ID: ${existingHomePage.id})`);
+    console.info(
+      `[SEED][HOME] ✓ Found existing Home Page (ID: ${existingHomePage.id})`,
+    );
     homePageId = existingHomePage.id;
     console.info('[SEED][HOME] 🔄 Will update Home Page with template...');
   }
-  
+
   // Now update the page with the template relation
-  console.info(`[SEED][HOME] 🔗 Setting template relation: Page ${homePageId} -> Template ${homeTemplate.id}`);
+  console.info(
+    `[SEED][HOME] 🔗 Setting template relation: Page ${homePageId} -> Template ${homeTemplate.id}`,
+  );
   await strapi.entityService.update(PAGE_UID, homePageId, {
     data: {
       template: homeTemplate.id,
@@ -211,29 +236,41 @@ export async function seedHomePage(strapi: any, configId: number) {
 
   // Final verification - check the page has the template
   // Final verification - the relation is managed by the page side (template.page is mappedBy)
-  console.info('[SEED][HOME] 🔍 Final verification of page-template relation...');
-  
+  console.info(
+    '[SEED][HOME] 🔍 Final verification of page-template relation...',
+  );
+
   // Use db.query to verify the relation at the database level
   const verifyPageDB = await strapi.db.query(PAGE_UID).findOne({
     where: { id: homePageId },
     populate: { template: true },
   });
-  
+
   if (verifyPageDB?.template) {
-    console.info(`[SEED][HOME] ✅ Page-Template relation established: Home page.template = ${verifyPageDB.template.id}`);
+    console.info(
+      `[SEED][HOME] ✅ Page-Template relation established: Home page.template = ${verifyPageDB.template.id}`,
+    );
     // Verify the inverse side as well
     const verifyTemplateDB = await strapi.db.query(TEMPLATE_UID).findOne({
       where: { id: homeTemplate.id },
       populate: { page: true },
     });
     if (verifyTemplateDB?.page) {
-      console.info(`[SEED][HOME] ✅ Bidirectional relation confirmed: Template.page = ${verifyTemplateDB.page.id}`);
+      console.info(
+        `[SEED][HOME] ✅ Bidirectional relation confirmed: Template.page = ${verifyTemplateDB.page.id}`,
+      );
     } else {
-      console.warn('[SEED][HOME] ⚠️  Template.page is not set (inverse side). This may be expected in Strapi v5.');
+      console.warn(
+        '[SEED][HOME] ⚠️  Template.page is not set (inverse side). This may be expected in Strapi v5.',
+      );
     }
   } else {
-    console.error('[SEED][HOME] ❌ ERROR: Page template relation not established!');
-    console.error(`[SEED][HOME] Page ID: ${homePageId}, Template ID: ${homeTemplate.id}`);
+    console.error(
+      '[SEED][HOME] ❌ ERROR: Page template relation not established!',
+    );
+    console.error(
+      `[SEED][HOME] Page ID: ${homePageId}, Template ID: ${homeTemplate.id}`,
+    );
     // Try to fix the relation by updating the page again
     console.info('[SEED][HOME] 🔄 Attempting to fix relation...');
     await strapi.entityService.update(PAGE_UID, homePageId, {
@@ -247,7 +284,9 @@ export async function seedHomePage(strapi: any, configId: number) {
     if (recheckPageDB?.template) {
       console.info('[SEED][HOME] ✅ Relation fixed successfully!');
     } else {
-      console.error('[SEED][HOME] ❌ Failed to establish relation after retry!');
+      console.error(
+        '[SEED][HOME] ❌ Failed to establish relation after retry!',
+      );
     }
   }
 
@@ -259,18 +298,20 @@ export async function seedHomePage(strapi: any, configId: number) {
       populate: { Content: { populate: '*' } },
     },
   );
-  console.info(`[SEED][HOME] ✓ Final template Content count: ${finalTemplateCheck?.Content?.length || 0}`);
+  console.info(
+    `[SEED][HOME] ✓ Final template Content count: ${finalTemplateCheck?.Content?.length || 0}`,
+  );
   if (!finalTemplateCheck?.Content || finalTemplateCheck.Content.length === 0) {
     console.warn('[SEED][HOME] ⚠️  WARNING: Template Content is empty!');
     console.warn('[SEED][HOME] 🔄 Attempting retry with Content...');
-    
+
     // Try to update the template again with Content
     await strapi.entityService.update(TEMPLATE_UID, homeTemplate.id, {
       data: {
         Content: templateContent,
       },
     });
-    
+
     const recheckTemplate = await strapi.entityService.findOne(
       TEMPLATE_UID,
       homeTemplate.id,
@@ -278,7 +319,9 @@ export async function seedHomePage(strapi: any, configId: number) {
         populate: { Content: { populate: '*' } },
       },
     );
-    console.info(`[SEED][HOME] ✓ After retry - Content count: ${recheckTemplate?.Content?.length || 0}`);
+    console.info(
+      `[SEED][HOME] ✓ After retry - Content count: ${recheckTemplate?.Content?.length || 0}`,
+    );
     if (recheckTemplate?.Content?.length > 0) {
       console.info('[SEED][HOME] ✅ Retry successful! Content saved.');
     } else {
@@ -287,7 +330,7 @@ export async function seedHomePage(strapi: any, configId: number) {
   } else {
     console.info('[SEED][HOME] ✅ Template Content verified successfully!');
   }
-  
+
   console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.info('[SEED][HOME] ✅ Home page seeding complete!');
   console.info('[SEED][HOME] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
