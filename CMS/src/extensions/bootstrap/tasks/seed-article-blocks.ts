@@ -54,14 +54,16 @@ export async function seedArticleBlocks(strapi: any) {
     );
   }
 
-  // PHASE 2: Attach articles relation using entityService
+  // PHASE 2: Attach articles relation using entityService with connect syntax
   console.info(
     '[SEED][ARTICLE_BLOCKS] 🔗 PHASE 2: Attaching articles to block...',
   );
   try {
     await strapi.entityService.update(ARTICLE_BLOCK_UID, articleBlock.id, {
       data: {
-        articles: articleIdObjects,
+        articles: {
+          connect: articleIdObjects,
+        },
         publishedAt: new Date().toISOString(), // Maintain published status
       },
     });

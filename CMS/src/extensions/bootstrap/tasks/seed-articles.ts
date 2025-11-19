@@ -1151,7 +1151,9 @@ export default async function seedArticles({ strapi }: { strapi: any }) {
             articleBlock.id,
             {
               data: {
-                articles: articleIdObjects,
+                articles: {
+                  connect: articleIdObjects,
+                },
                 publishedAt: new Date().toISOString(), // Maintain published status
               },
             },

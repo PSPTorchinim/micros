@@ -82,12 +82,14 @@ export async function seedHeroBlocks(strapi: any) {
       },
     });
 
-    // PHASE 2: Establish actions relation using entityService
+    // PHASE 2: Establish actions relation using entityService with connect syntax
     console.info('[SEED][HERO_BLOCKS] 🔗 Connecting actions to hero block...');
     try {
       await strapi.entityService.update(HERO_BLOCK_UID, existingHero.id, {
         data: {
-          actions: [heroSignupCta.id, heroLearnCta.id],
+          actions: {
+            connect: [heroSignupCta.id, heroLearnCta.id],
+          },
           publishedAt: new Date().toISOString(), // Maintain published status
         },
       });
@@ -170,14 +172,16 @@ export async function seedHeroBlocks(strapi: any) {
   );
   console.info(`[SEED][HERO_BLOCKS] ✅ Heading: "${heroBlock.heading}"`);
 
-  // PHASE 2: Establish actions relation using entityService
+  // PHASE 2: Establish actions relation using entityService with connect syntax
   console.info(
     '[SEED][HERO_BLOCKS] 🔗 PHASE 2: Connecting actions to hero block...',
   );
   try {
     await strapi.entityService.update(HERO_BLOCK_UID, heroBlock.id, {
       data: {
-        actions: [heroSignupCta.id, heroLearnCta.id],
+        actions: {
+          connect: [heroSignupCta.id, heroLearnCta.id],
+        },
         publishedAt: new Date().toISOString(), // Maintain published status
       },
     });
