@@ -26,6 +26,7 @@ export default async function seedStepsContainers({ strapi }: { strapi: StrapiIn
     logger.debug(`Found Get Started CTA (${getStartedCTA.id})`);
 
     // Create steps containers with inline step components
+    // Note: Using Document Service API for Strapi v5 compatibility
     const stepsContainerData = [
       {
         heading: 'Get Started in 3 Simple Steps',
@@ -79,22 +80,41 @@ export default async function seedStepsContainers({ strapi }: { strapi: StrapiIn
       },
     ];
 
-    logger.debug(`Sample data structure: ${JSON.stringify(stepsContainerData[0], null, 2)}`);
-
     const stepsContainers = [];
     for (const data of stepsContainerData) {
-      const container = await createAndPublish(
-        strapi,
-        'api::steps-container.steps-container',
-        'heading',
-        data,
-        logger,
-        'Steps Container'
-      );
-      stepsContainers.push(container);
+      try {
+        // Check if already exists
+        const existing = await strapi.db.query('api::steps-container.steps-container').findOne({
+          where: { heading: data.heading },
+        });
+
+        if (existing) {
+          logger.debug(`Steps Container "${data.heading}" already exists (id: ${existing.id})`);
+          stepsContainers.push(existing);
+          continue;
+        }
+
+        // Create using Document Service API for better component handling
+        logger.info(`Creating Steps Container "${data.heading}"...`);
+        const container = await strapi.documents('api::steps-container.steps-container').create({
+          data: data,
+        });
+        
+        // Publish the container
+        if (container && container.documentId) {
+          await strapi.documents('api::steps-container.steps-container').publish({
+            documentId: container.documentId,
+          });
+          logger.success(`Created and published Steps Container "${data.heading}" (id: ${container.id})`);
+          stepsContainers.push(container);
+        }
+      } catch (error: any) {
+        logger.error(`Failed to create Steps Container "${data.heading}"`, error);
+        // Continue with next container instead of failing completely
+      }
     }
 
-    logger.success(`Successfully seeded ${stepsContainers.length} Steps Containers`);
+    logger.success(`Successfully seeded ${stepsContainers.length}/${stepsContainerData.length} Steps Containers`);
     return stepsContainers;
   } catch (error) {
     logger.error('Failed to seed Steps Containers', error);
