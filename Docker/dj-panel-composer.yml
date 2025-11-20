@@ -667,7 +667,6 @@ services:
       mongodb_container:
         condition: service_healthy
     command:
-      - '--mongodb.uri=mongodb://${DATABASE_USER_MONGODB}:${DATABASE_PASSWORD_MONGODB}@mongodb_container:27017'
       - '--collect-all'
 
   postgres-exporter:
