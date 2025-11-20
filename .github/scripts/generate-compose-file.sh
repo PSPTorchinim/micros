@@ -393,7 +393,8 @@ while IFS= read -r service; do
 
   # Preserve critical service blocks, but **intentionally skip networks and volumes**
   # Volumes are handled separately with transformation
-  for key in environment expose extra_hosts healthcheck user ulimits tmpfs command entrypoint; do
+  # Note: healthcheck is already copied above, so skip it here
+  for key in environment expose extra_hosts user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
   
