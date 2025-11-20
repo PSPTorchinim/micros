@@ -34,27 +34,33 @@ Instead of blue-green deployment with separate instances, we use **rolling updat
    ├─ Generate compose file with new image tags
    └─ Upload to TrueNAS
 
-3. Rolling Update
+3. Test Docker Compose
+   ├─ Validate YAML syntax
+   ├─ Verify required services are defined
+   ├─ Check Docker compose config
+   └─ Fail fast if compose is invalid
+
+4. Rolling Update
    ├─ Update aggregator to point to new compose
    ├─ Restart TrueNAS app (databases stay running)
    ├─ Application containers restart with new images
    └─ Wait for healthy state
 
-4. Health Checks
+5. Health Checks
    ├─ Poll app state via midclt
    ├─ Wait for RUNNING/HEALTHY status
    └─ Fail if not healthy within 10 minutes
 
-5. Manual Approval
+6. Manual Approval
    ├─ Deployment pauses for human verification
    ├─ Approve to complete
    └─ Reject to investigate (app already updated)
 
-6. Update Cloudflare
+7. Update Cloudflare
    ├─ Update tunnel configuration
    └─ Update DNS records
 
-7. Deployment Complete ✅
+8. Deployment Complete ✅
 ```
 
 ### Database Behavior

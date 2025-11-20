@@ -1359,6 +1359,7 @@ jobs:
       - determine_docker_tag
       - determine_compose_timestamp
       - determine_environment
+      - test_docker_compose
       - rolling_update_deployment
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
@@ -1387,6 +1388,7 @@ jobs:
           echo "   Services: Updated with health checks"
           echo ""
           echo "✅ Status:"
+          echo "   Compose Test: ${{ needs.test_docker_compose.result }}"
           echo "   Rolling Update: ${{ needs.rolling_update_deployment.result }}"
           echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
           echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
