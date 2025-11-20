@@ -636,16 +636,18 @@ services:
       - '--storage.tsdb.retention.time=7d'
 
   sqlserver-exporter:
-    image: awaragi/prometheus-mssql-exporter:latest
+    build:
+      context: ../
+      dockerfile: Docker/infra/sqlserver-exporter.Dockerfile
+      args:
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_SQLSERVER: sqlserver
+        DATABASE_PORT_SQLSERVER: "1433"
     restart: unless-stopped
+    pull_policy: always
     ports:
       - "4000:4000"
-    environment:
-      SERVER: sqlserver
-      PORT: 1433
-      USERNAME: ${DATABASE_USER_SQLSERVER}
-      PASSWORD: ${DATABASE_PASSWORD_SQLSERVER}
-      DEBUG: "false"
     networks:
       - sql_net
       - logging_net
@@ -654,28 +656,39 @@ services:
         condition: service_healthy
 
   mongodb-exporter:
-    image: percona/mongodb_exporter:0.40
+    build:
+      context: ../
+      dockerfile: Docker/infra/mongodb-exporter.Dockerfile
+      args:
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        DATABASE_HOST_MONGODB: mongodb_container
+        DATABASE_PORT_MONGODB: "27017"
     restart: unless-stopped
+    pull_policy: always
     ports:
       - "9216:9216"
-    environment:
-      MONGODB_URI: "mongodb://${DATABASE_USER_MONGODB}:${DATABASE_PASSWORD_MONGODB}@mongodb_container:27017"
     networks:
       - mongo_net
       - logging_net
     depends_on:
       mongodb_container:
         condition: service_healthy
-    command:
-      - '--collect-all'
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+    build:
+      context: ../
+      dockerfile: Docker/infra/postgres-exporter.Dockerfile
+      args:
+        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
+        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
+        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
+        CMS_DATABASE_HOST: strapi_db
+        CMS_DATABASE_PORT: "5432"
     restart: unless-stopped
+    pull_policy: always
     ports:
       - "9187:9187"
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${CMS_DATABASE_USERNAME}:${CMS_DATABASE_PASSWORD}@strapi_db:5432/${CMS_DATABASE_NAME}?sslmode=disable"
     networks:
       - strapi
       - logging_net
@@ -684,13 +697,17 @@ services:
         condition: service_healthy
 
   redis-exporter:
-    image: oliver006/redis_exporter:latest
+    build:
+      context: ../
+      dockerfile: Docker/infra/redis-exporter.Dockerfile
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        REDIS_HOST: redis
+        REDIS_PORT: "6379"
     restart: unless-stopped
+    pull_policy: always
     ports:
       - "9121:9121"
-    environment:
-      REDIS_ADDR: "redis:6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - redis_net
       - logging_net
