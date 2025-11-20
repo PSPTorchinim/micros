@@ -1,0 +1,6 @@
+# Hadolint configuration
+# https://github.com/hadolint/hadolint
+
+ignored:
+  - DL3007  # Using latest is prone to errors if the image will ever update. Pin the version explicitly to a release tag
+            # Ignored for exporter base images that are pulled from upstream registries
