@@ -102,7 +102,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mongodb_connections{instance=\"mongodb-exporter:9216\",state=\"current\"}",
+          "expr": "mongodb_connections{job=\"mongodb\",state=\"current\"}",
           "refId": "A"
         }
       ],
@@ -165,7 +165,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(mongodb_memory{instance=\"mongodb-exporter:9216\",type=\"resident\"} / mongodb_memory{instance=\"mongodb-exporter:9216\",type=\"virtual\"}) * 100",
+          "expr": "(mongodb_memory{job=\"mongodb\",type=\"resident\"} / mongodb_memory{job=\"mongodb\",type=\"virtual\"}) * 100",
           "refId": "A"
         }
       ],
@@ -252,7 +252,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(mongodb_op_counters_total{instance=\"mongodb-exporter:9216\"}[5m])",
+          "expr": "rate(mongodb_op_counters_total{job=\"mongodb\"}[5m])",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
@@ -340,7 +340,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(mongodb_network_bytes_total{instance=\"mongodb-exporter:9216\"}[5m])",
+          "expr": "rate(mongodb_network_bytes_total{job=\"mongodb\"}[5m])",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
@@ -403,7 +403,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mongodb_dbstats_collections{instance=\"mongodb-exporter:9216\"}",
+          "expr": "mongodb_dbstats_collections{job=\"mongodb\"}",
           "refId": "A",
           "format": "table",
           "instant": true

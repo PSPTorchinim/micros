@@ -102,7 +102,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pg_stat_database_numbackends{instance=\"postgres-exporter:9187\"}",
+          "expr": "pg_stat_database_numbackends{job=\"postgres\"}",
           "refId": "A"
         }
       ],
@@ -165,7 +165,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pg_database_size_bytes{instance=\"postgres-exporter:9187\"}",
+          "expr": "pg_database_size_bytes{job=\"postgres\"}",
           "refId": "A"
         }
       ],
@@ -252,7 +252,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(pg_stat_database_xact_commit{instance=\"postgres-exporter:9187\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_commit{job=\"postgres\"}[5m])",
           "legendFormat": "Commits",
           "refId": "A"
         },
@@ -261,7 +261,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(pg_stat_database_xact_rollback{instance=\"postgres-exporter:9187\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_rollback{job=\"postgres\"}[5m])",
           "legendFormat": "Rollbacks",
           "refId": "B"
         }
@@ -349,7 +349,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(pg_stat_database_blks_hit{instance=\"postgres-exporter:9187\"}[5m]) / (rate(pg_stat_database_blks_hit{instance=\"postgres-exporter:9187\"}[5m]) + rate(pg_stat_database_blks_read{instance=\"postgres-exporter:9187\"}[5m])) * 100",
+          "expr": "rate(pg_stat_database_blks_hit{job=\"postgres\"}[5m]) / (rate(pg_stat_database_blks_hit{job=\"postgres\"}[5m]) + rate(pg_stat_database_blks_read{job=\"postgres\"}[5m])) * 100",
           "refId": "A"
         }
       ],
@@ -411,7 +411,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pg_stat_user_tables_n_tup_ins{instance=\"postgres-exporter:9187\"}",
+          "expr": "pg_stat_user_tables_n_tup_ins{job=\"postgres\"}",
           "refId": "A",
           "format": "table",
           "instant": true

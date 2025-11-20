@@ -423,18 +423,56 @@ The following exporters are automatically deployed to collect database metrics:
 Prometheus (http://localhost:9090) aggregates metrics from all database exporters with:
 - 15-second scrape interval
 - 7-day retention period
-- Automatic service discovery
+- Job-based service discovery for automatic dashboard updates
+
+### Adding New Database Instances
+
+The monitoring system is designed to automatically support new database instances with minimal configuration:
+
+1. **Add Exporter to Docker Compose**
+   ```yaml
+   sqlserver-exporter-2:
+     image: awaragi/prometheus-mssql-exporter:latest
+     ports:
+       - "4001:4000"
+     environment:
+       SERVER: sqlserver2
+       # ... other config
+   ```
+
+2. **Update Prometheus Configuration**
+   
+   Edit `Docker/init/prometheus/prometheus.yml` and add the new target under the appropriate job:
+   ```yaml
+   - job_name: 'sqlserver'  # Keep the same job name
+     static_configs:
+       - targets: ['sqlserver-exporter:4000']
+         labels:
+           instance_name: 'primary'
+       - targets: ['sqlserver-exporter-2:4001']  # Add new exporter
+         labels:
+           instance_name: 'secondary'
+   ```
+
+3. **Rebuild Prometheus**
+   ```bash
+   docker compose -f dj-panel-composer.yml build prometheus
+   docker compose -f dj-panel-composer.yml up -d prometheus
+   ```
+
+**That's it!** The Grafana dashboards automatically discover and display metrics from all exporters with matching job names. No dashboard changes needed!
 
 ### Database Dashboard Features
 
 Each database dashboard includes:
 
 1. **Real-time Metrics**: Live performance data updated every 10 seconds
-2. **Connection Monitoring**: Track active database connections
+2. **Connection Monitoring**: Track active database connections across all instances
 3. **Resource Usage**: Monitor memory, CPU, and storage utilization
 4. **Performance Metrics**: Query rates, transaction rates, operations per second
 5. **Health Indicators**: Deadlocks, errors, cache hit rates
 6. **Log Integration**: Recent database logs from Loki in the same view
+7. **Multi-Instance Support**: Automatically aggregates metrics from all instances with the same job name
 
 ### Accessing Database Metrics
 
@@ -455,20 +493,26 @@ Each database dashboard includes:
 ### Sample Prometheus Queries
 
 ```promql
-# SQL Server active connections
-mssql_connections{instance="sqlserver-exporter:4000"}
+# SQL Server active connections (all instances)
+mssql_connections{job="sqlserver"}
 
-# MongoDB operations per second
-rate(mongodb_op_counters_total{instance="mongodb-exporter:9216"}[5m])
+# SQL Server connections for specific instance
+mssql_connections{job="sqlserver",instance_name="primary"}
 
-# PostgreSQL cache hit rate
-rate(pg_stat_database_blks_hit[5m]) / (rate(pg_stat_database_blks_hit[5m]) + rate(pg_stat_database_blks_read[5m])) * 100
+# MongoDB operations per second (all instances)
+rate(mongodb_op_counters_total{job="mongodb"}[5m])
 
-# Redis memory usage percentage
-(redis_memory_used_bytes / redis_memory_max_bytes) * 100
+# PostgreSQL cache hit rate (all instances)
+rate(pg_stat_database_blks_hit{job="postgres"}[5m]) / (rate(pg_stat_database_blks_hit{job="postgres"}[5m]) + rate(pg_stat_database_blks_read{job="postgres"}[5m])) * 100
 
-# All database connections
-sum(mssql_connections) + sum(mongodb_connections{state="current"}) + sum(pg_stat_database_numbackends) + sum(redis_connected_clients)
+# Redis memory usage percentage (all instances)
+(redis_memory_used_bytes{job="redis"} / redis_memory_max_bytes{job="redis"}) * 100
+
+# All database connections across all instances
+sum(mssql_connections{job="sqlserver"}) + sum(mongodb_connections{job="mongodb",state="current"}) + sum(pg_stat_database_numbackends{job="postgres"}) + sum(redis_connected_clients{job="redis"})
+
+# Group connections by instance
+sum by (instance_name) (mssql_connections{job="sqlserver"})
 ```
 
 ### Database Monitoring Ports

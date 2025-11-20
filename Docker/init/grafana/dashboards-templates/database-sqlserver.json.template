@@ -102,7 +102,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mssql_connections{instance=\"sqlserver-exporter:4000\"}",
+          "expr": "mssql_connections{job=\"sqlserver\"}",
           "refId": "A"
         }
       ],
@@ -248,7 +248,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(mssql_batch_requests{instance=\"sqlserver-exporter:4000\"}[5m])",
+          "expr": "rate(mssql_batch_requests{job=\"sqlserver\"}[5m])",
           "refId": "A"
         }
       ],
@@ -335,7 +335,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mssql_deadlocks{instance=\"sqlserver-exporter:4000\"}",
+          "expr": "mssql_deadlocks{job=\"sqlserver\"}",
           "refId": "A"
         }
       ],
@@ -397,7 +397,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mssql_database_size_bytes{instance=\"sqlserver-exporter:4000\"}",
+          "expr": "mssql_database_size_bytes{job=\"sqlserver\"}",
           "refId": "A",
           "format": "table",
           "instant": true

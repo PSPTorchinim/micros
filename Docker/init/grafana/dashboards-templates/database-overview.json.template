@@ -72,7 +72,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mssql_connections{instance=\"sqlserver-exporter:4000\"}",
+          "expr": "mssql_connections{job=\"sqlserver\"}",
           "refId": "A"
         }
       ],
@@ -129,7 +129,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mongodb_connections{instance=\"mongodb-exporter:9216\",state=\"current\"}",
+          "expr": "mongodb_connections{job=\"mongodb\",state=\"current\"}",
           "refId": "A"
         }
       ],
@@ -186,7 +186,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pg_stat_database_numbackends{instance=\"postgres-exporter:9187\"}",
+          "expr": "pg_stat_database_numbackends{job=\"postgres\"}",
           "refId": "A"
         }
       ],
@@ -243,7 +243,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "redis_connected_clients{instance=\"redis-exporter:9121\"}",
+          "expr": "redis_connected_clients{job=\"redis\"}",
           "refId": "A"
         }
       ],
@@ -330,7 +330,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mssql_connections{instance=\"sqlserver-exporter:4000\"}",
+          "expr": "mssql_connections{job=\"sqlserver\"}",
           "legendFormat": "SQL Server",
           "refId": "A"
         },
@@ -339,7 +339,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "mongodb_connections{instance=\"mongodb-exporter:9216\",state=\"current\"}",
+          "expr": "mongodb_connections{job=\"mongodb\",state=\"current\"}",
           "legendFormat": "MongoDB",
           "refId": "B"
         },
@@ -348,7 +348,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(pg_stat_database_numbackends{instance=\"postgres-exporter:9187\"})",
+          "expr": "sum(pg_stat_database_numbackends{job=\"postgres\"})",
           "legendFormat": "PostgreSQL",
           "refId": "C"
         },
@@ -357,7 +357,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "redis_connected_clients{instance=\"redis-exporter:9121\"}",
+          "expr": "redis_connected_clients{job=\"redis\"}",
           "legendFormat": "Redis",
           "refId": "D"
         }
@@ -445,7 +445,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(mssql_database_size_bytes{instance=\"sqlserver-exporter:4000\"})",
+          "expr": "sum(mssql_database_size_bytes{job=\"sqlserver\"})",
           "legendFormat": "SQL Server",
           "refId": "A"
         },
@@ -454,7 +454,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(pg_database_size_bytes{instance=\"postgres-exporter:9187\"})",
+          "expr": "sum(pg_database_size_bytes{job=\"postgres\"})",
           "legendFormat": "PostgreSQL",
           "refId": "B"
         },
@@ -463,7 +463,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "redis_memory_used_bytes{instance=\"redis-exporter:9121\"}",
+          "expr": "redis_memory_used_bytes{job=\"redis\"}",
           "legendFormat": "Redis",
           "refId": "C"
         }
@@ -551,7 +551,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(mssql_batch_requests{instance=\"sqlserver-exporter:4000\"}[5m])",
+          "expr": "rate(mssql_batch_requests{job=\"sqlserver\"}[5m])",
           "legendFormat": "SQL Server Batch Requests",
           "refId": "A"
         },
@@ -560,7 +560,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(mongodb_op_counters_total{instance=\"mongodb-exporter:9216\"}[5m])",
+          "expr": "rate(mongodb_op_counters_total{job=\"mongodb\"}[5m])",
           "legendFormat": "MongoDB {{type}}",
           "refId": "B"
         },
@@ -569,7 +569,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(pg_stat_database_xact_commit{instance=\"postgres-exporter:9187\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_commit{job=\"postgres\"}[5m])",
           "legendFormat": "PostgreSQL Commits",
           "refId": "C"
         },
@@ -578,7 +578,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(redis_commands_total{instance=\"redis-exporter:9121\"}[5m])",
+          "expr": "rate(redis_commands_total{job=\"redis\"}[5m])",
           "legendFormat": "Redis {{cmd}}",
           "refId": "D"
         }
