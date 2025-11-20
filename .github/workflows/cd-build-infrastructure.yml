@@ -342,6 +342,20 @@ jobs:
             echo "external_ports_map=$external_map_json"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Show compose generation logs
+        if: always()
+        run: |
+          echo "==== Compose Generation Log(s) ===="
+          ls -1 generate-compose-*.log 2>/dev/null || echo "No log files found."
+          for f in generate-compose-*.log; do
+            if [ -f "$f" ]; then
+              echo "--- $f ---"
+              cat "$f"
+              echo "--- End of $f ---"
+            fi
+          done
+          echo "==== End of Compose Generation Log(s) ===="
+
       - name: Package compose for transfer (base64)
         id: package_compose
         run: |
@@ -399,8 +413,8 @@ jobs:
           echo "✅ Compose uploaded to: $abs"
           echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-      - name: Create static compose file symlink
-        id: create_static_symlink
+      - name: Create static compose file with include
+        id: create_static_include_file
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
@@ -412,7 +426,7 @@ jobs:
             set -euo pipefail
             
             echo "=========================================="
-            echo "🔗 Creating Static Compose File Symlink"
+            echo "📝 Creating Static Compose File with Include"
             echo "=========================================="
             
             ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
@@ -425,27 +439,20 @@ jobs:
             
             echo "📁 Compose directory: $COMPOSE_DIR"
             echo "⏰ Timestamped file: $TIMESTAMPED_COMPOSE"
-            echo "📌 Static symlink: $STATIC_COMPOSE"
+            echo "📌 Static include file: $STATIC_COMPOSE"
             
-            # Remove existing symlink or file if it exists
-            if [ -L "$STATIC_COMPOSE" ] || [ -f "$STATIC_COMPOSE" ]; then
-              echo "🗑️  Removing existing file/symlink: $STATIC_COMPOSE"
+            # Remove existing file if it exists
+            if [ -f "$STATIC_COMPOSE" ]; then
+              echo "🗑️  Removing existing file: $STATIC_COMPOSE"
               rm -f "$STATIC_COMPOSE"
             fi
             
-            # Create symlink to timestamped compose file
-            ln -s "$(basename "$TIMESTAMPED_COMPOSE")" "$STATIC_COMPOSE"
+            # Write include YAML
+            echo "include:" > "$STATIC_COMPOSE"
+            echo "  - $TIMESTAMPED_COMPOSE" >> "$STATIC_COMPOSE"
+            chmod 664 "$STATIC_COMPOSE" || true
             
-            # Verify symlink was created successfully
-            if [ -L "$STATIC_COMPOSE" ]; then
-              echo "✅ Symlink created successfully"
-              echo "   Points to: $(readlink "$STATIC_COMPOSE")"
-              echo "   Full path: $STATIC_COMPOSE"
-            else
-              echo "❌ Failed to create symlink"
-              exit 1
-            fi
-            
+            echo "✅ Static include file created: $STATIC_COMPOSE"
             echo ""
             echo "📋 Compose file listing:"
             ls -lh "$COMPOSE_DIR" | grep "dj-panel" || echo "No dj-panel files found"
