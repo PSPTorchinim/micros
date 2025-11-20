@@ -239,6 +239,8 @@ jobs:
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
       CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
       CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
       CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
@@ -252,7 +254,6 @@ jobs:
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
       CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
       GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
       GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
@@ -274,6 +275,11 @@ jobs:
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
+          - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
+          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
+          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
+          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
+          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
 
     steps:
       - name: Checkout Source Code
@@ -299,9 +305,14 @@ jobs:
           build-args: |
             DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
             DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
             DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
             DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
             DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
+            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
+            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
             CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
             CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
             CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
@@ -313,7 +324,6 @@ jobs:
             REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
             RABBITMQ_USER=${{ env.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
             GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
             GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
             PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
