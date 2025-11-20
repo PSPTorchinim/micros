@@ -413,6 +413,27 @@ class StrapiAPI {
     }
   }
 
+  async getLoginBlockById(id: number) {
+    try {
+      const response = await this.api.loginBlock.getLoginBlocksId(id);
+      return response?.data?.data || null;
+    } catch (error) {
+      console.error(`Error fetching login block by ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockById(id: number) {
+    try {
+      const response =
+        await this.api.forgotPasswordBlock.getForgotPasswordBlocksId(id);
+      return response?.data?.data || null;
+    } catch (error) {
+      console.error(`Error fetching forgot password block by ID ${id}:`, error);
+      return null;
+    }
+  }
+
   // --------------------------------------
   // ARTICLES
   // --------------------------------------

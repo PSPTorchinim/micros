@@ -1,12 +1,12 @@
 {
-  "kind": "singleType",
+  "kind": "collectionType",
   "collectionName": "login_blocks",
   "info": {
     "singularName": "login-block",
     "pluralName": "login-blocks",
     "displayName": "Login Block"
   },
-  "options": { "draftAndPublish": false },
+  "options": { "draftAndPublish": true },
   "attributes": {
     "title": {
       "type": "string",

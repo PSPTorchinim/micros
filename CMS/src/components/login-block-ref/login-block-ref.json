@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_login_block_ref_login_block_refs",
+  "info": { "displayName": "LoginBlockRef" },
+  "attributes": {
+    "login_block": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::login-block.login-block"
+    }
+  }
+}

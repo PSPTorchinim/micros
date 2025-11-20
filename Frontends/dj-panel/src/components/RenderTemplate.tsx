@@ -76,44 +76,6 @@ export const RenderTemplate: React.FC<Props> = ({
     let mounted = true;
 
     const run = async () => {
-      // Get template type
-      const templateType = tpl?.attributes?.TemplateType || tpl?.TemplateType;
-
-      // For Login and ForgotPassword templates, fetch the singleton blocks
-      if (templateType === 'Login') {
-        try {
-          const loginBlock = await strapiAPI.getLoginBlockSingleton();
-          if (mounted && loginBlock) {
-            setBlocks([
-              { __kind: 'login-block', ...loginBlock } as ContentBlock,
-            ]);
-          }
-        } catch (e) {
-          console.error('Error fetching login block singleton:', e);
-          if (mounted) setBlocks([]);
-        }
-        return;
-      }
-
-      if (templateType === 'ForgotPassword') {
-        try {
-          const forgotPasswordBlock =
-            await strapiAPI.getForgotPasswordBlockSingleton();
-          if (mounted && forgotPasswordBlock) {
-            setBlocks([
-              {
-                __kind: 'forgot-password-block',
-                ...forgotPasswordBlock,
-              } as ContentBlock,
-            ]);
-          }
-        } catch (e) {
-          console.error('Error fetching forgot password block singleton:', e);
-          if (mounted) setBlocks([]);
-        }
-        return;
-      }
-
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.attributes?.Content,
@@ -123,13 +85,9 @@ export const RenderTemplate: React.FC<Props> = ({
           ? tpl.Content
           : [];
 
-      // If this is a Standard template with no content and we have a page title,
+      // If no content blocks and we have a page title,
       // try to fetch and render the article directly
-      if (
-        templateType === 'Standard' &&
-        contentBlocks.length === 0 &&
-        pageTitle
-      ) {
+      if (contentBlocks.length === 0 && pageTitle) {
         try {
           const article = await strapiAPI.getArticleByTitle(pageTitle);
           if (mounted && article) {

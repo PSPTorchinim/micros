@@ -1,12 +1,12 @@
 {
-  "kind": "singleType",
+  "kind": "collectionType",
   "collectionName": "forgot_password_blocks",
   "info": {
     "singularName": "forgot-password-block",
     "pluralName": "forgot-password-blocks",
     "displayName": "Forgot Password Block"
   },
-  "options": { "draftAndPublish": false },
+  "options": { "draftAndPublish": true },
   "attributes": {
     "title": {
       "type": "string",
