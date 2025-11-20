@@ -127,7 +127,8 @@ This platform follows a microservices architecture with each service owning its 
 | **DJ Panel**      | 3000 | React 19 + TypeScript | -          | Frontend Application             |
 | **Storybook**     | 6006 | Storybook 10          | -          | Component Documentation          |
 | **Strapi CMS**    | 1337 | Strapi 5 + Node.js    | PostgreSQL | Content Management               |
-| **Grafana**       | 3001 | Grafana 11            | -          | Log Visualization & Dashboards   |
+| **Grafana**       | 3001 | Grafana 11            | -          | Logs & Metrics Visualization     |
+| **Prometheus**    | 9090 | Prometheus 2.48       | -          | Metrics Aggregation & Storage    |
 | **Loki**          | 3100 | Loki 3.3              | Filesystem | Log Aggregation & Storage        |
 | **Promtail**      | 9080 | Promtail 3.3          | -          | Log Collection Agent             |
 
@@ -183,7 +184,8 @@ This platform follows a microservices architecture with each service owning its 
 - **Storybook**: http://localhost:6006
 - **API Gateway**: http://localhost:5000/swagger
 - **Strapi CMS**: http://localhost:1337/admin
-- **Grafana Logs**: http://localhost:3001 (admin/djpanel_grafana_admin_2024)
+- **Grafana Dashboards**: http://localhost:3001 (admin/djpanel_grafana_admin_2024)
+- **Prometheus Metrics**: http://localhost:9090
 - **Individual Service Swagger**: http://localhost:500X/swagger
 
 For detailed setup instructions, see [Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md).
@@ -223,7 +225,7 @@ See **[Rollback Quick Start Guide](ROLLBACK_QUICK_START.md)** for step-by-step i
 
 - **[Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md)** - Complete guide for local development
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
-- **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
+- **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging and database monitoring with Grafana, Loki, and Prometheus
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
 - **[Rollback Quick Start](ROLLBACK_QUICK_START.md)** - Quick guide to rollback deployments
 - **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
