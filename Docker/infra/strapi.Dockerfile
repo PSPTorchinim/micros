@@ -31,8 +31,8 @@ RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 # Copy only package manifests for better cache
 COPY CMS/package*.json ./
 
-# Install dependencies (production only)
-RUN npm ci --only=production
+# Install dependencies (all dependencies needed for build)
+RUN npm ci
 
 # Copy app source (after deps for better cache)
 COPY CMS/ ./
