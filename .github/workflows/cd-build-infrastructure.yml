@@ -4,11 +4,12 @@ name: Build TrueNAS Infrastructure
 # 1. Determines environment (Development/Production) and generates unique tags
 # 2. Calculates available ports on TrueNAS for service allocation
 # 3. Generates and uploads Docker Compose file with service configurations
-# 4. Enables Cloudflare maintenance page to prevent user disruption
-# 5. Performs rolling update of services while keeping databases running
-# 6. Updates Cloudflare tunnel and DNS for service routing
-# 7. Disables maintenance page after successful deployment
-# 8. Includes automatic rollback on failure
+# 4. Tests generated Docker Compose file for validity before deployment
+# 5. Enables Cloudflare maintenance page to prevent user disruption
+# 6. Performs rolling update of services while keeping databases running
+# 7. Updates Cloudflare tunnel and DNS for service routing
+# 8. Disables maintenance page after successful deployment
+# 9. Includes automatic rollback on failure
 
 on:
   workflow_dispatch:
@@ -613,11 +614,139 @@ jobs:
             echo "✅ Created ${volume_count} volume directories"
             echo "=========================================="
 
+  test_docker_compose:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Test Generated Docker Compose
+    runs-on: ubuntu-latest
+    needs: [generate_and_upload_truenas_compose_file, determine_environment]
+    steps:
+      - name: Download and validate compose file from TrueNAS
+        id: test_compose
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🧪 Testing Generated Docker Compose File"
+            echo "=========================================="
+
+            COMPOSE_FILE="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+            
+            echo "Compose file location: $COMPOSE_FILE"
+            
+            # Verify compose file exists
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "❌ ERROR: Compose file not found at: $COMPOSE_FILE"
+              exit 1
+            fi
+            echo "✅ Compose file exists"
+            
+            # Verify file is readable and not empty
+            if [ ! -s "$COMPOSE_FILE" ]; then
+              echo "❌ ERROR: Compose file is empty"
+              exit 1
+            fi
+            echo "✅ Compose file is not empty"
+            
+            # Basic YAML syntax validation
+            if command -v yq >/dev/null 2>&1; then
+              echo "🔍 Validating YAML syntax with yq..."
+              if ! yq eval '.' "$COMPOSE_FILE" >/dev/null 2>&1; then
+                echo "❌ ERROR: Invalid YAML syntax"
+                exit 1
+              fi
+              echo "✅ YAML syntax is valid"
+            else
+              echo "⚠️  yq not available, skipping YAML syntax validation"
+            fi
+            
+            # Validate with docker-compose config if available
+            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+              echo "🔍 Validating compose file with docker compose config..."
+              
+              # Create temporary directory for validation
+              temp_dir=$(mktemp -d)
+              temp_compose="$temp_dir/docker-compose.yml"
+              
+              # Copy compose file to temp location
+              cp "$COMPOSE_FILE" "$temp_compose"
+              
+              # Run docker compose config to validate
+              if docker compose -f "$temp_compose" config >/dev/null 2>&1; then
+                echo "✅ Docker compose configuration is valid"
+              else
+                echo "❌ ERROR: Docker compose validation failed"
+                echo "Attempting to show validation errors..."
+                docker compose -f "$temp_compose" config 2>&1 || true
+                rm -rf "$temp_dir"
+                exit 1
+              fi
+              
+              # Cleanup
+              rm -rf "$temp_dir"
+            else
+              echo "⚠️  Docker compose not available, skipping compose validation"
+            fi
+            
+            # Check for required top-level keys
+            echo "🔍 Checking for required compose structure..."
+            if command -v yq >/dev/null 2>&1; then
+              # Check if services key exists
+              services_count=$(yq eval '.services | length' "$COMPOSE_FILE" 2>/dev/null || echo "0")
+              if [ "$services_count" -eq 0 ]; then
+                echo "❌ ERROR: No services defined in compose file"
+                exit 1
+              fi
+              echo "✅ Found $services_count service(s) defined"
+              
+              # List services
+              echo "📋 Services in compose file:"
+              yq eval '.services | keys | .[]' "$COMPOSE_FILE" 2>/dev/null | while read -r svc; do
+                echo "   - $svc"
+              done
+            fi
+            
+            # Basic content validation - check file size is reasonable
+            file_size=$(wc -c < "$COMPOSE_FILE")
+            if [ "$file_size" -lt 100 ]; then
+              echo "❌ ERROR: Compose file is suspiciously small ($file_size bytes)"
+              exit 1
+            fi
+            echo "✅ Compose file size is reasonable ($file_size bytes)"
+            
+            # Check for common issues in compose files
+            echo "🔍 Checking for common configuration issues..."
+            
+            # Check if file contains any service definitions
+            if ! grep -q "services:" "$COMPOSE_FILE"; then
+              echo "❌ ERROR: No 'services:' section found in compose file"
+              exit 1
+            fi
+            echo "✅ Services section exists"
+            
+            # Display first 20 lines for verification
+            echo ""
+            echo "📄 First 20 lines of compose file:"
+            echo "-----------------------------------"
+            head -n 20 "$COMPOSE_FILE"
+            echo "-----------------------------------"
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ All compose file tests passed!"
+            echo "=========================================="
+
   enable_maintenance_page:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
-    needs: [generate_and_upload_truenas_compose_file, determine_environment]
+    needs: [generate_and_upload_truenas_compose_file, determine_environment, test_docker_compose]
     steps:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
@@ -696,6 +825,7 @@ jobs:
         determine_environment,
         generate_and_upload_truenas_compose_file,
         backup_current_state,
+        test_docker_compose,
         enable_maintenance_page,
       ]
     outputs:
