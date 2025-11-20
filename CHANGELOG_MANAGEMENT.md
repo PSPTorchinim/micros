@@ -1,14 +1,14 @@
 # Changelog Management
 
-This document describes the automatic changelog generation system implemented for all microservices in the DJ Beat Blaster platform.
+This document describes the changelog management system for all microservices in the DJ Beat Blaster platform.
 
 ## Overview
 
-Each service maintains its own `CHANGELOG.md` file that automatically tracks notable changes. The changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Each service maintains its own `CHANGELOG.md` file that tracks notable changes. The changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Services with Changelogs
 
-All backend services have automated changelog generation:
+All backend services maintain changelogs:
 
 - **CompanyAPI** - Brand and client management service
 - **DJHostGateway** - API Gateway service
@@ -21,41 +21,23 @@ All backend services have automated changelog generation:
 
 ## How It Works
 
-### Automatic Generation
+### Manual Maintenance
 
-Changelogs are automatically generated using [git-cliff](https://git-cliff.org/) based on commit messages. The system:
+Changelogs should be manually maintained following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format. Changes should be grouped into categories:
 
-1. **Triggers** on:
-   - Pushes to `production` branch
-   - Pushes to `releases/**` branches
-   - Published releases
-   - Manual workflow dispatch
+- **Added** - New features
+- **Fixed** - Bug fixes
+- **Changed** - Changes to existing functionality
+- **Deprecated** - Features marked for removal
+- **Removed** - Removed features
+- **Security** - Security-related changes
+- **Performance** - Performance improvements
+- **Documentation** - Documentation updates
+- **Testing** - Test updates
+- **Refactored** - Code refactoring
+- **Miscellaneous** - Other changes
 
-2. **Analyzes** commit messages using conventional commit format
-
-3. **Groups** changes into categories:
-   - **Added** - New features (`feat:`, `add:`)
-   - **Fixed** - Bug fixes (`fix:`, `bug:`)
-   - **Changed** - Changes to existing functionality (`change:`)
-   - **Deprecated** - Features marked for removal
-   - **Removed** - Removed features (`remove:`)
-   - **Security** - Security-related changes
-   - **Performance** - Performance improvements (`perf:`)
-   - **Documentation** - Documentation updates (`doc:`)
-   - **Testing** - Test updates (`test:`)
-   - **Refactored** - Code refactoring (`refactor:`)
-   - **Miscellaneous** - Other changes (`chore:`, `ci:`)
-
-4. **Updates** the appropriate `CHANGELOG.md` file in each service directory
-
-### Manual Generation
-
-You can manually trigger changelog generation for all services or a specific service:
-
-1. Navigate to **Actions** → **Generate Changelogs**
-2. Click **Run workflow**
-3. (Optional) Select a specific service from the dropdown
-4. Click **Run workflow** button
+When making changes to a service, update the corresponding `CHANGELOG.md` file in the service directory with a description of the change under the appropriate category.
 
 ## Commit Message Format
 
@@ -129,25 +111,33 @@ For example:
 - `Services/IdentityAPI/CHANGELOG.md`
 - `Services/MusicAPI/CHANGELOG.md`
 
-## Configuration
+## Changelog Format
 
-The changelog generation is configured in:
-- **Workflow**: `.github/workflows/changelog-generator.yml`
-- **git-cliff config**: `.github/cliff.toml`
+Each changelog should follow this structure:
 
-### Customization
+```markdown
+# Changelog
 
-To customize how changelogs are generated, edit `.github/cliff.toml`:
+All notable changes to this service will be documented in this file.
 
-```toml
-[changelog]
-header = "..."    # Changelog header
-body = "..."      # Template for changelog entries
-footer = "..."    # Changelog footer
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[git]
-conventional_commits = true
-commit_parsers = [...]  # Rules for parsing commits
+## [Unreleased]
+
+### Added
+- New features
+
+### Fixed
+- Bug fixes
+
+### Changed
+- Changes to existing functionality
+
+## [1.0.0] - YYYY-MM-DD
+
+### Added
+- Initial release
 ```
 
 ## Best Practices
@@ -158,24 +148,13 @@ commit_parsers = [...]  # Rules for parsing commits
 4. **Mark breaking changes** - Use `!` or `BREAKING CHANGE:` in commit messages
 5. **Keep commits focused** - One logical change per commit
 
-## Troubleshooting
+## Maintenance Tips
 
-### Changelog not updating?
-
-1. Verify your commit messages follow the conventional format
-2. Check if the workflow ran successfully in the Actions tab
-3. Ensure commits affect the service directory (e.g., `Services/CompanyAPI/`)
-
-### Manual regeneration needed?
-
-Run the workflow manually:
-```bash
-# Via GitHub CLI
-gh workflow run changelog-generator.yml
-
-# Or use the GitHub UI
-Actions → Generate Changelogs → Run workflow
-```
+1. **Update changelogs as you make changes** - Don't wait until release time
+2. **Keep entries concise** - One line per change is usually sufficient
+3. **Link to issues/PRs** - Use `#123` to reference related issues
+4. **Use the unreleased section** - Add new entries under `[Unreleased]` until you create a release
+5. **Create version sections when releasing** - Move unreleased changes to a new version section with the release date
 
 ## Related Documentation
 
