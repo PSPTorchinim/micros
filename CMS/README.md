@@ -396,6 +396,7 @@ Main entry point that coordinates seeding of all standard pages:
 ## 📖 Learn More
 
 - [Strapi Documentation](https://docs.strapi.io) - Official Strapi documentation
+- [Dynamic Content Building Guide](DYNAMIC_CONTENT_GUIDE.md) - How to create pages without code changes
 - [Main Project README](../README.md) - DJ Beat Blaster platform overview
 - [Docker Setup](../Docker/README.md) - Container deployment guide
 - [API Documentation](../Services/README.md) - Microservices integration
