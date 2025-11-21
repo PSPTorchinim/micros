@@ -391,17 +391,18 @@ while IFS= read -r service; do
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
-  # Preserve critical service blocks, but **intentionally skip networks and volumes**
+  # Preserve critical service blocks, but **intentionally skip volumes**
   # Volumes are handled separately with transformation
   # Note: healthcheck is already copied above, so skip it here
-  for key in environment expose extra_hosts user ulimits tmpfs command entrypoint; do
+  # Networks are now included for proper service-to-service communication
+  for key in environment expose extra_hosts user ulimits tmpfs command entrypoint networks; do
     copy_service_key_if_present "$service" "$key"
   done
   
   # Transform and copy volumes with TrueNAS bind mounts
   transform_and_copy_volumes "$service"
 
-  # depends_on (force all to map with condition: service_started)
+  # depends_on (preserve conditions for services with healthchecks, otherwise use service_started)
   has_depends_on=$(yq eval ".services.${service} | has(\"depends_on\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
   if [[ "$has_depends_on" == "true" ]]; then
     echo "    depends_on:" >> "$OUTPUT_FILE"
@@ -415,19 +416,48 @@ while IFS= read -r service; do
     fi
     while IFS= read -r dep; do
       [[ -z "$dep" || "$dep" == "null" ]] && continue
+      # Check if original has a condition specified
+      original_condition=$(yq eval ".services.${service}.depends_on.${dep}.condition" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
       echo "      ${dep}:" >> "$OUTPUT_FILE"
-      echo "        condition: service_started" >> "$OUTPUT_FILE"
+      if [[ "$original_condition" != "null" && "$original_condition" != "" ]]; then
+        echo "        condition: ${original_condition}" >> "$OUTPUT_FILE"
+      else
+        echo "        condition: service_started" >> "$OUTPUT_FILE"
+      fi
     done <<< "$deps_list"
   fi
 
   echo "" >> "$OUTPUT_FILE"
 done <<< "$services"
 
-# ======================== Top-level sections (networks intentionally skipped) ==========================
-log_subsection "Skipping top-level volumes and networks (using direct bind mounts)"
-log_info "Skipping top-level networks import by design"
+# ======================== Top-level sections ==========================
+log_subsection "Adding top-level networks for service communication"
+log_info "Networks are required for Grafana-Prometheus and other service-to-service communication"
 log_info "Volumes are now direct TrueNAS bind mounts in service definitions"
 # No top-level volumes section needed - all volumes are direct bind mounts in services
+
+# Extract and copy networks from source compose
+has_networks=$(yq eval 'has("networks")' "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+if [[ "$has_networks" == "true" ]]; then
+  echo "" >> "$OUTPUT_FILE"
+  echo "networks:" >> "$OUTPUT_FILE"
+  network_names=$(yq eval '.networks | keys | .[]' "$SOURCE_COMPOSE" 2>/dev/null || true)
+  while IFS= read -r network; do
+    [[ -z "$network" || "$network" == "null" ]] && continue
+    echo "  ${network}:" >> "$OUTPUT_FILE"
+    driver=$(yq eval ".networks.${network}.driver" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    if [[ "$driver" != "null" && "$driver" != "" ]]; then
+      echo "    driver: ${driver}" >> "$OUTPUT_FILE"
+    fi
+    external=$(yq eval ".networks.${network}.external" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    if [[ "$external" != "null" && "$external" != "" ]]; then
+      echo "    external: ${external}" >> "$OUTPUT_FILE"
+    fi
+  done <<< "$network_names"
+  log_info "Copied networks: $(echo "$network_names" | tr '\n' ' ')"
+else
+  log_warn "No networks found in source compose file"
+fi
 
 
 # ======================== Summary & Sanity Reports ==========================
