@@ -296,6 +296,39 @@ copy_service_key_if_present() {
   fi
 }
 
+# Copy service networks, filtering out external networks
+copy_service_networks_if_present() {
+  local service="$1"
+  local has; has=$(yq eval ".services.${service} | has(\"networks\")" "$SOURCE_COMPOSE" 2>/dev/null || echo "false")
+  if [[ "$has" != "true" ]]; then
+    return 0
+  fi
+  
+  # Get all networks for this service
+  local service_networks; service_networks=$(yq eval ".services.${service}.networks[]" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+  local filtered_networks=""
+  
+  while IFS= read -r network; do
+    [[ -z "$network" || "$network" == "null" ]] && continue
+    # Check if this network is external in the top-level networks definition
+    local external; external=$(yq eval ".networks.${network}.external" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    if [[ "$external" == "true" ]]; then
+      log_info "  Filtering out external network '${network}' from service '${service}'"
+      continue
+    fi
+    filtered_networks="${filtered_networks}${network}"$'\n'
+  done <<< "$service_networks"
+  
+  # Only write networks section if there are non-external networks
+  if [[ -n "$filtered_networks" ]]; then
+    echo "    networks:" >> "$OUTPUT_FILE"
+    while IFS= read -r network; do
+      [[ -z "$network" ]] && continue
+      echo "      - $network" >> "$OUTPUT_FILE"
+    done <<< "$filtered_networks"
+  fi
+}
+
 # ---- Transform volumes to direct TrueNAS bind mounts ----
 transform_and_copy_volumes() {
   local service="$1"
@@ -394,10 +427,13 @@ while IFS= read -r service; do
   # Preserve critical service blocks, but **intentionally skip volumes**
   # Volumes are handled separately with transformation
   # Note: healthcheck is already copied above, so skip it here
-  # Networks are now included for proper service-to-service communication
-  for key in environment expose extra_hosts user ulimits tmpfs command entrypoint networks; do
+  # Networks are now filtered to exclude external networks
+  for key in environment expose extra_hosts user ulimits tmpfs command entrypoint; do
     copy_service_key_if_present "$service" "$key"
   done
+  
+  # Copy networks with filtering for external networks
+  copy_service_networks_if_present "$service"
   
   # Transform and copy volumes with TrueNAS bind mounts
   transform_and_copy_volumes "$service"
@@ -442,19 +478,28 @@ if [[ "$has_networks" == "true" ]]; then
   echo "" >> "$OUTPUT_FILE"
   echo "networks:" >> "$OUTPUT_FILE"
   network_names=$(yq eval '.networks | keys | .[]' "$SOURCE_COMPOSE" 2>/dev/null || true)
+  copied_networks=""
   while IFS= read -r network; do
     [[ -z "$network" || "$network" == "null" ]] && continue
+    # Skip external networks - they're expected to exist in the environment
+    external=$(yq eval ".networks.${network}.external" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    if [[ "$external" == "true" ]]; then
+      log_info "Skipping external network '${network}' - not available in TrueNAS environment"
+      continue
+    fi
     echo "  ${network}:" >> "$OUTPUT_FILE"
     driver=$(yq eval ".networks.${network}.driver" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
     if [[ "$driver" != "null" && "$driver" != "" ]]; then
       echo "    driver: ${driver}" >> "$OUTPUT_FILE"
     fi
-    external=$(yq eval ".networks.${network}.external" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-    if [[ "$external" != "null" && "$external" != "" ]]; then
-      echo "    external: ${external}" >> "$OUTPUT_FILE"
-    fi
+    # Don't copy external flag since we're creating these networks
+    copied_networks="${copied_networks}${network} "
   done <<< "$network_names"
-  log_info "Copied networks: $(echo "$network_names" | tr '\n' ' ')"
+  if [[ -n "$copied_networks" ]]; then
+    log_info "Copied networks: ${copied_networks}"
+  else
+    log_warn "No non-external networks found to copy"
+  fi
 else
   log_warn "No networks found in source compose file"
 fi
