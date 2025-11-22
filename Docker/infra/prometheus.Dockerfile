@@ -6,6 +6,10 @@ FROM prom/prometheus:v2.48.0
 # Copy Prometheus configuration
 COPY Docker/init/prometheus/prometheus.yml /etc/prometheus/prometheus.yml
 
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
+USER root
+
 # Expose Prometheus port
 EXPOSE 9090
 
