@@ -105,6 +105,7 @@ This service provides comprehensive music management for:
 - **ASP.NET Core Web API** - REST API framework
 - **Entity Framework Core** - ORM for SQL Server
 - **SQL Server** - Primary database
+- **Redis** - Distributed caching
 - **AutoMapper** - Object mapping
 - **TagLib** - Audio metadata reading (optional)
 - **Serilog** - Structured logging
