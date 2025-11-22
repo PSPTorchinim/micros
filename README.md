@@ -84,10 +84,9 @@ This platform follows a microservices architecture with each service owning its 
 - **Authentication**: JWT Bearer Tokens
 - **Documentation**: Swagger/OpenAPI
 - **Database**: Entity Framework Core (SQL Server), MongoDB Driver
-- **Caching**: Redis
+- **Caching**: Redis (distributed caching)
 - **Messaging**: RabbitMQ
 - **API Gateway**: YARP (Yet Another Reverse Proxy)
-- **Caching**: Redis with distributed caching support
 
 #### Frontend (React 19)
 
