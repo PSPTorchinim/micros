@@ -28,14 +28,9 @@ ENV NODE_ENV=production \
 # hadolint ignore=DL3018
 RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 
-# Copy only package manifests for better cache
-COPY CMS/package*.json ./
-
-# Install dependencies (all dependencies needed for build)
-RUN npm ci
-
 # Copy app source (after deps for better cache)
 COPY CMS/ ./
+RUN npm install
 
 # Build the app
 RUN npm run build
