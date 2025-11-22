@@ -97,19 +97,21 @@ The platform uses a modern logging stack consisting of:
 
 ### Pre-configured Features
 
-1. **Loki Datasource**: Automatically configured and set as default
-2. **Service Labels**: All logs are automatically labeled with:
+1. **Loki Datasource**: Automatically configured and set as default for log aggregation
+2. **Prometheus Datasource**: Automatically configured for metrics collection from database exporters
+3. **Service Labels**: All logs are automatically labeled with:
    - `service`: Service name (e.g., identity_be, music_be)
    - `container`: Container name
    - `type`: Service type (microservice, frontend, infrastructure)
    - `environment`: Deployment environment
    - `compose_project`: Docker Compose project name
-3. **Pre-built Dashboards**: 13 dashboards are automatically provisioned for DJ Panel services:
+4. **Pre-built Dashboards**: 18 dashboards are automatically provisioned for DJ Panel services:
    
    **Aggregate Dashboards:**
    - **DJ Panel - Overview**: Comprehensive view of all DJ Panel services with log rates, error counts, and real-time logs
    - **DJ Panel - Microservices**: Detailed monitoring of backend services (identity_be, music_be, gear_be, documents_be, brand_be, party_be, mailing_be, apigateway)
    - **DJ Panel - Frontend Services**: Focused view of frontend services (host_fe, strapi)
+   - **Database - Overview**: Real-time metrics for all databases (SQL Server, MongoDB, PostgreSQL, Redis)
    
    **Individual Service Dashboards:**
    - **Identity Service**: User authentication and session management logs
@@ -122,6 +124,12 @@ The platform uses a modern logging stack consisting of:
    - **API Gateway**: Gateway and routing logs
    - **DJ Panel Frontend**: React frontend application logs
    - **Strapi CMS**: Content management system logs
+   
+   **Database Dashboards:**
+   - **Database - SQL Server**: Connections, memory usage, batch requests, deadlocks, database sizes, and logs
+   - **Database - MongoDB**: Connections, memory usage, operations per second, network traffic, collections, and logs
+   - **Database - PostgreSQL**: Connections, database size, transactions, cache hit rate, table statistics, and logs
+   - **Database - Redis**: Connections, memory usage, commands per second, cache hit rate, keys per database, and logs
 
 ### Accessing Pre-built Dashboards
 
@@ -131,9 +139,11 @@ The platform uses a modern logging stack consisting of:
 4. Select one of the pre-configured dashboards:
    - Use **DJ Panel - Overview** for a quick health check of all services
    - Use **DJ Panel - Microservices** or **DJ Panel - Frontend Services** for grouped monitoring with filtering
+   - Use **Database - Overview** for a comprehensive view of all database metrics
    - Use individual service dashboards (e.g., **Identity Service**, **Music Service**) for deep-dive analysis of a specific service
+   - Use individual database dashboards (e.g., **Database - SQL Server**, **Database - MongoDB**) for detailed database performance monitoring
 
-All dashboards automatically filter to show only logs from DJ Panel services (excluding infrastructure services like databases, message queues, etc.).
+Application dashboards automatically filter to show only logs from DJ Panel services (excluding infrastructure services). Database dashboards combine both Prometheus metrics and Loki logs for comprehensive monitoring.
 
 ### Creating Your First Dashboard
 
@@ -381,6 +391,175 @@ When changing environments:
 docker compose -f dj-panel-composer.yml build --no-cache grafana
 docker compose -f dj-panel-composer.yml up -d grafana
 ```
+
+## 📊 Database Monitoring
+
+### Overview
+
+In addition to application logs, the platform includes comprehensive database monitoring using Prometheus exporters and Grafana dashboards. This provides real-time insights into database performance, resource usage, and health.
+
+### Database Exporters
+
+The following exporters are automatically deployed to collect database metrics:
+
+1. **SQL Server Exporter** (Port 4000)
+   - Monitors: IdentityDB, MusicDB, GearDB, BrandDB, PartyDB, ApiGatewayDB
+   - Metrics: Connections, memory usage, batch requests, deadlocks, database sizes
+
+2. **MongoDB Exporter** (Port 9216)
+   - Monitors: DocumentsDB, MailingDB
+   - Metrics: Connections, memory usage, operations per second, network traffic, collections
+
+3. **PostgreSQL Exporter** (Port 9187)
+   - Monitors: Strapi CMS database
+   - Metrics: Connections, database size, transactions, cache hit rate, table statistics
+
+4. **Redis Exporter** (Port 9121)
+   - Monitors: Cache layer
+   - Metrics: Connections, memory usage, commands per second, cache hit rate, keys per database
+
+### Prometheus
+
+Prometheus (http://localhost:9090) aggregates metrics from all database exporters with:
+- 15-second scrape interval
+- 7-day retention period
+- Job-based service discovery for automatic dashboard updates
+
+### Adding New Database Instances
+
+The monitoring system is designed to automatically support new database instances with minimal configuration:
+
+1. **Add Exporter to Docker Compose**
+   ```yaml
+   sqlserver-exporter-2:
+     image: awaragi/prometheus-mssql-exporter:latest
+     ports:
+       - "4001:4000"
+     environment:
+       SERVER: sqlserver2
+       # ... other config
+   ```
+
+2. **Update Prometheus Configuration**
+   
+   Edit `Docker/init/prometheus/prometheus.yml` and add the new target under the appropriate job:
+   ```yaml
+   - job_name: 'sqlserver'  # Keep the same job name
+     static_configs:
+       - targets: ['sqlserver-exporter:4000']
+         labels:
+           instance_name: 'primary'
+       - targets: ['sqlserver-exporter-2:4001']  # Add new exporter
+         labels:
+           instance_name: 'secondary'
+   ```
+
+3. **Rebuild Prometheus**
+   ```bash
+   docker compose -f dj-panel-composer.yml build prometheus
+   docker compose -f dj-panel-composer.yml up -d prometheus
+   ```
+
+**That's it!** The Grafana dashboards automatically discover and display metrics from all exporters with matching job names. No dashboard changes needed!
+
+### Database Dashboard Features
+
+Each database dashboard includes:
+
+1. **Real-time Metrics**: Live performance data updated every 10 seconds
+2. **Connection Monitoring**: Track active database connections across all instances
+3. **Resource Usage**: Monitor memory, CPU, and storage utilization
+4. **Performance Metrics**: Query rates, transaction rates, operations per second
+5. **Health Indicators**: Deadlocks, errors, cache hit rates
+6. **Log Integration**: Recent database logs from Loki in the same view
+7. **Multi-Instance Support**: Automatically aggregates metrics from all instances with the same job name
+
+### Accessing Database Metrics
+
+**Grafana Dashboards**: http://localhost:3001
+- Navigate to "Dashboards" → "DJ Beat Blaster" folder
+- Select from:
+  - **Database - Overview**: All databases at a glance
+  - **Database - SQL Server**: Detailed SQL Server monitoring
+  - **Database - MongoDB**: Detailed MongoDB monitoring
+  - **Database - PostgreSQL**: Detailed PostgreSQL monitoring
+  - **Database - Redis**: Detailed Redis monitoring
+
+**Prometheus Query Interface**: http://localhost:9090
+- Direct access to raw metrics
+- Custom PromQL queries
+- Metric exploration and testing
+
+### Sample Prometheus Queries
+
+```promql
+# SQL Server active connections (all instances)
+mssql_connections{job="sqlserver"}
+
+# SQL Server connections for specific instance
+mssql_connections{job="sqlserver",instance_name="primary"}
+
+# MongoDB operations per second (all instances)
+rate(mongodb_op_counters_total{job="mongodb"}[5m])
+
+# PostgreSQL cache hit rate (all instances)
+rate(pg_stat_database_blks_hit{job="postgres"}[5m]) / (rate(pg_stat_database_blks_hit{job="postgres"}[5m]) + rate(pg_stat_database_blks_read{job="postgres"}[5m])) * 100
+
+# Redis memory usage percentage (all instances)
+(redis_memory_used_bytes{job="redis"} / redis_memory_max_bytes{job="redis"}) * 100
+
+# All database connections across all instances
+sum(mssql_connections{job="sqlserver"}) + sum(mongodb_connections{job="mongodb",state="current"}) + sum(pg_stat_database_numbackends{job="postgres"}) + sum(redis_connected_clients{job="redis"})
+
+# Group connections by instance
+sum by (instance_name) (mssql_connections{job="sqlserver"})
+```
+
+### Database Monitoring Ports
+
+| Service              | Port | Purpose                        |
+| -------------------- | ---- | ------------------------------ |
+| Prometheus           | 9090 | Metrics aggregation and query  |
+| SQL Server Exporter  | 4000 | SQL Server metrics collection  |
+| MongoDB Exporter     | 9216 | MongoDB metrics collection     |
+| PostgreSQL Exporter  | 9187 | PostgreSQL metrics collection  |
+| Redis Exporter       | 9121 | Redis metrics collection       |
+
+### Troubleshooting Database Monitoring
+
+**Metrics not appearing:**
+
+1. Check exporter is running:
+   ```bash
+   docker compose -f dj-panel-composer.yml ps | grep exporter
+   ```
+
+2. Verify Prometheus is scraping:
+   ```bash
+   curl http://localhost:9090/api/v1/targets
+   ```
+
+3. Test exporter directly:
+   ```bash
+   curl http://localhost:4000/metrics  # SQL Server
+   curl http://localhost:9216/metrics  # MongoDB
+   curl http://localhost:9187/metrics  # PostgreSQL
+   curl http://localhost:9121/metrics  # Redis
+   ```
+
+**Dashboard shows no data:**
+
+1. Verify Prometheus datasource in Grafana:
+   - Go to Configuration → Data Sources
+   - Select "Prometheus"
+   - Click "Test" to verify connection
+
+2. Check time range in dashboard (default is last 1 hour)
+
+3. Verify database is running and accessible:
+   ```bash
+   docker compose -f dj-panel-composer.yml ps sqlserver mongodb_container strapi_db redis
+   ```
 
 ---
 

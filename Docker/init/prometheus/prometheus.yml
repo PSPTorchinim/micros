@@ -1,0 +1,100 @@
+# Prometheus Configuration
+# Scrapes metrics from database exporters
+#
+# ADDING NEW DATABASE INSTANCES:
+# To add a new database exporter:
+# 1. Add the exporter service to docker-compose.yml
+# 2. Add a new job below following the existing pattern
+# 3. Ensure the job_name matches the database type (e.g., 'sqlserver', 'mongodb', 'postgres', 'redis')
+# 4. Grafana dashboards use job labels, so they'll automatically pick up new exporters with matching job names
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'dj-panel'
+    replica: '1'
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # SQL Server metrics
+  # Add additional SQL Server instances here with the same job_name: 'sqlserver'
+  - job_name: 'sqlserver'
+    static_configs:
+      - targets: ['sqlserver-exporter:4000']
+        labels:
+          service: 'sqlserver'
+          database_type: 'mssql'
+          instance_name: 'primary'  # Add instance_name to distinguish multiple instances
+      # Example: Add a second SQL Server instance
+      # - targets: ['sqlserver-exporter-2:4000']
+      #   labels:
+      #     service: 'sqlserver'
+      #     database_type: 'mssql'
+      #     instance_name: 'secondary'
+
+  # MongoDB metrics
+  # Add additional MongoDB instances here with the same job_name: 'mongodb'
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+        labels:
+          service: 'mongodb'
+          database_type: 'mongodb'
+          instance_name: 'primary'
+      # Example: Add a second MongoDB instance
+      # - targets: ['mongodb-exporter-2:9216']
+      #   labels:
+      #     service: 'mongodb'
+      #     database_type: 'mongodb'
+      #     instance_name: 'secondary'
+
+  # PostgreSQL metrics
+  # Add additional PostgreSQL instances here with the same job_name: 'postgres'
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgres'
+          database_type: 'postgres'
+          instance_name: 'strapi'
+      # Example: Add a second PostgreSQL instance
+      # - targets: ['postgres-exporter-2:9187']
+      #   labels:
+      #     service: 'postgres'
+      #     database_type: 'postgres'
+      #     instance_name: 'app-db'
+
+  # Redis metrics
+  # Add additional Redis instances here with the same job_name: 'redis'
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          database_type: 'redis'
+          instance_name: 'cache'
+      # Example: Add a second Redis instance
+      # - targets: ['redis-exporter-2:9121']
+      #   labels:
+      #     service: 'redis'
+      #     database_type: 'redis'
+      #     instance_name: 'session-store'
+
+  # RabbitMQ metrics (built-in Prometheus plugin on port 15692)
+  # Add additional RabbitMQ instances here with the same job_name: 'rabbitmq'
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+        labels:
+          service: 'rabbitmq'
+          instance_name: 'primary'
+      # Example: Add a second RabbitMQ instance
+      # - targets: ['rabbitmq-2:15692']
+      #   labels:
+      #     service: 'rabbitmq'
+      #     instance_name: 'secondary'

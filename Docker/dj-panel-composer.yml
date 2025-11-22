@@ -614,6 +614,107 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - promtail_positions:/var/lib/promtail
 
+  prometheus:
+    build:
+      context: ../
+      dockerfile: Docker/infra/prometheus.Dockerfile
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "9090:9090"
+    networks:
+      - logging_net
+      - sql_net
+      - mongo_net
+      - redis_net
+      - public
+    volumes:
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+
+  sqlserver-exporter:
+    build:
+      context: ../
+      dockerfile: Docker/infra/sqlserver-exporter.Dockerfile
+      args:
+        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
+        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+        DATABASE_HOST_SQLSERVER: sqlserver
+        DATABASE_PORT_SQLSERVER: "1433"
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "4000:4000"
+    networks:
+      - sql_net
+      - logging_net
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  mongodb-exporter:
+    build:
+      context: ../
+      dockerfile: Docker/infra/mongodb-exporter.Dockerfile
+      args:
+        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
+        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
+        DATABASE_HOST_MONGODB: mongodb_container
+        DATABASE_PORT_MONGODB: "27017"
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "9216:9216"
+    networks:
+      - mongo_net
+      - logging_net
+    depends_on:
+      mongodb_container:
+        condition: service_healthy
+
+  postgres-exporter:
+    build:
+      context: ../
+      dockerfile: Docker/infra/postgres-exporter.Dockerfile
+      args:
+        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
+        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
+        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
+        CMS_DATABASE_HOST: strapi_db
+        CMS_DATABASE_PORT: "5432"
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "9187:9187"
+    networks:
+      - strapi
+      - logging_net
+    depends_on:
+      strapi_db:
+        condition: service_healthy
+
+  redis-exporter:
+    build:
+      context: ../
+      dockerfile: Docker/infra/redis-exporter.Dockerfile
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        REDIS_HOST: redis
+        REDIS_PORT: "6379"
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "9121:9121"
+    networks:
+      - redis_net
+      - logging_net
+    depends_on:
+      redis:
+        condition: service_healthy
+
   grafana:
     build:
       context: ../
@@ -629,6 +730,8 @@ services:
       - "3001:3001"
     depends_on:
       loki:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     networks:
       - logging_net
@@ -686,6 +789,8 @@ volumes:
   loki_data:
     driver: local
   promtail_positions:
+    driver: local
+  prometheus_data:
     driver: local
   grafana_data:
     driver: local
