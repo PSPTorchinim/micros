@@ -85,6 +85,7 @@ This service provides comprehensive document management for:
 - **ASP.NET Core Web API** - REST API framework
 - **MongoDB Driver** - NoSQL database access
 - **MongoDB** - Document database
+- **Redis** - Distributed caching
 - **RazorEngine** - Template rendering
 - **iTextSharp/QuestPDF** - PDF generation
 - **AutoMapper** - Object mapping

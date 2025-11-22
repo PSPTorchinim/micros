@@ -67,6 +67,7 @@ The gateway routes requests to backend services:
 - **ASP.NET Core** - Web framework
 - **YARP** - Reverse proxy library
 - **SQL Server** - Configuration and logging storage
+- **Redis** - Distributed caching and response caching
 - **JWT** - Token-based authentication
 - **Serilog** - Structured logging
 - **Swagger/OpenAPI** - Aggregated API documentation

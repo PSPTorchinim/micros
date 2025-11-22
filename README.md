@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-latest-47A248?style=for-the-badge&logo=mongodb)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?style=for-the-badge&logo=microsoftsqlserver)
-![Strapi](https://img.shields.io/badge/Strapi-5.23.6-2F2E8B?style=for-the-badge&logo=strapi)
+![Strapi](https://img.shields.io/badge/Strapi-5.29.0-2F2E8B?style=for-the-badge&logo=strapi)
 
 A comprehensive microservices platform for DJ services management, built with .NET 9, React, and modern cloud-native technologies.
 
@@ -87,6 +87,7 @@ This platform follows a microservices architecture with each service owning its 
 - **Caching**: Redis
 - **Messaging**: RabbitMQ
 - **API Gateway**: YARP (Yet Another Reverse Proxy)
+- **Caching**: Redis with distributed caching support
 
 #### Frontend (React 19)
 
@@ -99,9 +100,10 @@ This platform follows a microservices architecture with each service owning its 
 
 #### CMS (Strapi 5)
 
-- **Version**: Strapi 5.23.6
+- **Version**: Strapi 5.29.0
 - **Database**: PostgreSQL
-- **Plugins**: GraphQL, Users & Permissions
+- **Plugins**: GraphQL, Users & Permissions, Documentation
+- **Testing**: Jest for unit and integration tests
 
 #### Infrastructure
 
@@ -224,6 +226,7 @@ See **[Rollback Quick Start Guide](ROLLBACK_QUICK_START.md)** for step-by-step i
 - **[Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md)** - Complete guide for local development
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
 - **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
+- **[Caching Guide](Services/CACHING_GUIDE.md)** - Redis caching implementation guide
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
 - **[Rollback Quick Start](ROLLBACK_QUICK_START.md)** - Quick guide to rollback deployments
 - **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
