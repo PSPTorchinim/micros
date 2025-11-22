@@ -84,3 +84,17 @@ scrape_configs:
       #     service: 'redis'
       #     database_type: 'redis'
       #     instance_name: 'session-store'
+
+  # RabbitMQ metrics (built-in Prometheus plugin on port 15692)
+  # Add additional RabbitMQ instances here with the same job_name: 'rabbitmq'
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+        labels:
+          service: 'rabbitmq'
+          instance_name: 'primary'
+      # Example: Add a second RabbitMQ instance
+      # - targets: ['rabbitmq-2:15692']
+      #   labels:
+      #     service: 'rabbitmq'
+      #     instance_name: 'secondary'
