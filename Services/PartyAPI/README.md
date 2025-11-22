@@ -96,6 +96,7 @@ Planned entities:
 - **ASP.NET Core Web API** - REST API framework
 - **Entity Framework Core** - ORM for SQL Server
 - **SQL Server** - Primary database
+- **Redis** - Distributed caching
 - **AutoMapper** - Object mapping
 - **Serilog** - Structured logging
 - **Swagger/OpenAPI** - API documentation

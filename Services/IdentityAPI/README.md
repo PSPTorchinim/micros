@@ -86,6 +86,7 @@ This service provides centralized identity and access management for:
 - **ASP.NET Core Web API** - REST API framework
 - **Entity Framework Core** - ORM for SQL Server
 - **SQL Server** - Primary database
+- **Redis** - Distributed caching
 - **JWT** - Token-based authentication
 - **AutoMapper** - Object mapping
 - **Serilog** - Structured logging

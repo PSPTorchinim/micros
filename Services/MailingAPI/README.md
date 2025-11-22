@@ -105,6 +105,7 @@ Planned entities:
 - **ASP.NET Core Web API** - REST API framework
 - **MongoDB Driver** - NoSQL database access
 - **MongoDB** - Document database
+- **Redis** - Distributed caching
 - **MailKit/MimeKit** - Email sending library
 - **RazorEngine** - Template rendering
 - **AutoMapper** - Object mapping

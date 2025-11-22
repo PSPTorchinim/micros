@@ -198,11 +198,15 @@ The `Shared` project contains common functionality used across all services:
 - **Database Configuration**: SQL Server and MongoDB setup
 - **Authentication**: JWT token validation and middleware
 - **Security**: API key validation and security middleware
-- **Caching**: Redis configuration and services
+- **Caching**: Redis configuration and distributed caching services
 - **Messaging**: RabbitMQ producer and consumer services
 - **Health Checks**: Service health monitoring
 - **CORS Configuration**: Cross-origin request handling
 - **Swagger Configuration**: API documentation setup
+
+For detailed caching implementation guidance, see:
+- **[Caching Guide](CACHING_GUIDE.md)** - Comprehensive Redis caching usage guide
+- **[Caching Implementation Summary](CACHING_IMPLEMENTATION_SUMMARY.md)** - Overview of caching architecture and features
 
 ### Common Patterns
 
@@ -412,7 +416,7 @@ dotnet test --filter Category=Load
 - Automated deployment to staging
 - Manual approval for production deployment
 
-For detailed deployment instructions, see the [Docker README](../Docker/README.md) and [Kubernetes configurations](../k8s/README.md).
+For detailed deployment instructions, see the [Docker README](../Docker/README.md).
 
 ## 📖 Individual Service Documentation
 
