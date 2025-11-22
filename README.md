@@ -70,8 +70,8 @@ This platform follows a microservices architecture with each service owning its 
 ┌─────────────────────────────────────────────────────────────┐
 │              Infrastructure Layer                          │
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│ │RabbitMQ  │ │  Docker  │ │Kubernetes│ │  GitHub  │       │
-│ │(Messages)│ │(Container│ │ (Orchest.)│ │ Actions  │       │
+│ │RabbitMQ  │ │  Redis   │ │  Docker  │ │  GitHub  │       │
+│ │(Messages)│ │ (Cache)  │ │(Container│ │ Actions  │       │
 │ └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -111,7 +111,6 @@ This platform follows a microservices architecture with each service owning its 
 - **Caching**: Redis
 - **Message Broker**: RabbitMQ
 - **Containerization**: Docker & Docker Compose
-- **Orchestration**: Kubernetes (Helm Charts)
 - **CI/CD**: GitHub Actions
 
 ## 📦 Services Overview
@@ -197,13 +196,6 @@ For detailed setup instructions, see [Local Development Setup](LOCAL_DEVELOPMENT
 ```bash
 cd Docker
 docker-compose -f dj-panel-composer.yml up -d
-```
-
-### Using Kubernetes
-
-```bash
-cd k8s
-helm install dj-beat-blaster .
 ```
 
 For detailed deployment instructions, see [Docker README](Docker/README.md).
@@ -296,7 +288,6 @@ npm run format:fix  # Auto-format code
 - C# for Visual Studio Code
 - ES7+ React/Redux/React-Native snippets
 - Docker
-- Kubernetes
 - REST Client
 - ESLint
 - Prettier - Code formatter
@@ -304,7 +295,6 @@ npm run format:fix  # Auto-format code
 ### Visual Studio Extensions
 
 - Docker Tools
-- Kubernetes Tools
 - Web Essentials
 
 ## 🤝 Contributing

@@ -416,7 +416,7 @@ dotnet test --filter Category=Load
 - Automated deployment to staging
 - Manual approval for production deployment
 
-For detailed deployment instructions, see the [Docker README](../Docker/README.md) and [Kubernetes configurations](../k8s/README.md).
+For detailed deployment instructions, see the [Docker README](../Docker/README.md).
 
 ## 📖 Individual Service Documentation
 
