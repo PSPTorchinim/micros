@@ -230,13 +230,10 @@ namespace Shared.Services.Run
                     Description = "Enter JWT Token"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id="Bearer" }
-                        }, new string[]{}
+                        new OpenApiSecuritySchemeReference("Bearer"), new List<string>()
                     }
                 });
             });
@@ -400,7 +397,7 @@ namespace Shared.Services.Run
             services.AddHttpContextAccessor();
             configureDbContext(services);
             new Sc().CreateScope(services);
-            services.AddAutoMapper(typeof(P));
+            services.AddAutoMapper(cfg => cfg.AddMaps(typeof(P).Assembly));
             services.AddScoped(typeof(S));
             Console.WriteLine($"Scope built for {typeof(P).Name}, {typeof(S).Name}, {typeof(Sc).Name}.");
             return services;
