@@ -1,7 +1,7 @@
 
 # hadolint global ignore=DL3059
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 ARG MICROSERVICE_NAME
 
@@ -98,7 +98,7 @@ RUN dotnet build -c Release -o /app/build --no-restore
 RUN dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 SHELL ["/bin/bash","-lc"]
 
 # hadolint ignore=DL3008

@@ -5,11 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
 using Shared.Configurations;
-using Shared.Services.App;
 using Shared.Services.Database;
 using Shared.Services.MessagesBroker.RabbitMQ;
 using Shared.Services.Security;
@@ -20,6 +19,7 @@ using System.Text.Json.Serialization;
 using Yarp.ReverseProxy.Swagger;
 using Yarp.ReverseProxy.Swagger.Extensions;
 using Yarp.ReverseProxy.Transforms;
+using Scope = Shared.Services.App.Scope;
 
 namespace Shared.Services.Run
 {
@@ -37,7 +37,7 @@ namespace Shared.Services.Run
                     options.CacheProfiles.Add(profile.Key, profile.Value);
                 }
             }).AddJsonOptions(ConfigureJsonOptions);
-            
+
             // Configure Serilog for structured logging with Loki
             ConfigureSerilog(name);
             services.AddLogging(loggingBuilder =>
@@ -45,7 +45,7 @@ namespace Shared.Services.Run
                 loggingBuilder.ClearProviders();
                 loggingBuilder.AddSerilog();
             });
-            
+
             services.ConfigureCors();
             services.ConfigureApiVersioning();
             services.ConfigureHealthChecks();
@@ -65,7 +65,7 @@ namespace Shared.Services.Run
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
             }
-            
+
             // Add response caching
             services.AddResponseCaching();
             Console.WriteLine("Response caching configured.");
@@ -230,13 +230,10 @@ namespace Shared.Services.Run
                     Description = "Enter JWT Token"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id="Bearer" }
-                        }, new string[]{}
+                        new OpenApiSecuritySchemeReference("Bearer"), new List<string>()
                     }
                 });
             });
@@ -251,14 +248,14 @@ namespace Shared.Services.Run
                 options.InstanceName = $"{name}_";
                 options.Configuration = connection;
             });
-            
+
             // Register Redis ConnectionMultiplexer for advanced operations
             // Using lazy initialization to avoid blocking during startup
             services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
             {
                 return StackExchange.Redis.ConnectionMultiplexer.Connect(connection);
             });
-            
+
             // Register cache service
             services.AddScoped<Shared.Services.Cache.ICacheService>(provider =>
             {
@@ -267,7 +264,7 @@ namespace Shared.Services.Run
                 var connectionMultiplexer = provider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
                 return new Shared.Services.Cache.RedisCacheService(distributedCache, logger, connectionMultiplexer, $"{name}_");
             });
-            
+
             Console.WriteLine($"Redis configured with connection: {connection}");
             // services.AddEFSecondLevelCache(options => options.UseStackExchangeRedisCacheProvider(connection, TimeSpan.FromMinutes(5)));
         }
@@ -400,7 +397,7 @@ namespace Shared.Services.Run
             services.AddHttpContextAccessor();
             configureDbContext(services);
             new Sc().CreateScope(services);
-            services.AddAutoMapper(typeof(P));
+            services.AddAutoMapper(cfg => cfg.AddMaps(typeof(P).Assembly));
             services.AddScoped(typeof(S));
             Console.WriteLine($"Scope built for {typeof(P).Name}, {typeof(S).Name}, {typeof(Sc).Name}.");
             return services;
