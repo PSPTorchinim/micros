@@ -58,6 +58,27 @@ namespace Shared.Services.Cache
             await _distributedCache.SetStringAsync(key, serialized, options);
         }
 
+        public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null) where T : class
+        {
+            // Try to get from cache
+            var cached = await GetAsync<T>(key);
+            if (cached != null)
+            {
+                _logger.LogDebug("Cache hit for key: {Key}", key);
+                return cached;
+            }
+
+            // Cache miss - get from factory (database)
+            _logger.LogDebug("Cache miss for key: {Key}. Fetching from source.", key);
+            var value = await factory();
+
+            // Store in cache
+            await SetAsync(key, value, expiration);
+            _logger.LogDebug("Cached value for key: {Key}", key);
+
+            return value;
+        }
+
         public async Task RemoveAsync(string key)
         {
             await _distributedCache.RemoveAsync(key);

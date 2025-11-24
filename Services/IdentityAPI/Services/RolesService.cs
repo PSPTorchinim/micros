@@ -41,21 +41,14 @@ namespace IdentityAPI.Services
             {
                 var cacheKey = $"{RolesCachePrefix}All";
                 
-                // Try to get from cache
-                var cached = await _cacheService.GetAsync<List<Role>>(cacheKey);
-                if (cached != null)
-                {
-                    _logger.LogDebug("Cache hit for all roles.");
-                    return cached;
-                }
+                // Use GetOrCreateAsync to simplify cache-aside pattern
+                var roles = await _cacheService.GetOrCreateAsync(
+                    cacheKey,
+                    async () => (await _rolesRepository.Get()).ToList(),
+                    DefaultCacheExpiration
+                );
                 
-                _logger.LogDebug("Cache miss for all roles. Calling _rolesRepository.Get()");
-                var roles = (await _rolesRepository.Get()).ToList();
-                
-                // Store in cache
-                await _cacheService.SetAsync(cacheKey, roles, DefaultCacheExpiration);
-                
-                _logger.LogInformation("Retrieved {Count} roles and cached them.", roles.Count);
+                _logger.LogInformation("Retrieved {Count} roles.", roles.Count);
                 return roles;
             }, _logger);
         }
@@ -67,34 +60,26 @@ namespace IdentityAPI.Services
             {
                 var cacheKey = $"{RolesCachePrefix}{id}";
                 
-                // Try to get from cache
-                var cached = await _cacheService.GetAsync<GetRoleDTO>(cacheKey);
-                if (cached != null)
-                {
-                    _logger.LogDebug("Cache hit for role Id: {RoleId}", id);
-                    return cached;
-                }
-                
-                _logger.LogDebug("Cache miss for role Id: {RoleId}. Creating RolePermissionsSpec", id);
-                var spec = new RolePermissionsSpec(x => x.Id.Equals(id));
-                _logger.LogDebug("Calling _rolesRepository.Get(spec) for Id: {RoleId}", id);
-                var req = await _rolesRepository.Get(spec);
-                if (req == null || !req.Any())
-                {
-                    _logger.LogWarning("Role with Id: {RoleId} not found.", id);
-                }
-                else
-                {
-                    _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
-                }
-                
-                var result = _mapper.Map<GetRoleDTO>(req);
-                
-                // Store in cache
-                if (result != null)
-                {
-                    await _cacheService.SetAsync(cacheKey, result, DefaultCacheExpiration);
-                }
+                // Use GetOrCreateAsync to simplify cache-aside pattern
+                var result = await _cacheService.GetOrCreateAsync(
+                    cacheKey,
+                    async () =>
+                    {
+                        _logger.LogDebug("Creating RolePermissionsSpec for Id: {RoleId}", id);
+                        var spec = new RolePermissionsSpec(x => x.Id.Equals(id));
+                        var req = await _rolesRepository.Get(spec);
+                        if (req == null || !req.Any())
+                        {
+                            _logger.LogWarning("Role with Id: {RoleId} not found.", id);
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
+                        }
+                        return _mapper.Map<GetRoleDTO>(req);
+                    },
+                    DefaultCacheExpiration
+                );
                 
                 return result;
             }, _logger);

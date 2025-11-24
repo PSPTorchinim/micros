@@ -44,6 +44,19 @@ namespace IdentityAPI.Tests
             _cacheServiceMock.Setup(x => x.RemoveByPrefixAsync(It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
             
+            // Setup GetOrCreateAsync to call the factory function (simulates cache miss)
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<Role>>(
+                It.IsAny<string>(), 
+                It.IsAny<Func<Task<List<Role>>>>(), 
+                It.IsAny<TimeSpan?>()))
+                .Returns<string, Func<Task<List<Role>>>, TimeSpan?>((key, factory, expiry) => factory());
+            
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetRoleDTO>(
+                It.IsAny<string>(), 
+                It.IsAny<Func<Task<GetRoleDTO>>>(), 
+                It.IsAny<TimeSpan?>()))
+                .Returns<string, Func<Task<GetRoleDTO>>, TimeSpan?>((key, factory, expiry) => factory());
+            
             return new RolesService(
                 _loggerMock.Object,
                 _mapperMock.Object,
