@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Shared.Services.MessagesBroker.RabbitMQ;
+using Shared.Services.Cache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace IdentityAPI.Tests
     public class PermissionsServiceTests
     {
         private readonly Mock<IPermissionsRepository> _permissionsRepositoryMock = new();
+        private readonly Mock<ICacheService> _cacheServiceMock = new();
         private readonly Mock<ILogger<IPermissionsService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
@@ -27,6 +29,26 @@ namespace IdentityAPI.Tests
         private PermissionsService CreateService()
         {
             _serviceProviderMock.Setup(x => x.GetService(typeof(IPermissionsRepository))).Returns(_permissionsRepositoryMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
+            
+            // Setup default cache behavior - GetOrCreateAsync calls factory function (simulates cache miss)
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<GetPermissionsDTO>>(
+                It.IsAny<string>(), 
+                It.IsAny<Func<Task<List<GetPermissionsDTO>>>>(), 
+                It.IsAny<TimeSpan?>()))
+                .Returns<string, Func<Task<List<GetPermissionsDTO>>>, TimeSpan?>((key, factory, expiry) => factory());
+            
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetPermissionDTO>(
+                It.IsAny<string>(), 
+                It.IsAny<Func<Task<GetPermissionDTO>>>(), 
+                It.IsAny<TimeSpan?>()))
+                .Returns<string, Func<Task<GetPermissionDTO>>, TimeSpan?>((key, factory, expiry) => factory());
+            
+            _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
+                .Returns(Task.CompletedTask);
+            _cacheServiceMock.Setup(x => x.RemoveAsync(It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+            
             return new PermissionsService(
                 _loggerMock.Object,
                 _mapperMock.Object,

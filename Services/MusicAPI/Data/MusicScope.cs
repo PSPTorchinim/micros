@@ -6,6 +6,9 @@ internal class MusicScope : Scope
 {
     public override void CreateScope(IServiceCollection services)
     {
+        // Note: Redis caching is implemented at the service layer via ICacheService
+        // for maximum flexibility with custom queries.
+        // Use GetOrCreateAsync for cache-aside pattern in services.
         services.AddScoped<IAlbumRepository, AlbumRepository>();
         services.AddScoped<IArtistsRepository, ArtistsRepository>();
         services.AddScoped<IDirectoriesRepository, DirectoriesRepository>();

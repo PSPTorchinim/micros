@@ -4,6 +4,7 @@ using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using Shared.Data.Exceptions;
 using Shared.Services.App;
+using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
 
 namespace IdentityAPI.Services
@@ -19,22 +20,38 @@ namespace IdentityAPI.Services
 
     public class PermissionsService : BaseService<IPermissionsService>, IPermissionsService
     {
+        private readonly IPermissionsRepository _permissionsRepository;
+        private readonly ICacheService _cacheService;
+        private const string PermissionsCachePrefix = "Permissions_";
+        private static readonly TimeSpan DefaultCacheExpiration = TimeSpan.FromMinutes(5);
+
         public PermissionsService(ILogger<IPermissionsService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, RabbitMQProducerService rabbitMQProducerService, IServiceProvider serviceProvider) : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
             _permissionsRepository = serviceProvider.GetRequiredService<IPermissionsRepository>();
+            _cacheService = serviceProvider.GetRequiredService<ICacheService>();
         }
-
-        private IPermissionsRepository _permissionsRepository { get; set; }
 
         public async Task<List<GetPermissionsDTO>> GetPermissions()
         {
             _logger.LogInformation("Getting all permissions.");
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Calling _permissionsRepository.Get()");
-                var result = await _permissionsRepository.Get();
-                _logger.LogInformation("Retrieved {Count} permissions.", result.Count);
-                return _mapper.Map<List<GetPermissionsDTO>>(result);
+                var cacheKey = $"{PermissionsCachePrefix}All";
+                
+                // Use GetOrCreateAsync to simplify cache-aside pattern
+                var permissions = await _cacheService.GetOrCreateAsync(
+                    cacheKey,
+                    async () =>
+                    {
+                        _logger.LogDebug("Cache miss for permissions. Fetching from database.");
+                        var result = await _permissionsRepository.Get();
+                        return _mapper.Map<List<GetPermissionsDTO>>(result);
+                    },
+                    DefaultCacheExpiration
+                );
+                
+                _logger.LogInformation("Retrieved {Count} permissions.", permissions.Count);
+                return permissions;
             }, _logger);
         }
 
@@ -53,7 +70,13 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
                 await _permissionsRepository.Save();
-                _logger.LogInformation("Permission with name {Name} added: {Result}", request.Name, result);
+                
+                // Update cache with new data
+                var allPermissions = await _permissionsRepository.Get();
+                var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
+                await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                
+                _logger.LogInformation("Permission with name {Name} added and cache updated: {Result}", request.Name, result);
                 return result;
             }, _logger);
         }
@@ -63,17 +86,26 @@ namespace IdentityAPI.Services
             _logger.LogInformation("Getting permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Calling _permissionsRepository.Get() for id: {Id}", id);
-                var req = await _permissionsRepository.Get(p => p.Id.Equals(id));
-                if (req.FirstOrDefault() == null)
-                {
-                    _logger.LogWarning("Permission with id {Id} not found.", id);
-                }
-                else
-                {
-                    _logger.LogInformation("Permission with id {Id} retrieved.", id);
-                }
-                return _mapper.Map<GetPermissionDTO>(req.FirstOrDefault());
+                var cacheKey = $"{PermissionsCachePrefix}{id}";
+                
+                // Use GetOrCreateAsync to simplify cache-aside pattern
+                var permission = await _cacheService.GetOrCreateAsync(
+                    cacheKey,
+                    async () =>
+                    {
+                        _logger.LogDebug("Cache miss for permission id: {Id}. Fetching from database.", id);
+                        var req = await _permissionsRepository.Get(p => p.Id.Equals(id));
+                        var entity = req.FirstOrDefault();
+                        if (entity == null)
+                        {
+                            _logger.LogWarning("Permission with id {Id} not found.", id);
+                        }
+                        return _mapper.Map<GetPermissionDTO>(entity);
+                    },
+                    DefaultCacheExpiration
+                );
+                
+                return permission;
             }, _logger);
         }
 
@@ -94,7 +126,17 @@ namespace IdentityAPI.Services
                 permission.Description = request.Description;
                 var result = await _permissionsRepository.Update(permission);
                 await _permissionsRepository.Save();
-                _logger.LogInformation("Permission with id {Id} updated: {Result}", id, result);
+                
+                // Update cache with new data
+                var updatedPermission = _mapper.Map<GetPermissionDTO>(permission);
+                await _cacheService.SetAsync($"{PermissionsCachePrefix}{id}", updatedPermission, DefaultCacheExpiration);
+                
+                // Update the all permissions cache
+                var allPermissions = await _permissionsRepository.Get();
+                var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
+                await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                
+                _logger.LogInformation("Permission with id {Id} updated and cache refreshed: {Result}", id, result);
                 return result;
             }, _logger);
         }
@@ -111,7 +153,15 @@ namespace IdentityAPI.Services
                     _logger.LogDebug("Permission found. Proceeding to delete id: {Id}", id);
                     var result = await _permissionsRepository.Delete(permission);
                     await _permissionsRepository.Save();
-                    _logger.LogInformation("Permission with id {Id} deleted: {Result}", id, result);
+                    
+                    // Invalidate the specific permission cache and update all permissions cache
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}{id}");
+                    
+                    var allPermissions = await _permissionsRepository.Get();
+                    var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
+                    await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                    
+                    _logger.LogInformation("Permission with id {Id} deleted and cache updated: {Result}", id, result);
                     return result;
                 }
                 else
