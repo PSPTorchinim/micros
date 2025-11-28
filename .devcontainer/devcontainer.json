@@ -158,5 +158,6 @@
     }
   },
   "postCreateCommand": "dotnet restore Micros.sln && cd Frontends/dj-panel && npm install && cd ../../CMS && npm install",
+  "postStartCommand": "chmod +x scripts/start-services.sh && scripts/start-services.sh --wait",
   "remoteUser": "vscode"
 }
