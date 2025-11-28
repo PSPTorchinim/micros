@@ -1,24 +1,148 @@
-// The Dev Container format allows you to configure your environment. At the heart of it
-// is a Docker image or Dockerfile which controls the tools available in your environment.
-//
-// See https://aka.ms/devcontainer.json for more information.
 {
-  "name": "Ona",
-  // Use "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-  // instead of the build to use a pre-built image.
+  "name": "DJ Beat Blaster Development",
   "build": {
     "context": ".",
     "dockerfile": "Dockerfile"
   },
-  // Features add additional features to your environment. See https://containers.dev/features
-  // Beware: features are not supported on all platforms and may have unintended side-effects.
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "moby": false,
       "dockerDashComposeVersion": "v2"
     }
   },
-  "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
-  ]
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-azuretools.vscode-docker",
+        "dsznajder.es7-react-js-snippets",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "humao.rest-client",
+        "eamodio.gitlens",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "Micros.sln",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        }
+      }
+    }
+  },
+  "forwardPorts": [
+    3000,
+    3001,
+    3080,
+    5000,
+    5001,
+    5002,
+    5003,
+    5004,
+    5005,
+    5006,
+    5007,
+    6006,
+    1337,
+    1433,
+    5432,
+    27017,
+    6379,
+    5672,
+    15672,
+    9090,
+    3100
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "API Gateway",
+      "onAutoForward": "notify"
+    },
+    "3080": {
+      "label": "DJ Panel Frontend",
+      "onAutoForward": "notify"
+    },
+    "5000": {
+      "label": "API Gateway (Local)",
+      "onAutoForward": "silent"
+    },
+    "5001": {
+      "label": "Identity API",
+      "onAutoForward": "silent"
+    },
+    "5002": {
+      "label": "Music API",
+      "onAutoForward": "silent"
+    },
+    "5003": {
+      "label": "Equipment API",
+      "onAutoForward": "silent"
+    },
+    "5004": {
+      "label": "Documents API",
+      "onAutoForward": "silent"
+    },
+    "5005": {
+      "label": "Company API",
+      "onAutoForward": "silent"
+    },
+    "5006": {
+      "label": "Party API",
+      "onAutoForward": "silent"
+    },
+    "5007": {
+      "label": "Mailing API",
+      "onAutoForward": "silent"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    },
+    "1337": {
+      "label": "Strapi CMS",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Grafana",
+      "onAutoForward": "notify"
+    },
+    "9090": {
+      "label": "Prometheus",
+      "onAutoForward": "silent"
+    },
+    "1433": {
+      "label": "SQL Server",
+      "onAutoForward": "silent"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "27017": {
+      "label": "MongoDB",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "5672": {
+      "label": "RabbitMQ",
+      "onAutoForward": "silent"
+    },
+    "15672": {
+      "label": "RabbitMQ Management",
+      "onAutoForward": "silent"
+    },
+    "3100": {
+      "label": "Loki",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "dotnet restore Micros.sln && cd Frontends/dj-panel && npm install && cd ../../CMS && npm install",
+  "remoteUser": "vscode"
 }
