@@ -1,14 +1,47 @@
 {
   "name": "DJ Beat Blaster Development",
-  "build": {
-    "context": ".",
-    "dockerfile": "Dockerfile"
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "moby": false,
       "dockerDashComposeVersion": "v2"
     }
+  },
+  "containerEnv": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
+    "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
+    "ASPNETCORE_DATABASE_HOST_SQLSERVER": "sqlserver",
+    "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
+    "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
+    "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "YourStrong@Passw0rd",
+    "ASPNETCORE_DATABASE_HOST_MONGODB": "mongodb",
+    "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
+    "ASPNETCORE_DATABASE_USER_MONGODB": "admin",
+    "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "password",
+    "ASPNETCORE_REDIS_HOST": "redis",
+    "ASPNETCORE_REDIS_PORT": "6379",
+    "ASPNETCORE_REDIS_PASSWORD": "",
+    "ASPNETCORE_RABBITMQ_HOST": "rabbitmq",
+    "ASPNETCORE_RABBITMQ_PORT": "5672",
+    "ASPNETCORE_RABBITMQ_USER": "guest",
+    "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
+    "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
+    "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!",
+    "ASPNETCORE_IDENTITY_BE_ADDRESS": "http://localhost:5001",
+    "ASPNETCORE_MUSIC_BE_ADDRESS": "http://localhost:5002",
+    "ASPNETCORE_GEAR_BE_ADDRESS": "http://localhost:5003",
+    "ASPNETCORE_DOCUMENTS_BE_ADDRESS": "http://localhost:5004",
+    "ASPNETCORE_BRAND_BE_ADDRESS": "http://localhost:5005",
+    "ASPNETCORE_PARTY_BE_ADDRESS": "http://localhost:5006",
+    "ASPNETCORE_MAILING_BE_ADDRESS": "http://localhost:5007",
+    "DATABASE_HOST": "postgres",
+    "DATABASE_PORT": "5432",
+    "DATABASE_NAME": "strapi_db",
+    "DATABASE_USERNAME": "strapi_user",
+    "DATABASE_PASSWORD": "strapi_password"
   },
   "customizations": {
     "vscode": {
