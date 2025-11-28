@@ -116,9 +116,14 @@ namespace IdentityAPI.Services
                 var roleDto = _mapper.Map<GetRoleDTO>(toAdd);
                 await _cacheService.SetAsync($"{RolesCachePrefix}{toAdd.Id}", roleDto, DefaultCacheExpiration);
                 
-                // 2. Update the all roles cache
-                var allRoles = (await _rolesRepository.Get()).ToList();
-                await _cacheService.SetAsync($"{RolesCachePrefix}All", allRoles, DefaultCacheExpiration);
+                // 2. Update the all roles cache by appending the new role if cache exists
+                var cachedAllRoles = await _cacheService.GetAsync<List<Role>>($"{RolesCachePrefix}All");
+                if (cachedAllRoles != null)
+                {
+                    cachedAllRoles.Add(toAdd);
+                    await _cacheService.SetAsync($"{RolesCachePrefix}All", cachedAllRoles, DefaultCacheExpiration);
+                }
+                // If cache doesn't exist, it will be lazily loaded on next read
                 
                 _logger.LogInformation("Role '{RoleName}' added successfully and cache updated: {Result}", request.Name, result);
                 
@@ -149,17 +154,14 @@ namespace IdentityAPI.Services
                 await _rolesRepository.Save();
                 
                 // Update cache with new data instead of just invalidating
-                // 1. Fetch the updated role with permissions
-                var spec = new RolePermissionsSpec(x => x.Id.Equals(id));
-                var updatedRole = await _rolesRepository.Get(spec);
-                var roleDto = _mapper.Map<GetRoleDTO>(updatedRole);
+                // Use the already-updated entity for the DTO instead of fetching again
+                var roleDto = _mapper.Map<GetRoleDTO>(foundByName);
                 
-                // 2. Update the specific role cache
+                // Update the specific role cache
                 await _cacheService.SetAsync($"{RolesCachePrefix}{id}", roleDto, DefaultCacheExpiration);
                 
-                // 3. Update the all roles cache
-                var allRoles = (await _rolesRepository.Get()).ToList();
-                await _cacheService.SetAsync($"{RolesCachePrefix}All", allRoles, DefaultCacheExpiration);
+                // Invalidate the all roles cache; it will be refreshed on next read
+                await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
                 
                 _logger.LogInformation("Role with Id: {RoleId} updated and cache refreshed: {Result}", id, result);
                 

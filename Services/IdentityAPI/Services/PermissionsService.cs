@@ -71,12 +71,10 @@ namespace IdentityAPI.Services
                 var result = await _permissionsRepository.Add(req);
                 await _permissionsRepository.Save();
                 
-                // Update cache with new data
-                var allPermissions = await _permissionsRepository.Get();
-                var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
-                await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                // Invalidate cache so it will be refreshed on next read
+                await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
                 
-                _logger.LogInformation("Permission with name {Name} added and cache updated: {Result}", request.Name, result);
+                _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", request.Name, result);
                 return result;
             }, _logger);
         }
@@ -131,10 +129,8 @@ namespace IdentityAPI.Services
                 var updatedPermission = _mapper.Map<GetPermissionDTO>(permission);
                 await _cacheService.SetAsync($"{PermissionsCachePrefix}{id}", updatedPermission, DefaultCacheExpiration);
                 
-                // Update the all permissions cache
-                var allPermissions = await _permissionsRepository.Get();
-                var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
-                await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                // Invalidate the all permissions cache so it will be refreshed on next read
+                await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
                 
                 _logger.LogInformation("Permission with id {Id} updated and cache refreshed: {Result}", id, result);
                 return result;
@@ -154,14 +150,13 @@ namespace IdentityAPI.Services
                     var result = await _permissionsRepository.Delete(permission);
                     await _permissionsRepository.Save();
                     
-                    // Invalidate the specific permission cache and update all permissions cache
+                    // Invalidate the specific permission cache
                     await _cacheService.RemoveAsync($"{PermissionsCachePrefix}{id}");
                     
-                    var allPermissions = await _permissionsRepository.Get();
-                    var mappedPermissions = _mapper.Map<List<GetPermissionsDTO>>(allPermissions);
-                    await _cacheService.SetAsync($"{PermissionsCachePrefix}All", mappedPermissions, DefaultCacheExpiration);
+                    // Invalidate the "All" permissions cache so it will be lazily loaded on next read
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
                     
-                    _logger.LogInformation("Permission with id {Id} deleted and cache updated: {Result}", id, result);
+                    _logger.LogInformation("Permission with id {Id} deleted and cache invalidated: {Result}", id, result);
                     return result;
                 }
                 else
