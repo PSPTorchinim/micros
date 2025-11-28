@@ -1,10 +1,13 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-# Install required packages
+# Set shell options for pipefail support
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Install required packages (versions not pinned for devcontainer flexibility)
+# hadolint ignore=DL3008
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
     curl \
-    wget \
     git \
     ca-certificates \
     apt-transport-https \
@@ -12,15 +15,16 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && rm -rf /var/lib/apt/lists/*
 
 # Install .NET SDK 9.0
-RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh \
+RUN curl -fsSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh \
     && chmod +x dotnet-install.sh \
     && ./dotnet-install.sh --channel 9.0 --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh
 
 # Install Node.js 20.x
+# hadolint ignore=DL3008
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
