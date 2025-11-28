@@ -1,6 +1,22 @@
 # DJ Beat Blaster - Development Infrastructure
 # This Docker Compose file provides infrastructure services for local development.
 #
+# ARCHITECTURE:
+# - Infrastructure services (databases, message queue) run in Docker containers
+# - Application services (microservices, frontend) are run locally for debugging
+# - Monitoring services (Grafana, Prometheus, Loki) run in Docker containers
+#
+# HOW TO USE:
+# 1. Open this folder in VS Code with "Remote-Containers: Reopen in Container"
+# 2. Infrastructure services start automatically and are accessible via localhost
+# 3. Run microservices locally: cd Services/<ServiceName> && dotnet run
+# 4. Run frontend locally: cd Frontends/dj-panel && npm run dev
+# 5. Run storybook locally: cd Frontends/dj-panel && npm run storybook
+#
+# ALTERNATIVE - Full Docker Stack:
+# To run ALL services (including backends) via Docker, use the production compose:
+#   docker compose -f Docker/dj-panel-composer.yml up -d
+#
 # Port Forwarding: VS Code port forwarding works from within the devcontainer's network
 # namespace, not from sibling containers. To enable proper port forwarding, all
 # infrastructure services use network_mode: service:devcontainer to share the same
@@ -21,17 +37,32 @@ services:
     command: sleep infinity
     # Ports exposed by the devcontainer for VS Code port forwarding.
     # Infrastructure services share this network namespace via network_mode: service:devcontainer
+    # Application ports (5000-5007) are for locally running microservices
     ports:
+      # Infrastructure Services
       - "1433:1433"       # SQL Server
       - "27017:27017"     # MongoDB
       - "5432:5432"       # PostgreSQL
       - "6379:6379"       # Redis
       - "5672:5672"       # RabbitMQ
       - "15672:15672"     # RabbitMQ Management
+      # Application Services (CMS & Monitoring)
       - "1337:1337"       # Strapi CMS
       - "3001:3001"       # Grafana
       - "9090:9090"       # Prometheus
       - "3100:3100"       # Loki
+      # Application Services (run locally via dotnet run / npm run dev)
+      - "3000:3000"       # API Gateway (run: cd Services/DJHostGateway && dotnet run)
+      - "3080:3080"       # DJ Panel Frontend (run: cd Frontends/dj-panel && npm run dev)
+      - "5000:5000"       # API Gateway Local
+      - "5001:5001"       # Identity API (run: cd Services/IdentityAPI && dotnet run)
+      - "5002:5002"       # Music API
+      - "5003:5003"       # Equipment API
+      - "5004:5004"       # Documents API
+      - "5005:5005"       # Company API
+      - "5006:5006"       # Party API
+      - "5007:5007"       # Mailing API
+      - "6006:6006"       # Storybook (run: cd Frontends/dj-panel && npm run storybook)
 
   # SQL Server for .NET microservices
   sqlserver:
