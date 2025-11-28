@@ -1,12 +1,13 @@
 # DJ Beat Blaster - Development Infrastructure
 # This Docker Compose file provides infrastructure services for local development.
-# Services run as Docker containers accessible via Docker DNS names (sqlserver, mongodb, etc.)
-# The devcontainer connects to these services using the service names defined below.
-# For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
 #
-# Port Forwarding: All infrastructure services share network with devcontainer using
-# network_mode. This allows VS Code to properly forward ports from the devcontainer.
-# Services are accessible via localhost from within the devcontainer.
+# Port Forwarding: VS Code port forwarding works from within the devcontainer's network
+# namespace, not from sibling containers. To enable proper port forwarding, all
+# infrastructure services use network_mode: service:devcontainer to share the same
+# network namespace. This makes services accessible via localhost from within the
+# devcontainer and allows VS Code to forward ports to the host.
+#
+# For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
 name: djpanel-devcontainer
 
 services:
@@ -18,9 +19,8 @@ services:
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
-    # Ports exposed by the devcontainer for VS Code port forwarding
-    # All infrastructure services use network_mode: service:devcontainer
-    # so their ports appear on localhost within the devcontainer
+    # Ports exposed by the devcontainer for VS Code port forwarding.
+    # Infrastructure services share this network namespace via network_mode: service:devcontainer
     ports:
       - "1433:1433"
       - "27017:27017"
