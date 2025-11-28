@@ -1,3 +1,8 @@
+# DJ Beat Blaster - Development Infrastructure
+# This Docker Compose file provides infrastructure services for local development.
+# Services run as Docker containers accessible via Docker DNS names (sqlserver, mongodb, etc.)
+# The devcontainer connects to these services using the service names defined below.
+# For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
 name: djpanel-devcontainer
 
 services:
@@ -28,6 +33,7 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
     healthcheck:
+      # -C flag bypasses certificate validation (acceptable for local development)
       test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1
       interval: 10s
       timeout: 15s
