@@ -25,7 +25,7 @@
     "@strapi/plugin-graphql": "5.31.2",
     "@strapi/plugin-users-permissions": "5.31.2",
     "@strapi/strapi": "5.31.2",
-    "better-sqlite3": "^12.4.6",
+    "better-sqlite3": "^11.10.0",
     "pg": "8.16.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@strapi/types": "5.31.2",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.3",
