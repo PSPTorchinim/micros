@@ -3,6 +3,10 @@
 # Services run as Docker containers accessible via Docker DNS names (sqlserver, mongodb, etc.)
 # The devcontainer connects to these services using the service names defined below.
 # For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
+#
+# Port Forwarding: All infrastructure services share network with devcontainer using
+# network_mode. This allows VS Code to properly forward ports from the devcontainer.
+# Services are accessible via localhost from within the devcontainer.
 name: djpanel-devcontainer
 
 services:
@@ -14,19 +18,22 @@ services:
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
-    depends_on:
-      - sqlserver
-      - mongodb
-      - postgres
-      - redis
-      - rabbitmq
+    # Ports exposed by the devcontainer for VS Code port forwarding
+    # All infrastructure services use network_mode: service:devcontainer
+    # so their ports appear on localhost within the devcontainer
+    ports:
+      - "1433:1433"
+      - "27017:27017"
+      - "5432:5432"
+      - "6379:6379"
+      - "5672:5672"
+      - "15672:15672"
 
   # SQL Server for .NET microservices
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: unless-stopped
-    ports:
-      - "1433:1433"
+    network_mode: service:devcontainer
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
@@ -43,8 +50,7 @@ services:
   mongodb:
     image: mongo:8
     restart: unless-stopped
-    ports:
-      - "27017:27017"
+    network_mode: service:devcontainer
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -62,8 +68,7 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
-    ports:
-      - "5432:5432"
+    network_mode: service:devcontainer
     environment:
       POSTGRES_DB: strapi_db
       POSTGRES_USER: strapi_user
@@ -80,8 +85,7 @@ services:
   redis:
     image: redis:8-alpine
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    network_mode: service:devcontainer
     volumes:
       - redis_data:/data
     healthcheck:
@@ -94,9 +98,7 @@ services:
   rabbitmq:
     image: rabbitmq:4-management-alpine
     restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    network_mode: service:devcontainer
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
