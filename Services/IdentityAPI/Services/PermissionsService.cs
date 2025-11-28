@@ -50,8 +50,10 @@ namespace IdentityAPI.Services
                     DefaultCacheExpiration
                 );
                 
-                _logger.LogInformation("Retrieved {Count} permissions.", permissions.Count);
-                return permissions;
+                // GetOrCreateAsync will never return null for list factories that return non-null
+                var result = permissions ?? new List<GetPermissionsDTO>();
+                _logger.LogInformation("Retrieved {Count} permissions.", result.Count);
+                return result;
             }, _logger);
         }
 

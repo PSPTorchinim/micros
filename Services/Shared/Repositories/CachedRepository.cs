@@ -194,27 +194,22 @@ namespace Shared.Repositories
         }
 
         /// <summary>
-        /// Refreshes the cache after write operations by invalidating old data
-        /// and pre-loading fresh data from the database.
-        /// This implements write-through caching pattern.
+        /// Invalidates the cache after write operations.
+        /// Uses lazy loading pattern - cache is refreshed on next read, not eagerly.
+        /// This avoids unnecessary database queries after write operations.
         /// </summary>
         private async Task RefreshCacheAfterWriteAsync()
         {
             try
             {
-                // First invalidate all cached data for this entity
+                // Invalidate all cached data for this entity
+                // The cache will be refreshed lazily on the next read operation
                 await _cacheService.RemoveByPrefixAsync(GetEntityCachePrefix());
-                
-                // Then pre-load the GetAll cache with fresh data
-                var cacheKey = GetCacheKey("GetAll");
-                var freshData = await _innerRepository.Get();
-                await _cacheService.SetAsync(cacheKey, freshData, _defaultExpiration);
-                
-                _logger.LogInformation("Cache refreshed for {EntityName} with {Count} items", _entityName, freshData.Count);
+                _logger.LogInformation("Cache invalidated for {EntityName}. Will be refreshed on next read.", _entityName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error refreshing cache for {EntityName}", _entityName);
+                _logger.LogError(ex, "Error invalidating cache for {EntityName}", _entityName);
             }
         }
     }

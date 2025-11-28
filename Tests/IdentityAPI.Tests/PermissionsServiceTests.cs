@@ -34,15 +34,15 @@ namespace IdentityAPI.Tests
             // Setup default cache behavior - GetOrCreateAsync calls factory function (simulates cache miss)
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<GetPermissionsDTO>>(
                 It.IsAny<string>(), 
-                It.IsAny<Func<Task<List<GetPermissionsDTO>>>>(), 
+                It.IsAny<Func<Task<List<GetPermissionsDTO>?>>>(), 
                 It.IsAny<TimeSpan?>()))
-                .Returns<string, Func<Task<List<GetPermissionsDTO>>>, TimeSpan?>((key, factory, expiry) => factory());
+                .Returns<string, Func<Task<List<GetPermissionsDTO>?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
             
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetPermissionDTO>(
                 It.IsAny<string>(), 
-                It.IsAny<Func<Task<GetPermissionDTO>>>(), 
+                It.IsAny<Func<Task<GetPermissionDTO?>>>(), 
                 It.IsAny<TimeSpan?>()))
-                .Returns<string, Func<Task<GetPermissionDTO>>, TimeSpan?>((key, factory, expiry) => factory());
+                .Returns<string, Func<Task<GetPermissionDTO?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
             
             _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
                 .Returns(Task.CompletedTask);

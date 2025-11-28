@@ -13,7 +13,7 @@ namespace IdentityAPI.Services
     public interface IRolesService : IService
     {
         Task<List<Role>> GetRoles();
-        Task<GetRoleDTO> GetRole(Guid id);
+        Task<GetRoleDTO?> GetRole(Guid id);
         Task<bool> AddRole(AddRoleRequest request);
         Task<bool> EditRole(Guid id, AddRoleRequest request);
         Task<bool> DeleteRole(Guid id);
@@ -48,12 +48,14 @@ namespace IdentityAPI.Services
                     DefaultCacheExpiration
                 );
                 
-                _logger.LogInformation("Retrieved {Count} roles.", roles.Count);
-                return roles;
+                // GetOrCreateAsync will never return null for list factories that return non-null
+                var result = roles ?? new List<Role>();
+                _logger.LogInformation("Retrieved {Count} roles.", result.Count);
+                return result;
             }, _logger);
         }
 
-        public async Task<GetRoleDTO> GetRole(Guid id)
+        public async Task<GetRoleDTO?> GetRole(Guid id)
         {
             _logger.LogInformation("Getting role with Id: {RoleId}", id);
             return await ExceptionHandler.Handle(async () =>
@@ -61,6 +63,7 @@ namespace IdentityAPI.Services
                 var cacheKey = $"{RolesCachePrefix}{id}";
                 
                 // Use GetOrCreateAsync to simplify cache-aside pattern
+                // Returns null if role not found (null is not cached)
                 var result = await _cacheService.GetOrCreateAsync(
                     cacheKey,
                     async () =>
@@ -71,11 +74,9 @@ namespace IdentityAPI.Services
                         if (req == null || !req.Any())
                         {
                             _logger.LogWarning("Role with Id: {RoleId} not found.", id);
+                            return null;
                         }
-                        else
-                        {
-                            _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
-                        }
+                        _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
                         return _mapper.Map<GetRoleDTO>(req);
                     },
                     DefaultCacheExpiration

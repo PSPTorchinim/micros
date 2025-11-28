@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace Shared.Services.Cache
@@ -11,6 +12,10 @@ namespace Shared.Services.Cache
         private readonly IConnectionMultiplexer? _connectionMultiplexer;
         private readonly ILogger<RedisCacheService> _logger;
         private readonly string _instanceName;
+        
+        // Lock dictionary to prevent cache stampede (multiple concurrent requests for same key)
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+        
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -58,9 +63,9 @@ namespace Shared.Services.Cache
             await _distributedCache.SetStringAsync(key, serialized, options);
         }
 
-        public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null) where T : class
+        public async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T?>> factory, TimeSpan? expiration = null) where T : class
         {
-            // Try to get from cache
+            // Try to get from cache first (without lock)
             var cached = await GetAsync<T>(key);
             if (cached != null)
             {
@@ -68,15 +73,49 @@ namespace Shared.Services.Cache
                 return cached;
             }
 
-            // Cache miss - get from factory (database)
-            _logger.LogDebug("Cache miss for key: {Key}. Fetching from source.", key);
-            var value = await factory();
+            // Get or create a lock for this specific key to prevent cache stampede
+            var keyLock = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+            
+            await keyLock.WaitAsync();
+            try
+            {
+                // Double-check after acquiring lock (another thread might have populated the cache)
+                cached = await GetAsync<T>(key);
+                if (cached != null)
+                {
+                    _logger.LogDebug("Cache hit for key (after lock): {Key}", key);
+                    return cached;
+                }
 
-            // Store in cache
-            await SetAsync(key, value, expiration);
-            _logger.LogDebug("Cached value for key: {Key}", key);
+                // Cache miss - get from factory (database)
+                _logger.LogDebug("Cache miss for key: {Key}. Fetching from source.", key);
+                var value = await factory();
 
-            return value;
+                // Don't cache null values - they could represent "not found" scenarios
+                // that should be retried on subsequent requests
+                if (value != null)
+                {
+                    await SetAsync(key, value, expiration);
+                    _logger.LogDebug("Cached value for key: {Key}", key);
+                }
+                else
+                {
+                    _logger.LogDebug("Factory returned null for key: {Key}. Not caching.", key);
+                }
+
+                return value;
+            }
+            finally
+            {
+                keyLock.Release();
+                
+                // Clean up the lock if no one else is waiting
+                // This prevents memory leaks from accumulating locks
+                if (keyLock.CurrentCount == 1)
+                {
+                    _locks.TryRemove(key, out _);
+                }
+            }
         }
 
         public async Task RemoveAsync(string key)

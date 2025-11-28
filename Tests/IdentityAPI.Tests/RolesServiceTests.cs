@@ -47,15 +47,15 @@ namespace IdentityAPI.Tests
             // Setup GetOrCreateAsync to call the factory function (simulates cache miss)
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<Role>>(
                 It.IsAny<string>(), 
-                It.IsAny<Func<Task<List<Role>>>>(), 
+                It.IsAny<Func<Task<List<Role>?>>>(), 
                 It.IsAny<TimeSpan?>()))
-                .Returns<string, Func<Task<List<Role>>>, TimeSpan?>((key, factory, expiry) => factory());
+                .Returns<string, Func<Task<List<Role>?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
             
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetRoleDTO>(
                 It.IsAny<string>(), 
-                It.IsAny<Func<Task<GetRoleDTO>>>(), 
+                It.IsAny<Func<Task<GetRoleDTO?>>>(), 
                 It.IsAny<TimeSpan?>()))
-                .Returns<string, Func<Task<GetRoleDTO>>, TimeSpan?>((key, factory, expiry) => factory());
+                .Returns<string, Func<Task<GetRoleDTO?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
             
             return new RolesService(
                 _loggerMock.Object,
@@ -83,8 +83,9 @@ namespace IdentityAPI.Tests
             var service = CreateService();
             var id = Guid.NewGuid();
             var roles = new List<Role> { new Role { Id = id, Name = "Admin" } };
+            // Setup for ISpecification-based Get
             _rolesRepositoryMock
-                .Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>()))
+                .Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>()))
                 .ReturnsAsync(roles);
             var mapped = new GetRoleDTO();
             _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<object>())).Returns(mapped);
