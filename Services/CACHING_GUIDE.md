@@ -16,8 +16,9 @@ The caching implementation provides:
 Located in `Shared/Services/Cache/ICacheService.cs`, this interface provides methods for:
 - `GetAsync<T>`: Retrieve cached data
 - `SetAsync<T>`: Store data in cache with optional expiration
-- `RemoveAsync`: Remove specific cache entry
-- `RemoveByPrefixAsync`: Invalidate all cache entries with a prefix
+- `GetOrCreateAsync<T>`: Get from cache or create from factory if not exists (recommended)
+- `RemoveAsync`: Remove specific cache entry (Invalidate)
+- `RemoveByPrefixAsync`: Invalidate all cache entries with a prefix (InvalidateByPrefix)
 - `ExistsAsync`: Check if a cache key exists
 
 ### 2. RedisCacheService
@@ -32,7 +33,9 @@ HTTP response caching configured with predefined cache profiles.
 
 ## Usage
 
-### Using ICacheService in Services
+### Using GetOrCreateAsync (Recommended)
+
+The `GetOrCreateAsync` method simplifies the cache-aside pattern by combining cache retrieval and creation in a single call:
 
 ```csharp
 public class MyService : BaseService<IMyService>, IMyService
@@ -54,18 +57,12 @@ public class MyService : BaseService<IMyService>, IMyService
     {
         var cacheKey = $"MyEntity_{id}";
         
-        // Try to get from cache
-        var cached = await _cacheService.GetAsync<MyDto>(cacheKey);
-        if (cached != null)
-        {
-            return cached;
-        }
-        
-        // If not in cache, get from database
-        var data = await FetchFromDatabase(id);
-        
-        // Store in cache for 5 minutes
-        await _cacheService.SetAsync(cacheKey, data, TimeSpan.FromMinutes(5));
+        // GetOrCreateAsync handles cache hit/miss automatically
+        var data = await _cacheService.GetOrCreateAsync(
+            cacheKey,
+            async () => await FetchFromDatabase(id),
+            TimeSpan.FromMinutes(5)
+        );
         
         return data;
     }
@@ -74,11 +71,37 @@ public class MyService : BaseService<IMyService>, IMyService
     {
         await UpdateInDatabase(dto);
         
-        // Invalidate cache
+        // Invalidate cache using RemoveAsync
         await _cacheService.RemoveAsync($"MyEntity_{dto.Id}");
-        // Or invalidate all related caches
+        // Or invalidate all related caches using RemoveByPrefixAsync
         await _cacheService.RemoveByPrefixAsync("MyEntity_");
     }
+}
+```
+
+### Manual Cache Management (Alternative)
+
+If you need more control over the caching logic:
+
+```csharp
+public async Task<MyDto> GetDataAsync(string id)
+{
+    var cacheKey = $"MyEntity_{id}";
+    
+    // Try to get from cache
+    var cached = await _cacheService.GetAsync<MyDto>(cacheKey);
+    if (cached != null)
+    {
+        return cached;
+    }
+    
+    // If not in cache, get from database
+    var data = await FetchFromDatabase(id);
+    
+    // Store in cache for 5 minutes
+    await _cacheService.SetAsync(cacheKey, data, TimeSpan.FromMinutes(5));
+    
+    return data;
 }
 ```
 

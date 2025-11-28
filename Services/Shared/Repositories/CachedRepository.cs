@@ -7,6 +7,11 @@ using System.Linq.Expressions;
 
 namespace Shared.Repositories
 {
+    /// <summary>
+    /// Decorator that wraps any IRepository with Redis caching capabilities.
+    /// All read operations use GetOrCreateAsync for automatic cache-aside pattern.
+    /// All write operations invalidate the cache to maintain consistency.
+    /// </summary>
     public class CachedRepository<T, C> : IRepository<T> where T : class where C : DbContext
     {
         private readonly IRepository<T> _innerRepository;
@@ -43,7 +48,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.Add(entity);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -53,7 +58,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.AddRange(entities);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -77,7 +82,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.Delete(entity);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -87,7 +92,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.DeleteRange(entities);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -116,52 +121,43 @@ namespace Shared.Repositories
         public async Task<List<T>> Get()
         {
             var cacheKey = GetCacheKey("GetAll");
-            var cached = await _cacheService.GetAsync<List<T>>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityName} GetAll", _entityName);
-                return cached;
-            }
-
-            _logger.LogDebug("Cache miss for {EntityName} GetAll", _entityName);
-            var result = await _innerRepository.Get();
-            await _cacheService.SetAsync(cacheKey, result, _defaultExpiration);
-            return result;
+            return await _cacheService.GetOrCreateAsync(
+                cacheKey,
+                async () =>
+                {
+                    _logger.LogDebug("Cache miss for {EntityName} GetAll - fetching from database", _entityName);
+                    return await _innerRepository.Get();
+                },
+                _defaultExpiration
+            ) ?? new List<T>();
         }
 
         public async Task<List<T>> Get(Expression<Func<T, bool>> expression)
         {
             var cacheKey = GetCacheKey("GetByExpression", expression.ToString());
-            var cached = await _cacheService.GetAsync<List<T>>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityName} GetByExpression", _entityName);
-                return cached;
-            }
-
-            _logger.LogDebug("Cache miss for {EntityName} GetByExpression", _entityName);
-            var result = await _innerRepository.Get(expression);
-            await _cacheService.SetAsync(cacheKey, result, _defaultExpiration);
-            return result;
+            return await _cacheService.GetOrCreateAsync(
+                cacheKey,
+                async () =>
+                {
+                    _logger.LogDebug("Cache miss for {EntityName} GetByExpression - fetching from database", _entityName);
+                    return await _innerRepository.Get(expression);
+                },
+                _defaultExpiration
+            ) ?? new List<T>();
         }
 
         public async Task<List<T>> Get(ISpecification<T> specification)
         {
             var cacheKey = GetCacheKey("GetBySpecification", specification.GetType().Name);
-            var cached = await _cacheService.GetAsync<List<T>>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityName} GetBySpecification", _entityName);
-                return cached;
-            }
-
-            _logger.LogDebug("Cache miss for {EntityName} GetBySpecification", _entityName);
-            var result = await _innerRepository.Get(specification);
-            await _cacheService.SetAsync(cacheKey, result, _defaultExpiration);
-            return result;
+            return await _cacheService.GetOrCreateAsync(
+                cacheKey,
+                async () =>
+                {
+                    _logger.LogDebug("Cache miss for {EntityName} GetBySpecification - fetching from database", _entityName);
+                    return await _innerRepository.Get(specification);
+                },
+                _defaultExpiration
+            ) ?? new List<T>();
         }
         #endregion
 
@@ -171,7 +167,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.Update(entity);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -181,7 +177,7 @@ namespace Shared.Repositories
             var result = await _innerRepository.UpdateRange(entities);
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
@@ -192,17 +188,24 @@ namespace Shared.Repositories
             var result = await _innerRepository.Save();
             if (result)
             {
-                await InvalidateCacheAsync();
+                await RefreshCacheAfterWriteAsync();
             }
             return result;
         }
 
-        private async Task InvalidateCacheAsync()
+        /// <summary>
+        /// Invalidates the cache after write operations.
+        /// Uses lazy loading pattern - cache is refreshed on next read, not eagerly.
+        /// This avoids unnecessary database queries after write operations.
+        /// </summary>
+        private async Task RefreshCacheAfterWriteAsync()
         {
             try
             {
+                // Invalidate all cached data for this entity
+                // The cache will be refreshed lazily on the next read operation
                 await _cacheService.RemoveByPrefixAsync(GetEntityCachePrefix());
-                _logger.LogInformation("Cache invalidated for {EntityName}", _entityName);
+                _logger.LogInformation("Cache invalidated for {EntityName}. Will be refreshed on next read.", _entityName);
             }
             catch (Exception ex)
             {

@@ -6,6 +6,7 @@ name: PR Validation
 # 3. Lints all Dockerfiles for best practices
 # 4. Validates Docker Compose configurations
 # 5. Lints GitHub Actions workflow files
+# 6. Validates devcontainer configuration (Dockerfile, docker-compose.yml, devcontainer.json)
 # All checks must pass before PR can be merged
 
 on:
