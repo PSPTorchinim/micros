@@ -89,6 +89,7 @@ namespace IdentityAPI.Services
                 var cacheKey = $"{PermissionsCachePrefix}{id}";
                 
                 // Use GetOrCreateAsync to simplify cache-aside pattern
+                // Returns null if not found (null values are not cached)
                 var permission = await _cacheService.GetOrCreateAsync(
                     cacheKey,
                     async () =>
@@ -99,7 +100,9 @@ namespace IdentityAPI.Services
                         if (entity == null)
                         {
                             _logger.LogWarning("Permission with id {Id} not found.", id);
+                            return null;
                         }
+                        _logger.LogInformation("Permission with id {Id} retrieved.", id);
                         return _mapper.Map<GetPermissionDTO>(entity);
                     },
                     DefaultCacheExpiration

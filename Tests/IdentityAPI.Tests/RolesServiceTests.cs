@@ -41,6 +41,8 @@ namespace IdentityAPI.Tests
                 .ReturnsAsync(default(GetRoleDTO));
             _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
                 .Returns(Task.CompletedTask);
+            _cacheServiceMock.Setup(x => x.RemoveAsync(It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
             _cacheServiceMock.Setup(x => x.RemoveByPrefixAsync(It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
             
@@ -142,10 +144,7 @@ namespace IdentityAPI.Tests
             _permissionsRepositoryMock.Setup(p => p.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Permission, bool>>>())).ReturnsAsync(new List<Permission>());
             _rolesRepositoryMock.Setup(r => r.Update(role)).ReturnsAsync(true);
             _rolesRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
-            
-            // Mock for cache update - Get all roles
-            _rolesRepositoryMock.Setup(r => r.Get()).ReturnsAsync(new List<Role> { role });
-            // Mock for mapping role to DTO
+            // Mock for mapping role to DTO (used for caching the updated entity)
             _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<object>())).Returns(new GetRoleDTO());
             
             var result = await service.EditRole(id, req);

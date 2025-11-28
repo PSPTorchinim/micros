@@ -129,7 +129,7 @@ namespace Shared.Repositories
                     return await _innerRepository.Get();
                 },
                 _defaultExpiration
-            );
+            ) ?? new List<T>();
         }
 
         public async Task<List<T>> Get(Expression<Func<T, bool>> expression)
@@ -143,7 +143,7 @@ namespace Shared.Repositories
                     return await _innerRepository.Get(expression);
                 },
                 _defaultExpiration
-            );
+            ) ?? new List<T>();
         }
 
         public async Task<List<T>> Get(ISpecification<T> specification)
@@ -157,7 +157,7 @@ namespace Shared.Repositories
                     return await _innerRepository.Get(specification);
                 },
                 _defaultExpiration
-            );
+            ) ?? new List<T>();
         }
         #endregion
 

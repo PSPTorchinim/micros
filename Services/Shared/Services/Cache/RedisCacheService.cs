@@ -108,13 +108,9 @@ namespace Shared.Services.Cache
             finally
             {
                 keyLock.Release();
-                
-                // Clean up the lock if no one else is waiting
-                // This prevents memory leaks from accumulating locks
-                if (keyLock.CurrentCount == 1)
-                {
-                    _locks.TryRemove(key, out _);
-                }
+                // Note: Lock cleanup removed to avoid race condition.
+                // SemaphoreSlim instances are small and the dictionary will reach
+                // a steady state based on active cache keys.
             }
         }
 
