@@ -1,0 +1,117 @@
+# DJ Beat Blaster - Development Infrastructure
+# This Docker Compose file provides infrastructure services for local development.
+# Services run as Docker containers accessible via Docker DNS names (sqlserver, mongodb, etc.)
+# The devcontainer connects to these services using the service names defined below.
+# For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
+name: djpanel-devcontainer
+
+services:
+  # Development container
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    depends_on:
+      - sqlserver
+      - mongodb
+      - postgres
+      - redis
+      - rabbitmq
+
+  # SQL Server for .NET microservices
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      # -C flag bypasses certificate validation (acceptable for local development)
+      test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  # MongoDB for DocumentsAPI and MailingAPI
+  mongodb:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    healthcheck:
+      test: mongosh --username admin --password password --authenticationDatabase admin --eval "db.adminCommand('ping')" --quiet || exit 1
+      interval: 30s
+      timeout: 15s
+      start_period: 60s
+      retries: 5
+
+  # PostgreSQL for Strapi CMS
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: strapi_db
+      POSTGRES_USER: strapi_user
+      POSTGRES_PASSWORD: strapi_password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U strapi_user -d strapi_db || exit 1
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  # Redis for caching
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: redis-cli ping | grep PONG
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  # RabbitMQ for message queue
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+volumes:
+  mssql_data:
+  mongo_data:
+  mongo_config:
+  pg_data:
+  redis_data:
+  rabbitmq_data:
