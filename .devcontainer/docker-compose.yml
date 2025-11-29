@@ -34,6 +34,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../..:/workspaces:cached
+    # Enable docker-in-docker support (required for running Docker commands inside container)
+    privileged: true
     command: sleep infinity
     # Ports exposed by the devcontainer for VS Code port forwarding.
     # Infrastructure services share this network namespace via network_mode: service:devcontainer
