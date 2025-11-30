@@ -6,60 +6,40 @@ name: PR Validation
 # 3. Lints all Dockerfiles for best practices
 # 4. Validates Docker Compose configurations
 # 5. Lints GitHub Actions workflow files
-# 6. Validates devcontainer configuration (Dockerfile, docker-compose.yml, devcontainer.json)
 # All checks must pass before PR can be merged
 
 on:
   pull_request:
 
+# Cancel in-progress runs when a new commit is pushed to the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  determine_environment:
-    name: Determine Environment
+  lint_dockerfiles:
+    name: Lint Dockerfiles
     runs-on: ubuntu-latest
-    outputs:
-      current_env: ${{ steps.set_env.outputs.current_env }}
-      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
+    timeout-minutes: 5
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
-      - name: Set Environment
-        id: set_env
-        uses: ./.github/templates/determine-environment
 
-      - name: Compute env slug
-        id: compute_slug
-        uses: ./.github/templates/compute-env-slug
+      - name: Lint all Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
         with:
-          environment: ${{ steps.set_env.outputs.current_env }}
+          dockerfile: "*.Dockerfile"
+          recursive: true
 
-  determine_docker_tag:
-    name: Determine Docker Tag
-    runs-on: ubuntu-latest
-    outputs:
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
-      all_tags: ${{ steps.tag_set.outputs.all_tags }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-      - name: Determine Docker tag based on branch
-        id: tag_set
-        uses: ./.github/templates/determine-docker-tag
-
-
-  validate_dotnet_docker:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
-    name: Validate & Build .NET Services
-    needs:
-      - determine_environment
-      - determine_docker_tag
+  validate_dotnet:
+    name: Build & Test .NET Services
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         service:
           [
@@ -72,268 +52,34 @@ jobs:
             "MusicAPI",
             "PartyAPI",
           ]
-    env:
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-      IDENTITY_BE_ADDRESS: ${{ vars.IDENTITY_BE_ADDRESS }}
-      MUSIC_BE_ADDRESS: ${{ vars.MUSIC_BE_ADDRESS }}
-      GEAR_BE_ADDRESS: ${{ vars.GEAR_BE_ADDRESS }}
-      DOCUMENTS_BE_ADDRESS: ${{ vars.DOCUMENTS_BE_ADDRESS }}
-      BRAND_BE_ADDRESS: ${{ vars.BRAND_BE_ADDRESS }}
-      PARTY_BE_ADDRESS: ${{ vars.PARTY_BE_ADDRESS }}
-      MAILING_BE_ADDRESS: ${{ vars.MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ matrix.service }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
-
-      - name: Hadolint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Docker/services/dotnet.Dockerfile
 
       - name: Build .NET Service
         uses: ./.github/templates/build-dotnet-service
         with:
           service: ${{ matrix.service }}
 
-      - name: Build Docker Image (No Push)
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: ${{ matrix.service }}
-          service-type: services
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
-          dockerfile: Docker/services/dotnet.Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          push: 'false'
-          build-args: |
-            MICROSERVICE_NAME=${{ matrix.service }}
-            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
-            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
-            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            REDIS_HOST=${{ env.REDIS_HOST }}
-            REDIS_PORT=${{ env.REDIS_PORT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
-            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            SECURE_KEY=${{ env.SECURE_KEY }}
-            JWT_KEY=${{ env.JWT_KEY }}
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
-            IDENTITY_BE_ADDRESS=${{ env.IDENTITY_BE_ADDRESS }}
-            MUSIC_BE_ADDRESS=${{ env.MUSIC_BE_ADDRESS }}
-            GEAR_BE_ADDRESS=${{ env.GEAR_BE_ADDRESS }}
-            DOCUMENTS_BE_ADDRESS=${{ env.DOCUMENTS_BE_ADDRESS }}
-            BRAND_BE_ADDRESS=${{ env.BRAND_BE_ADDRESS }}
-            PARTY_BE_ADDRESS=${{ env.PARTY_BE_ADDRESS }}
-            MAILING_BE_ADDRESS=${{ env.MAILING_BE_ADDRESS }}
-            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
-            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
-            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
-
-  validate_react_docker:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
-    name: Validate & Build React Frontends
-    needs:
-      - determine_environment
-      - determine_docker_tag
+  validate_react:
+    name: Build & Test React Frontends
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
-        image:
-          - {
-              name: "dj-panel",
-              dockerfile: "Docker/frontends/react.Dockerfile",
-            }
-    env:
-      API_GATEWAY: ${{ vars.API_GATEWAY }}
-      API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
-      CMS_HOST: ${{ vars.CMS_HOST }}
-      CMS_PORT: ${{ vars.CMS_PORT }}
-      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
-      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
+        service: ["dj-panel"]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
-
-      - name: Hadolint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: ${{ matrix.image.dockerfile }}
 
       - name: Build React Service
         uses: ./.github/templates/build-react-service
         with:
-          service: ${{ matrix.image.name }}
-
-      - name: Build Frontend Docker Image (No Push)
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: ${{ matrix.image.name }}
-          service-type: frontends
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
-          dockerfile: ${{ matrix.image.dockerfile }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          push: 'false'
-          build-args: |
-            MICROFRONTEND_NAME=${{ matrix.image.name }}
-            API_GATEWAY=${{ env.API_GATEWAY }}
-            SECURE_KEY=${{ env.API_SECURE_KEY }}
-            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
-            CMS_HOST=${{ env.CMS_HOST }}
-            CMS_PORT=${{ env.CMS_PORT }}
-            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
-            CMS_API_PATH=${{ env.CMS_API_PATH }}
-
-      - name: Build Storybook Docker Image (No Push)
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: "storybook-${{ matrix.image.name }}"
-          service-type: frontends
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
-          dockerfile: "Docker/frontends/storybook.Dockerfile"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          push: 'false'
-          build-args: |
-            MICROFRONTEND_NAME=${{ matrix.image.name }}
-
-  validate_infrastructure_docker:
-    name: Validate & Build Infrastructure Images
-    needs:
-      - determine_docker_tag
-      - determine_environment
-    runs-on: ubuntu-latest
-    environment: ${{ needs.determine_environment.outputs.current_env }}
-    timeout-minutes: 15
-    env:
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
-      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
-      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
-      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
-      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
-      CMS_DATABASE_HOST: ${{ vars.CMS_DATABASE_HOST }}
-      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
-      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
-      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
-      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
-      GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
-      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-      GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
-      GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
-      GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
-    strategy:
-      matrix:
-        image:
-          - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
-          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
-          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
-          - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
-          - {
-              name: "sqlserver",
-              dockerfile: "Docker/infra/sqlserver.Dockerfile",
-            }
-          - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
-          - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
-          - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
-          - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
-          - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
-          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
-          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
-          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
-          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
-
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-
-      - name: Hadolint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: ${{ matrix.image.dockerfile }}
-
-      - name: Build Docker Image (No Push)
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: ${{ matrix.image.name }}
-          service-type: infra
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
-          dockerfile: ${{ matrix.image.dockerfile }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          push: 'false'
-          # Pass ALL possible args; Docker will ignore ones not declared via ARG
-          build-args: |
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
-            DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
-            DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
-            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
-            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
-            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
-            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
-            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
-            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
-            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
-            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
-            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
-            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
-            CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
-            GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
-            PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
-            REPLICA_INDEX=1
+          service: ${{ matrix.service }}
 
   validate_composers:
     name: Validate Docker Compose files
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -347,8 +93,6 @@ jobs:
   validate_github_workflows:
     name: Validate GitHub Actions workflows
     runs-on: ubuntu-latest
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -361,9 +105,9 @@ jobs:
     name: PR Validation
     runs-on: ubuntu-latest
     needs:
-      - validate_dotnet_docker
-      - validate_react_docker
-      - validate_infrastructure_docker
+      - lint_dockerfiles
+      - validate_dotnet
+      - validate_react
       - validate_composers
       - validate_github_workflows
     if: always()
@@ -373,16 +117,16 @@ jobs:
           echo "=========================================="
           echo "PR Validation Status Report"
           echo "=========================================="
-          echo "DotNet Docker:       ${{ needs.validate_dotnet_docker.result }}"
-          echo "React Docker:        ${{ needs.validate_react_docker.result }}"
-          echo "Infrastructure:      ${{ needs.validate_infrastructure_docker.result }}"
+          echo "Dockerfile Lint:     ${{ needs.lint_dockerfiles.result }}"
+          echo "DotNet Build:        ${{ needs.validate_dotnet.result }}"
+          echo "React Build:         ${{ needs.validate_react.result }}"
           echo "Compose Validation:  ${{ needs.validate_composers.result }}"
           echo "Workflow Lint:       ${{ needs.validate_github_workflows.result }}"
           echo "=========================================="
 
-          if [ "${{ needs.validate_dotnet_docker.result }}" = "success" ] && \
-             [ "${{ needs.validate_react_docker.result }}" = "success" ] && \
-             [ "${{ needs.validate_infrastructure_docker.result }}" = "success" ] && \
+          if [ "${{ needs.lint_dockerfiles.result }}" = "success" ] && \
+             [ "${{ needs.validate_dotnet.result }}" = "success" ] && \
+             [ "${{ needs.validate_react.result }}" = "success" ] && \
              [ "${{ needs.validate_composers.result }}" = "success" ] && \
              [ "${{ needs.validate_github_workflows.result }}" = "success" ]; \
           then
