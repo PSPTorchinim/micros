@@ -4,6 +4,8 @@
 # All services use network_mode: service:devcontainer to share the network namespace,
 # making them accessible via localhost from within the devcontainer.
 #
+# Healthchecks are defined in the Dockerfiles - this file only overrides where needed.
+#
 # Port Forwarding: VS Code automatically forwards ports defined in devcontainer.json
 name: djpanel-devcontainer
 
@@ -25,8 +27,15 @@ services:
       - "6379:6379"       # Redis
       - "5672:5672"       # RabbitMQ
       - "15672:15672"     # RabbitMQ Management
-      # Application Services
+      # Application Services (port 8080 internally, exposed on these ports)
       - "3000:3000"       # API Gateway
+      - "5001:5001"       # Identity API
+      - "5002:5002"       # Music API
+      - "5003:5003"       # Equipment API
+      - "5004:5004"       # Documents API
+      - "5005:5005"       # Company API
+      - "5006:5006"       # Party API
+      - "5007:5007"       # Mailing API
       - "3080:3080"       # DJ Panel Frontend
       - "6006:6006"       # Storybook
       - "1337:1337"       # Strapi CMS
@@ -37,6 +46,7 @@ services:
 
   # ================================================
   # INFRASTRUCTURE SERVICES
+  # Healthchecks defined in Dockerfiles
   # ================================================
 
   # SQL Server for .NET microservices
@@ -50,11 +60,6 @@ services:
     network_mode: service:devcontainer
     volumes:
       - mssql_data:/var/opt/mssql
-    healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "YourStrong@Passw0rd" -Q "SELECT 1" -C || exit 1
-      interval: 10s
-      timeout: 15s
-      retries: 10
 
   # MongoDB for DocumentsAPI and MailingAPI
   mongodb:
@@ -69,12 +74,6 @@ services:
     volumes:
       - mongo_data:/data/db
       - mongo_config:/data/configdb
-    healthcheck:
-      test: mongosh --username admin --password password --authenticationDatabase admin --eval "db.adminCommand('ping')" --quiet || exit 1
-      interval: 30s
-      timeout: 15s
-      start_period: 60s
-      retries: 5
 
   # PostgreSQL for Strapi CMS
   postgres:
@@ -89,11 +88,6 @@ services:
     network_mode: service:devcontainer
     volumes:
       - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready -U strapi_user -d strapi_db || exit 1
-      interval: 10s
-      timeout: 15s
-      retries: 10
 
   # Redis for caching
   redis:
@@ -106,11 +100,6 @@ services:
     network_mode: service:devcontainer
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: redis-cli ping | grep PONG
-      interval: 10s
-      timeout: 15s
-      retries: 10
 
   # RabbitMQ for message queue
   rabbitmq:
@@ -124,14 +113,11 @@ services:
     network_mode: service:devcontainer
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 10s
-      timeout: 15s
-      retries: 10
 
   # ================================================
   # BACKEND MICROSERVICES
+  # Healthchecks defined in Docker/services/dotnet.Dockerfile
+  # Override ASPNETCORE_URLS to use custom ports since all share localhost
   # ================================================
 
   identity_be:
@@ -179,12 +165,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5001/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   music_be:
     build:
@@ -231,12 +211,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5002/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   gear_be:
     build:
@@ -283,12 +257,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5003/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   documents_be:
     build:
@@ -335,12 +303,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5004/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   brand_be:
     build:
@@ -387,12 +349,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5005/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   party_be:
     build:
@@ -439,12 +395,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5006/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   mailing_be:
     build:
@@ -491,12 +441,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:5007/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   apigateway:
     build:
@@ -551,12 +495,6 @@ services:
         condition: service_healthy
       mailing_be:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:3000/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   # ================================================
   # FRONTEND SERVICES
@@ -584,12 +522,6 @@ services:
         condition: service_healthy
       strapi:
         condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost:3080 || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   storybook:
     build:
@@ -599,12 +531,6 @@ services:
         MICROFRONTEND_NAME: dj-panel
     restart: unless-stopped
     network_mode: service:devcontainer
-    healthcheck:
-      test: curl -f http://localhost:6006 || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   # ================================================
   # CMS SERVICE
@@ -635,15 +561,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:1337/admin || exit 1
-      interval: 30s
-      timeout: 15s
-      start_period: 120s
-      retries: 5
 
   # ================================================
   # LOGGING & MONITORING SERVICES
+  # Healthchecks defined in Dockerfiles
   # ================================================
 
   loki:
@@ -654,11 +575,6 @@ services:
     network_mode: service:devcontainer
     volumes:
       - loki_data:/loki
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1
-      interval: 15s
-      timeout: 10s
-      retries: 5
 
   prometheus:
     build:
@@ -672,11 +588,6 @@ services:
       - '--storage.tsdb.retention.time=7d'
     volumes:
       - prometheus_data:/prometheus
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1
-      interval: 15s
-      timeout: 10s
-      retries: 5
 
   grafana:
     build:
@@ -696,11 +607,6 @@ services:
         condition: service_healthy
       prometheus:
         condition: service_healthy
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
-      interval: 15s
-      timeout: 10s
-      retries: 5
 
 volumes:
   mssql_data:
