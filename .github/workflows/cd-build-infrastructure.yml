@@ -427,46 +427,50 @@ jobs:
             echo "📄 Environment file: $ENV_FILE"
             
             # Create .env file with all required environment variables
-            # Values are substituted by GitHub Actions at workflow parse time
-            cat > "$ENV_FILE" << 'EOF'
+            # All values are substituted by GitHub Actions at workflow parse time
+            cat > "$ENV_FILE" << 'ENVEOF'
             # DJ Panel Environment Configuration - Auto-generated
-            DATABASE_HOST_MONGODB=mongodb_container
-            DATABASE_PORT_MONGODB=27017
-            DATABASE_HOST_SQLSERVER=sqlserver
-            DATABASE_PORT_SQLSERVER=1433
-            CMS_DATABASE_HOST=strapi_db
-            CMS_DATABASE_PORT=5432
-            REDIS_HOST=redis
-            REDIS_PORT=6379
-            RABBITMQ_HOST=rabbitmq
-            RABBITMQ_PORT=5672
-            APIGATEWAY_DATABASE_CATALOG=DJPanel_Gateway
-            IDENTITY_DATABASE_CATALOG=DJPanel_Identity
-            MUSIC_DATABASE_CATALOG=DJPanel_Music
-            GEAR_DATABASE_CATALOG=DJPanel_Equipment
-            DOCUMENTS_DATABASE_CATALOG=djpanel_documents
-            BRAND_DATABASE_CATALOG=DJPanel_Company
-            PARTY_DATABASE_CATALOG=DJPanel_Party
-            MAILING_DATABASE_CATALOG=DJPanel_Mailing
-            EOF
+            ENVEOF
             
-            # Append variables from GitHub secrets/vars (substituted at parse time)
+            # Database - MongoDB
+            echo "DATABASE_HOST_MONGODB=${{ vars.DATABASE_HOST_MONGODB }}" >> "$ENV_FILE"
+            echo "DATABASE_PORT_MONGODB=${{ vars.DATABASE_PORT_MONGODB }}" >> "$ENV_FILE"
             echo "DATABASE_USER_MONGODB=${{ vars.DATABASE_USER_MONGODB }}" >> "$ENV_FILE"
             echo "DATABASE_PASSWORD_MONGODB=${{ secrets.DATABASE_PASSWORD_MONGODB }}" >> "$ENV_FILE"
+            
+            # Database - SQL Server
+            echo "DATABASE_HOST_SQLSERVER=${{ vars.DATABASE_HOST_SQLSERVER }}" >> "$ENV_FILE"
+            echo "DATABASE_PORT_SQLSERVER=${{ vars.DATABASE_PORT_SQLSERVER }}" >> "$ENV_FILE"
             echo "DATABASE_USER_SQLSERVER=${{ vars.DATABASE_USER_SQLSERVER }}" >> "$ENV_FILE"
             echo "DATABASE_PASSWORD_SQLSERVER=${{ secrets.DATABASE_PASSWORD_SQLSERVER }}" >> "$ENV_FILE"
+            
+            # Database - PostgreSQL (Strapi CMS)
+            echo "CMS_DATABASE_HOST=${{ vars.CMS_DATABASE_HOST }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_PORT=${{ vars.CMS_DATABASE_PORT }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_NAME=${{ vars.CMS_DATABASE_NAME }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_USERNAME=${{ vars.CMS_DATABASE_USERNAME }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_PASSWORD=${{ secrets.CMS_DATABASE_PASSWORD }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_CLIENT=${{ vars.CMS_DATABASE_CLIENT }}" >> "$ENV_FILE"
             echo "CMS_NODE_ENV=${{ vars.CMS_NODE_ENV }}" >> "$ENV_FILE"
+            
+            # Redis
+            echo "REDIS_HOST=${{ vars.REDIS_HOST }}" >> "$ENV_FILE"
+            echo "REDIS_PORT=${{ vars.REDIS_PORT }}" >> "$ENV_FILE"
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> "$ENV_FILE"
+            
+            # RabbitMQ
+            echo "RABBITMQ_HOST=${{ vars.RABBITMQ_HOST }}" >> "$ENV_FILE"
+            echo "RABBITMQ_PORT=${{ vars.RABBITMQ_PORT }}" >> "$ENV_FILE"
             echo "RABBITMQ_USER=${{ vars.RABBITMQ_USER }}" >> "$ENV_FILE"
             echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> "$ENV_FILE"
+            
+            # Security & Authentication
             echo "SECURE_KEY=${{ secrets.SECURE_KEY }}" >> "$ENV_FILE"
             echo "JWT_KEY=${{ secrets.JWT_KEY }}" >> "$ENV_FILE"
             echo "DJPANEL_USER_EMAIL=${{ vars.DJPANEL_USER_EMAIL }}" >> "$ENV_FILE"
             echo "DJPANEL_USER_PASSWORD=${{ secrets.DJPANEL_USER_PASSWORD }}" >> "$ENV_FILE"
+            
+            # Microservices Addresses
             echo "IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "MUSIC_BE_ADDRESS=${{ vars.MUSIC_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "GEAR_BE_ADDRESS=${{ vars.GEAR_BE_ADDRESS }}" >> "$ENV_FILE"
@@ -474,8 +478,22 @@ jobs:
             echo "BRAND_BE_ADDRESS=${{ vars.BRAND_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "PARTY_BE_ADDRESS=${{ vars.PARTY_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "MAILING_BE_ADDRESS=${{ vars.MAILING_BE_ADDRESS }}" >> "$ENV_FILE"
+            
+            # Database Catalogs
+            echo "APIGATEWAY_DATABASE_CATALOG=${{ vars.APIGATEWAY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "IDENTITY_DATABASE_CATALOG=${{ vars.IDENTITY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "MUSIC_DATABASE_CATALOG=${{ vars.MUSIC_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "GEAR_DATABASE_CATALOG=${{ vars.GEAR_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "DOCUMENTS_DATABASE_CATALOG=${{ vars.DOCUMENTS_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "BRAND_DATABASE_CATALOG=${{ vars.BRAND_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "PARTY_DATABASE_CATALOG=${{ vars.PARTY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "MAILING_DATABASE_CATALOG=${{ vars.MAILING_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            
+            # Environment
             echo "ENVIRONMENT=${{ vars.ENVIRONMENT }}" >> "$ENV_FILE"
             echo "API_GATEWAY=${{ vars.API_GATEWAY }}" >> "$ENV_FILE"
+            
+            # CMS (Strapi)
             echo "CMS_HOST=${{ vars.CMS_HOST }}" >> "$ENV_FILE"
             echo "CMS_PORT=${{ vars.CMS_PORT }}" >> "$ENV_FILE"
             echo "CMS_PROTOCOL=${{ vars.CMS_PROTOCOL }}" >> "$ENV_FILE"
@@ -486,6 +504,8 @@ jobs:
             echo "CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}" >> "$ENV_FILE"
             echo "CMS_TRANSFER_TOKEN_SALT=${{ secrets.CMS_TRANSFER_TOKEN_SALT }}" >> "$ENV_FILE"
             echo "CMS_ENCRYPTION_KEY=${{ secrets.CMS_ENCRYPTION_KEY }}" >> "$ENV_FILE"
+            
+            # Grafana
             echo "GRAFANA_ADMIN_USER=${{ vars.GRAFANA_ADMIN_USER }}" >> "$ENV_FILE"
             echo "GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" >> "$ENV_FILE"
             echo "GRAFANA_HOST=${{ vars.GRAFANA_HOST }}" >> "$ENV_FILE"
