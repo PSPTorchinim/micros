@@ -20,6 +20,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+# Minimal permissions - jobs that need more will specify them
+permissions:
+  contents: read
+
 jobs:
   setup:
     name: Setup Build Configuration
@@ -55,6 +59,9 @@ jobs:
       - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         service:
@@ -97,6 +104,9 @@ jobs:
       - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         image:
@@ -161,6 +171,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.setup.outputs.current_env }}
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
