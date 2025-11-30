@@ -157,12 +157,12 @@ jobs:
           echo "=========================================="
           echo "PR Validation Status Report"
           echo "=========================================="
-          echo "Dockerfile Lint:       ${{ needs.lint_dockerfiles.result }}"
-          echo "DotNet Build:          ${{ needs.validate_dotnet.result }}"
-          echo "React Build:           ${{ needs.validate_react.result }}"
-          echo "Compose Validation:    ${{ needs.validate_composers.result }}"
-          echo "Infrastructure Build:  ${{ needs.validate_infrastructure.result }}"
-          echo "Workflow Lint:         ${{ needs.validate_github_workflows.result }}"
+          echo "Dockerfile Lint:        ${{ needs.lint_dockerfiles.result }}"
+          echo "DotNet Build:           ${{ needs.validate_dotnet.result }}"
+          echo "React Build:            ${{ needs.validate_react.result }}"
+          echo "Compose Validation:     ${{ needs.validate_composers.result }}"
+          echo "Infrastructure Build:   ${{ needs.validate_infrastructure.result }}"
+          echo "Workflow Lint:          ${{ needs.validate_github_workflows.result }}"
           echo "=========================================="
 
           if [ "${{ needs.lint_dockerfiles.result }}" = "success" ] && \
