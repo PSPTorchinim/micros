@@ -3,25 +3,14 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 # Set shell options for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install required packages including Docker CLI (versions not pinned for devcontainer flexibility)
-# Docker CLI is required for docker-in-docker feature to work properly
+# Install required packages (versions not pinned for devcontainer flexibility)
+# Docker CLI is installed via the docker-in-docker feature in devcontainer.json
 # hadolint ignore=DL3008
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
     curl \
     git \
     ca-certificates \
-    apt-transport-https \
-    gnupg \
-    lsb-release \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Docker CLI
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends docker-ce-cli docker-compose-plugin \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
