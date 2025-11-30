@@ -31,7 +31,7 @@ jobs:
       - name: Lint all Dockerfiles
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: "Docker"
+          dockerfile: "*.Dockerfile"
           recursive: true
 
   validate_dotnet:
