@@ -21,14 +21,25 @@ on:
       - "releases/R*"
       - "production"
 
+# Prevent concurrent deployments to the same environment
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  determine_environment:
+  # Consolidated setup job - combines environment, docker tag, and compose timestamp determination
+  # This eliminates 3 separate checkout operations and reduces startup time
+  setup:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    name: Determine Environment
+    name: Setup Build Configuration
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.compute_slug.outputs.env_slug }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
+      compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v5
@@ -45,48 +56,21 @@ jobs:
         with:
           environment: ${{ steps.set_env.outputs.current_env }}
 
-  determine_docker_tag:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    name: Determine Docker Tag
-    runs-on: ubuntu-latest
-    outputs:
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-
       - name: Determine Docker tag
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
-
-  determine_compose_timestamp:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    name: Determine Compose File Timestamp
-    needs: [determine_environment]
-    runs-on: ubuntu-latest
-    outputs:
-      compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
-      compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
 
       - name: Determine compose timestamp
         id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
         with:
-          env_slug: ${{ needs.determine_environment.outputs.env_slug }}
+          env_slug: ${{ steps.compute_slug.outputs.env_slug }}
 
   setup_truenas_directories:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Setup TrueNAS directory structure (first-time)
     runs-on: ubuntu-latest
-    needs: [determine_environment]
+    needs: [setup]
     steps:
       - name: Create directory structure on TrueNAS
         id: create_dirs
@@ -104,7 +88,7 @@ jobs:
             echo "🔧 TrueNAS Directory Setup"
             echo "=========================================="
 
-            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            ENV="${{ needs.setup.outputs.current_env }}"
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
 
             echo "Setting up base directories for environment: ${ENV}"
@@ -133,7 +117,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Backup current deployment for rollback
     runs-on: ubuntu-latest
-    needs: [determine_environment, setup_truenas_directories]
+    needs: [setup, setup_truenas_directories]
     outputs:
       backup_created: ${{ steps.backup.outputs.backup_created }}
     steps:
@@ -148,20 +132,20 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
+            base="/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.setup.outputs.env_slug }}.yml"
             backup_dir="${base}/backups"
             timestamp=$(date +%Y%m%d_%H%M%S)
 
             mkdir -p "$backup_dir"
 
             if [ -f "$agg" ]; then
-              backup_file="${backup_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-${timestamp}.yml"
+              backup_file="${backup_dir}/dj-panel-${{ needs.setup.outputs.env_slug }}-backup-${timestamp}.yml"
               cp "$agg" "$backup_file"
               echo "✅ Backup created: $backup_file"
               
               # Keep only last 5 backups
-              ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null \
+              ls -1t "$backup_dir"/dj-panel-${{ needs.setup.outputs.env_slug }}-backup-*.yml 2>/dev/null \
                 | tail -n +6 | xargs -r rm -f || true
               
               echo "BACKUP_CREATED=true"
@@ -230,12 +214,10 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Generate & Upload New Compose
     runs-on: ubuntu-latest
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     needs:
       [
-        determine_environment,
-        determine_docker_tag,
-        determine_compose_timestamp,
+        setup,
         calculate_unused_ports,
         backup_current_state,
       ]
@@ -260,7 +242,7 @@ jobs:
           set -euo pipefail
           echo "🔍 Verifying Docker images exist in registry..."
           
-          DOCKER_TAG="${{ needs.determine_docker_tag.outputs.docker_tag }}"
+          DOCKER_TAG="${{ needs.setup.outputs.docker_tag }}"
           OWNER="${{ github.repository_owner }}"
           REPO="micros"  # Hardcoded as per the generate script
           
@@ -320,7 +302,7 @@ jobs:
           echo "🔧 Generating Docker Compose file..."
           chmod +x .github/scripts/generate-compose-file.sh
           
-          output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          output_file="${{ needs.setup.outputs.compose_file_name }}"
           echo "Output file: $output_file"
           
           # Extract repo name from "owner/repo" format
@@ -332,10 +314,10 @@ jobs:
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
-            "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
+            "${{ needs.setup.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
             "$repo_name" \
-            "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
+            "Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}" \
             "$output_file")
           
           echo "✅ Compose file generated successfully"
@@ -389,7 +371,7 @@ jobs:
             #!/bin/sh
             set -euo pipefail
             POOL="Files"
-            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
             COMPOSE_NAME='${{ steps.package_compose.outputs.compose_name }}'
             COMPOSE_B64='${{ steps.package_compose.outputs.compose_b64 }}'
             TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
@@ -417,7 +399,7 @@ jobs:
             echo "📝 Generating .env file for TrueNAS"
             echo "=========================================="
             
-            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
             POOL="Files"
             TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
             DST_DIR="/mnt/$POOL/$TARGET_REL"
@@ -551,8 +533,8 @@ jobs:
             echo "📝 Creating Static Compose File with Include"
             echo "=========================================="
             
-            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
-            ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
+            ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
             TIMESTAMPED_COMPOSE='${{ steps.parse_upload.outputs.new_compose_abs }}'
             
             # Determine directory and static filename
@@ -595,7 +577,7 @@ jobs:
             echo "🔧 Creating Volume Directories"
             echo "=========================================="
             
-            ENV="${{ needs.determine_environment.outputs.current_env }}"
+            ENV="${{ needs.setup.outputs.current_env }}"
             BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
             COMPOSE_FILE="${{ steps.parse_upload.outputs.new_compose_abs }}"
             
@@ -739,7 +721,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Test Generated Docker Compose
     runs-on: ubuntu-latest
-    needs: [generate_and_upload_truenas_compose_file, determine_environment]
+    needs: [generate_and_upload_truenas_compose_file, setup]
     steps:
       - name: Download and validate compose file from TrueNAS
         id: test_compose
@@ -867,7 +849,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
-    needs: [generate_and_upload_truenas_compose_file, determine_environment, test_docker_compose]
+    needs: [generate_and_upload_truenas_compose_file, setup, test_docker_compose]
     steps:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
@@ -899,7 +881,7 @@ jobs:
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
-          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Deploy worker to Cloudflare
@@ -943,7 +925,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       [
-        determine_environment,
+        setup,
         generate_and_upload_truenas_compose_file,
         backup_current_state,
         test_docker_compose,
@@ -968,10 +950,10 @@ jobs:
             echo "🔄 Rolling Update Deployment (Zero Downtime)"
             echo "=========================================="
 
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
+            base="/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.setup.outputs.env_slug }}.yml"
             new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+            app="dj-panel-${{ needs.setup.outputs.env_slug }}"
 
             test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
 
@@ -981,7 +963,7 @@ jobs:
             echo "✅ Updated aggregator -> $agg includes $new"
 
             # Keep only 3 newest generated compose files for this env
-            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
+            ls -1 "${base}/dj-panel-${{ needs.setup.outputs.env_slug }}-"*.yml 2>/dev/null \
               | sort -r | awk 'NR>3' | xargs -r rm -f || true
 
             # Check if app exists and is running
@@ -1188,7 +1170,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       [
-        determine_environment,
+        setup,
         generate_and_upload_truenas_compose_file,
         rolling_update_deployment
       ]
@@ -1203,7 +1185,7 @@ jobs:
           ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
-          ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+          ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
 
           HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
           HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
@@ -1289,7 +1271,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       [
-        determine_environment,
+        setup,
         enable_maintenance_page,
         rolling_update_deployment,
         update_cloudflare_tunnel,
@@ -1304,7 +1286,7 @@ jobs:
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
-          ENV_SLUG="${{ needs.determine_environment.outputs.env_slug }}"
+          ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Get routes
@@ -1357,7 +1339,7 @@ jobs:
     needs:
       [
         update_cloudflare_tunnel,
-        determine_environment,
+        setup,
         generate_and_upload_truenas_compose_file,
         rolling_update_deployment,
       ]
@@ -1370,7 +1352,7 @@ jobs:
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           TUNNEL_UUID="${{ secrets.CLOUDFLARE_TUNNEL_UUID }}"
-          ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+          ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
 
           HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
           HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
@@ -1477,9 +1459,7 @@ jobs:
     name: Deployment Summary
     runs-on: ubuntu-latest
     needs:
-      - determine_docker_tag
-      - determine_compose_timestamp
-      - determine_environment
+      - setup
       - test_docker_compose
       - rolling_update_deployment
       - update_cloudflare_tunnel
@@ -1497,12 +1477,12 @@ jobs:
           echo "=========================================="
           echo ""
           echo "📦 Docker Image:"
-          echo "   Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
-          echo "   Latest: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
+          echo "   Tag: ${{ needs.setup.outputs.docker_tag }}"
+          echo "   Latest: ${{ needs.setup.outputs.latest_tag }}"
           echo ""
           echo "🌍 Environment:"
-          echo "   Name: ${{ needs.determine_environment.outputs.current_env }}"
-          echo "   Slug: ${{ needs.determine_environment.outputs.env_slug }}"
+          echo "   Name: ${{ needs.setup.outputs.current_env }}"
+          echo "   Slug: ${{ needs.setup.outputs.env_slug }}"
           echo ""
           echo "🔄 Deployment Strategy: Rolling Update"
           echo "   Databases: Remained running (shared)"
@@ -1514,7 +1494,7 @@ jobs:
           echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
           echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
           echo ""
-          echo "📄 Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          echo "📄 Compose File: ${{ needs.setup.outputs.compose_file_name }}"
           echo ""
           echo "=========================================="
           if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
