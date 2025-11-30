@@ -1,29 +1,10 @@
-# DJ Beat Blaster - Development Infrastructure
-# This Docker Compose file provides infrastructure services for local development.
+# DJ Beat Blaster - Development Environment
+# This Docker Compose file provides all services for local development in a devcontainer.
 #
-# ARCHITECTURE:
-# - Infrastructure services (databases, message queue) run in Docker containers
-# - Application services (microservices, frontend) are run locally for debugging
-# - Monitoring services (Grafana, Prometheus, Loki) run in Docker containers
+# All services use network_mode: service:devcontainer to share the network namespace,
+# making them accessible via localhost from within the devcontainer.
 #
-# HOW TO USE:
-# 1. Open this folder in VS Code with "Remote-Containers: Reopen in Container"
-# 2. Infrastructure services start automatically and are accessible via localhost
-# 3. Run microservices locally: cd Services/<ServiceName> && dotnet run
-# 4. Run frontend locally: cd Frontends/dj-panel && npm run dev
-# 5. Run storybook locally: cd Frontends/dj-panel && npm run storybook
-#
-# ALTERNATIVE - Full Docker Stack:
-# To run ALL services (including backends) via Docker, use the production compose:
-#   docker compose -f Docker/dj-panel-composer.yml up -d
-#
-# Port Forwarding: VS Code port forwarding works from within the devcontainer's network
-# namespace, not from sibling containers. To enable proper port forwarding, all
-# infrastructure services use network_mode: service:devcontainer to share the same
-# network namespace. This makes services accessible via localhost from within the
-# devcontainer and allows VS Code to forward ports to the host.
-#
-# For local development outside devcontainer, use 'localhost' instead - see LOCAL_DEVELOPMENT_SETUP.md
+# Port Forwarding: VS Code automatically forwards ports defined in devcontainer.json
 name: djpanel-devcontainer
 
 services:
@@ -34,12 +15,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../..:/workspaces:cached
-    # Enable docker-in-docker support (required for running Docker commands inside container)
     privileged: true
     command: sleep infinity
-    # Ports exposed by the devcontainer for VS Code port forwarding.
-    # Infrastructure services share this network namespace via network_mode: service:devcontainer
-    # Application ports (5000-5007) are for locally running microservices
     ports:
       # Infrastructure Services
       - "1433:1433"       # SQL Server
@@ -48,49 +25,47 @@ services:
       - "6379:6379"       # Redis
       - "5672:5672"       # RabbitMQ
       - "15672:15672"     # RabbitMQ Management
-      # Application Services (CMS & Monitoring)
+      # Application Services
+      - "3000:3000"       # API Gateway
+      - "3080:3080"       # DJ Panel Frontend
+      - "6006:6006"       # Storybook
       - "1337:1337"       # Strapi CMS
+      # Monitoring Services
       - "3001:3001"       # Grafana
       - "9090:9090"       # Prometheus
       - "3100:3100"       # Loki
-      # Application Services (run locally via dotnet run / npm run dev)
-      - "3000:3000"       # API Gateway (run: cd Services/DJHostGateway && dotnet run)
-      - "3080:3080"       # DJ Panel Frontend (run: cd Frontends/dj-panel && npm run dev)
-      - "5000:5000"       # API Gateway Local
-      - "5001:5001"       # Identity API (run: cd Services/IdentityAPI && dotnet run)
-      - "5002:5002"       # Music API
-      - "5003:5003"       # Equipment API
-      - "5004:5004"       # Documents API
-      - "5005:5005"       # Company API
-      - "5006:5006"       # Party API
-      - "5007:5007"       # Mailing API
-      - "6006:6006"       # Storybook (run: cd Frontends/dj-panel && npm run storybook)
+
+  # ================================================
+  # INFRASTRUCTURE SERVICES
+  # ================================================
 
   # SQL Server for .NET microservices
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: ../
+      dockerfile: Docker/infra/sqlserver.Dockerfile
+      args:
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
     restart: unless-stopped
     network_mode: service:devcontainer
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
     volumes:
       - mssql_data:/var/opt/mssql
     healthcheck:
-      # -C flag bypasses certificate validation (acceptable for local development)
-      test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1
+      test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "YourStrong@Passw0rd" -Q "SELECT 1" -C || exit 1
       interval: 10s
       timeout: 15s
       retries: 10
 
   # MongoDB for DocumentsAPI and MailingAPI
   mongodb:
-    image: mongo:8
+    build:
+      context: ../
+      dockerfile: Docker/infra/mongodb.Dockerfile
+      args:
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
     restart: unless-stopped
     network_mode: service:devcontainer
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
       - mongo_data:/data/db
       - mongo_config:/data/configdb
@@ -103,13 +78,15 @@ services:
 
   # PostgreSQL for Strapi CMS
   postgres:
-    image: postgres:16
+    build:
+      context: ../
+      dockerfile: Docker/infra/postgres.Dockerfile
+      args:
+        DATABASE_NAME_POSTGRES: strapi_db
+        DATABASE_USERNAME_POSTGRES: strapi_user
+        DATABASE_PASSWORD_POSTGRES: strapi_password
     restart: unless-stopped
     network_mode: service:devcontainer
-    environment:
-      POSTGRES_DB: strapi_db
-      POSTGRES_USER: strapi_user
-      POSTGRES_PASSWORD: strapi_password
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -120,7 +97,11 @@ services:
 
   # Redis for caching
   redis:
-    image: redis:8-alpine
+    build:
+      context: ../
+      dockerfile: Docker/infra/redis.Dockerfile
+      args:
+        REDIS_PASSWORD: ""
     restart: unless-stopped
     network_mode: service:devcontainer
     volumes:
@@ -133,12 +114,14 @@ services:
 
   # RabbitMQ for message queue
   rabbitmq:
-    image: rabbitmq:4-management-alpine
+    build:
+      context: ../
+      dockerfile: Docker/infra/rabbitmq.Dockerfile
+      args:
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
     restart: unless-stopped
     network_mode: service:devcontainer
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -148,27 +131,505 @@ services:
       retries: 10
 
   # ================================================
-  # APPLICATION SERVICES
+  # BACKEND MICROSERVICES
   # ================================================
 
-  # Strapi CMS
-  strapi:
-    image: strapi/strapi:4.25-alpine
+  identity_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: IdentityAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: IdentityDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
     restart: unless-stopped
     network_mode: service:devcontainer
     environment:
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: localhost
-      DATABASE_PORT: 5432
-      DATABASE_NAME: strapi_db
-      DATABASE_USERNAME: strapi_user
-      DATABASE_PASSWORD: strapi_password
-      JWT_SECRET: local-dev-jwt-secret-123456789
-      ADMIN_JWT_SECRET: local-dev-admin-jwt-secret-123456789
-      APP_KEYS: local-dev-app-key-1,local-dev-app-key-2
-      API_TOKEN_SALT: local-dev-api-token-salt
-      TRANSFER_TOKEN_SALT: local-dev-transfer-token-salt
-      NODE_ENV: development
+      - ASPNETCORE_URLS=http://+:5001
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5001/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  music_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: MusicAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: MusicDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5002
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5002/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  gear_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: EquipmentAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: EquipmentDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5003
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5003/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  documents_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: DocumentsAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: DocumentsDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5004
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5004/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  brand_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: CompanyAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: CompanyDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5005
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5005/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  party_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: PartyAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: PartyDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5006
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5006/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  mailing_be:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: MailingAPI
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: MailingDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:5007
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:5007/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  apigateway:
+    build:
+      context: ../
+      dockerfile: Docker/services/dotnet.Dockerfile
+      args:
+        MICROSERVICE_NAME: DJHostGateway
+        DATABASE_HOST_SQLSERVER: localhost
+        DATABASE_PORT_SQLSERVER: "1433"
+        DATABASE_USER_SQLSERVER: sa
+        DATABASE_PASSWORD_SQLSERVER: YourStrong@Passw0rd
+        DATABASE_HOST_MONGODB: localhost
+        DATABASE_PORT_MONGODB: "27017"
+        DATABASE_USER_MONGODB: admin
+        DATABASE_PASSWORD_MONGODB: password
+        REDIS_HOST: localhost
+        REDIS_PORT: "6379"
+        REDIS_PASSWORD: ""
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: "5672"
+        RABBITMQ_USER: guest
+        RABBITMQ_PASSWORD: guest
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_KEY: LocalDevelopmentJWTKey123456789012345678901234567890
+        ENVIRONMENT: Development
+        IDENTITY_BE_ADDRESS: http://localhost:5001
+        MUSIC_BE_ADDRESS: http://localhost:5002
+        GEAR_BE_ADDRESS: http://localhost:5003
+        DOCUMENTS_BE_ADDRESS: http://localhost:5004
+        BRAND_BE_ADDRESS: http://localhost:5005
+        PARTY_BE_ADDRESS: http://localhost:5006
+        MAILING_BE_ADDRESS: http://localhost:5007
+        DATABASE_CATALOG: GatewayDB
+        DJPANEL_USER_EMAIL: admin@djbeatblaster.com
+        DJPANEL_USER_PASSWORD: Admin123!
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - ASPNETCORE_URLS=http://+:3000
+    depends_on:
+      identity_be:
+        condition: service_healthy
+      music_be:
+        condition: service_healthy
+      gear_be:
+        condition: service_healthy
+      documents_be:
+        condition: service_healthy
+      brand_be:
+        condition: service_healthy
+      party_be:
+        condition: service_healthy
+      mailing_be:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:3000/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ================================================
+  # FRONTEND SERVICES
+  # ================================================
+
+  dj-panel:
+    build:
+      context: ../
+      dockerfile: Docker/frontends/react.Dockerfile
+      args:
+        MICROFRONTEND_NAME: dj-panel
+        API_GATEWAY: http://localhost:3000
+        SECURE_KEY: LocalDevelopmentSecureKey123456789
+        JWT_TOKEN: LocalDevelopmentJWTKey123456789012345678901234567890
+        CMS_HOST: localhost
+        CMS_PORT: "1337"
+        CMS_PROTOCOL: http
+        CMS_API_PATH: /api
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    environment:
+      - PORT=3080
+    depends_on:
+      apigateway:
+        condition: service_healthy
+      strapi:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:3080 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  storybook:
+    build:
+      context: ../
+      dockerfile: Docker/frontends/storybook.Dockerfile
+      args:
+        MICROFRONTEND_NAME: dj-panel
+    restart: unless-stopped
+    network_mode: service:devcontainer
+    healthcheck:
+      test: curl -f http://localhost:6006 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ================================================
+  # CMS SERVICE
+  # ================================================
+
+  strapi:
+    build:
+      context: ../
+      dockerfile: Docker/infra/strapi.Dockerfile
+      args:
+        CMS_DATABASE_CLIENT: postgres
+        CMS_NODE_ENV: development
+        CMS_DATABASE_HOST: localhost
+        CMS_DATABASE_PORT: "5432"
+        DATABASE_NAME_POSTGRES: strapi_db
+        DATABASE_USERNAME_POSTGRES: strapi_user
+        DATABASE_PASSWORD_POSTGRES: strapi_password
+        CMS_JWT_SECRET: local-dev-jwt-secret-123456789
+        CMS_ADMIN_JWT_SECRET: local-dev-admin-jwt-secret-123456789
+        CMS_APP_KEYS: local-dev-app-key-1,local-dev-app-key-2
+        CMS_API_TOKEN_SALT: local-dev-api-token-salt
+        CMS_TRANSFER_TOKEN_SALT: local-dev-transfer-token-salt
+        CMS_ENCRYPTION_KEY: local-dev-encryption-key-12345
+    restart: unless-stopped
+    network_mode: service:devcontainer
     volumes:
       - strapi_data:/srv/app
     depends_on:
@@ -185,14 +646,13 @@ services:
   # LOGGING & MONITORING SERVICES
   # ================================================
 
-  # Loki for log aggregation
   loki:
-    image: grafana/loki:3.0.0
+    build:
+      context: ../
+      dockerfile: Docker/infra/loki.Dockerfile
     restart: unless-stopped
     network_mode: service:devcontainer
-    command: -config.file=/etc/loki/loki-config.yml
     volumes:
-      - ../Docker/init/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1
@@ -200,9 +660,10 @@ services:
       timeout: 10s
       retries: 5
 
-  # Prometheus for metrics
   prometheus:
-    image: prom/prometheus:v2.53.0
+    build:
+      context: ../
+      dockerfile: Docker/infra/prometheus.Dockerfile
     restart: unless-stopped
     network_mode: service:devcontainer
     command:
@@ -210,7 +671,6 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=7d'
     volumes:
-      - ../Docker/init/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1
@@ -218,19 +678,18 @@ services:
       timeout: 10s
       retries: 5
 
-  # Grafana for dashboards
   grafana:
-    image: grafana/grafana:11.1.0
+    build:
+      context: ../
+      dockerfile: Docker/infra/grafana.Dockerfile
+      args:
+        GRAFANA_ADMIN_USER: admin
+        GRAFANA_ADMIN_PASSWORD: admin
+        PROJECT_NAME: djpanel-devcontainer
+        REPLICA_INDEX: "1"
     restart: unless-stopped
     network_mode: service:devcontainer
-    environment:
-      GF_SERVER_HTTP_PORT: 3001
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ../Docker/init/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-      - ../Docker/init/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - grafana_data:/var/lib/grafana
     depends_on:
       loki:
