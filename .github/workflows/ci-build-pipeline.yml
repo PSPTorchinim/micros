@@ -15,16 +15,25 @@ on:
     - cron: "0 0 1 * *"
   workflow_dispatch:
 
+# Prevent duplicate builds when multiple triggers occur simultaneously
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  determine_environment:
-    name: Determine Environment
+  setup:
+    name: Setup Build Configuration
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
       env_slug: ${{ steps.compute_slug.outputs.env_slug }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      all_tags: ${{ steps.tag_set.outputs.all_tags }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
+
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
@@ -35,39 +44,15 @@ jobs:
         with:
           environment: ${{ steps.set_env.outputs.current_env }}
 
-  determine_target_branch:
-    name: Determine Target Branch
-    runs-on: ubuntu-latest
-    outputs:
-      target_branch: ${{ steps.branch_set.outputs.target_branch }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-      - name: Determine target branch based on branch
-        id: branch_set
-        uses: ./.github/templates/determine-target-branch
-
-  determine_docker_tag:
-    name: Determine Docker Tag
-    runs-on: ubuntu-latest
-    outputs:
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
-      all_tags: ${{ steps.tag_set.outputs.all_tags }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
   build_dotnet_services:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     name: Build & Push .NET Services
     needs:
-      - determine_environment
-      - determine_target_branch
-      - determine_docker_tag
+      - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -97,8 +82,8 @@ jobs:
         with:
           service-name: ${{ matrix.service }}
           service-type: services
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository-owner: ${{ github.repository_owner }}
@@ -106,12 +91,10 @@ jobs:
             MICROSERVICE_NAME=${{ matrix.service }}
 
   build_react_frontends:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     name: Build & Push React Frontends
     needs:
-      - determine_environment
-      - determine_target_branch
-      - determine_docker_tag
+      - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -143,8 +126,8 @@ jobs:
         with:
           service-name: ${{ matrix.image.name }}
           service-type: frontends
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository-owner: ${{ github.repository_owner }}
@@ -163,8 +146,8 @@ jobs:
         with:
           service-name: "storybook-${{ matrix.image.name }}"
           service-type: frontends
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: "Docker/frontends/storybook.Dockerfile"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository-owner: ${{ github.repository_owner }}
@@ -174,11 +157,9 @@ jobs:
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
     needs:
-      - determine_target_branch
-      - determine_docker_tag
-      - determine_environment
+      - setup
     runs-on: ubuntu-latest
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     timeout-minutes: 15
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
@@ -234,8 +215,8 @@ jobs:
         with:
           service-name: ${{ matrix.image.name }}
           service-type: infra
-          docker-tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}
-          latest-tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository-owner: ${{ github.repository_owner }}
@@ -264,5 +245,5 @@ jobs:
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
             GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
             GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
-            PROJECT_NAME=ix-dj-panel-${{ needs.determine_environment.outputs.env_slug }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.setup.outputs.env_slug }}
             REPLICA_INDEX=1
