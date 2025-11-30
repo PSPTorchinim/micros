@@ -1,17 +1,14 @@
-# DJ Beat Blaster - Development Infrastructure
-# This Docker Compose file provides infrastructure services for local development.
+# DJ Beat Blaster - Devcontainer Overlay
+# This file extends Docker/dj-panel-composer.yml with the devcontainer workspace.
+# 
+# The devcontainer.json references both compose files:
+# 1. ../Docker/dj-panel-composer.yml - All production services
+# 2. ./docker-compose.yml - Devcontainer workspace overlay
 #
-# IMPORTANT: Backend and Frontend services are run LOCALLY (not in Docker) for faster
-# development iteration and to save disk space in Codespaces.
-#
-# Infrastructure services use pre-built images to minimize disk usage and build time.
-# After the devcontainer starts, use the postStartCommand script to launch services.
-#
-# Services are accessible via localhost because all containers share the devcontainer network.
-name: djpanel-devcontainer
+# All services start automatically when the codespace is created.
 
 services:
-  # Development container - The main workspace
+  # Development container - workspace for coding
   devcontainer:
     build:
       context: .
@@ -19,126 +16,8 @@ services:
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
-    ports:
-      # Infrastructure Services
-      - "1433:1433"       # SQL Server
-      - "27017:27017"     # MongoDB
-      - "5432:5432"       # PostgreSQL
-      - "6379:6379"       # Redis
-      - "5672:5672"       # RabbitMQ
-      - "15672:15672"     # RabbitMQ Management
-      # Application Services (run locally via dotnet run / npm run dev)
-      - "3000:3000"       # API Gateway
-      - "5001:5001"       # Identity API
-      - "5002:5002"       # Music API
-      - "5003:5003"       # Equipment API
-      - "5004:5004"       # Documents API
-      - "5005:5005"       # Company API
-      - "5006:5006"       # Party API
-      - "5007:5007"       # Mailing API
-      - "3080:3080"       # DJ Panel Frontend
-      - "6006:6006"       # Storybook
+    networks:
+      - public
     depends_on:
-      sqlserver:
+      apigateway:
         condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-
-  # ================================================
-  # INFRASTRUCTURE SERVICES
-  # Using pre-built images for faster startup and less disk usage
-  # ================================================
-
-  # SQL Server for .NET microservices
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: unless-stopped
-    network_mode: service:devcontainer
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
-    volumes:
-      - mssql_data:/var/opt/mssql
-    healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1
-      interval: 10s
-      timeout: 15s
-      retries: 10
-
-  # MongoDB for DocumentsAPI and MailingAPI
-  mongodb:
-    image: mongo:8
-    restart: unless-stopped
-    network_mode: service:devcontainer
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    volumes:
-      - mongo_data:/data/db
-      - mongo_config:/data/configdb
-    healthcheck:
-      test: mongosh --username admin --password password --authenticationDatabase admin --eval "db.adminCommand('ping')" --quiet || exit 1
-      interval: 30s
-      timeout: 15s
-      start_period: 60s
-      retries: 5
-
-  # PostgreSQL for Strapi CMS
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    network_mode: service:devcontainer
-    environment:
-      POSTGRES_DB: strapi_db
-      POSTGRES_USER: strapi_user
-      POSTGRES_PASSWORD: strapi_password
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready -U strapi_user -d strapi_db || exit 1
-      interval: 10s
-      timeout: 15s
-      retries: 10
-
-  # Redis for caching
-  redis:
-    image: redis:8-alpine
-    restart: unless-stopped
-    network_mode: service:devcontainer
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: redis-cli ping | grep PONG
-      interval: 10s
-      timeout: 15s
-      retries: 10
-
-  # RabbitMQ for message queue
-  rabbitmq:
-    image: rabbitmq:4-management-alpine
-    restart: unless-stopped
-    network_mode: service:devcontainer
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 10s
-      timeout: 15s
-      retries: 10
-
-volumes:
-  mssql_data:
-  mongo_data:
-  mongo_config:
-  pg_data:
-  redis_data:
-  rabbitmq_data:

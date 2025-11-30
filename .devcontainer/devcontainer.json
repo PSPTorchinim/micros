@@ -1,6 +1,6 @@
 {
   "name": "DJ Beat Blaster Development",
-  "dockerComposeFile": "docker-compose.yml",
+  "dockerComposeFile": ["../Docker/dj-panel-composer.yml", "docker-compose.yml"],
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
@@ -8,40 +8,6 @@
       "moby": false,
       "dockerDashComposeVersion": "v2"
     }
-  },
-  "containerEnv": {
-    "ASPNETCORE_ENVIRONMENT": "Development",
-    "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
-    "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
-    "ASPNETCORE_DATABASE_HOST_SQLSERVER": "localhost",
-    "ASPNETCORE_DATABASE_PORT_SQLSERVER": "1433",
-    "ASPNETCORE_DATABASE_USER_SQLSERVER": "sa",
-    "ASPNETCORE_DATABASE_PASSWORD_SQLSERVER": "YourStrong@Passw0rd",
-    "ASPNETCORE_DATABASE_HOST_MONGODB": "localhost",
-    "ASPNETCORE_DATABASE_PORT_MONGODB": "27017",
-    "ASPNETCORE_DATABASE_USER_MONGODB": "admin",
-    "ASPNETCORE_DATABASE_PASSWORD_MONGODB": "password",
-    "ASPNETCORE_REDIS_HOST": "localhost",
-    "ASPNETCORE_REDIS_PORT": "6379",
-    "ASPNETCORE_REDIS_PASSWORD": "",
-    "ASPNETCORE_RABBITMQ_HOST": "localhost",
-    "ASPNETCORE_RABBITMQ_PORT": "5672",
-    "ASPNETCORE_RABBITMQ_USER": "guest",
-    "ASPNETCORE_RABBITMQ_PASSWORD": "guest",
-    "ASPNETCORE_DJPANEL_USER_EMAIL": "admin@djbeatblaster.com",
-    "ASPNETCORE_DJPANEL_USER_PASSWORD": "Admin123!",
-    "ASPNETCORE_IDENTITY_BE_ADDRESS": "http://localhost:5001",
-    "ASPNETCORE_MUSIC_BE_ADDRESS": "http://localhost:5002",
-    "ASPNETCORE_GEAR_BE_ADDRESS": "http://localhost:5003",
-    "ASPNETCORE_DOCUMENTS_BE_ADDRESS": "http://localhost:5004",
-    "ASPNETCORE_BRAND_BE_ADDRESS": "http://localhost:5005",
-    "ASPNETCORE_PARTY_BE_ADDRESS": "http://localhost:5006",
-    "ASPNETCORE_MAILING_BE_ADDRESS": "http://localhost:5007",
-    "DATABASE_HOST": "localhost",
-    "DATABASE_PORT": "5432",
-    "DATABASE_NAME": "strapi_db",
-    "DATABASE_USERNAME": "strapi_user",
-    "DATABASE_PASSWORD": "strapi_password"
   },
   "customizations": {
     "vscode": {
@@ -68,7 +34,7 @@
     }
   },
   "forwardPorts": [
-    3000, 3001, 3080, 5000, 5001, 5002, 5003, 5004, 5005, 5006, 5007, 6006,
+    3000, 3001, 3080, 5000, 6006,
     1337, 1433, 5432, 27017, 6379, 5672, 15672, 9090, 3100
   ],
   "portsAttributes": {
@@ -79,38 +45,6 @@
     "3080": {
       "label": "DJ Panel Frontend",
       "onAutoForward": "notify"
-    },
-    "5000": {
-      "label": "API Gateway (Local)",
-      "onAutoForward": "silent"
-    },
-    "5001": {
-      "label": "Identity API",
-      "onAutoForward": "silent"
-    },
-    "5002": {
-      "label": "Music API",
-      "onAutoForward": "silent"
-    },
-    "5003": {
-      "label": "Equipment API",
-      "onAutoForward": "silent"
-    },
-    "5004": {
-      "label": "Documents API",
-      "onAutoForward": "silent"
-    },
-    "5005": {
-      "label": "Company API",
-      "onAutoForward": "silent"
-    },
-    "5006": {
-      "label": "Party API",
-      "onAutoForward": "silent"
-    },
-    "5007": {
-      "label": "Mailing API",
-      "onAutoForward": "silent"
     },
     "6006": {
       "label": "Storybook",
@@ -158,6 +92,5 @@
     }
   },
   "postCreateCommand": "dotnet restore Micros.sln && cd Frontends/dj-panel && npm install && cd ../../CMS && npm install",
-  "postStartCommand": "scripts/start-services.sh",
   "remoteUser": "vscode"
 }
