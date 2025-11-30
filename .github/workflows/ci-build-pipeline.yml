@@ -83,35 +83,6 @@ jobs:
             "MusicAPI",
             "PartyAPI",
           ]
-    env:
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-      IDENTITY_BE_ADDRESS: ${{ vars.IDENTITY_BE_ADDRESS }}
-      MUSIC_BE_ADDRESS: ${{ vars.MUSIC_BE_ADDRESS }}
-      GEAR_BE_ADDRESS: ${{ vars.GEAR_BE_ADDRESS }}
-      DOCUMENTS_BE_ADDRESS: ${{ vars.DOCUMENTS_BE_ADDRESS }}
-      BRAND_BE_ADDRESS: ${{ vars.BRAND_BE_ADDRESS }}
-      PARTY_BE_ADDRESS: ${{ vars.PARTY_BE_ADDRESS }}
-      MAILING_BE_ADDRESS: ${{ vars.MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ matrix.service }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -133,34 +104,6 @@ jobs:
           repository-owner: ${{ github.repository_owner }}
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
-            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
-            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
-            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            REDIS_HOST=${{ env.REDIS_HOST }}
-            REDIS_PORT=${{ env.REDIS_PORT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
-            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            SECURE_KEY=${{ env.SECURE_KEY }}
-            JWT_KEY=${{ env.JWT_KEY }}
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
-            IDENTITY_BE_ADDRESS=${{ env.IDENTITY_BE_ADDRESS }}
-            MUSIC_BE_ADDRESS=${{ env.MUSIC_BE_ADDRESS }}
-            GEAR_BE_ADDRESS=${{ env.GEAR_BE_ADDRESS }}
-            DOCUMENTS_BE_ADDRESS=${{ env.DOCUMENTS_BE_ADDRESS }}
-            BRAND_BE_ADDRESS=${{ env.BRAND_BE_ADDRESS }}
-            PARTY_BE_ADDRESS=${{ env.PARTY_BE_ADDRESS }}
-            MAILING_BE_ADDRESS=${{ env.MAILING_BE_ADDRESS }}
-            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
-            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
-            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
 
   build_react_frontends:
     environment: ${{ needs.determine_environment.outputs.current_env }}
