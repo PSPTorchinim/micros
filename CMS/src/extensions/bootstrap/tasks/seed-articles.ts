@@ -433,7 +433,7 @@ async function seedArticles(strapi: StrapiAny): Promise<any[]> {
       const created = await strapi.db.query('api::article.article').create({
         data: {
           ...article,
-          article_block: articleBlock.documentId,
+          article_block: articleBlock.id,
           publishedAt: new Date(),
           locale: 'en',
         },

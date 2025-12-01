@@ -146,7 +146,7 @@ async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (heroBlock) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
-      heroBlock: heroBlock.documentId,
+      heroBlock: heroBlock.id,
     });
   }
   
@@ -155,7 +155,7 @@ async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (featureSection) {
     content.push({
       __component: 'feature-section-ref.feature-section-ref',
-      featureSection: featureSection.documentId,
+      featureSection: featureSection.id,
     });
   }
   
@@ -164,7 +164,7 @@ async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (stepsContainer) {
     content.push({
       __component: 'steps-container-ref.steps-container-ref',
-      stepsContainer: stepsContainer.documentId,
+      stepsContainer: stepsContainer.id,
     });
   }
   
@@ -173,7 +173,7 @@ async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (articleBlock) {
     content.push({
       __component: 'article-block-ref.article-block-ref',
-      articleBlock: articleBlock.documentId,
+      articleBlock: articleBlock.id,
     });
   }
   
@@ -188,7 +188,7 @@ async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (heroBlock) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
-      heroBlock: heroBlock.documentId,
+      heroBlock: heroBlock.id,
     });
   }
   
@@ -197,7 +197,7 @@ async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (featureSection) {
     content.push({
       __component: 'feature-section-ref.feature-section-ref',
-      featureSection: featureSection.documentId,
+      featureSection: featureSection.id,
     });
   }
   
@@ -206,7 +206,7 @@ async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (imageSlider) {
     content.push({
       __component: 'image-slider-ref.image-slider-ref',
-      imageSlider: imageSlider.documentId,
+      imageSlider: imageSlider.id,
     });
   }
   
@@ -221,7 +221,7 @@ async function buildEventsTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (heroBlock) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
-      heroBlock: heroBlock.documentId,
+      heroBlock: heroBlock.id,
     });
   }
   
@@ -230,7 +230,7 @@ async function buildEventsTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (featureSection) {
     content.push({
       __component: 'feature-section-ref.feature-section-ref',
-      featureSection: featureSection.documentId,
+      featureSection: featureSection.id,
     });
   }
   
@@ -239,7 +239,7 @@ async function buildEventsTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (imageSlider) {
     content.push({
       __component: 'image-slider-ref.image-slider-ref',
-      imageSlider: imageSlider.documentId,
+      imageSlider: imageSlider.id,
     });
   }
   
@@ -254,7 +254,7 @@ async function buildContactTemplateContent(strapi: StrapiAny): Promise<any[]> {
   if (contactSection) {
     content.push({
       __component: 'contact-section-ref.contact-section-ref',
-      contactSection: contactSection.documentId,
+      contactSection: contactSection.id,
     });
   }
   
@@ -346,8 +346,8 @@ async function seedPages(strapi: StrapiAny, templateMap: Map<string, any>): Prom
           AuthState: pageData.AuthState,
           NavigationOrder: pageData.NavigationOrder,
           NavigationAction: pageData.NavigationAction,
-          template: template?.documentId ?? null,
-          configuration: configuration.documentId,
+          template: template?.id ?? null,
+          configuration: configuration.id,
           publishedAt: new Date(),
         },
       });
