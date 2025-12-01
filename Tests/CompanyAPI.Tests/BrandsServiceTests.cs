@@ -6,6 +6,7 @@ using CompanyAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
 
 namespace CompanyAPI.Tests
@@ -16,6 +17,7 @@ namespace CompanyAPI.Tests
         private readonly Mock<ILogger<IBrandsService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
+        private readonly Mock<ICacheService> _cacheServiceMock = new();
         private readonly RabbitMQProducerService _rabbitMQProducerServiceMock = null!;
         private readonly Mock<IServiceProvider> _serviceProviderMock = new();
         private readonly IBrandsService _brandsService;
@@ -26,7 +28,17 @@ namespace CompanyAPI.Tests
             _loggerMock = new Mock<ILogger<IBrandsService>>();
             _mapperMock = new Mock<IMapper>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _cacheServiceMock = new Mock<ICacheService>();
+            
+            // Setup cache service mocks
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync(
+                It.IsAny<string>(),
+                It.IsAny<Func<Task<List<Brand>?>>>(),
+                It.IsAny<TimeSpan?>()))
+                .Returns((string key, Func<Task<List<Brand>?>> factory, TimeSpan? expiration) => factory());
+            
             _serviceProviderMock.Setup(x => x.GetService(typeof(IBrandsRepository))).Returns(_brandsRepositoryMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
             _brandsService = new BrandsService(
                 _loggerMock.Object,
                 _mapperMock.Object,

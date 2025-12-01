@@ -1,10 +1,10 @@
-# Node.js LTS on Alpine
-FROM node:18-alpine3.18
+# hadolint global ignore=DL3059
 
+# --- Stage 1: Builder ---
+FROM node:25-alpine AS builder
 WORKDIR /app
 
-
-# Build args
+# Build args (for build-time env)
 ARG CMS_DATABASE_CLIENT
 ARG CMS_NODE_ENV
 ARG CMS_DATABASE_HOST
@@ -19,54 +19,78 @@ ARG CMS_API_TOKEN_SALT
 ARG CMS_TRANSFER_TOKEN_SALT
 ARG CMS_ENCRYPTION_KEY
 
-# Env
-ENV DATABASE_CLIENT=$CMS_DATABASE_CLIENT \
-  NODE_ENV=$CMS_NODE_ENV \
-  DATABASE_NAME=$DATABASE_NAME_POSTGRES \
-  DATABASE_HOST=$CMS_DATABASE_HOST \
-  DATABASE_PORT=$CMS_DATABASE_PORT \
-  DATABASE_USERNAME=$DATABASE_USERNAME_POSTGRES \
-  DATABASE_PASSWORD=$DATABASE_PASSWORD_POSTGRES \
-  JWT_SECRET=$CMS_JWT_SECRET \
-  ADMIN_JWT_SECRET=$CMS_ADMIN_JWT_SECRET \
-  APP_KEYS=$CMS_APP_KEYS \
-  API_TOKEN_SALT=$CMS_API_TOKEN_SALT \
-  TRANSFER_TOKEN_SALT=$CMS_TRANSFER_TOKEN_SALT \
-  ENCRYPTION_KEY=$CMS_ENCRYPTION_KEY \
-  HOST=0.0.0.0 \
-  PORT=1337
+# Set only minimal env needed for build
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=1337
 
-# ---- Install runtime deps that must remain in the final image ----
-# Keep libc6-compat and *runtime* libvips, plus tools for health checks and connectivity
-RUN apk add --no-cache \
-    libc6-compat=~1.2 \
-    vips=~8.14 \
-    wget=~1.21 \
-    netcat-openbsd=~1.219
+# Install build dependencies only once for cache efficiency
+# hadolint ignore=DL3018
+RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 
-# ---- Copy manifests first to leverage Docker layer caching ----
-COPY CMS/package*.json ./
-
-# ---- Install build deps only for compiling native modules, then remove ----
-RUN apk add --no-cache --virtual .build-deps \
-      python3=~3.11 make=~4.4 g++=~12.2 vips-dev=~8.14 \
-  && npm ci --only=production \
-  && apk del .build-deps
-
-# ---- Copy app code ----
+# Copy app source (after deps for better cache)
 COPY CMS/ ./
+RUN npm install
 
+# Build the app
+RUN npm run build
+RUN npm cache clean --force
 
-# ---- Build Strapi admin, make entrypoint executable, and drop privileges in one RUN ----
-RUN npm run build \
-  && chmod +x docker-entrypoint.sh \
-  && addgroup -g 1001 -S strapi \
-  && adduser -S strapi -u 1001 \
-  && chown -R strapi:strapi /app
-USER strapi
+# Remove unnecessary files to reduce image size
+RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github
+RUN find /app -type d -name "__tests__" -exec rm -rf {} +
+RUN find /app -type f -name "*.md" -delete
+RUN chmod +x docker-entrypoint.sh
 
-# Health check – use custom health endpoint with longer grace period
-HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=3 \
+# --- Stage 2: Runtime ---
+FROM node:25-alpine AS runtime
+WORKDIR /app
+
+# Build args (for env propagation)
+ARG CMS_DATABASE_CLIENT
+ARG CMS_NODE_ENV
+ARG CMS_DATABASE_HOST
+ARG CMS_DATABASE_PORT
+ARG CMS_JWT_SECRET
+ARG CMS_ADMIN_JWT_SECRET
+ARG CMS_APP_KEYS
+ARG DATABASE_NAME_POSTGRES
+ARG DATABASE_USERNAME_POSTGRES
+ARG DATABASE_PASSWORD_POSTGRES
+ARG CMS_API_TOKEN_SALT
+ARG CMS_TRANSFER_TOKEN_SALT
+ARG CMS_ENCRYPTION_KEY
+
+# Set all runtime envs
+ENV DATABASE_CLIENT=$CMS_DATABASE_CLIENT \
+    NODE_ENV=$CMS_NODE_ENV \
+    DATABASE_NAME=$DATABASE_NAME_POSTGRES \
+    DATABASE_HOST=$CMS_DATABASE_HOST \
+    DATABASE_PORT=$CMS_DATABASE_PORT \
+    DATABASE_USERNAME=$DATABASE_USERNAME_POSTGRES \
+    DATABASE_PASSWORD=$DATABASE_PASSWORD_POSTGRES \
+    JWT_SECRET=$CMS_JWT_SECRET \
+    ADMIN_JWT_SECRET=$CMS_ADMIN_JWT_SECRET \
+    APP_KEYS=$CMS_APP_KEYS \
+    API_TOKEN_SALT=$CMS_API_TOKEN_SALT \
+    TRANSFER_TOKEN_SALT=$CMS_TRANSFER_TOKEN_SALT \
+    ENCRYPTION_KEY=$CMS_ENCRYPTION_KEY \
+    HOST=0.0.0.0 \
+    PORT=1337
+
+# Install only runtime dependencies
+# hadolint ignore=DL3018
+RUN apk add --no-cache libc6-compat vips wget netcat-openbsd
+
+# Copy built app and node_modules from builder
+COPY --from=builder /app .
+
+# Run as root to avoid permission issues with TrueNAS bind mounts
+# hadolint ignore=DL3002
+USER root
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=15s --start-period=180s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider --timeout=10 http://localhost:1337/api/health || exit 1
 
 EXPOSE 1337

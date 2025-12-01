@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
+import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
 
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,11 +34,14 @@ export const MobileMenu = (props: any) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        if (
-          element.isAuth === undefined || // Display for all users
-          (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
-          (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
-        ) {
+        // Check AuthState field to determine if link should be shown based on authentication
+        const authState = element.AuthState || 'All';
+        const shouldShow =
+          authState === 'All' ||
+          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
+          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
+
+        if (shouldShow) {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
           return (
@@ -107,8 +111,8 @@ export const MobileMenu = (props: any) => {
                 ? props.links
                     .filter(
                       (element: any) =>
-                        (element.menu === 'main' ||
-                          element.menu === undefined) &&
+                        (element.Menu === ConfigurationMenuEnum.Main ||
+                          element.Menu === undefined) &&
                         element.url,
                     )
                     .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
@@ -121,7 +125,9 @@ export const MobileMenu = (props: any) => {
             props.links?.filter
               ? props.links
                   .filter(
-                    (element: any) => element.menu === 'login' && element.url,
+                    (element: any) =>
+                      element.Menu === ConfigurationMenuEnum.Login &&
+                      element.url,
                   )
                   .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
               : [],

@@ -1,7 +1,6 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-
-using Microsoft.Extensions.Logging;
 
 namespace Shared.Services.Security
 {

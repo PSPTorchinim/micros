@@ -1,3 +1,21 @@
+node_modules
+npm-debug.log
+tests
+test
+docs
+.github
+*.md
+*.log
+.env
+Dockerfile
+docker-compose*
+.git
+.gitignore
+.vscode
+coverage
+build
+.cache
+__tests__
 # Logs
 logs
 *.log

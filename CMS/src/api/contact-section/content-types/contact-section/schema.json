@@ -9,7 +9,7 @@
   "attributes": {
     "introText": { "type": "string" },
     "heading": { "type": "string" },
-    "description": { "type": "string" },
+    "description": { "type": "text" },
     "contactInfo": {
       "type": "relation",
       "relation": "oneToMany",

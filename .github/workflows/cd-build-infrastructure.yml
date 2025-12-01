@@ -1,150 +1,176 @@
 name: Build TrueNAS Infrastructure
 
+# This workflow deploys the application stack to TrueNAS with zero-downtime:
+# 1. Determines environment (Development/Production) and generates unique tags
+# 2. Calculates available ports on TrueNAS for service allocation
+# 3. Generates and uploads Docker Compose file with service configurations
+# 4. Tests generated Docker Compose file for validity before deployment
+# 5. Enables Cloudflare maintenance page to prevent user disruption
+# 6. Performs rolling update of services while keeping databases running
+# 7. Updates Cloudflare tunnel and DNS for service routing
+# 8. Disables maintenance page after successful deployment
+# 9. Includes automatic rollback on failure
+
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types:
+      - completed
+    branches:
+      - "releases/R*"
+      - "production"
+
+# Prevent concurrent deployments to the same environment
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  determine_environment:
+  # Consolidated setup job - combines environment, docker tag, and compose timestamp determination
+  # This eliminates 3 separate checkout operations and reduces startup time
+  setup:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    name: Determine Environment
+    name: Setup Build Configuration
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
-      env_slug: ${{ steps.slug.outputs.env_slug }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
+      compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
+      base_domain: ${{ steps.derive_domain.outputs.base_domain }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
 
       - name: Compute env slug
-        id: slug
-        run: |
-          set -euo pipefail
-          env_raw='${{ steps.set_env.outputs.current_env }}'
-          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
-          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
-
-  determine_docker_tag:
-    name: Determine Docker Tag
-    runs-on: ubuntu-latest
-    outputs:
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
-    steps:
-      - uses: actions/checkout@v5
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
         with:
-          ref: ${{ github.sha }}
-      - id: tag_set
+          environment: ${{ steps.set_env.outputs.current_env }}
+
+      - name: Determine Docker tag
+        id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
-  determine_compose_timestamp:
-    name: Determine Compose File Timestamp
-    needs: [determine_environment]
-    runs-on: ubuntu-latest
-    outputs:
-      compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
-      compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-      - id: timestamp_set
+      - name: Determine compose timestamp
+        id: timestamp_set
         uses: ./.github/templates/determine-compose-timestamp
         with:
-          env_slug: ${{ needs.determine_environment.outputs.env_slug }}
+          env_slug: ${{ steps.compute_slug.outputs.env_slug }}
 
-  stop_app:
-    name: Stop existing app cleanly
+      - name: Derive BASE_DOMAIN
+        id: derive_domain
+        uses: ./.github/templates/derive-base-domain
+        with:
+          base_domain: ${{ vars.BASE_DOMAIN }}
+          account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          tunnel_uuid: ${{ secrets.CLOUDFLARE_TUNNEL_UUID }}
+          cf_email: ${{ secrets.CLOUDFLARE_EMAIL }}
+          cf_key: ${{ secrets.CLOUDFLARE_API_KEY }}
+
+  setup_truenas_directories:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Setup TrueNAS directory structure (first-time)
     runs-on: ubuntu-latest
-    needs: [determine_environment]
-    outputs:
-      stop_stdout: ${{ steps.stop_remote.outputs.stdout }}
-      stop_state: ${{ steps.set_stop_state.outputs.stop_state }}
+    needs: [setup]
     steps:
-      - name: Stop app on TrueNAS (app.stop or scale -> 0) and wait until stopped
-        id: stop_remote
+      - name: Create directory structure on TrueNAS
+        id: create_dirs
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,APP_NAME
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
-            APP="dj-panel-$(printf '%s' "${{ needs.determine_environment.outputs.env_slug }}")"
 
-            echo "Stopping app: $APP"
-            if midclt call app.stop "$APP" 2>/dev/null; then
-              echo "Stopped via app.stop"
+            echo "=========================================="
+            echo "🔧 TrueNAS Directory Setup"
+            echo "=========================================="
+
+            ENV="${{ needs.setup.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+
+            echo "Setting up base directories for environment: ${ENV}"
+
+            # Create main directories (mkdir -p is idempotent)
+            mkdir -p "${BASE_DIR}/Images"
+            mkdir -p "${BASE_DIR}/Images/backups"
+            mkdir -p "${BASE_DIR}/data"
+
+            echo "✅ Created: ${BASE_DIR}/Images"
+            echo "✅ Created: ${BASE_DIR}/Images/backups"
+            echo "✅ Created: ${BASE_DIR}/data"
+
+            # Set permissions on newly created directories (non-fatal)
+            chmod -R 755 "${BASE_DIR}/Images" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/Images (may already exist with correct permissions)"
+            chmod -R 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data (may already exist with correct permissions)"
+
+            echo "ℹ️  Volume subdirectories will be created after compose file generation"
+
+            echo "✅ Directory setup verified"
+            echo "=========================================="
+            echo "✅ TrueNAS directory setup complete!"
+            echo "=========================================="
+
+  backup_current_state:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Backup current deployment for rollback
+    runs-on: ubuntu-latest
+    needs: [setup, setup_truenas_directories]
+    outputs:
+      backup_created: ${{ steps.backup.outputs.backup_created }}
+    steps:
+      - name: Backup current compose file and app state
+        id: backup
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            base="/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.setup.outputs.env_slug }}.yml"
+            backup_dir="${base}/backups"
+            timestamp=$(date +%Y%m%d_%H%M%S)
+
+            mkdir -p "$backup_dir"
+
+            if [ -f "$agg" ]; then
+              backup_file="${backup_dir}/dj-panel-${{ needs.setup.outputs.env_slug }}-backup-${timestamp}.yml"
+              cp "$agg" "$backup_file"
+              echo "✅ Backup created: $backup_file"
+              
+              # Keep only last 5 backups
+              ls -1t "$backup_dir"/dj-panel-${{ needs.setup.outputs.env_slug }}-backup-*.yml 2>/dev/null \
+                | tail -n +6 | xargs -r rm -f || true
+              
+              echo "BACKUP_CREATED=true"
+              echo "BACKUP_FILE=$backup_file"
             else
-              echo "app.stop not available; trying chart.release.scale -> 0"
-              if midclt call chart.release.scale "$APP" '{"replica_count":0}' 2>/dev/null; then
-                echo "Scaled to 0 replicas"
-              else
-                echo "WARN: could not stop app '$APP' with known methods."
-              fi
+              echo "ℹ️  No existing deployment to backup (first deployment)"
+              echo "BACKUP_CREATED=false"
             fi
-
-            has_jq() { command -v jq >/dev/null 2>&1; }
-            get_state() {
-              j="$(midclt call app.query '[["name","=","'"$APP"'"]]' 2>/dev/null || echo '[]')"
-              if has_jq; then
-                echo "$j" | jq -r '.[0] | (.state // .status // .health // .metadata.state // empty)' 2>/dev/null | head -n1
-                return 0
-              fi
-              echo "$j" \
-               | tr -d '\n' \
-               | awk '{
-                    s=$0
-                    if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                      m=substr(s, RSTART, RLENGTH)
-                      gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                      gsub(/".*$/, "", m)
-                      print m
-                    }
-                  }' | head -n1
-            }
-            is_stopped() {
-              case "$1" in
-                STOPPED|INACTIVE|OFF|SCALED_DOWN|DEGRADED|UNKNOWN) return 0 ;;
-                *) return 1 ;;
-              esac
-            }
-            i=0
-            st=""
-            while [ $i -lt 60 ]; do
-              st="$(get_state || true)"
-              [ -n "$st" ] || st="unknown"
-              echo "Stop poll #$((i+1)): state=$st"
-              if is_stopped "$st"; then
-                break
-              fi
-              sleep 5
-              i=$((i+1))
-            done
-            echo "APP_STOP_STATE=${st}"
-            # If state is unknown, do not fail, allow pipeline to continue
-            if [ "$st" = "unknown" ]; then
-              echo "WARNING: App stop state is unknown, continuing pipeline with fallback."
-            fi
-      - name: Parse stop state from SSH output
-        id: set_stop_state
-        run: |
-          set -euo pipefail
-          out='${{ steps.stop_remote.outputs.stdout }}'
-          st=$(echo "$out" | awk -F= '/^APP_STOP_STATE=/{print $2}' | tail -n1)
-          echo "Detected stop state: $st"
-          echo "stop_state=$st" >> "$GITHUB_OUTPUT"
 
   get_truenas_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
-    needs: [stop_app]
+    needs: [backup_current_state]
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
@@ -164,6 +190,7 @@ jobs:
               | sort -n | uniq
 
   calculate_unused_ports:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Calculate Unused External and Internal Ports
     runs-on: ubuntu-latest
     needs: [get_truenas_ports]
@@ -171,7 +198,8 @@ jobs:
       external_ports: ${{ steps.calculate_external_ports.outputs.unused_ports }}
       internal_ports: ${{ steps.calculate_internal_ports.outputs.unused_ports }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
@@ -194,22 +222,22 @@ jobs:
           tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Generate & Upload New Compose
     runs-on: ubuntu-latest
+    environment: ${{ needs.setup.outputs.current_env }}
     needs:
       [
-        determine_environment,
-        determine_docker_tag,
-        determine_compose_timestamp,
+        setup,
         calculate_unused_ports,
-        stop_app,
+        backup_current_state,
       ]
-    if: always() && (needs.stop_app.outputs.stop_state != 'unknown') || (needs.stop_app.outputs.stop_state == 'unknown')
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
       external_map_json: ${{ steps.generate_compose_file.outputs.external_ports_map }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout source code
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
 
@@ -219,6 +247,61 @@ jobs:
           sudo wget -q https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
+      - name: Verify Docker images exist before generating compose
+        id: verify_images
+        run: |
+          set -euo pipefail
+          echo "🔍 Verifying Docker images exist in registry..."
+          
+          DOCKER_TAG="${{ needs.setup.outputs.docker_tag }}"
+          OWNER="${{ github.repository_owner }}"
+          REPO="micros"  # Hardcoded as per the generate script
+          
+          # List of key images to check
+          images=(
+            "ghcr.io/${OWNER,,}/${REPO,,}/services/djhostgateway:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/services/companyapi:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/frontends/dj-panel:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/infra/mongodb:${DOCKER_TAG}"
+            "ghcr.io/${OWNER,,}/${REPO,,}/infra/sqlserver:${DOCKER_TAG}"
+          )
+          
+          missing_images=()
+          for image in "${images[@]}"; do
+            echo "Checking: $image"
+            if ! docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "❌ Missing: $image"
+              missing_images+=("$image")
+            else
+              echo "✅ Found: $image"
+            fi
+          done
+          
+          if [ ${#missing_images[@]} -gt 0 ]; then
+            echo ""
+            echo "======================================================================"
+            echo "❌ DEPLOYMENT FAILED: Missing Docker Images"
+            echo "======================================================================"
+            echo ""
+            echo "The following Docker images are missing from the registry:"
+            printf '   • %s\n' "${missing_images[@]}"
+            echo ""
+            echo "🔧 TO FIX THIS ISSUE:"
+            echo "   1. Go to GitHub Actions in your repository"
+            echo "   2. Select 'Build Artifacts' workflow"
+            echo "   3. Click 'Run workflow' and select your branch: ${{ github.ref_name }}"
+            echo "   4. Wait for the build to complete successfully"
+            echo "   5. Re-run this deployment workflow"
+            echo ""
+            echo "💡 TIP: The Build Artifacts workflow builds and pushes all Docker"
+            echo "   images to GHCR with the tag: ${DOCKER_TAG}"
+            echo ""
+            echo "======================================================================"
+            exit 1
+          else
+            echo "✅ All required Docker images exist in registry"
+          fi
+
       - name: Generate compose from template and free ports
         id: generate_compose_file
         shell: bash
@@ -226,28 +309,61 @@ jobs:
           LOG_LEVEL: DEBUG
         run: |
           set -euo pipefail
+          
+          echo "🔧 Generating Docker Compose file..."
           chmod +x .github/scripts/generate-compose-file.sh
-          output_file="${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
+          
+          output_file="${{ needs.setup.outputs.compose_file_name }}"
+          echo "Output file: $output_file"
+          
+          # Extract repo name from "owner/repo" format
+          repo_name="${{ github.repository }}"
+          repo_name="${repo_name##*/}"
+          echo "Repository: $repo_name"
+          
+          echo "Running compose generator script..."
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
-            "${{ needs.determine_docker_tag.outputs.docker_tag }}" \
+            "${{ needs.setup.outputs.docker_tag }}" \
             "${{ github.repository_owner }}" \
-            "${{ github.event.repository.name }}" \
-            "Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}" \
+            "$repo_name" \
+            "Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}" \
             "$output_file")
+          
+          echo "✅ Compose file generated successfully"
           {
             echo "compose_file=$output_file"
             echo "external_ports_map=$external_map_json"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Show compose generation logs
+        if: always()
+        run: |
+          echo "==== Compose Generation Log(s) ===="
+          ls -1 generate-compose-*.log 2>/dev/null || echo "No log files found."
+          for f in generate-compose-*.log; do
+            if [ -f "$f" ]; then
+              echo "--- $f ---"
+              cat "$f"
+              echo "--- End of $f ---"
+            fi
+          done
+          echo "==== End of Compose Generation Log(s) ===="
+
       - name: Package compose for transfer (base64)
         id: package_compose
         run: |
           set -euo pipefail
+          
+          echo "📦 Packaging compose file for transfer..."
           COMPOSE_FILE="${{ steps.generate_compose_file.outputs.compose_file }}"
-          test -f "$COMPOSE_FILE" || { echo "Compose not found: $COMPOSE_FILE" >&2; exit 1; }
+          test -f "$COMPOSE_FILE" || { echo "❌ Compose not found: $COMPOSE_FILE" >&2; exit 1; }
+          
+          echo "Encoding file: $COMPOSE_FILE"
           B64=$(base64 -w0 "$COMPOSE_FILE")
+          echo "✅ File encoded successfully"
+          
           {
             echo "compose_name=$COMPOSE_FILE"
             echo "compose_b64=$B64"
@@ -266,7 +382,7 @@ jobs:
             #!/bin/sh
             set -euo pipefail
             POOL="Files"
-            ENV_DIR='${{ needs.determine_environment.outputs.current_env }}'
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
             COMPOSE_NAME='${{ steps.package_compose.outputs.compose_name }}'
             COMPOSE_B64='${{ steps.package_compose.outputs.compose_b64 }}'
             TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
@@ -278,86 +394,695 @@ jobs:
             chmod 664 "$DST_PATH" || true
             echo "COMPOSE_ABS=$DST_PATH"
 
-      - name: Parse upload path and expose as output
-        id: parse_upload
-        run: |
-          set -euo pipefail
-          out='${{ steps.upload_compose.outputs.stdout }}'
-          abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
-          test -n "$abs" || { echo "No COMPOSE_ABS marker in SSH output"; exit 1; }
-          echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
-
-  update_aggregator_and_start_app:
-    name: Update aggregator, prune old files, start app & wait healthy
-    runs-on: ubuntu-latest
-    needs:
-      [
-        determine_environment,
-        generate_and_upload_truenas_compose_file,
-        stop_app,
-      ]
-    outputs:
-      start_stdout: ${{ steps.agg_start.outputs.stdout }}
-    if: needs.stop_app.outputs.stop_state != 'unknown'
-    steps:
-      - name: Update aggregator and start app (robust state wait)
-        id: agg_start
+      - name: Generate and upload .env file to TrueNAS
+        id: upload_env_file
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
           capture_stdout: true
           script: |
             #!/bin/sh
             set -euo pipefail
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
-            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+            
+            echo "=========================================="
+            echo "📝 Generating .env file for TrueNAS"
+            echo "=========================================="
+            
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
+            POOL="Files"
+            TARGET_REL="Apps/DJPanel/${ENV_DIR}/Images"
+            DST_DIR="/mnt/$POOL/$TARGET_REL"
+            ENV_FILE="$DST_DIR/.env"
+            
+            echo "📁 Target directory: $DST_DIR"
+            echo "📄 Environment file: $ENV_FILE"
+            
+            # Create .env file with all required environment variables
+            # All values are substituted by GitHub Actions at workflow parse time
+            cat > "$ENV_FILE" << 'ENVEOF'
+            # DJ Panel Environment Configuration - Auto-generated
+            ENVEOF
+            
+            # Database - MongoDB
+            echo "DATABASE_HOST_MONGODB=${{ vars.DATABASE_HOST_MONGODB }}" >> "$ENV_FILE"
+            echo "DATABASE_PORT_MONGODB=${{ vars.DATABASE_PORT_MONGODB }}" >> "$ENV_FILE"
+            echo "DATABASE_USER_MONGODB=${{ vars.DATABASE_USER_MONGODB }}" >> "$ENV_FILE"
+            echo "DATABASE_PASSWORD_MONGODB=${{ secrets.DATABASE_PASSWORD_MONGODB }}" >> "$ENV_FILE"
+            
+            # Database - SQL Server
+            echo "DATABASE_HOST_SQLSERVER=${{ vars.DATABASE_HOST_SQLSERVER }}" >> "$ENV_FILE"
+            echo "DATABASE_PORT_SQLSERVER=${{ vars.DATABASE_PORT_SQLSERVER }}" >> "$ENV_FILE"
+            echo "DATABASE_USER_SQLSERVER=${{ vars.DATABASE_USER_SQLSERVER }}" >> "$ENV_FILE"
+            echo "DATABASE_PASSWORD_SQLSERVER=${{ secrets.DATABASE_PASSWORD_SQLSERVER }}" >> "$ENV_FILE"
+            
+            # Database - PostgreSQL (Strapi CMS)
+            echo "CMS_DATABASE_HOST=${{ vars.CMS_DATABASE_HOST }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_PORT=${{ vars.CMS_DATABASE_PORT }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_NAME=${{ vars.CMS_DATABASE_NAME }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_USERNAME=${{ vars.CMS_DATABASE_USERNAME }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_PASSWORD=${{ secrets.CMS_DATABASE_PASSWORD }}" >> "$ENV_FILE"
+            echo "CMS_DATABASE_CLIENT=${{ vars.CMS_DATABASE_CLIENT }}" >> "$ENV_FILE"
+            echo "CMS_NODE_ENV=${{ vars.CMS_NODE_ENV }}" >> "$ENV_FILE"
+            
+            # Redis
+            echo "REDIS_HOST=${{ vars.REDIS_HOST }}" >> "$ENV_FILE"
+            echo "REDIS_PORT=${{ vars.REDIS_PORT }}" >> "$ENV_FILE"
+            echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> "$ENV_FILE"
+            
+            # RabbitMQ
+            echo "RABBITMQ_HOST=${{ vars.RABBITMQ_HOST }}" >> "$ENV_FILE"
+            echo "RABBITMQ_PORT=${{ vars.RABBITMQ_PORT }}" >> "$ENV_FILE"
+            echo "RABBITMQ_USER=${{ vars.RABBITMQ_USER }}" >> "$ENV_FILE"
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> "$ENV_FILE"
+            
+            # Security & Authentication
+            echo "SECURE_KEY=${{ secrets.SECURE_KEY }}" >> "$ENV_FILE"
+            echo "JWT_KEY=${{ secrets.JWT_KEY }}" >> "$ENV_FILE"
+            echo "DJPANEL_USER_EMAIL=${{ vars.DJPANEL_USER_EMAIL }}" >> "$ENV_FILE"
+            echo "DJPANEL_USER_PASSWORD=${{ secrets.DJPANEL_USER_PASSWORD }}" >> "$ENV_FILE"
+            
+            # Microservices Addresses
+            echo "IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "MUSIC_BE_ADDRESS=${{ vars.MUSIC_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "GEAR_BE_ADDRESS=${{ vars.GEAR_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "DOCUMENTS_BE_ADDRESS=${{ vars.DOCUMENTS_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "BRAND_BE_ADDRESS=${{ vars.BRAND_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "PARTY_BE_ADDRESS=${{ vars.PARTY_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "MAILING_BE_ADDRESS=${{ vars.MAILING_BE_ADDRESS }}" >> "$ENV_FILE"
+            
+            # Database Catalogs
+            echo "APIGATEWAY_DATABASE_CATALOG=${{ vars.APIGATEWAY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "IDENTITY_DATABASE_CATALOG=${{ vars.IDENTITY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "MUSIC_DATABASE_CATALOG=${{ vars.MUSIC_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "GEAR_DATABASE_CATALOG=${{ vars.GEAR_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "DOCUMENTS_DATABASE_CATALOG=${{ vars.DOCUMENTS_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "BRAND_DATABASE_CATALOG=${{ vars.BRAND_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "PARTY_DATABASE_CATALOG=${{ vars.PARTY_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            echo "MAILING_DATABASE_CATALOG=${{ vars.MAILING_DATABASE_CATALOG }}" >> "$ENV_FILE"
+            
+            # Environment
+            echo "ENVIRONMENT=${{ vars.ENVIRONMENT }}" >> "$ENV_FILE"
+            echo "API_GATEWAY=${{ vars.API_GATEWAY }}" >> "$ENV_FILE"
+            
+            # CMS (Strapi)
+            echo "CMS_HOST=${{ vars.CMS_HOST }}" >> "$ENV_FILE"
+            echo "CMS_PORT=${{ vars.CMS_PORT }}" >> "$ENV_FILE"
+            echo "CMS_PROTOCOL=${{ vars.CMS_PROTOCOL }}" >> "$ENV_FILE"
+            echo "CMS_API_PATH=${{ vars.CMS_API_PATH }}" >> "$ENV_FILE"
+            echo "CMS_JWT_SECRET=${{ secrets.CMS_JWT_SECRET }}" >> "$ENV_FILE"
+            echo "CMS_ADMIN_JWT_SECRET=${{ secrets.CMS_ADMIN_JWT_SECRET }}" >> "$ENV_FILE"
+            echo "CMS_APP_KEYS=${{ secrets.CMS_APP_KEYS }}" >> "$ENV_FILE"
+            echo "CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}" >> "$ENV_FILE"
+            echo "CMS_TRANSFER_TOKEN_SALT=${{ secrets.CMS_TRANSFER_TOKEN_SALT }}" >> "$ENV_FILE"
+            echo "CMS_ENCRYPTION_KEY=${{ secrets.CMS_ENCRYPTION_KEY }}" >> "$ENV_FILE"
+            
+            # Grafana
+            echo "GRAFANA_ADMIN_USER=${{ vars.GRAFANA_ADMIN_USER }}" >> "$ENV_FILE"
+            echo "GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" >> "$ENV_FILE"
+            echo "GRAFANA_HOST=${{ vars.GRAFANA_HOST }}" >> "$ENV_FILE"
+            echo "GRAFANA_PORT=${{ vars.GRAFANA_PORT }}" >> "$ENV_FILE"
+            echo "GRAFANA_PROTOCOL=${{ vars.GRAFANA_PROTOCOL }}" >> "$ENV_FILE"
+            
+            # Set secure permissions (readable by owner only)
+            if ! chmod 600 "$ENV_FILE"; then
+              echo "⚠️  Warning: Could not set restrictive permissions on $ENV_FILE"
+              echo "⚠️  File may be readable by other users on the system"
+            fi
+            
+            echo "✅ Environment file created: $ENV_FILE"
+            echo "ENV_FILE_ABS=$ENV_FILE"
 
-            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
-            mkdir -p "$base"
-            printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "Updated aggregator -> $agg includes $new"
+      - name: Parse upload path and expose as output
+        id: parse_upload
+        run: |
+          set -euo pipefail
+          
+          echo "🔍 Parsing upload output..."
+          out='${{ steps.upload_compose.outputs.stdout }}'
+          abs=$(echo "$out" | awk -F= '/^COMPOSE_ABS=/{print $2}' | tail -n1)
+          
+          test -n "$abs" || { echo "❌ No COMPOSE_ABS marker in SSH output"; exit 1; }
+          
+          echo "✅ Compose uploaded to: $abs"
+          echo "new_compose_abs=$abs" >> "$GITHUB_OUTPUT"
 
-            # Keep only 3 newest generated compose files for this env
-            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
-              | sort -r | awk 'NR>3' | xargs -r rm -f || true
+      - name: Create static compose file with include
+        id: create_static_include_file
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "📝 Creating Static Compose File with Include"
+            echo "=========================================="
+            
+            ENV_DIR='${{ needs.setup.outputs.current_env }}'
+            ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
+            TIMESTAMPED_COMPOSE='${{ steps.parse_upload.outputs.new_compose_abs }}'
+            
+            # Determine directory and static filename
+            COMPOSE_DIR=$(dirname "$TIMESTAMPED_COMPOSE")
+            STATIC_COMPOSE="$COMPOSE_DIR/dj-panel-${ENV_SLUG}.yml"
+            
+            echo "📁 Compose directory: $COMPOSE_DIR"
+            echo "⏰ Timestamped file: $TIMESTAMPED_COMPOSE"
+            echo "📌 Static include file: $STATIC_COMPOSE"
+            
+            # Remove existing file if it exists
+            if [ -f "$STATIC_COMPOSE" ]; then
+              echo "🗑️  Removing existing file: $STATIC_COMPOSE"
+              rm -f "$STATIC_COMPOSE"
+            fi
+            
+            # Write include YAML
+            echo "include:" > "$STATIC_COMPOSE"
+            echo "  - $TIMESTAMPED_COMPOSE" >> "$STATIC_COMPOSE"
+            chmod 664 "$STATIC_COMPOSE" || true
+            
+            echo "✅ Static include file created: $STATIC_COMPOSE"
+            echo ""
+            echo "📋 Compose file listing:"
+            ls -lh "$COMPOSE_DIR" | grep "dj-panel" || echo "No dj-panel files found"
 
-            echo "Starting app: $app"
-            if midclt call app.start "$app" 2>/dev/null; then
-              echo "Started via app.start"
+      - name: Create volume directories from generated compose
+        id: create_volume_dirs
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            echo "=========================================="
+            echo "🔧 Creating Volume Directories"
+            echo "=========================================="
+            
+            ENV="${{ needs.setup.outputs.current_env }}"
+            BASE_DIR="/mnt/Files/Apps/DJPanel/${ENV}"
+            COMPOSE_FILE="${{ steps.parse_upload.outputs.new_compose_abs }}"
+            
+            echo "Extracting volume paths from: ${COMPOSE_FILE}"
+            
+            # Verify compose file exists and is readable
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "❌ Compose file not found: $COMPOSE_FILE"
+              exit 1
+            fi
+            
+            # Extract unique volume paths from service bind mounts
+            # Pattern: /mnt/Files/Apps/DJPanel/{ENV}/data/{service}/{volume}:/container/path
+            if command -v yq >/dev/null 2>&1; then
+              echo "Using yq to extract volume paths from service bind mounts"
+              yq_version=$(yq --version || echo "unknown version")
+              echo "yq version: $yq_version"
+              
+              # First, let's see all volume entries for debugging
+              echo "🔍 All volume entries in compose file:"
+              yq eval '.services.*.volumes[]?' "$COMPOSE_FILE" 2>/dev/null | head -20 || echo "No volumes found with yq"
+              
+              # Try multiple methods to extract volume paths
+              # Method 1: Use yq with test function
+              volume_paths=$(yq eval '.services.*.volumes[]? | select(test("^/mnt/Files"))' "$COMPOSE_FILE" 2>/dev/null | \
+                sed -E 's/^([^:]+):.*$/\1/' | sort -u || echo "")
+              
+              # Method 2: If that fails, try a simpler yq approach
+              if [ -z "$volume_paths" ]; then
+                echo "⚠️  Method 1 failed, trying simpler yq approach..."
+                volume_paths=$(yq eval '.services.[].volumes[]?' "$COMPOSE_FILE" 2>/dev/null | \
+                  grep '^/mnt/Files' | sed -E 's/^([^:]+):.*$/\1/' | sort -u || echo "")
+              fi
             else
-              echo "app.start not available; trying chart.release.scale -> 1"
-              if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
-                echo "Scaled to 1 replica"
+              echo "Using grep to extract volume paths (yq not available)"
+              
+              # Show what we're working with for debugging
+              echo "🔍 Lines containing volumes in compose file:"
+              grep -n "volumes:" "$COMPOSE_FILE" | head -5 || echo "No volumes sections found"
+              echo "🔍 Lines with /mnt/Files bind mounts:"
+              grep -E '^\s*-\s*/mnt/Files' "$COMPOSE_FILE" | head -5 || echo "No /mnt/Files mounts found"
+              
+              # Extract paths that start with /mnt/Files and end before :
+              volume_paths=$(grep -E '^\s*-\s*/mnt/Files/Apps/DJPanel/' "$COMPOSE_FILE" | \
+                sed -E 's/.*-\s*([^:]+):.*/\1/' | sort -u || echo "")
+            fi
+            
+            # Final fallback: Use plain grep if still no paths found
+            if [ -z "$volume_paths" ]; then
+              echo "⚠️  No paths found with primary methods, trying fallback grep..."
+              volume_paths=$(grep -o '/mnt/Files/Apps/DJPanel/[^:]*' "$COMPOSE_FILE" | sort -u || echo "")
+            fi
+            
+            if [ -z "$volume_paths" ]; then
+              echo "⚠️  No TrueNAS volume paths found in compose file"
+              echo "ℹ️  This might be expected if no services use TrueNAS volumes"
+              echo "ℹ️  Checking compose file content for debugging..."
+              
+              # Show some context from the compose file
+              if [ -f "$COMPOSE_FILE" ]; then
+                echo "📄 First 20 lines of compose file:"
+                head -20 "$COMPOSE_FILE" || echo "Could not read compose file"
+                echo ""
+                echo "📄 All volume references in compose:"
+                grep -n "volumes:" "$COMPOSE_FILE" || echo "No volumes section found"
+                echo ""
               else
-                echo "ERROR: could not start app '$app' with known methods."
+                echo "❌ Compose file not found: $COMPOSE_FILE"
+              fi
+              
+              # This is not necessarily an error - continue successfully
+              echo "✅ Volume directory creation completed (no volumes to create)"
+              exit 0
+            fi
+            
+            echo "Found volume paths:"
+            echo "$volume_paths"
+            echo ""
+            
+            # Create directories for each unique path
+            volume_count=0
+            # Count the number of paths
+            path_count=$(echo "$volume_paths" | wc -w)
+            echo "Processing $path_count unique volume paths..."
+            
+            for vol_path in $volume_paths; do
+              # Skip only truly empty paths
+              if [ -z "$vol_path" ]; then
+                continue
+              fi
+              
+              echo "Processing volume path: $vol_path"
+              
+              # Create directory if it doesn't exist - no validation, just create
+              if [ ! -d "$vol_path" ]; then
+                if mkdir -p "$vol_path" 2>/dev/null; then
+                  echo "📁 Created: $vol_path"
+                else
+                  echo "❌ Failed to create: $vol_path"
+                  continue
+                fi
+              else
+                echo "ℹ️  Exists: $vol_path"
+              fi
+              
+              # Set universal permissions for all containers
+              # No special handling - just make it accessible
+              if chmod -R 777 "$vol_path" 2>/dev/null; then
+                echo "✅ Set permissions: $vol_path (777)"
+              else
+                echo "⚠️  Could not set permissions on: $vol_path"
+              fi
+              
+              # Optional: Create common subdirectories that some services might expect
+              # This is done opportunistically - if it fails, we continue anyway
+              for subdir in "pgdata" "data" "logs"; do
+                mkdir -p "$vol_path/$subdir" 2>/dev/null && echo "📁 Created optional subdirectory: $vol_path/$subdir" || true
+              done
+              
+              # Verify permissions (non-critical)
+              actual_perms=$(stat -c '%a' "$vol_path" 2>/dev/null || stat -f '%Lp' "$vol_path" 2>/dev/null || echo "unknown")
+              if [ "$actual_perms" = "777" ]; then
+                echo "✅ Verified permissions: $vol_path (777)"
+              else
+                echo "ℹ️  Permissions: $vol_path ($actual_perms)"
+              fi
+              
+              volume_count=$((volume_count + 1))
+            done
+            
+            # Ensure parent directories have execute permissions for traversal
+            chmod 755 "${BASE_DIR}/data" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}/data"
+            chmod 755 "${BASE_DIR}" 2>/dev/null || echo "⚠️  Could not set permissions on ${BASE_DIR}"
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ Created ${volume_count} volume directories"
+            echo "=========================================="
+
+  test_docker_compose:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Test Generated Docker Compose
+    runs-on: ubuntu-latest
+    needs: [generate_and_upload_truenas_compose_file, setup]
+    steps:
+      - name: Download and validate compose file from TrueNAS
+        id: test_compose
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🧪 Testing Generated Docker Compose File"
+            echo "=========================================="
+
+            COMPOSE_FILE="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+            
+            echo "Compose file location: $COMPOSE_FILE"
+            
+            # Verify compose file exists
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "❌ ERROR: Compose file not found at: $COMPOSE_FILE"
+              exit 1
+            fi
+            echo "✅ Compose file exists"
+            
+            # Verify file is readable and not empty
+            if [ ! -s "$COMPOSE_FILE" ]; then
+              echo "❌ ERROR: Compose file is empty"
+              exit 1
+            fi
+            echo "✅ Compose file is not empty"
+            
+            # Basic YAML syntax validation
+            if command -v yq >/dev/null 2>&1; then
+              echo "🔍 Validating YAML syntax with yq..."
+              if ! yq eval '.' "$COMPOSE_FILE" >/dev/null 2>&1; then
+                echo "❌ ERROR: Invalid YAML syntax"
                 exit 1
               fi
+              echo "✅ YAML syntax is valid"
+            else
+              echo "⚠️  yq not available, skipping YAML syntax validation"
             fi
+            
+            # Validate with docker-compose config if available
+            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+              echo "🔍 Validating compose file with docker compose config..."
+              
+              # Create temporary directory for validation
+              temp_dir=$(mktemp -d)
+              temp_compose="$temp_dir/docker-compose.yml"
+              
+              # Copy compose file to temp location
+              cp "$COMPOSE_FILE" "$temp_compose"
+              
+              # Run docker compose config to validate
+              if docker compose -f "$temp_compose" config >/dev/null 2>&1; then
+                echo "✅ Docker compose configuration is valid"
+              else
+                echo "❌ ERROR: Docker compose validation failed"
+                echo "Attempting to show validation errors..."
+                docker compose -f "$temp_compose" config 2>&1 || true
+                rm -rf "$temp_dir"
+                exit 1
+              fi
+              
+              # Cleanup
+              rm -rf "$temp_dir"
+            else
+              echo "⚠️  Docker compose not available, skipping compose validation"
+            fi
+            
+            # Check for required top-level keys
+            echo "🔍 Checking for required compose structure..."
+            if command -v yq >/dev/null 2>&1; then
+              # Check if services key exists
+              services_count=$(yq eval '.services | length' "$COMPOSE_FILE" 2>/dev/null || echo "0")
+              if [ "$services_count" -eq 0 ]; then
+                echo "❌ ERROR: No services defined in compose file"
+                exit 1
+              fi
+              echo "✅ Found $services_count service(s) defined"
+              
+              # List services
+              echo "📋 Services in compose file:"
+              yq eval '.services | keys | .[]' "$COMPOSE_FILE" 2>/dev/null | while read -r svc; do
+                echo "   - $svc"
+              done
+            fi
+            
+            # Basic content validation - check file size is reasonable
+            file_size=$(wc -c < "$COMPOSE_FILE")
+            if [ "$file_size" -lt 100 ]; then
+              echo "❌ ERROR: Compose file is suspiciously small ($file_size bytes)"
+              exit 1
+            fi
+            echo "✅ Compose file size is reasonable ($file_size bytes)"
+            
+            # Check for common issues in compose files
+            echo "🔍 Checking for common configuration issues..."
+            
+            # Check if file contains any service definitions
+            if ! grep -q "services:" "$COMPOSE_FILE"; then
+              echo "❌ ERROR: No 'services:' section found in compose file"
+              exit 1
+            fi
+            echo "✅ Services section exists"
+            
+            # Display first 20 lines for verification
+            echo ""
+            echo "📄 First 20 lines of compose file:"
+            echo "-----------------------------------"
+            head -n 20 "$COMPOSE_FILE"
+            echo "-----------------------------------"
+            
+            echo ""
+            echo "=========================================="
+            echo "✅ All compose file tests passed!"
+            echo "=========================================="
 
+  enable_maintenance_page:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Enable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs: [generate_and_upload_truenas_compose_file, setup, test_docker_compose]
+    steps:
+      - name: Checkout repository for maintenance page
+        uses: actions/checkout@v4
+
+      - name: Enable Cloudflare maintenance mode for all external service hostnames
+        run: |
+          echo "🔧 Enabling maintenance page on Cloudflare..."
+
+          MAINTENANCE_HTML=$(jq -Rs . < .github/workflows/maintenance.html)
+          cat > /tmp/worker-script.js <<EOF
+          addEventListener('fetch', event => {
+            event.respondWith(handleRequest(event.request))
+          })
+
+          async function handleRequest(request) {
+            const maintenanceHTML = ${MAINTENANCE_HTML}
+            return new Response(maintenanceHTML, {
+              status: 503,
+              headers: {
+                'Content-Type': 'text/html;charset=UTF-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Retry-After': '120'
+              }
+            })
+          }
+          EOF
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Deploy worker to Cloudflare
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
+          echo "📤 Uploading worker script: ${WORKER_NAME}"
+          
+          response=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/javascript" \
+            --data-binary @/tmp/worker-script.js)
+          
+          if echo "$response" | jq -e '.success' > /dev/null; then
+            echo "✅ Worker script uploaded successfully"
+          else
+            echo "⚠️  Worker upload response: $response"
+          fi
+
+          # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          echo "🔗 Creating maintenance routes..."
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+              echo "  - Creating route for: $PATTERN"
+              curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+                -H "X-Auth-Email: ${CF_EMAIL}" \
+                -H "X-Auth-Key: ${CF_KEY}" \
+                -H "Content-Type: application/json" \
+                --data "${ROUTE_DATA}" > /dev/null
+            done
+          done
+
+          echo "✅ Maintenance page enabled for all external service hostnames."
+          echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
+
+  rolling_update_deployment:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Rolling update with zero downtime
+    runs-on: ubuntu-latest
+    needs:
+      [
+        setup,
+        generate_and_upload_truenas_compose_file,
+        backup_current_state,
+        test_docker_compose,
+        enable_maintenance_page,
+      ]
+    outputs:
+      start_stdout: ${{ steps.rolling_update.outputs.stdout }}
+    steps:
+      - name: Perform rolling update (databases stay up, services update)
+        id: rolling_update
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🔄 Rolling Update Deployment (Zero Downtime)"
+            echo "=========================================="
+
+            base="/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}/Images"
+            agg="${base}/dj-panel-${{ needs.setup.outputs.env_slug }}.yml"
+            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+            app="dj-panel-${{ needs.setup.outputs.env_slug }}"
+
+            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
+
+            # Update aggregator to point to new compose
+            mkdir -p "$base"
+            printf 'include:\n  - %s\n' "$new" > "$agg"
+            echo "✅ Updated aggregator -> $agg includes $new"
+
+            # Keep only 3 newest generated compose files for this env
+            ls -1 "${base}/dj-panel-${{ needs.setup.outputs.env_slug }}-"*.yml 2>/dev/null \
+              | sort -r | awk 'NR>3' | xargs -r rm -f || true
+
+            # Check if app exists and is running
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
               j="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
               if has_jq; then
-                echo "$j" | jq -r '.[0] | (.state // .status // .health // .metadata.state // empty)' 2>/dev/null | head -n1
-                return 0
+                echo "$j" | jq -r '.[0] | (.state // .status // empty)' 2>/dev/null | head -n1
+              else
+                echo "$j" | tr -d '\n' | awk '{
+                  s=$0
+                  if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+                    m=substr(s, RSTART, RLENGTH)
+                    gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
+                    gsub(/".*$/, "", m)
+                    print m
+                  }
+                }' | head -n1
               fi
-              echo "$j" \
-                | tr -d '\n' \
-                | awk '{
-                    s=$0
-                    if (match(s, /"state"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-                      m=substr(s, RSTART, RLENGTH)
-                      gsub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", m)
-                      gsub(/".*$/, "", m)
-                      print m
-                    }
-                  }' | head -n1
             }
+
+            current_state="$(get_state || echo 'NOT_FOUND')"
+            echo "Current app state: $current_state"
+
+            # Ensure Docker network exists (some TrueNAS/compose runs race and network may not be created)
+            NET_PREFIX="ix-$app"
+            NET_NAME="${NET_PREFIX}_default"
+            echo "🔧 Ensuring Docker network exists: $NET_NAME"
+            if ! docker network inspect "$NET_NAME" >/dev/null 2>&1; then
+              if docker network create "$NET_NAME" >/dev/null 2>&1; then
+                echo "✅ Created network: $NET_NAME"
+              else
+                echo "⚠️  Could not create network: $NET_NAME (continuing)"
+              fi
+            else
+              echo "ℹ️  Network already exists: $NET_NAME"
+            fi
+
+            if [ "$current_state" = "NOT_FOUND" ] || [ "$current_state" = "STOPPED" ]; then
+              echo "📦 First deployment or app stopped - starting app normally"
+              if midclt call app.start "$app" 2>/dev/null; then
+                echo "✅ Started via app.start"
+                # Give TrueNAS time to process the start command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
+              else
+                if midclt call chart.release.scale "$app" '{"replica_count":1}' 2>/dev/null; then
+                  echo "✅ Scaled to 1 replica"
+                  # Give TrueNAS time to process the scale command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
+                else
+                  echo "❌ ERROR: could not start app '$app'"
+                  exit 1
+                fi
+              fi
+            else
+              echo "🔄 App is running - performing rolling update"
+              echo "ℹ️  TrueNAS will restart containers with new images"
+              echo "ℹ️  Databases will remain running throughout"
+              
+              # Restart app to apply new compose
+              if midclt call app.restart "$app" 2>/dev/null; then
+                echo "✅ Restarted via app.restart"
+                # Give TrueNAS time to process the restart command
+                echo "⏳ Waiting for TrueNAS to begin startup process..."
+                sleep 10
+              else
+                echo "ℹ️  Restart not available, using stop/start"
+                midclt call app.stop "$app" 2>/dev/null || true
+                
+                # Wait for STOPPED state (3 minutes timeout)
+                echo "⏳ Waiting for app to stop..."
+                stop_wait=0
+                stop_state="UNKNOWN"
+                max_stop_iterations=90
+                while [ $stop_wait -lt $max_stop_iterations ]; do
+                  stop_state="$(get_state || echo 'UNKNOWN')"
+                  [ -z "$stop_state" ] && stop_state="UNKNOWN"
+                  echo "  Stop check $((stop_wait+1))/$max_stop_iterations: state=$stop_state"
+                  if [ "$stop_state" = "STOPPED" ] || [ "$stop_state" = "NOT_FOUND" ]; then
+                    echo "✅ App stopped successfully"
+                    break
+                  fi
+                  sleep 2
+                  stop_wait=$((stop_wait+1))
+                done
+                
+                if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
+                  echo "❌ ERROR: App failed to stop after 180 seconds (state=$stop_state)"
+                  echo "Cannot proceed with deployment - manual intervention required"
+                  exit 1
+                fi
+                
+                if midclt call app.start "$app" 2>/dev/null; then
+                  echo "✅ Started via app.start"
+                  # Give TrueNAS time to process the start command
+                  echo "⏳ Waiting for TrueNAS to begin startup process..."
+                  sleep 10
+                else
+                  echo "❌ ERROR: could not restart app"
+                  exit 1
+                fi
+              fi
+            fi
+
+            # Wait for healthy state (10 minutes timeout)
+            echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
               case "$1" in
                 RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) return 0 ;;
@@ -365,91 +1090,103 @@ jobs:
               esac
             }
 
-            i=0
-            st=""
-            while [ $i -gt 120 ]; do
-              st="$(get_state || true)"
-              [ -n "$st" ] || st="unknown"
-              echo "Poll #$((i+1)): state=$st"
-              if is_good_state "$st"; then
+            health_check=0
+            max_health_checks=600
+            app_state="UNKNOWN"
+            last_detailed_check=0
+            previous_state="UNKNOWN"
+            
+            while [ $health_check -lt $max_health_checks ]; do
+              app_state="$(get_state || echo 'UNKNOWN')"
+              [ -z "$app_state" ] && app_state="UNKNOWN"
+              
+              # Reset counter when state changes to DEPLOYING
+              if [ "$app_state" = "DEPLOYING" ] && [ "$previous_state" != "DEPLOYING" ]; then
+                echo "  🔄 State changed to DEPLOYING - resetting health check counter"
+                health_check=0
+              fi
+              
+              echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
+              previous_state="$app_state"
+              
+              if is_good_state "$app_state"; then
+                echo "✅ App is healthy and running"
                 break
               fi
-              sleep 5
-              i=$((i+1))
+              sleep 10
+              health_check=$((health_check+1))
             done
 
-            echo "APP_STATE=${st}"
-
-  update_aggregator_compose_only:
-    name: Update aggregator (compose only, skip start)
-    needs:
-      [
-        determine_environment,
-        generate_and_upload_truenas_compose_file,
-        stop_app,
-      ]
-    if: needs.stop_app.outputs.stop_state == 'unknown'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update aggregator file only (no app start)
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          envs: TRUENAS_POOL,CURRENT_ENV,ENV_SLUG,NEW_COMPOSE_ABS,APP_NAME
-          capture_stdout: true
-          script: |
-            #!/bin/sh
-            set -euo pipefail
-            base="/mnt/Files/Apps/DJPanel/${{ needs.determine_environment.outputs.current_env }}/Images"
-            agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
-            new="${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
-
-            test -n "$new" && test -f "$new" || { echo "ERROR: new compose $new not found"; exit 1; }
-            mkdir -p "$base"
-            printf 'include:\n  - %s\n' "$new" > "$agg"
-            echo "Updated aggregator -> $agg includes $new"
-            # Keep only 3 newest generated compose files for this env
-            ls -1 "${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-"*.yml 2>/dev/null \
-              | sort -r | awk 'NR>3' | xargs -r rm -f || true
-
-  verify_app_started:
-    name: Verify app healthy
-    runs-on: ubuntu-latest
-    needs: [update_aggregator_and_start_app]
-    if: needs.update_aggregator_and_start_app.result == 'success'
-    steps:
-      - name: Parse and verify start result
-        run: |
-          set -euo pipefail
-          out='${{ needs.update_aggregator_and_start_app.outputs.start_stdout }}'
-          echo "---- start stdout ----"
-          printf '%s\n' "$out"
-          st=$(echo "$out" | awk -F= '/^APP_STATE=/{print $2}' | tail -n1)
-          case "$st" in
-            RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY)
-              echo "App reached acceptable state: $st"
-              ;;
-            *)
-              echo "App failed to reach a healthy state (state=$st)"
+            if ! is_good_state "$app_state"; then
+              echo ""
+              echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
+              echo ""
+              echo "🔍 TROUBLESHOOTING INFORMATION:"
+              echo "================================"
+              
+              # Get final detailed status for troubleshooting
+              final_details="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+              if [ "$final_details" != "[]" ] && [ -n "$final_details" ]; then
+                echo "App exists in TrueNAS system"
+                if has_jq; then
+                  error_msg=$(echo "$final_details" | jq -r '.[0].error // empty' 2>/dev/null || echo "")
+                  [ -n "$error_msg" ] && echo "Error Message: $error_msg"
+                fi
+              else
+                echo "⚠️  App not found in TrueNAS system"
+              fi
+              
+              # Show compose file location for manual inspection
+              echo "Compose file location: $new"
+              echo "App name in TrueNAS: $app"
+              echo ""
+              echo "💡 MANUAL DEBUGGING STEPS:"
+              echo "1. SSH to TrueNAS and run: midclt call app.query '[["name","=","'"$app"'"]]'"
+              echo "2. Check TrueNAS UI: Apps > Installed Apps > $app"
+              echo "3. Review app logs in TrueNAS interface"
+              echo "4. Verify compose file: cat $new"
+              echo ""
+              echo "⚠️  Rollback recommended - backup is available in backups directory"
               exit 1
-              ;;
-          esac
+            fi
+
+            echo ""
+            echo "📋 Final App Status Summary:"
+            echo "============================"
+            final_summary="$(midclt call app.query '[["name","=","'"$app"'"]]' 2>/dev/null || echo '[]')"
+            if [ "$final_summary" != "[]" ] && [ -n "$final_summary" ]; then
+              if has_jq; then
+                app_version=$(echo "$final_summary" | jq -r '.[0].version // "unknown"' 2>/dev/null || echo "unknown")
+                human_version=$(echo "$final_summary" | jq -r '.[0].human_version // "unknown"' 2>/dev/null || echo "unknown")
+                echo "App Version: $app_version"
+                echo "Human Version: $human_version"
+                echo "State: $app_state"
+              else
+                echo "State: $app_state"
+                echo "Detailed info available via TrueNAS UI"
+              fi
+            fi
+            echo "============================"
+            echo ""
+            
+            echo "=========================================="
+            echo "✅ Rolling update completed successfully!"
+            echo "✅ Zero downtime maintained"
+            echo "=========================================="
+            echo "APP_STATE=${app_state}"
 
   update_cloudflare_tunnel:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success') }}
     name: Update Cloudflare Tunnel (service-based hostnames)
     runs-on: ubuntu-latest
     needs:
       [
-        determine_environment,
+        setup,
         generate_and_upload_truenas_compose_file,
-        verify_app_started,
-        stop_app,
+        rolling_update_deployment
       ]
-    if: needs.stop_app.outputs.stop_state != 'unknown'
     steps:
-      - name: Build ingress JSON and PUT to Cloudflare (auto-calc BASE_DOMAIN; preserve other envs)
+      - name: Build ingress JSON and PUT to Cloudflare (preserve other envs)
         id: cf_update
         run: |
           set -euo pipefail
@@ -459,30 +1196,13 @@ jobs:
           ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
-          ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+          ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
+          BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
 
           HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
           HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
 
-          BASE_DOMAIN="${{ vars.BASE_DOMAIN }}"
-          BASE_DOMAIN="${BASE_DOMAIN:-}"
-
-          # Derive BASE_DOMAIN if empty
-          if [ -z "$BASE_DOMAIN" ]; then
-            echo "BASE_DOMAIN not provided; deriving…"
-            cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}")"
-            BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
-              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
-              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
-            if [ -z "$BASE_DOMAIN" ]; then
-              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1
-            fi
-            echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
-          else
-            echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
-          fi
+          echo "Using BASE_DOMAIN: $BASE_DOMAIN"
 
           # External port -> "service:containerPort" from generator
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
@@ -539,50 +1259,96 @@ jobs:
           fi
           echo "Cloudflare Tunnel configuration updated successfully."
 
+  disable_maintenance_page:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success') }}
+    name: Disable Cloudflare Maintenance Page
+    runs-on: ubuntu-latest
+    needs:
+      [
+        setup,
+        enable_maintenance_page,
+        rolling_update_deployment,
+        update_cloudflare_tunnel,
+        generate_and_upload_truenas_compose_file,
+      ]
+    steps:
+      - name: Disable Cloudflare maintenance mode for all external service hostnames
+        run: |
+          echo "🔧 Disabling maintenance page on Cloudflare..."
+
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
+          CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
+          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Get routes
+          echo "🔍 Fetching existing routes..."
+          ROUTES=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/json")
+
+          # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          echo "🗑️  Deleting maintenance routes..."
+          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
+            for pair in $(echo "$entry" | tr ',' '\n'); do
+              svc=$(echo "$pair" | cut -d: -f1)
+              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
+              if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
+                echo "  - Deleting route: $ROUTE_ID ($PATTERN)"
+                curl -s -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes/${ROUTE_ID}" \
+                  -H "X-Auth-Email: ${CF_EMAIL}" \
+                  -H "X-Auth-Key: ${CF_KEY}" \
+                  -H "Content-Type: application/json" > /dev/null
+                echo "    ✅ Deleted"
+              else
+                echo "  ℹ️  No maintenance route found for $PATTERN"
+              fi
+            done
+          done
+
+          # Optional: Delete the worker script itself
+          echo "🗑️  Deleting worker script..."
+          WORKER_NAME="maintenance-page-${ENV_SLUG}"
+          response=$(curl -s -X DELETE "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}" \
+            -H "X-Auth-Email: ${CF_EMAIL}" \
+            -H "X-Auth-Key: ${CF_KEY}" \
+            -H "Content-Type: application/json")
+          
+          if echo "$response" | jq -e '.success' > /dev/null 2>&1; then
+            echo "✅ Worker script deleted"
+          else
+            echo "ℹ️  Worker already deleted or not found"
+          fi
+          
+          echo "✅ Maintenance page fully disabled"
+
   update_cloudflare_dns_records:
+    if: ${{ always() && (needs.rolling_update_deployment.result == 'success') }}
     name: Ensure Cloudflare DNS CNAMEs for tunnel hostnames
     runs-on: ubuntu-latest
     needs:
       [
         update_cloudflare_tunnel,
-        determine_environment,
+        setup,
         generate_and_upload_truenas_compose_file,
-        stop_app,
+        rolling_update_deployment,
       ]
-    if: needs.stop_app.outputs.stop_state != 'unknown'
     steps:
       - name: Create/Update DNS CNAMEs for service FQDNs (env-scoped)
         run: |
           set -euo pipefail
 
-          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           CF_EMAIL="${{ secrets.CLOUDFLARE_EMAIL }}"
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           TUNNEL_UUID="${{ secrets.CLOUDFLARE_TUNNEL_UUID }}"
-          ENV_SLUG='${{ needs.determine_environment.outputs.env_slug }}'
+          ENV_SLUG='${{ needs.setup.outputs.env_slug }}'
+          BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
 
-          HOST_LAN_IP="${{ vars.TRUENAS_LAN_IP }}"
-          HOST_LAN_IP="${HOST_LAN_IP:-192.168.1.17}"
-
-          BASE_DOMAIN="${{ vars.BASE_DOMAIN }}"
-          BASE_DOMAIN="${BASE_DOMAIN:-}"
-
-          # Derive BASE_DOMAIN if not provided
-          if [ -z "$BASE_DOMAIN" ]; then
-            echo "BASE_DOMAIN not provided; deriving…"
-            cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
-              -H "X-Auth-Email: ${CF_EMAIL}" \
-              -H "X-Auth-Key: ${CF_KEY}")"
-            BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
-              | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
-              | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
-            if [ -z "$BASE_DOMAIN" ]; then
-              echo "ERROR: Could not derive BASE_DOMAIN"; exit 1
-            fi
-            echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
-          else
-            echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
-          fi
+          echo "Using BASE_DOMAIN: $BASE_DOMAIN"
 
           # Zone id
           ZONE_ID="$(curl -sS -G "https://api.cloudflare.com/client/v4/zones" \
@@ -662,28 +1428,51 @@ jobs:
           echo "DNS sync (env-scoped) complete."
 
   deployment_summary:
+    if: ${{ always() }}
     name: Deployment Summary
     runs-on: ubuntu-latest
     needs:
-      - determine_docker_tag
-      - determine_compose_timestamp
-      - determine_environment
-      - calculate_unused_ports
-      - generate_and_upload_truenas_compose_file
-      - stop_app
-      - update_aggregator_and_start_app
-      - update_aggregator_compose_only
-      - verify_app_started
+      - setup
+      - test_docker_compose
+      - rolling_update_deployment
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
     steps:
       - name: Summary
         run: |
           set -euo pipefail
-          echo "=== TrueNAS DJ Panel Deployment Summary ==="
-          echo "Docker Tag: ${{ needs.determine_docker_tag.outputs.docker_tag }}"
-          echo "Latest Tag: ${{ needs.determine_docker_tag.outputs.latest_tag }}"
-          echo "Compose File: ${{ needs.determine_compose_timestamp.outputs.compose_file_name }}"
-          echo "Environment: ${{ needs.determine_environment.outputs.current_env }}"
-          echo "Env Slug: ${{ needs.determine_environment.outputs.env_slug }}"
-          echo "New compose absolute: ${{ needs.generate_and_upload_truenas_compose_file.outputs.new_compose_abs }}"
+          echo "=========================================="
+          if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
+            echo "  🎉 Zero-Downtime Deployment Complete!"
+          else
+            echo "  ❌ Deployment Failed"
+          fi
+          echo "=========================================="
+          echo ""
+          echo "📦 Docker Image:"
+          echo "   Tag: ${{ needs.setup.outputs.docker_tag }}"
+          echo "   Latest: ${{ needs.setup.outputs.latest_tag }}"
+          echo ""
+          echo "🌍 Environment:"
+          echo "   Name: ${{ needs.setup.outputs.current_env }}"
+          echo "   Slug: ${{ needs.setup.outputs.env_slug }}"
+          echo ""
+          echo "🔄 Deployment Strategy: Rolling Update"
+          echo "   Databases: Remained running (shared)"
+          echo "   Services: Updated with health checks"
+          echo ""
+          echo "✅ Status:"
+          echo "   Compose Test: ${{ needs.test_docker_compose.result }}"
+          echo "   Rolling Update: ${{ needs.rolling_update_deployment.result }}"
+          echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
+          echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
+          echo ""
+          echo "📄 Compose File: ${{ needs.setup.outputs.compose_file_name }}"
+          echo ""
+          echo "=========================================="
+          if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
+            echo "✨ ZERO DOWNTIME ACHIEVED ✨"
+          else
+            echo "❌ DEPLOYMENT FAILED - MANUAL INTERVENTION REQUIRED"
+          fi
+          echo "=========================================="

@@ -1,0 +1,8 @@
+# Ignore generated and API models
+Frontends/dj-panel/src/models/strapi/
+Frontends/dj-panel/src/models/api/
+node_modules/
+dist/
+build/
+bin/
+obj/

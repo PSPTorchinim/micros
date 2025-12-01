@@ -9,10 +9,10 @@ export default {
       if (mod?.default) {
         await mod.default({ strapi });
       } else {
-        strapi.log.warn("[BOOT] run-bootstrap not exported as default.");
+        console.warn("[BOOT] run-bootstrap not exported as default.");
       }
     } catch (e: any) {
-      strapi.log.warn(
+      console.warn(
         "[BOOT] Failed to run bootstrap tasks: " + (e?.message ?? e)
       );
     }

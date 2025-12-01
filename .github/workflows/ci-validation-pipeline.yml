@@ -1,28 +1,45 @@
 name: PR Validation
 
+# This workflow validates pull requests before merging:
+# 1. Builds all .NET microservices to check for compilation errors
+# 2. Builds React frontends and runs tests (unit + E2E)
+# 3. Lints all Dockerfiles for best practices
+# 4. Validates Docker Compose configurations
+# 5. Lints GitHub Actions workflow files
+# All checks must pass before PR can be merged
+
 on:
   pull_request:
 
+# Cancel in-progress runs when a new commit is pushed to the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  determine_environment:
+  lint_dockerfiles:
+    name: Lint Dockerfiles
     runs-on: ubuntu-latest
-    name: Determine Environment
-    outputs:
-      current_env: ${{ steps.set_env.outputs.current_env }}
+    timeout-minutes: 5
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
-      - name: Set Environment
-        id: set_env
-        uses: ./.github/templates/determine-environment
+
+      - name: Lint all Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "*.Dockerfile"
+          recursive: true
 
   validate_dotnet:
-    name: Build - DotNet
+    name: Build & Test .NET Services
     runs-on: ubuntu-latest
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         service:
           [
@@ -36,7 +53,7 @@ jobs:
             "PartyAPI",
           ]
     steps:
-      - name: Checkout code
+      - name: Checkout Source Code
         uses: actions/checkout@v5
 
       - name: Build .NET Service
@@ -45,16 +62,15 @@ jobs:
           service: ${{ matrix.service }}
 
   validate_react:
-    name: Build - React
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    name: Build & Test React Frontends
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         service: ["dj-panel"]
     steps:
-      - name: Checkout code
+      - name: Checkout Source Code
         uses: actions/checkout@v5
 
       - name: Build React Service
@@ -62,37 +78,8 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
-  validate_dockerfiles:
-    name: Validate Dockerfiles
-    needs: determine_environment
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        file:
-          [
-            "services/dotnet",
-            "frontends/react",
-            "infra/mongodb",
-            "infra/postgres",
-            "infra/redis",
-            "infra/rabbitmq",
-            "infra/sqlserver",
-            "infra/strapi",
-          ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Hadolint Dockerfiles
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Docker/${{ matrix.file }}.Dockerfile
-
   validate_composers:
     name: Validate Docker Compose files
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -103,11 +90,48 @@ jobs:
         run: |
           docker compose -f Docker/dj-panel-composer.yml config
 
+  validate_infrastructure:
+    name: Validate Infrastructure Apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
+          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
+          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
+          - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
+          - { name: "sqlserver", dockerfile: "Docker/infra/sqlserver.Dockerfile" }
+          - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+          - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
+          - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
+          - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
+          - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
+          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
+          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
+          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
+          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Infrastructure Image (validation only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          push: false
+          tags: test/${{ matrix.image.name }}:validation
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   validate_github_workflows:
     name: Validate GitHub Actions workflows
     runs-on: ubuntu-latest
-    needs: determine_environment
-    environment: ${{ needs.determine_environment.outputs.current_env }}
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -120,23 +144,37 @@ jobs:
     name: PR Validation
     runs-on: ubuntu-latest
     needs:
+      - lint_dockerfiles
       - validate_dotnet
       - validate_react
-      - validate_dockerfiles
       - validate_composers
+      - validate_infrastructure
       - validate_github_workflows
     if: always()
     steps:
       - name: Report overall status
         run: |
-          if [ "${{ needs.validate_dotnet.result }}" = "success" ] && \
+          echo "=========================================="
+          echo "PR Validation Status Report"
+          echo "=========================================="
+          echo "Dockerfile Lint:        ${{ needs.lint_dockerfiles.result }}"
+          echo "DotNet Build:           ${{ needs.validate_dotnet.result }}"
+          echo "React Build:            ${{ needs.validate_react.result }}"
+          echo "Compose Validation:     ${{ needs.validate_composers.result }}"
+          echo "Infrastructure Build:   ${{ needs.validate_infrastructure.result }}"
+          echo "Workflow Lint:          ${{ needs.validate_github_workflows.result }}"
+          echo "=========================================="
+
+          if [ "${{ needs.lint_dockerfiles.result }}" = "success" ] && \
+             [ "${{ needs.validate_dotnet.result }}" = "success" ] && \
              [ "${{ needs.validate_react.result }}" = "success" ] && \
-             [ "${{ needs.validate_dockerfiles.result }}" = "success" ] && \
              [ "${{ needs.validate_composers.result }}" = "success" ] && \
-             [ "${{ needs.validate_github_workflows.result }}" = "success" ]; then
-            echo "All jobs succeeded."
+             [ "${{ needs.validate_infrastructure.result }}" = "success" ] && \
+             [ "${{ needs.validate_github_workflows.result }}" = "success" ]; \
+          then
+            echo "✅ All validation jobs succeeded."
             exit 0
           else
-            echo "One or more jobs failed."
+            echo "❌ One or more validation jobs failed."
             exit 1
           fi

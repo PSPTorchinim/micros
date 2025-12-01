@@ -3,7 +3,9 @@
   display: flex;
   position: relative;
   justify-content: center;
-  background-color: var(--dl-color-theme-neutral-light);
+  background-color: var(--dl-color-theme-background);
+  border-bottom: 1px solid var(--dl-color-theme-border);
+  box-shadow: 0 2px 4px var(--dl-color-theme-shadow);
 }
 
 .navbar-navbar-interactive {
@@ -20,4 +22,10 @@
 
 .navbar-image {
   height: 3rem;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--dl-space-space-unit);
 }

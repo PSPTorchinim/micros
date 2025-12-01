@@ -1,0 +1,57 @@
+name: Build and Push Docker Image
+description: Build and push Docker image to GHCR with standardized tags
+inputs:
+  service-name:
+    description: Name of the service (will be lowercased)
+    required: true
+  service-type:
+    description: Type of service (services/frontends/infra)
+    required: true
+  docker-tag:
+    description: Primary Docker tag
+    required: true
+  latest-tag:
+    description: Latest tag
+    required: true
+  dockerfile:
+    description: Path to Dockerfile
+    required: true
+  build-args:
+    description: Docker build arguments
+    required: false
+  github-token:
+    description: GitHub token for registry login
+    required: true
+  repository-owner:
+    description: GitHub repository owner
+    required: true
+  push:
+    description: Whether to push the built image
+    required: false
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - name: Convert service name to lowercase
+      id: lowercase
+      shell: bash
+      run: |
+        LOWERCASE_SERVICE=$(echo "${{ inputs.service-name }}" | tr '[:upper:]' '[:lower:]')
+        echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
+
+    - name: Build docker tags list
+      id: docker_tags
+      shell: bash
+      run: |
+        BASE_PATH="ghcr.io/${{ inputs.repository-owner }}/micros/${{ inputs.service-type }}/${{ steps.lowercase.outputs.service_name }}"
+        TAGS="${BASE_PATH}:${{ inputs.docker-tag }},${BASE_PATH}:${{ inputs.latest-tag }}"
+        echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+        echo "Building tags: ${TAGS}"
+
+    - name: Login and Push to GitHub Container Registry
+      uses: ./.github/templates/ghcr
+      with:
+        tag: ${{ steps.docker_tags.outputs.tags }}
+        dockerfile: ${{ inputs.dockerfile }}
+        github-token: ${{ inputs.github-token }}
+        build-args: ${{ inputs.build-args }}

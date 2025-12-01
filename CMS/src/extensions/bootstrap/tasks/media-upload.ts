@@ -1,6 +1,6 @@
 // Helper to upload a media file to Strapi and return the uploaded file entity
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Upload a file from disk to Strapi's upload plugin.
@@ -15,14 +15,14 @@ export async function uploadMedia(strapi: any, filePath: string) {
 
   // Simulate a file upload (Strapi v4)
   const uploadedFiles = await strapi
-    .plugin("upload")
-    .service("upload")
+    .plugin('upload')
+    .service('upload')
     .upload({
       data: {},
       files: {
         path: filePath,
         name: fileName,
-        type: "image/jpeg", // or detect from extension
+        type: 'image/jpeg', // or detect from extension
         size: fileStat.size,
         buffer: fileBuffer,
       },

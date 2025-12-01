@@ -1,0 +1,21 @@
+name: Compute Environment Slug
+description: Compute a normalized slug from the environment name for use in resource naming
+inputs:
+  environment:
+    description: The environment name to convert to a slug (e.g., "Development", "Production")
+    required: true
+outputs:
+  env_slug:
+    description: The computed environment slug (e.g., "development", "production")
+    value: ${{ steps.slug.outputs.env_slug }}
+runs:
+  using: composite
+  steps:
+    - name: Compute env slug
+      id: slug
+      shell: bash
+      run: |
+        set -euo pipefail
+        env_raw='${{ inputs.environment }}'
+        env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+        echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
