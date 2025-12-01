@@ -489,7 +489,7 @@ async function seedCTAs(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedHeroBlocks(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
+async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < HERO_BLOCK_SEEDS.length; i++) {
     const hero = HERO_BLOCK_SEEDS[i];
@@ -497,12 +497,10 @@ async function seedHeroBlocks(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
       where: { heading: hero.heading },
     });
     if (!existing) {
-      // Assign a CTA action to each hero block (use id for strapi.db.query relations)
-      const actionsToConnect = ctas.length > i ? [ctas[i].id] : [];
+      // Create hero block without relations first
       const created = await strapi.db.query('api::hero-block.hero-block').create({
         data: {
           ...hero,
-          actions: actionsToConnect,
         },
       });
       console.info(`[SEED] Created Hero Block: ${hero.heading}`);
@@ -535,7 +533,7 @@ async function seedFeatureTabs(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedFeatureSections(strapi: StrapiAny, tabs: any[]): Promise<any[]> {
+async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < FEATURE_SECTION_SEEDS.length; i++) {
     const section = FEATURE_SECTION_SEEDS[i];
@@ -543,12 +541,10 @@ async function seedFeatureSections(strapi: StrapiAny, tabs: any[]): Promise<any[
       where: { Title: section.Title },
     });
     if (!existing) {
-      // Assign a tab to each feature section (use id for strapi.db.query relations)
-      const tabsToConnect = tabs.length > i ? [tabs[i].id] : [];
+      // Create feature section without relations first
       const created = await strapi.db.query('api::feature-section.feature-section').create({
         data: {
           ...section,
-          tabs: tabsToConnect,
         },
       });
       console.info(`[SEED] Created Feature Section: ${section.Title}`);
@@ -581,7 +577,7 @@ async function seedContactInfos(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedContactSections(strapi: StrapiAny, contactInfos: any[]): Promise<any[]> {
+async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < CONTACT_SECTION_SEEDS.length; i++) {
     const section = CONTACT_SECTION_SEEDS[i];
@@ -589,12 +585,10 @@ async function seedContactSections(strapi: StrapiAny, contactInfos: any[]): Prom
       where: { heading: section.heading },
     });
     if (!existing) {
-      // Assign contact info to the first contact section (use id for strapi.db.query relations)
-      const contactInfoToConnect = i === 0 ? contactInfos.map((ci) => ci.id) : [];
+      // Create contact section without relations first
       const created = await strapi.db.query('api::contact-section.contact-section').create({
         data: {
           ...section,
-          contactInfo: contactInfoToConnect,
         },
       });
       console.info(`[SEED] Created Contact Section: ${section.heading}`);
@@ -607,7 +601,7 @@ async function seedContactSections(strapi: StrapiAny, contactInfos: any[]): Prom
   return results;
 }
 
-async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
+async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < STEPS_CONTAINER_SEEDS.length; i++) {
     const container = STEPS_CONTAINER_SEEDS[i];
@@ -622,14 +616,12 @@ async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[
         description: step.description,
         icon: step.icon,
       }));
-      // Assign a CTA action (use id for strapi.db.query relations)
-      const actionToConnect = ctas.length > i ? ctas[i].id : null;
+      // Create the steps container without the relation first
       const created = await strapi.db.query('api::steps-container.steps-container').create({
         data: {
           heading: container.heading,
           content: container.content,
           steps: stepsData,
-          action: actionToConnect,
           publishedAt: new Date(),
         },
       });
@@ -703,7 +695,7 @@ async function seedConfigurations(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedFooter(strapi: StrapiAny, configurations: any[]): Promise<any> {
+async function seedFooter(strapi: StrapiAny): Promise<any> {
   const existing = await strapi.db.query('api::footer.footer').findOne({
     where: { copyright: FOOTER_SEED.copyright },
   });
@@ -730,12 +722,12 @@ async function seedFooter(strapi: StrapiAny, configurations: any[]): Promise<any
       detail: social.detail,
     }));
     
+    // Create footer without configuration relation first
     const created = await strapi.db.query('api::footer.footer').create({
       data: {
         copyright: FOOTER_SEED.copyright,
         columns: columnsData,
         socialLinks: socialLinksData,
-        configuration: configurations.length > 0 ? configurations[0].id : null,
         publishedAt: new Date(),
       },
     });
@@ -754,26 +746,26 @@ async function seedFooter(strapi: StrapiAny, configurations: any[]): Promise<any
 export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }) {
   console.info('[SEED] Starting content type seeding...');
   
-  // Seed CTAs first (they are referenced by other content types)
-  const ctas = await seedCTAs(strapi);
+  // Seed CTAs first
+  await seedCTAs(strapi);
   
-  // Seed Hero Blocks (uses CTAs)
-  await seedHeroBlocks(strapi, ctas);
+  // Seed Hero Blocks
+  await seedHeroBlocks(strapi);
   
   // Seed Feature Tabs
-  const featureTabs = await seedFeatureTabs(strapi);
+  await seedFeatureTabs(strapi);
   
-  // Seed Feature Sections (uses Feature Tabs)
-  await seedFeatureSections(strapi, featureTabs);
+  // Seed Feature Sections
+  await seedFeatureSections(strapi);
   
   // Seed Contact Infos
-  const contactInfos = await seedContactInfos(strapi);
+  await seedContactInfos(strapi);
   
-  // Seed Contact Sections (uses Contact Infos)
-  await seedContactSections(strapi, contactInfos);
+  // Seed Contact Sections
+  await seedContactSections(strapi);
   
-  // Seed Steps Containers (uses CTAs)
-  await seedStepsContainers(strapi, ctas);
+  // Seed Steps Containers
+  await seedStepsContainers(strapi);
   
   // Seed Image Sliders
   await seedImageSliders(strapi);
@@ -782,10 +774,10 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }
   await seedArticleBlocks(strapi);
   
   // Seed Configurations
-  const configurations = await seedConfigurations(strapi);
+  await seedConfigurations(strapi);
   
-  // Seed Footer (uses Configuration)
-  await seedFooter(strapi, configurations);
+  // Seed Footer
+  await seedFooter(strapi);
   
   console.info('[SEED] Content type seeding completed.');
 }

@@ -406,22 +406,6 @@ Treating DJing like a business doesn't diminish the art - it protects it. When t
 async function seedArticles(strapi: StrapiAny): Promise<any[]> {
   console.info('[SEED] Starting article seeding...');
   
-  // Get the first article block to link articles to
-  let articleBlock = await strapi.db.query('api::article-block.article-block').findOne({
-    where: { Title: 'Latest News' },
-  });
-  
-  // If no article block exists, create one
-  if (!articleBlock) {
-    articleBlock = await strapi.db.query('api::article-block.article-block').create({
-      data: {
-        Title: 'Latest News',
-        publishedAt: new Date(),
-      },
-    });
-    console.info('[SEED] Created default Article Block: Latest News');
-  }
-  
   const results: any[] = [];
   
   for (const article of ARTICLE_SEEDS) {
@@ -430,10 +414,10 @@ async function seedArticles(strapi: StrapiAny): Promise<any[]> {
     });
     
     if (!existing) {
+      // Create article (relations can be set up via Strapi admin)
       const created = await strapi.db.query('api::article.article').create({
         data: {
           ...article,
-          article_block: articleBlock.id,
           publishedAt: new Date(),
           locale: 'en',
         },
