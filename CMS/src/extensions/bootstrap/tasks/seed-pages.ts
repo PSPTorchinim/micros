@@ -346,7 +346,7 @@ async function seedPages(strapi: StrapiAny, templateMap: Map<string, any>): Prom
           AuthState: pageData.AuthState,
           NavigationOrder: pageData.NavigationOrder,
           NavigationAction: pageData.NavigationAction,
-          template: template ? template.id : null,
+          template: template?.id ?? null,
           configuration: configuration.id,
           publishedAt: new Date(),
         },
