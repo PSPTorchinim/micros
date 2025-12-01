@@ -30,23 +30,16 @@ jobs:
     name: Determine Environment Slug
     runs-on: ubuntu-latest
     outputs:
-      env_slug: ${{ steps.slug.outputs.env_slug }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
       - name: Compute environment slug
-        id: slug
-        run: |
-          set -euo pipefail
-          env_raw='${{ inputs.environment }}'
-          env_slug=$(printf '%s' "$env_raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
-          
-          # Validate slug is safe (alphanumeric and dashes only)
-          if ! echo "$env_slug" | grep -qE '^[a-z0-9-]+$'; then
-            echo "ERROR: Invalid environment slug: $env_slug"
-            exit 1
-          fi
-          
-          echo "env_slug=$env_slug" >> "$GITHUB_OUTPUT"
-          echo "Environment slug: $env_slug"
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ inputs.environment }}
 
   list_available_backups:
     name: List Available Backups
