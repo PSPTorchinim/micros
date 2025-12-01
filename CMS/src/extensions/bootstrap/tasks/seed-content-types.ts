@@ -497,8 +497,8 @@ async function seedHeroBlocks(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
       where: { heading: hero.heading },
     });
     if (!existing) {
-      // Assign a CTA action to each hero block
-      const actionsToConnect = ctas.length > i ? [ctas[i].id] : [];
+      // Assign a CTA action to each hero block (use documentId for Strapi 5 relations)
+      const actionsToConnect = ctas.length > i ? [ctas[i].documentId] : [];
       const created = await strapi.db.query('api::hero-block.hero-block').create({
         data: {
           ...hero,
@@ -543,8 +543,8 @@ async function seedFeatureSections(strapi: StrapiAny, tabs: any[]): Promise<any[
       where: { Title: section.Title },
     });
     if (!existing) {
-      // Assign a tab to each feature section
-      const tabsToConnect = tabs.length > i ? [tabs[i].id] : [];
+      // Assign a tab to each feature section (use documentId for Strapi 5 relations)
+      const tabsToConnect = tabs.length > i ? [tabs[i].documentId] : [];
       const created = await strapi.db.query('api::feature-section.feature-section').create({
         data: {
           ...section,
@@ -589,8 +589,8 @@ async function seedContactSections(strapi: StrapiAny, contactInfos: any[]): Prom
       where: { heading: section.heading },
     });
     if (!existing) {
-      // Assign contact info to the first contact section
-      const contactInfoToConnect = i === 0 ? contactInfos.map((ci) => ci.id) : [];
+      // Assign contact info to the first contact section (use documentId for Strapi 5 relations)
+      const contactInfoToConnect = i === 0 ? contactInfos.map((ci) => ci.documentId) : [];
       const created = await strapi.db.query('api::contact-section.contact-section').create({
         data: {
           ...section,
@@ -622,8 +622,8 @@ async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[
         description: step.description,
         icon: step.icon,
       }));
-      // Assign a CTA action
-      const actionToConnect = ctas.length > i ? ctas[i].id : null;
+      // Assign a CTA action (use documentId for Strapi 5 relations)
+      const actionToConnect = ctas.length > i ? ctas[i].documentId : null;
       const created = await strapi.db.query('api::steps-container.steps-container').create({
         data: {
           heading: container.heading,
@@ -735,7 +735,7 @@ async function seedFooter(strapi: StrapiAny, configurations: any[]): Promise<any
         copyright: FOOTER_SEED.copyright,
         columns: columnsData,
         socialLinks: socialLinksData,
-        configuration: configurations.length > 0 ? configurations[0].id : null,
+        configuration: configurations.length > 0 ? configurations[0].documentId : null,
         publishedAt: new Date(),
       },
     });
