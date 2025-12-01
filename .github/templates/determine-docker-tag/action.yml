@@ -1,12 +1,15 @@
 name: Determine Docker Tag
-description: Determine the Docker tag for the service using commit hash (dev-{commit} or prod-{commit})
+description: Determine the Docker tag for the service using commit hash (dev-{commit} or prod-{commit}) and latest alias
 outputs:
   docker_tag:
-    description: The Docker tag determined based on the branch and commit hash (dev-{commit} or prod-{commit})
+    description: The commit-based Docker tag (dev-{commit} or prod-{commit})
     value: ${{ steps.tag_set.outputs.docker_tag }}
   latest_tag:
     description: The latest tag alias for the Docker tag (dev-latest or prod-latest)
     value: ${{ steps.tag_set.outputs.latest_tag }}
+  all_tags:
+    description: All tags to push (commit-based and latest)
+    value: ${{ steps.tag_set.outputs.all_tags }}
 runs:
   using: composite
   steps:
@@ -18,9 +21,11 @@ runs:
         COMMIT_HASH=$(git rev-parse --short=7 HEAD)
 
         if [[ "${GITHUB_REF}" == *"/production" ]]; then
-          echo "docker_tag=prod-latest" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=prod-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
           echo "latest_tag=prod-latest" >> "$GITHUB_OUTPUT"
+          echo "all_tags=prod-${COMMIT_HASH},prod-latest" >> "$GITHUB_OUTPUT"
         else
-          echo "docker_tag=dev-latest" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=dev-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
           echo "latest_tag=dev-latest" >> "$GITHUB_OUTPUT"
+          echo "all_tags=dev-${COMMIT_HASH},dev-latest" >> "$GITHUB_OUTPUT"
         fi

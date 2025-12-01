@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Page } from '../models/strapi/strapiMap';
+import {
+  Page,
+  PageAuthStateEnum1,
+  PageMenuEnum1,
+} from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
+import { ContentSkeleton } from './atoms/Skeleton';
+import { NavigationItem } from '../models/strapi/navigation-item';
 
 function buildPath(page: Page, parentPath = ''): string {
   const slug = (page as any)?.Slug || (page as any)?.Title || (page as any)?.id;
@@ -11,14 +17,6 @@ function buildPath(page: Page, parentPath = ''): string {
   const path = `${cleanParent}/${cleanSlug}`.replace(/\\/g, '/');
   return path.replace(/\/+/g, '/');
 }
-
-type NavigationItem = {
-  id: number;
-  text: string;
-  url: string;
-  children?: NavigationItem[];
-  NavigationOrder: number;
-};
 
 function buildRoutesAndNav(
   pages: Page[],
@@ -32,11 +30,16 @@ function buildRoutesAndNav(
     const rawPath = buildPath(page, parentPath).replace(/^\/+/g, '');
     // Special handling for home/root page
     const isHomePage = isRoot && (page as any)?.Slug === '/';
+
+    // For nested routes, we need to use relative paths (just the slug)
+    // For root routes, use the full path
     const path = isHomePage
       ? ''
       : isRoot
         ? rawPath.replace(/^\/+/g, '')
-        : rawPath.replace(/^\//, '');
+        : (page as any)?.Slug?.replace(/^\/+/g, '') ||
+          String((page as any)?.id);
+
     let childrenRoutes: React.ReactElement[] = [];
     let childrenNav: NavigationItem[] = [];
 
@@ -82,11 +85,13 @@ function buildRoutesAndNav(
     // For navigation URLs, always use leading slash
     const url = '/' + rawPath.replace(/^\/+/g, '');
     nav.push({
-      id: (page as any).id ?? 0,
-      text: (page as any).Title || String((page as any).id),
+      id: page.id ?? 0,
+      text: page.Title || String(page.id),
       url,
       ...(childrenNav.length ? { children: childrenNav } : {}),
-      NavigationOrder: (page as any).NavigationOrder ?? 0,
+      NavigationOrder: page.NavigationOrder ?? 0,
+      Menu: page.Menu ?? PageMenuEnum1.Main,
+      AuthState: page.AuthState ?? PageAuthStateEnum1.All,
     });
   });
 
@@ -101,8 +106,8 @@ export function useDynamicRoutes() {
   const [navigation, setNavigation] = useState<NavigationItem[]>([]);
 
   async function fetchAllChildren(page: Page): Promise<Page> {
-    if (!(page as any).id) return page;
-    const children = await strapiAPI.getPagesByParentId((page as any).id);
+    if (!page.id) return page;
+    const children = await strapiAPI.getPagesByParentId(page.id);
     if (!children || children.length === 0) return page;
 
     if (Array.isArray(children)) {
@@ -135,7 +140,11 @@ export function useDynamicRoutes() {
         )
       ) {
         routes = [
-          <Route key="fallback-index" index element={<div>Loading...</div>} />,
+          <Route
+            key="fallback-index"
+            index
+            element={<ContentSkeleton type="page" />}
+          />,
           ...routes,
         ];
       }

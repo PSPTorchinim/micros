@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-latest-47A248?style=for-the-badge&logo=mongodb)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?style=for-the-badge&logo=microsoftsqlserver)
-![Strapi](https://img.shields.io/badge/Strapi-5.23.6-2F2E8B?style=for-the-badge&logo=strapi)
+![Strapi](https://img.shields.io/badge/Strapi-5.31.2-2F2E8B?style=for-the-badge&logo=strapi)
 
 A comprehensive microservices platform for DJ services management, built with .NET 9, React, and modern cloud-native technologies.
 
@@ -70,8 +70,8 @@ This platform follows a microservices architecture with each service owning its 
 ┌─────────────────────────────────────────────────────────────┐
 │              Infrastructure Layer                          │
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│ │RabbitMQ  │ │  Docker  │ │Kubernetes│ │  GitHub  │       │
-│ │(Messages)│ │(Container│ │ (Orchest.)│ │ Actions  │       │
+│ │RabbitMQ  │ │  Redis   │ │  Docker  │ │  GitHub  │       │
+│ │(Messages)│ │ (Cache)  │ │(Container│ │ Actions  │       │
 │ └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -84,7 +84,7 @@ This platform follows a microservices architecture with each service owning its 
 - **Authentication**: JWT Bearer Tokens
 - **Documentation**: Swagger/OpenAPI
 - **Database**: Entity Framework Core (SQL Server), MongoDB Driver
-- **Caching**: Redis
+- **Caching**: Redis (distributed caching)
 - **Messaging**: RabbitMQ
 - **API Gateway**: YARP (Yet Another Reverse Proxy)
 
@@ -99,9 +99,10 @@ This platform follows a microservices architecture with each service owning its 
 
 #### CMS (Strapi 5)
 
-- **Version**: Strapi 5.23.6
+- **Version**: Strapi 5.29.0
 - **Database**: PostgreSQL
-- **Plugins**: GraphQL, Users & Permissions
+- **Plugins**: GraphQL, Users & Permissions, Documentation
+- **Testing**: Jest for unit and integration tests
 
 #### Infrastructure
 
@@ -109,7 +110,6 @@ This platform follows a microservices architecture with each service owning its 
 - **Caching**: Redis
 - **Message Broker**: RabbitMQ
 - **Containerization**: Docker & Docker Compose
-- **Orchestration**: Kubernetes (Helm Charts)
 - **CI/CD**: GitHub Actions
 
 ## 📦 Services Overview
@@ -125,7 +125,12 @@ This platform follows a microservices architecture with each service owning its 
 | **PartyAPI**      | 5006 | .NET 9 + EF Core      | SQL Server | Event & Booking Management       |
 | **MailingAPI**    | 5007 | .NET 9 + MongoDB      | MongoDB    | Email Campaigns & Templates      |
 | **DJ Panel**      | 3000 | React 19 + TypeScript | -          | Frontend Application             |
+| **Storybook**     | 6006 | Storybook 10          | -          | Component Documentation          |
 | **Strapi CMS**    | 1337 | Strapi 5 + Node.js    | PostgreSQL | Content Management               |
+| **Grafana**       | 3001 | Grafana 11            | -          | Logs & Metrics Visualization     |
+| **Prometheus**    | 9090 | Prometheus 2.48       | -          | Metrics Aggregation & Storage    |
+| **Loki**          | 3100 | Loki 3.3              | Filesystem | Log Aggregation & Storage        |
+| **Promtail**      | 9080 | Promtail 3.3          | -          | Log Collection Agent             |
 
 ## 🚀 Quick Start
 
@@ -176,8 +181,11 @@ This platform follows a microservices architecture with each service owning its 
 ### Access URLs
 
 - **DJ Panel Frontend**: http://localhost:3000
+- **Storybook**: http://localhost:6006
 - **API Gateway**: http://localhost:5000/swagger
 - **Strapi CMS**: http://localhost:1337/admin
+- **Grafana Dashboards**: http://localhost:3001 (admin/djpanel_grafana_admin_2024)
+- **Prometheus Metrics**: http://localhost:9090
 - **Individual Service Swagger**: http://localhost:500X/swagger
 
 For detailed setup instructions, see [Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md).
@@ -191,22 +199,49 @@ cd Docker
 docker-compose -f dj-panel-composer.yml up -d
 ```
 
-### Using Kubernetes
-
-```bash
-cd k8s
-helm install dj-beat-blaster .
-```
-
 For detailed deployment instructions, see [Docker README](Docker/README.md).
+
+### Rollback Deployment
+
+If a deployment causes issues, use the automated rollback workflow:
+
+1. Go to **Actions** → **Rollback Deployment**
+2. Click **Run workflow**
+3. Select environment and backup timestamp (use `latest` for most recent)
+4. Monitor the rollback process
+
+See **[Rollback Quick Start Guide](ROLLBACK_QUICK_START.md)** for step-by-step instructions, or [Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md#rollback-procedure) for detailed documentation.
 
 ## 📚 Documentation
 
+### Platform Documentation
+
 - **[Local Development Setup](LOCAL_DEVELOPMENT_SETUP.md)** - Complete guide for local development
 - **[Database Architecture](DATABASE_ARCHITECTURE.md)** - Database design and configuration
-- **[API Documentation](Services/README.md)** - Microservices API documentation
+- **[Logging Setup](LOGGING_SETUP.md)** - Centralized logging with Grafana and Loki
+- **[Caching Guide](Services/CACHING_GUIDE.md)** - Redis caching implementation guide
 - **[Docker Guide](Docker/README.md)** - Docker and deployment guide
-- **[CMS Guide](CMS/README.md)** - Strapi CMS configuration and usage
+- **[Rollback Quick Start](ROLLBACK_QUICK_START.md)** - Quick guide to rollback deployments
+- **[Zero Downtime Deployment](ZERO_DOWNTIME_DEPLOYMENT.md)** - Production deployment strategies
+- **[TrueNAS Setup](TRUENAS_SETUP_GUIDE.md)** - Storage configuration guide
+- **[Changelog Management](CHANGELOG_MANAGEMENT.md)** - Auto-generated changelog documentation
+
+### Service Documentation
+
+- **[Services Overview](Services/README.md)** - Microservices architecture and patterns
+- **[IdentityAPI](Services/IdentityAPI/README.md)** - Authentication & user management
+- **[MusicAPI](Services/MusicAPI/README.md)** - Music library management
+- **[EquipmentAPI](Services/EquipmentAPI/README.md)** - Equipment inventory
+- **[DocumentsAPI](Services/DocumentsAPI/README.md)** - Document generation
+- **[CompanyAPI](Services/CompanyAPI/README.md)** - Client & brand management
+- **[PartyAPI](Services/PartyAPI/README.md)** - Event management
+- **[MailingAPI](Services/MailingAPI/README.md)** - Email campaigns
+- **[DJHostGateway](Services/DJHostGateway/README.md)** - API Gateway
+
+### Frontend Documentation
+
+- **[DJ Panel Frontend](Frontends/dj-panel/README.md)** - React frontend application
+- **[Strapi CMS](CMS/README.md)** - Content management system
 
 ## 🧪 Testing
 
@@ -225,18 +260,42 @@ npm test
 
 ## 🛠️ Development Tools
 
+### Code Quality
+
+This repository uses automated code quality tools to ensure consistent code style and catch issues early:
+
+- **ESLint**: Automatically lints JavaScript/TypeScript code
+- **Prettier**: Automatically formats code according to project standards
+- **Husky**: Git hooks for running checks on commit
+- **lint-staged**: Runs linters only on staged files for better performance
+
+When you commit changes, the following will happen automatically:
+- ESLint will check and auto-fix JavaScript/TypeScript files in `Frontends/dj-panel/src/`
+- Prettier will format your code according to project standards
+- Only staged files are processed for fast commits
+
+To manually run linting and formatting:
+
+```bash
+# From the Frontends/dj-panel directory
+npm run lint        # Check for linting issues
+npm run lint:fix    # Auto-fix linting issues
+npm run format      # Check formatting
+npm run format:fix  # Auto-format code
+```
+
 ### VS Code Extensions
 
 - C# for Visual Studio Code
 - ES7+ React/Redux/React-Native snippets
 - Docker
-- Kubernetes
 - REST Client
+- ESLint
+- Prettier - Code formatter
 
 ### Visual Studio Extensions
 
 - Docker Tools
-- Kubernetes Tools
 - Web Essentials
 
 ## 🤝 Contributing
@@ -249,7 +308,7 @@ npm test
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is proprietary and confidential. Unauthorized copying, distribution, or use of this software is strictly prohibited. See the [LICENSE](LICENSE) file for details.
 
 ## 🔧 Configuration
 
@@ -277,9 +336,8 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📊 Project Status
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?style=flat-square)
-![Coverage](https://img.shields.io/badge/Coverage-85%25-yellowgreen?style=flat-square)
+This is an active development project. Check the [GitHub Actions](https://github.com/PSPTorchinim/micros/actions) page for current build and test status.
+
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square)
 
 ## 🌟 Features Roadmap
@@ -295,15 +353,10 @@ For more troubleshooting help, check the [Issues](https://github.com/PSPTorchini
 
 ## 📞 Support
 
-For support and questions:
-
-- 📧 Email: contact@djbeatblaster.com
-- 💬 Discord: [DJ Beat Blaster Community](https://discord.gg/djbeatblaster)
-- 📱 Facebook: [@djbeatblaster2024](https://facebook.com/djbeatblaster2024)
-- 📸 Instagram: [@dj.beat.blaster](https://instagram.com/dj.beat.blaster)
+For support and questions, please use the [GitHub Issues](https://github.com/PSPTorchinim/micros/issues) page.
 
 ---
 
 <div align="center">
-  <strong>Built with ❤️ by the DJ Beat Blaster Team</strong>
+  <strong>Developed by PSPTorchinim</strong>
 </div>

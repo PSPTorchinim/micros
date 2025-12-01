@@ -1,21 +1,21 @@
 import React from 'react';
 import './index.css';
+import type { ArticleBlock as ArticleBlockType } from '../../../models/strapi/strapiMap';
 
-export const ArticleBlock = ({ Title, items }: any) => (
-  <section className="article-block">
-    {Title && <h2 className="article-block__title">{Title}</h2>}
-    <ul className="article-block__list">
-      {items?.map((item: any, idx: number) => (
-        <li key={idx} className="article-block__item">
-          {item.url ? (
-            <a href={item.url} className="article-block__link">
-              {item.Title}
-            </a>
-          ) : (
+export const ArticleBlock = (props: ArticleBlockType) => {
+  const articles = Array.isArray(props.articles) ? props.articles : [];
+
+  return (
+    <section className="article-block">
+      {props.Title && <h2 className="article-block__title">{props.Title}</h2>}
+      <ul className="article-block__list">
+        {articles.map((item, idx: number) => (
+          <li key={idx} className="article-block__item">
+            {/* Articles don't have URL in Strapi schema, using documentId for linking */}
             <span>{item.Title}</span>
-          )}
-        </li>
-      ))}
-    </ul>
-  </section>
-);
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};

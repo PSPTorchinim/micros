@@ -1,57 +1,67 @@
 name: Build Artifacts
 
+# This workflow builds and pushes Docker images for all application components:
+# 1. Determines deployment environment and Docker image tags
+# 2. Builds .NET microservices with database migrations
+# 3. Builds React frontends with environment-specific configurations
+# 4. Builds infrastructure images (databases, message brokers, monitoring tools)
+# All images are pushed to GitHub Container Registry (GHCR)
+
 on:
-  push:
-    branches:
-      - "releases/R*"
+  schedule:
+    # Daily at midnight (00:00 UTC) for Development environment
+    - cron: "0 0 * * *"
+    # Monthly on the 1st at midnight (00:00 UTC) for Production environment
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
+# Prevent duplicate builds when multiple triggers occur simultaneously
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# Minimal permissions - jobs that need more will specify them
+permissions:
+  contents: read
+
 jobs:
-  determine_environment:
-    name: Determine Environment
+  setup:
+    name: Setup Build Configuration
     runs-on: ubuntu-latest
     outputs:
       current_env: ${{ steps.set_env.outputs.current_env }}
+      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
+      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
+      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      all_tags: ${{ steps.tag_set.outputs.all_tags }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
+
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
 
-  determine_target_branch:
-    name: Determine Target Branch
-    runs-on: ubuntu-latest
-    outputs:
-      target_branch: ${{ steps.branch_set.outputs.target_branch }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-      - name: Determine target branch based on branch
-        id: branch_set
-        uses: ./.github/templates/determine-target-branch
+      - name: Compute env slug
+        id: compute_slug
+        uses: ./.github/templates/compute-env-slug
+        with:
+          environment: ${{ steps.set_env.outputs.current_env }}
 
-  determine_docker_tag:
-    name: Determine Docker Tag
-    runs-on: ubuntu-latest
-    outputs:
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
       - name: Determine Docker tag based on branch
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
 
   build_dotnet_services:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     name: Build & Push .NET Services
     needs:
-      - determine_environment
-      - determine_target_branch
-      - determine_docker_tag
+      - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         service:
@@ -65,35 +75,6 @@ jobs:
             "MusicAPI",
             "PartyAPI",
           ]
-    env:
-      DATABASE_HOST_SQLSERVER: ${{ vars.DATABASE_HOST_SQLSERVER }}
-      DATABASE_PORT_SQLSERVER: ${{ vars.DATABASE_PORT_SQLSERVER }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      DATABASE_HOST_MONGODB: ${{ vars.DATABASE_HOST_MONGODB }}
-      DATABASE_PORT_MONGODB: ${{ vars.DATABASE_PORT_MONGODB }}
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      REDIS_HOST: ${{ vars.REDIS_HOST }}
-      REDIS_PORT: ${{ vars.REDIS_PORT }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
-      RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
-      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-      IDENTITY_BE_ADDRESS: ${{ vars.IDENTITY_BE_ADDRESS }}
-      MUSIC_BE_ADDRESS: ${{ vars.MUSIC_BE_ADDRESS }}
-      GEAR_BE_ADDRESS: ${{ vars.GEAR_BE_ADDRESS }}
-      DOCUMENTS_BE_ADDRESS: ${{ vars.DOCUMENTS_BE_ADDRESS }}
-      BRAND_BE_ADDRESS: ${{ vars.BRAND_BE_ADDRESS }}
-      PARTY_BE_ADDRESS: ${{ vars.PARTY_BE_ADDRESS }}
-      MAILING_BE_ADDRESS: ${{ vars.MAILING_BE_ADDRESS }}
-      DATABASE_CATALOG: ${{ matrix.service }}
-      DJPANEL_USER_EMAIL: ${{ vars.DJPANEL_USER_EMAIL }}
-      DJPANEL_USER_PASSWORD: ${{ secrets.DJPANEL_USER_PASSWORD }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -103,64 +84,35 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
-      - name: Convert service name to lowercase
-        id: lowercase_service
-        run: |
-          LOWERCASE_SERVICE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
-          echo "service_name=${LOWERCASE_SERVICE}" >> "$GITHUB_OUTPUT"
-
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/services/${{ steps.lowercase_service.outputs.service_name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          service-name: ${{ matrix.service }}
+          service-type: services
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: Docker/services/dotnet.Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           build-args: |
             MICROSERVICE_NAME=${{ matrix.service }}
-            DATABASE_HOST_SQLSERVER=${{ env.DATABASE_HOST_SQLSERVER }}
-            DATABASE_PORT_SQLSERVER=${{ env.DATABASE_PORT_SQLSERVER }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_HOST_MONGODB=${{ env.DATABASE_HOST_MONGODB }}
-            DATABASE_PORT_MONGODB=${{ env.DATABASE_PORT_MONGODB }}
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            REDIS_HOST=${{ env.REDIS_HOST }}
-            REDIS_PORT=${{ env.REDIS_PORT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_HOST=${{ env.RABBITMQ_HOST }}
-            RABBITMQ_PORT=${{ env.RABBITMQ_PORT }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            SECURE_KEY=${{ env.SECURE_KEY }}
-            JWT_KEY=${{ env.JWT_KEY }}
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
-            IDENTITY_BE_ADDRESS=${{ env.IDENTITY_BE_ADDRESS }}
-            MUSIC_BE_ADDRESS=${{ env.MUSIC_BE_ADDRESS }}
-            GEAR_BE_ADDRESS=${{ env.GEAR_BE_ADDRESS }}
-            DOCUMENTS_BE_ADDRESS=${{ env.DOCUMENTS_BE_ADDRESS }}
-            BRAND_BE_ADDRESS=${{ env.BRAND_BE_ADDRESS }}
-            PARTY_BE_ADDRESS=${{ env.PARTY_BE_ADDRESS }}
-            MAILING_BE_ADDRESS=${{ env.MAILING_BE_ADDRESS }}
-            DATABASE_CATALOG=${{ env.DATABASE_CATALOG }}
-            DJPANEL_USER_EMAIL=${{ env.DJPANEL_USER_EMAIL }}
-            DJPANEL_USER_PASSWORD=${{ env.DJPANEL_USER_PASSWORD }}
 
   build_react_frontends:
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     name: Build & Push React Frontends
     needs:
-      - determine_environment
-      - determine_target_branch
-      - determine_docker_tag
+      - setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         image:
           - {
               name: "dj-panel",
-              dockerfile: "Docker/frontends/react.Dockerfile",
+              dockerfile: "Docker/frontends/react.Dockerfile"
             }
     env:
       API_GATEWAY: ${{ vars.API_GATEWAY }}
@@ -179,12 +131,16 @@ jobs:
         with:
           service: ${{ matrix.image.name }}
 
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Frontend Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/frontends/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
+          service-name: ${{ matrix.image.name }}
+          service-type: frontends
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           build-args: |
             MICROFRONTEND_NAME=${{ matrix.image.name }}
             API_GATEWAY=${{ env.API_GATEWAY }}
@@ -195,18 +151,34 @@ jobs:
             CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
             CMS_API_PATH=${{ env.CMS_API_PATH }}
 
+      - name: Build and Push Storybook Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: "storybook-${{ matrix.image.name }}"
+          service-type: frontends
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
+          dockerfile: "Docker/frontends/storybook.Dockerfile"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
+
   build_infrastructure_images:
     name: Build & Push Infrastructure Images
     needs:
-      - determine_target_branch
-      - determine_docker_tag
-      - determine_environment
+      - setup
     runs-on: ubuntu-latest
-    environment: ${{ needs.determine_environment.outputs.current_env }}
+    environment: ${{ needs.setup.outputs.current_env }}
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     env:
       DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
       DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
       CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
       CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
       CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
@@ -220,8 +192,12 @@ jobs:
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
       CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
+      GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
+      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+      GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
+      GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
+      GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
     strategy:
       matrix:
         image:
@@ -234,24 +210,41 @@ jobs:
               dockerfile: "Docker/infra/sqlserver.Dockerfile",
             }
           - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
+          - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
+          - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
+          - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
+          - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
+          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
+          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
+          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
+          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Login and Push to GitHub Container Registry
-        uses: ./.github/templates/ghcr
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
         with:
-          tag: ghcr.io/${{ github.repository_owner }}/micros/infra/${{ matrix.image.name }}:${{ needs.determine_docker_tag.outputs.docker_tag }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ matrix.image.name }}
+          service-type: infra
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
           dockerfile: ${{ matrix.image.dockerfile }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
           # Pass ALL possible args; Docker will ignore ones not declared via ARG
           build-args: |
             DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
             DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
             DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
             DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
             DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
+            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
+            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
             CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
             CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
             CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
@@ -263,4 +256,7 @@ jobs:
             REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
             RABBITMQ_USER=${{ env.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+            GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
+            GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.setup.outputs.env_slug }}
+            REPLICA_INDEX=1

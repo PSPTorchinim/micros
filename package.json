@@ -1,0 +1,29 @@
+{
+  "name": "dj-beat-blaster-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DJ Beat Blaster Microservices Platform - Monorepo Root",
+  "author": "PSPTorchinim",
+  "license": "UNLICENSED",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "Frontends/dj-panel/src/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "CMS/**/*.{js,jsx,ts,tsx}": [
+      "prettier --write"
+    ]
+  }
+}

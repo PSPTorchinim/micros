@@ -2,23 +2,24 @@
   flex: 1;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-desktop-menu > *:first-child {
+  margin-left: 0;
+}
+
+.navbar-desktop-menu > *:last-child {
+  margin-right: var(--dl-space-space-twounits);
 }
 
 .navbar-links {
   gap: var(--dl-space-space-twounits);
-  flex: 1;
   display: flex;
   align-items: center;
   margin-left: var(--dl-space-space-twounits);
   flex-direction: row;
   justify-content: flex-start;
-}
-
-.navbar-buttons {
-  gap: var(--dl-space-space-twounits);
-  display: flex;
-  align-items: center;
-  margin-left: var(--dl-space-space-twounits);
 }
 
 .thq-link {
@@ -31,14 +32,16 @@
 .navbar-dropdown {
   display: none;
   position: absolute;
-  background-color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--dl-color-theme-background);
+  border: 1px solid var(--dl-color-theme-border);
+  box-shadow: 0 4px 6px var(--dl-color-theme-shadow);
   padding: var(--dl-space-space-unit);
   z-index: 1000;
   min-width: 10rem;
   max-width: 30rem;
   width: fit-content;
   white-space: nowrap;
+  border-radius: var(--dl-radius-radius-radius4);
 }
 
 .navbar-dropdown.visible {

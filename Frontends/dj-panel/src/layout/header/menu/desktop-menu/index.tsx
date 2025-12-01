@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import './index.css';
 import { useAuth } from '../../../../hooks/use-auth';
 
+import { NavigationItem } from '../../../../models/strapi/navigation-item';
+import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
+
 export const DesktopMenu = (props: any) => {
   const { token, user, logout } = useAuth();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -35,15 +38,18 @@ export const DesktopMenu = (props: any) => {
     }
   };
 
-  const renderLinks = (links: any[]) => {
+  const renderLinks = (links: NavigationItem[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        if (
-          element.isAuth === undefined || // Display for all users
-          (element.isAuth === true && isAuthenticated()) || // Display for logged-in users
-          (element.isAuth === false && !isAuthenticated()) // Display for not logged-in users
-        ) {
+        // Check AuthState field to determine if link should be shown based on authentication
+        const authState = element.AuthState || 'All';
+        const shouldShow =
+          authState === 'All' ||
+          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
+          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
+
+        if (shouldShow) {
           return (
             <div
               key={element.text}
@@ -80,37 +86,24 @@ export const DesktopMenu = (props: any) => {
   };
 
   // If menu property is missing, treat all as main
-  const mainLinks = props.links?.filter
+  const mainLinks = props.links
     ? props.links.filter(
         (element: any) =>
-          (element.Menu === 'main' || element.Menu === undefined) &&
-          element.url,
+          element.Menu === ConfigurationMenuEnum.Main ||
+          element.Menu === undefined,
       )
-    : props.links;
-  const loginLinks = props.links?.filter
+    : [];
+  const loginLinks = props.links
     ? props.links.filter(
-        (element: any) => element.Menu === 'login' && element.url,
+        (element: any) =>
+          element.Menu === ConfigurationMenuEnum.Login && element.url,
       )
     : [];
 
   return (
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
-      <div className="navbar-buttons">
-        {renderLinks(loginLinks)}
-        {isAuthenticated() && (
-          <Link
-            to="#"
-            className="thq-link thq-body-small"
-            onClick={(e) => {
-              e.preventDefault();
-              logout();
-            }}
-          >
-            Logout
-          </Link>
-        )}
-      </div>
+      <div className="navbar-links">{renderLinks(loginLinks)}</div>
     </div>
   );
 };

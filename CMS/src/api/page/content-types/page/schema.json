@@ -17,10 +17,6 @@
     "Slug": {
       "type": "string"
     },
-    "Visible": {
-      "type": "boolean",
-      "default": true
-    },
     "subpages": {
       "type": "relation",
       "relation": "manyToMany",
@@ -42,10 +38,12 @@
     "Menu": {
       "type": "enumeration",
       "default": "Main",
-      "enum": [
-        "Main",
-        "Login"
-      ]
+      "enum": ["Main", "Login", "NotVisible"]
+    },
+    "AuthState": {
+      "type": "enumeration",
+      "default": "All",
+      "enum": ["All", "OnlyAuthenticated", "OnlyUnauthenticated"]
     },
     "NavigationOrder": {
       "type": "integer"
@@ -53,10 +51,7 @@
     "NavigationAction": {
       "type": "enumeration",
       "default": "Link",
-      "enum": [
-        "Link",
-        "Action"
-      ]
+      "enum": ["Link", "Action"]
     },
     "template": {
       "type": "relation",

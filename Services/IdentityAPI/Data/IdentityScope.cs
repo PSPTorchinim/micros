@@ -8,6 +8,9 @@ namespace IdentityAPI.Data
     {
         public override void CreateScope(IServiceCollection services)
         {
+            // Note: Redis caching is implemented at the service layer via ICacheService
+            // for maximum flexibility with custom repository methods and complex queries.
+            // See RolesService and PermissionsService for caching implementation examples.
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddScoped<IRolesRepository, RolesRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();

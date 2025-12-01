@@ -1,0 +1,76 @@
+name: Derive Base Domain
+description: Derive BASE_DOMAIN from Cloudflare tunnel configuration or use provided value
+inputs:
+  base_domain:
+    description: Provided BASE_DOMAIN value (optional, will derive if empty)
+    required: false
+    default: ""
+  account_id:
+    description: Cloudflare Account ID
+    required: true
+  tunnel_uuid:
+    description: Cloudflare Tunnel UUID
+    required: true
+  cf_email:
+    description: Cloudflare Email
+    required: true
+  cf_key:
+    description: Cloudflare API Key
+    required: true
+outputs:
+  base_domain:
+    description: The resolved BASE_DOMAIN value
+    value: ${{ steps.derive.outputs.base_domain }}
+runs:
+  using: composite
+  steps:
+    - name: Derive BASE_DOMAIN
+      id: derive
+      shell: bash
+      env:
+        CF_ACCOUNT_ID: ${{ inputs.account_id }}
+        CF_TUNNEL_UUID: ${{ inputs.tunnel_uuid }}
+        CF_AUTH_EMAIL: ${{ inputs.cf_email }}
+        CF_AUTH_KEY: ${{ inputs.cf_key }}
+      run: |
+        set -euo pipefail
+
+        BASE_DOMAIN='${{ inputs.base_domain }}'
+
+        if [ -z "$BASE_DOMAIN" ]; then
+          echo "BASE_DOMAIN not provided; deriving from tunnel configuration..."
+          
+          # Fetch tunnel configuration using environment variables for credentials
+          cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/cfd_tunnel/${CF_TUNNEL_UUID}/configurations" \
+            -H "X-Auth-Email: ${CF_AUTH_EMAIL}" \
+            -H "X-Auth-Key: ${CF_AUTH_KEY}")"
+          
+          # Verify API response is valid JSON
+          if ! echo "$cfg" | jq -e '.success' >/dev/null 2>&1; then
+            echo "ERROR: Invalid or failed API response from Cloudflare"
+            echo "Response: $cfg"
+            exit 1
+          fi
+          
+          # Check if the API call was successful
+          if [ "$(echo "$cfg" | jq -r '.success')" != "true" ]; then
+            echo "ERROR: Cloudflare API returned error"
+            echo "Errors: $(echo "$cfg" | jq -r '.errors[]?.message // "Unknown error"')"
+            exit 1
+          fi
+          
+          # Extract BASE_DOMAIN from hostnames
+          BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
+            | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
+            | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
+          
+          if [ -z "$BASE_DOMAIN" ]; then
+            echo "ERROR: Could not derive BASE_DOMAIN from tunnel - no hostnames found"
+            exit 1
+          fi
+          echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
+        else
+          echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
+        fi
+
+        echo "base_domain=$BASE_DOMAIN" >> "$GITHUB_OUTPUT"

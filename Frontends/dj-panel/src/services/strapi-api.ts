@@ -1,4 +1,5 @@
-import { Api, Page } from '../models/strapi/strapiMap';
+import { Api } from '../models/strapi/strapiMap';
+import type { Page } from '../models/strapi/strapiMap';
 
 type StrapiFilters = Record<string, unknown>;
 
@@ -42,8 +43,8 @@ const TEMPLATE_CONTENT_POPULATE = {
       'documentId',
       'Title',
       'Slug',
-      'Visible',
       'Menu',
+      'AuthState',
       'NavigationOrder',
       'NavigationAction',
     ],
@@ -358,6 +359,86 @@ class StrapiAPI {
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching contact-info by documentId ${id}:`, e);
+      return null;
+    }
+  }
+
+  async getLoginBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.loginBlock.getLoginBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching login-block by documentId ${id}:`, e);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockByDocumentId(id: string) {
+    try {
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlocks({
+        filters: { documentId: { $eq: id } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(
+        `Error fetching forgot-password-block by documentId ${id}:`,
+        e,
+      );
+      return null;
+    }
+  }
+
+  // Singleton methods for Login and ForgotPassword blocks
+  async getLoginBlockSingleton() {
+    try {
+      const res = await this.api.loginBlock.getLoginBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching login-block singleton:', e);
+      return null;
+    }
+  }
+
+  async getForgotPasswordBlockSingleton() {
+    try {
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching forgot-password-block singleton:', e);
+      return null;
+    }
+  }
+
+  // --------------------------------------
+  // ARTICLES
+  // --------------------------------------
+
+  async getArticleBySlug(slug: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Slug: { $eq: slug } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by slug ${slug}:`, e);
+      return null;
+    }
+  }
+
+  async getArticleByTitle(title: string) {
+    try {
+      const res = await this.api.article.getArticles({
+        filters: { Title: { $eq: title } } as StrapiFilters,
+        populate: '*',
+      });
+      return res?.data?.data?.[0] || null;
+    } catch (e) {
+      console.error(`Error fetching article by title ${title}:`, e);
       return null;
     }
   }

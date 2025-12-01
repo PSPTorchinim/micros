@@ -7,6 +7,7 @@
   },
   "options": { "draftAndPublish": false },
   "attributes": {
+    "Title": { "type": "string" },
     "reversed": { "type": "boolean", "default": false },
     "tabs": {
       "type": "relation",
