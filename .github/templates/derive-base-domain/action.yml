@@ -1,0 +1,52 @@
+name: Derive Base Domain
+description: Derive BASE_DOMAIN from Cloudflare tunnel configuration or use provided value
+inputs:
+  base_domain:
+    description: Provided BASE_DOMAIN value (optional, will derive if empty)
+    required: false
+    default: ""
+  account_id:
+    description: Cloudflare Account ID
+    required: true
+  tunnel_uuid:
+    description: Cloudflare Tunnel UUID
+    required: true
+  cf_email:
+    description: Cloudflare Email
+    required: true
+  cf_key:
+    description: Cloudflare API Key
+    required: true
+outputs:
+  base_domain:
+    description: The resolved BASE_DOMAIN value
+    value: ${{ steps.derive.outputs.base_domain }}
+runs:
+  using: composite
+  steps:
+    - name: Derive BASE_DOMAIN
+      id: derive
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        BASE_DOMAIN='${{ inputs.base_domain }}'
+
+        if [ -z "$BASE_DOMAIN" ]; then
+          echo "BASE_DOMAIN not provided; deriving from tunnel configuration..."
+          cfg="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${{ inputs.account_id }}/cfd_tunnel/${{ inputs.tunnel_uuid }}/configurations" \
+            -H "X-Auth-Email: ${{ inputs.cf_email }}" \
+            -H "X-Auth-Key: ${{ inputs.cf_key }}")"
+          BASE_DOMAIN="$(echo "$cfg" | jq -r '.result.config.ingress[]?.hostname // empty' \
+            | awk -F. 'NF>=2 {print $(NF-1)"."$NF}' \
+            | sort | uniq -c | sort -nr | awk 'NR==1{print $2}')"
+          if [ -z "$BASE_DOMAIN" ]; then
+            echo "ERROR: Could not derive BASE_DOMAIN from tunnel"
+            exit 1
+          fi
+          echo "Derived BASE_DOMAIN from tunnel: $BASE_DOMAIN"
+        else
+          echo "Using provided BASE_DOMAIN: $BASE_DOMAIN"
+        fi
+
+        echo "base_domain=$BASE_DOMAIN" >> "$GITHUB_OUTPUT"
