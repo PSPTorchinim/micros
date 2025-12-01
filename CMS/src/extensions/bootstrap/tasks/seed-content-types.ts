@@ -609,19 +609,11 @@ async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
       where: { heading: container.heading },
     });
     if (!existing) {
-      // Map steps to the component format
-      const stepsData = container.steps.map((step) => ({
-        __component: 'steps.step',
-        title: step.title,
-        description: step.description,
-        icon: step.icon,
-      }));
-      // Create the steps container without the relation first
+      // Create the steps container without components (they can be added via Strapi admin)
       const created = await strapi.db.query('api::steps-container.steps-container').create({
         data: {
           heading: container.heading,
           content: container.content,
-          steps: stepsData,
           publishedAt: new Date(),
         },
       });
@@ -701,33 +693,10 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
   });
   
   if (!existing) {
-    // Map columns to component format
-    const columnsData = FOOTER_SEED.columns.map((col) => ({
-      __component: 'footer.link-column',
-      title: col.title,
-      links: col.links.map((link) => ({
-        __component: 'footer.link',
-        label: link.label,
-        url: link.url,
-        newTab: link.newTab,
-      })),
-    }));
-    
-    // Map social links to component format
-    const socialLinksData = FOOTER_SEED.socialLinks.map((social) => ({
-      __component: 'footer.social-link',
-      platform: social.platform,
-      url: social.url,
-      icon: social.icon,
-      detail: social.detail,
-    }));
-    
-    // Create footer without configuration relation first
+    // Create footer without components (they can be added via Strapi admin)
     const created = await strapi.db.query('api::footer.footer').create({
       data: {
         copyright: FOOTER_SEED.copyright,
-        columns: columnsData,
-        socialLinks: socialLinksData,
         publishedAt: new Date(),
       },
     });
