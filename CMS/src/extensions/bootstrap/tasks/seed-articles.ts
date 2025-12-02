@@ -415,14 +415,14 @@ async function seedArticles(strapi: StrapiAny): Promise<any[]> {
     
     if (!existing) {
       // Create article (relations can be set up via Strapi admin)
+      // Note: For content types with draftAndPublish: true, we create as drafts
       const created = await strapi.db.query('api::article.article').create({
         data: {
           ...article,
-          publishedAt: new Date(),
           locale: 'en',
         },
       });
-      console.info(`[SEED] Created Article: ${article.Title}`);
+      console.info(`[SEED] Created Article (draft): ${article.Title}`);
       results.push(created);
     } else {
       console.info(`[SEED] Article already exists: ${article.Title}`);

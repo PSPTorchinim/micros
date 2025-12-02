@@ -143,16 +143,15 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         content = await buildContactTemplateContent(strapi);
       }
       // Login and Forgot Password templates use built-in blocks, no Content needed
-      
+      // Note: For content types with draftAndPublish: true, we create as drafts
       await strapi.db.query('api::template.template').create({
         data: {
           Name: templateData.Name,
           TemplateType: templateData.TemplateType,
           Content: content,
-          publishedAt: new Date(),
         },
       });
-      console.info(`[SEED] Created Template: ${templateData.Name}`);
+      console.info(`[SEED] Created Template (draft): ${templateData.Name}`);
     } else {
       console.info(`[SEED] Template already exists: ${templateData.Name}`);
     }
@@ -173,6 +172,7 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
     
     if (!existing) {
       // Create page without relations (relations can be set up via Strapi admin)
+      // Note: For content types with draftAndPublish: true, we create as drafts
       const created = await strapi.db.query('api::page.page').create({
         data: {
           Title: pageData.Title,
@@ -181,10 +181,9 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
           AuthState: pageData.AuthState,
           NavigationOrder: pageData.NavigationOrder,
           NavigationAction: pageData.NavigationAction,
-          publishedAt: new Date(),
         },
       });
-      console.info(`[SEED] Created Page: ${pageData.Title} (${pageData.Slug})`);
+      console.info(`[SEED] Created Page (draft): ${pageData.Title} (${pageData.Slug})`);
       results.push(created);
     } else {
       console.info(`[SEED] Page already exists: ${pageData.Title} (${pageData.Slug})`);
