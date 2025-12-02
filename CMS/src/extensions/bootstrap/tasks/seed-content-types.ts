@@ -501,6 +501,7 @@ async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
       const created = await strapi.db.query('api::hero-block.hero-block').create({
         data: {
           ...hero,
+          publishedAt: new Date(),
         },
       });
       console.info(`[SEED] Created Hero Block: ${hero.heading}`);
@@ -521,7 +522,7 @@ async function seedFeatureTabs(strapi: StrapiAny): Promise<any[]> {
     });
     if (!existing) {
       const created = await strapi.db.query('api::feature-tab.feature-tab').create({
-        data: tab,
+        data: { ...tab, publishedAt: new Date() },
       });
       console.info(`[SEED] Created Feature Tab: ${tab.title}`);
       results.push(created);
@@ -545,6 +546,7 @@ async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
       const created = await strapi.db.query('api::feature-section.feature-section').create({
         data: {
           ...section,
+          publishedAt: new Date(),
         },
       });
       console.info(`[SEED] Created Feature Section: ${section.Title}`);
@@ -565,7 +567,10 @@ async function seedContactInfos(strapi: StrapiAny): Promise<any[]> {
     });
     if (!existing) {
       const created = await strapi.db.query('api::contact-info.contact-info').create({
-        data: info,
+        data: {
+          ...info,
+          publishedAt: new Date(),
+        },
       });
       console.info(`[SEED] Created Contact Info: ${info.title}`);
       results.push(created);
@@ -589,6 +594,7 @@ async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
       const created = await strapi.db.query('api::contact-section.contact-section').create({
         data: {
           ...section,
+          publishedAt: new Date(),
         },
       });
       console.info(`[SEED] Created Contact Section: ${section.heading}`);
