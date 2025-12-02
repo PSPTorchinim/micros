@@ -472,16 +472,17 @@ const FOOTER_SEED = {
 async function seedCTAs(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const cta of CTA_SEEDS) {
-    const existing = await strapi.db.query('api::cta.cta').findOne({
-      where: { Label: cta.Label },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::cta.cta').findFirst({
+      filters: { Label: cta.Label },
     });
     if (!existing) {
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      // They can be published via Strapi admin
-      const created = await strapi.db.query('api::cta.cta').create({
+      // Create and publish using Document Service
+      const created = await strapi.documents('api::cta.cta').create({
         data: { ...cta },
+        status: 'published',
       });
-      console.info(`[SEED] Created CTA (draft): ${cta.Label}`);
+      console.info(`[SEED] Created CTA: ${cta.Label}`);
       results.push(created);
     } else {
       console.info(`[SEED] CTA already exists: ${cta.Label}`);
@@ -613,19 +614,20 @@ async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < STEPS_CONTAINER_SEEDS.length; i++) {
     const container = STEPS_CONTAINER_SEEDS[i];
-    const existing = await strapi.db.query('api::steps-container.steps-container').findOne({
-      where: { heading: container.heading },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::steps-container.steps-container').findFirst({
+      filters: { heading: container.heading },
     });
     if (!existing) {
-      // Create the steps container without components (they can be added via Strapi admin)
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      const created = await strapi.db.query('api::steps-container.steps-container').create({
+      // Create using Document Service (without components - they can be added via Strapi admin)
+      const created = await strapi.documents('api::steps-container.steps-container').create({
         data: {
           heading: container.heading,
           content: container.content,
         },
+        status: 'published',
       });
-      console.info(`[SEED] Created Steps Container (draft): ${container.heading}`);
+      console.info(`[SEED] Created Steps Container: ${container.heading}`);
       results.push(created);
     } else {
       console.info(`[SEED] Steps Container already exists: ${container.heading}`);
@@ -638,15 +640,17 @@ async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
 async function seedImageSliders(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const slider of IMAGE_SLIDER_SEEDS) {
-    const existing = await strapi.db.query('api::image-slider.image-slider').findOne({
-      where: { Title: slider.Title },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::image-slider.image-slider').findFirst({
+      filters: { Title: slider.Title },
     });
     if (!existing) {
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      const created = await strapi.db.query('api::image-slider.image-slider').create({
+      // Create and publish using Document Service
+      const created = await strapi.documents('api::image-slider.image-slider').create({
         data: { ...slider },
+        status: 'published',
       });
-      console.info(`[SEED] Created Image Slider (draft): ${slider.Title}`);
+      console.info(`[SEED] Created Image Slider: ${slider.Title}`);
       results.push(created);
     } else {
       console.info(`[SEED] Image Slider already exists: ${slider.Title}`);
@@ -659,15 +663,17 @@ async function seedImageSliders(strapi: StrapiAny): Promise<any[]> {
 async function seedArticleBlocks(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const block of ARTICLE_BLOCK_SEEDS) {
-    const existing = await strapi.db.query('api::article-block.article-block').findOne({
-      where: { Title: block.Title },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::article-block.article-block').findFirst({
+      filters: { Title: block.Title },
     });
     if (!existing) {
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      const created = await strapi.db.query('api::article-block.article-block').create({
+      // Create and publish using Document Service
+      const created = await strapi.documents('api::article-block.article-block').create({
         data: { ...block },
+        status: 'published',
       });
-      console.info(`[SEED] Created Article Block (draft): ${block.Title}`);
+      console.info(`[SEED] Created Article Block: ${block.Title}`);
       results.push(created);
     } else {
       console.info(`[SEED] Article Block already exists: ${block.Title}`);
@@ -680,15 +686,17 @@ async function seedArticleBlocks(strapi: StrapiAny): Promise<any[]> {
 async function seedConfigurations(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const config of CONFIGURATION_SEEDS) {
-    const existing = await strapi.db.query('api::configuration.configuration').findOne({
-      where: { Title: config.Title },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::configuration.configuration').findFirst({
+      filters: { Title: config.Title },
     });
     if (!existing) {
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      const created = await strapi.db.query('api::configuration.configuration').create({
+      // Create and publish using Document Service
+      const created = await strapi.documents('api::configuration.configuration').create({
         data: { ...config },
+        status: 'published',
       });
-      console.info(`[SEED] Created Configuration (draft): ${config.Title}`);
+      console.info(`[SEED] Created Configuration: ${config.Title}`);
       results.push(created);
     } else {
       console.info(`[SEED] Configuration already exists: ${config.Title}`);
@@ -699,19 +707,21 @@ async function seedConfigurations(strapi: StrapiAny): Promise<any[]> {
 }
 
 async function seedFooter(strapi: StrapiAny): Promise<any> {
-  const existing = await strapi.db.query('api::footer.footer').findOne({
-    where: { copyright: FOOTER_SEED.copyright },
+  // Footer is a singleType with draftAndPublish: true
+  // Use Document Service for proper handling
+  const existing = await strapi.documents('api::footer.footer').findFirst({
+    filters: { copyright: FOOTER_SEED.copyright },
   });
   
   if (!existing) {
     // Create footer without components (they can be added via Strapi admin)
-    // Note: For content types with draftAndPublish: true, we create as drafts
-    const created = await strapi.db.query('api::footer.footer').create({
+    const created = await strapi.documents('api::footer.footer').create({
       data: {
         copyright: FOOTER_SEED.copyright,
       },
+      status: 'published',
     });
-    console.info(`[SEED] Created Footer (draft)`);
+    console.info(`[SEED] Created Footer`);
     return created;
   } else {
     console.info(`[SEED] Footer already exists`);

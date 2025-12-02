@@ -125,8 +125,9 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
   console.info('[SEED] Starting template seeding...');
   
   for (const templateData of TEMPLATE_SEEDS) {
-    const existing = await strapi.db.query('api::template.template').findOne({
-      where: { Name: templateData.Name },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::template.template').findFirst({
+      filters: { Name: templateData.Name },
     });
     
     if (!existing) {
@@ -143,15 +144,16 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         content = await buildContactTemplateContent(strapi);
       }
       // Login and Forgot Password templates use built-in blocks, no Content needed
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      await strapi.db.query('api::template.template').create({
+      // Create and publish using Document Service
+      await strapi.documents('api::template.template').create({
         data: {
           Name: templateData.Name,
           TemplateType: templateData.TemplateType,
           Content: content,
         },
+        status: 'published',
       });
-      console.info(`[SEED] Created Template (draft): ${templateData.Name}`);
+      console.info(`[SEED] Created Template: ${templateData.Name}`);
     } else {
       console.info(`[SEED] Template already exists: ${templateData.Name}`);
     }
@@ -166,14 +168,14 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   
   for (const pageData of PAGE_SEEDS) {
-    const existing = await strapi.db.query('api::page.page').findOne({
-      where: { Slug: pageData.Slug },
+    // Use Document Service for draftAndPublish: true content types
+    const existing = await strapi.documents('api::page.page').findFirst({
+      filters: { Slug: pageData.Slug },
     });
     
     if (!existing) {
-      // Create page without relations (relations can be set up via Strapi admin)
-      // Note: For content types with draftAndPublish: true, we create as drafts
-      const created = await strapi.db.query('api::page.page').create({
+      // Create page without relations using Document Service (relations can be set up via Strapi admin)
+      const created = await strapi.documents('api::page.page').create({
         data: {
           Title: pageData.Title,
           Slug: pageData.Slug,
@@ -182,8 +184,9 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
           NavigationOrder: pageData.NavigationOrder,
           NavigationAction: pageData.NavigationAction,
         },
+        status: 'published',
       });
-      console.info(`[SEED] Created Page (draft): ${pageData.Title} (${pageData.Slug})`);
+      console.info(`[SEED] Created Page: ${pageData.Title} (${pageData.Slug})`);
       results.push(created);
     } else {
       console.info(`[SEED] Page already exists: ${pageData.Title} (${pageData.Slug})`);
