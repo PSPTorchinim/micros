@@ -492,7 +492,7 @@ async function seedCTAs(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
+async function seedHeroBlocks(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < HERO_BLOCK_SEEDS.length; i++) {
     const hero = HERO_BLOCK_SEEDS[i];
@@ -500,14 +500,24 @@ async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
       where: { heading: hero.heading },
     });
     if (!existing) {
-      // Create hero block without relations first
+      // Get CTA id for this hero block (assign one CTA per hero)
+      const ctaId = ctas[i % ctas.length]?.id;
+      
+      // Create hero block with CTA relation
+      const heroData: any = {
+        ...hero,
+        publishedAt: new Date(),
+      };
+      
+      // Add actions relation if CTAs exist
+      if (ctaId) {
+        heroData.actions = [ctaId];
+      }
+      
       const created = await strapi.db.query('api::hero-block.hero-block').create({
-        data: {
-          ...hero,
-          publishedAt: new Date(),
-        },
+        data: heroData,
       });
-      console.info(`[SEED] Created Hero Block: ${hero.heading}`);
+      console.info(`[SEED] Created Hero Block: ${hero.heading}${ctaId ? ' (with CTA)' : ''}`);
       results.push(created);
     } else {
       console.info(`[SEED] Hero Block already exists: ${hero.heading}`);
@@ -537,7 +547,7 @@ async function seedFeatureTabs(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
+async function seedFeatureSections(strapi: StrapiAny, featureTabs: any[]): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < FEATURE_SECTION_SEEDS.length; i++) {
     const section = FEATURE_SECTION_SEEDS[i];
@@ -545,14 +555,24 @@ async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
       where: { Title: section.Title },
     });
     if (!existing) {
-      // Create feature section without relations first
+      // Get FeatureTab id for this section (assign one tab per section)
+      const tabId = featureTabs[i % featureTabs.length]?.id;
+      
+      // Create feature section with tab relation
+      const sectionData: any = {
+        ...section,
+        publishedAt: new Date(),
+      };
+      
+      // Add tabs relation if FeatureTabs exist
+      if (tabId) {
+        sectionData.tabs = [tabId];
+      }
+      
       const created = await strapi.db.query('api::feature-section.feature-section').create({
-        data: {
-          ...section,
-          publishedAt: new Date(),
-        },
+        data: sectionData,
       });
-      console.info(`[SEED] Created Feature Section: ${section.Title}`);
+      console.info(`[SEED] Created Feature Section: ${section.Title}${tabId ? ' (with tab)' : ''}`);
       results.push(created);
     } else {
       console.info(`[SEED] Feature Section already exists: ${section.Title}`);
@@ -585,7 +605,7 @@ async function seedContactInfos(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
+async function seedContactSections(strapi: StrapiAny, contactInfos: any[]): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < CONTACT_SECTION_SEEDS.length; i++) {
     const section = CONTACT_SECTION_SEEDS[i];
@@ -593,14 +613,24 @@ async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
       where: { heading: section.heading },
     });
     if (!existing) {
-      // Create contact section without relations first
+      // Get ContactInfo id for this section (assign one info per section)
+      const infoId = contactInfos[i % contactInfos.length]?.id;
+      
+      // Create contact section with contactInfo relation
+      const sectionData: any = {
+        ...section,
+        publishedAt: new Date(),
+      };
+      
+      // Add contactInfo relation if ContactInfos exist
+      if (infoId) {
+        sectionData.contactInfo = [infoId];
+      }
+      
       const created = await strapi.db.query('api::contact-section.contact-section').create({
-        data: {
-          ...section,
-          publishedAt: new Date(),
-        },
+        data: sectionData,
       });
-      console.info(`[SEED] Created Contact Section: ${section.heading}`);
+      console.info(`[SEED] Created Contact Section: ${section.heading}${infoId ? ' (with contact info)' : ''}`);
       results.push(created);
     } else {
       console.info(`[SEED] Contact Section already exists: ${section.heading}`);
@@ -736,23 +766,23 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
 export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }) {
   console.info('[SEED] Starting content type seeding...');
   
-  // Seed CTAs first
-  await seedCTAs(strapi);
+  // Seed CTAs first (needed for Hero Block relations)
+  const ctas = await seedCTAs(strapi);
   
-  // Seed Hero Blocks
-  await seedHeroBlocks(strapi);
+  // Seed Hero Blocks with CTA relations
+  await seedHeroBlocks(strapi, ctas);
   
-  // Seed Feature Tabs
-  await seedFeatureTabs(strapi);
+  // Seed Feature Tabs (needed for Feature Section relations)
+  const featureTabs = await seedFeatureTabs(strapi);
   
-  // Seed Feature Sections
-  await seedFeatureSections(strapi);
+  // Seed Feature Sections with FeatureTab relations
+  await seedFeatureSections(strapi, featureTabs);
   
-  // Seed Contact Infos
-  await seedContactInfos(strapi);
+  // Seed Contact Infos (needed for Contact Section relations)
+  const contactInfos = await seedContactInfos(strapi);
   
-  // Seed Contact Sections
-  await seedContactSections(strapi);
+  // Seed Contact Sections with ContactInfo relations
+  await seedContactSections(strapi, contactInfos);
   
   // Seed Steps Containers
   await seedStepsContainers(strapi);

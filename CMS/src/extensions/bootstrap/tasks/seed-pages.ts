@@ -32,6 +32,10 @@ const TEMPLATE_SEEDS = [
     Name: 'Forgot Password Template',
     TemplateType: 'ForgotPassword',
   },
+  {
+    Name: 'Article Template',
+    TemplateType: 'Standard',
+  },
 ];
 
 // ============================================================================
@@ -91,6 +95,15 @@ const PAGE_SEEDS = [
     NavigationOrder: 99,
     NavigationAction: 'Link',
     templateName: 'Forgot Password Template',
+  },
+  {
+    Title: 'Articles',
+    Slug: '/articles',
+    Menu: 'Main',
+    AuthState: 'All',
+    NavigationOrder: 5,
+    NavigationAction: 'Link',
+    templateName: 'Article Template',
   },
 ];
 
@@ -167,6 +180,13 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
   
   const results: any[] = [];
   
+  // First, get all templates to map names to documentIds
+  const templates = await strapi.documents('api::template.template').findMany({});
+  const templateMap = new Map<string, string>();
+  for (const template of templates) {
+    templateMap.set(template.Name, template.documentId);
+  }
+  
   for (const pageData of PAGE_SEEDS) {
     // Use Document Service for draftAndPublish: true content types
     const existing = await strapi.documents('api::page.page').findFirst({
@@ -174,19 +194,29 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
     });
     
     if (!existing) {
-      // Create page without relations using Document Service (relations can be set up via Strapi admin)
+      // Get the template documentId for this page
+      const templateDocId = templateMap.get(pageData.templateName);
+      
+      // Create page with template relation using Document Service
+      const pagePayload: any = {
+        Title: pageData.Title,
+        Slug: pageData.Slug,
+        Menu: pageData.Menu,
+        AuthState: pageData.AuthState,
+        NavigationOrder: pageData.NavigationOrder,
+        NavigationAction: pageData.NavigationAction,
+      };
+      
+      // Add template relation if template exists
+      if (templateDocId) {
+        pagePayload.template = templateDocId;
+      }
+      
       const created = await strapi.documents('api::page.page').create({
-        data: {
-          Title: pageData.Title,
-          Slug: pageData.Slug,
-          Menu: pageData.Menu,
-          AuthState: pageData.AuthState,
-          NavigationOrder: pageData.NavigationOrder,
-          NavigationAction: pageData.NavigationAction,
-        },
+        data: pagePayload,
         status: 'published',
       });
-      console.info(`[SEED] Created Page: ${pageData.Title} (${pageData.Slug})`);
+      console.info(`[SEED] Created Page: ${pageData.Title} (${pageData.Slug}) with template: ${pageData.templateName}`);
       results.push(created);
     } else {
       console.info(`[SEED] Page already exists: ${pageData.Title} (${pageData.Slug})`);
