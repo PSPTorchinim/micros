@@ -351,8 +351,9 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
   let orderNum = 100; // Start at 100 for article pages (not in main navigation)
   
   for (const article of articles) {
-    // Generate slug from article title using utility function
-    const articleSlug = generateSlug(article.Title, '/articles');
+    // Generate slug from article title - just the slug without /articles prefix
+    // Frontend calculates the full path using Articles page as parent
+    const articleSlug = generateSlug(article.Title);
     
     // Check if page already exists
     const existing = await strapi.documents('api::page.page').findFirst({
@@ -363,7 +364,7 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
       const pagePayload: any = {
         Title: article.Title,
         Slug: articleSlug,
-        Menu: 'NotVisible', // Article pages are not in navigation
+        Menu: 'Main', // Article pages visible in main menu
         AuthState: 'All',
         NavigationOrder: orderNum++,
         NavigationAction: 'Link',
