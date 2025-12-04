@@ -4,6 +4,18 @@
 type StrapiAny = any;
 
 // ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Generate a URL-friendly slug from a title
+ */
+function generateSlug(title: string, prefix: string = ''): string {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return prefix ? `${prefix}/${slug}` : `/${slug}`;
+}
+
+// ============================================================================
 // Template Seeds - Page templates referencing content types
 // ============================================================================
 const TEMPLATE_SEEDS = [
@@ -118,9 +130,15 @@ const PAGE_SEEDS = [
 async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
   const content: any[] = [];
   
-  // Add hero block reference
+  // Add hero block reference (first one for home page)
   const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
-  if (heroBlocks.length > 0) {
+  const homeHeroBlock = heroBlocks.find((h: any) => h.heading?.includes('Electronic Music Producer'));
+  if (homeHeroBlock) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: homeHeroBlock.id,
+    });
+  } else if (heroBlocks.length > 0) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
       hero_block: heroBlocks[0].id,
@@ -142,9 +160,15 @@ async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
 async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
   const content: any[] = [];
   
-  // Add a hero block for about page
+  // Add a hero block for about page (looking for one about club residencies or similar)
   const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
-  if (heroBlocks.length > 1) {
+  const aboutHeroBlock = heroBlocks.find((h: any) => h.heading?.includes('Private Events'));
+  if (aboutHeroBlock) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: aboutHeroBlock.id,
+    });
+  } else if (heroBlocks.length > 1) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
       hero_block: heroBlocks[1].id,
@@ -157,9 +181,15 @@ async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
 async function buildEventsTemplateContent(strapi: StrapiAny): Promise<any[]> {
   const content: any[] = [];
   
-  // Add a hero block for events page
+  // Add a hero block for events page (looking for one about live performance)
   const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
-  if (heroBlocks.length > 2) {
+  const eventsHeroBlock = heroBlocks.find((h: any) => h.heading?.includes('Ibiza Summer Festival'));
+  if (eventsHeroBlock) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: eventsHeroBlock.id,
+    });
+  } else if (heroBlocks.length > 2) {
     content.push({
       __component: 'hero-block-ref.hero-block-ref',
       hero_block: heroBlocks[2].id,
@@ -187,8 +217,8 @@ async function buildContactTemplateContent(strapi: StrapiAny): Promise<any[]> {
 async function buildArticleTemplateContent(strapi: StrapiAny): Promise<any[]> {
   const content: any[] = [];
   
-  // Add article block reference
-  const articleBlocks = await strapi.documents('api::article-block.article-block').findMany({});
+  // Add article block reference (using db.query for consistency)
+  const articleBlocks = await strapi.db.query('api::article-block.article-block').findMany({});
   if (articleBlocks.length > 0) {
     content.push({
       __component: 'article-block-ref.article-block-ref',
@@ -321,8 +351,8 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
   let orderNum = 100; // Start at 100 for article pages (not in main navigation)
   
   for (const article of articles) {
-    // Generate slug from article title
-    const articleSlug = `/articles/${article.Title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+    // Generate slug from article title using utility function
+    const articleSlug = generateSlug(article.Title, '/articles');
     
     // Check if page already exists
     const existing = await strapi.documents('api::page.page').findFirst({
