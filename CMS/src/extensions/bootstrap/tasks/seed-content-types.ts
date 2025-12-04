@@ -492,19 +492,29 @@ async function seedCTAs(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-// Helper function to add CTA relations to Hero Blocks after creation
+// Helper function to add CTA relations to Hero Blocks after creation using Document Service
 async function linkHeroBlocksToCTAs(strapi: StrapiAny, heroBlocks: any[], ctas: any[]): Promise<void> {
   console.info('[SEED] Linking Hero Blocks to CTAs...');
   for (let i = 0; i < heroBlocks.length && i < ctas.length; i++) {
     const heroBlock = heroBlocks[i];
     const cta = ctas[i];
     
-    // Update hero block to add CTA relation using numeric ID
+    // Get the documentId - for db.query created entities, we need to find them again
+    const heroBlockWithDocId = await strapi.documents('api::hero-block.hero-block').findFirst({
+      filters: { heading: heroBlock.heading },
+    });
+    
+    if (!heroBlockWithDocId) {
+      console.warn(`[SEED] Could not find Hero Block with heading: ${heroBlock.heading}`);
+      continue;
+    }
+    
+    // Update hero block to add CTA relation using Document Service
     try {
-      await strapi.db.query('api::hero-block.hero-block').update({
-        where: { id: heroBlock.id },
+      await strapi.documents('api::hero-block.hero-block').update({
+        documentId: heroBlockWithDocId.documentId,
         data: {
-          actions: [cta.id],
+          actions: [cta.documentId],
         },
       });
       console.info(`[SEED] Linked Hero Block "${heroBlock.heading}" to CTA "${cta.Label}"`);
@@ -514,18 +524,32 @@ async function linkHeroBlocksToCTAs(strapi: StrapiAny, heroBlocks: any[], ctas: 
   }
 }
 
-// Helper function to add FeatureTab relations to FeatureSections after creation
+// Helper function to add FeatureTab relations to FeatureSections after creation using Document Service
 async function linkFeatureSectionsToTabs(strapi: StrapiAny, sections: any[], tabs: any[]): Promise<void> {
   console.info('[SEED] Linking Feature Sections to Feature Tabs...');
   for (let i = 0; i < sections.length && i < tabs.length; i++) {
     const section = sections[i];
     const tab = tabs[i];
     
+    // Get the documentId - for db.query created entities, we need to find them again
+    const sectionWithDocId = await strapi.documents('api::feature-section.feature-section').findFirst({
+      filters: { Title: section.Title },
+    });
+    
+    const tabWithDocId = await strapi.documents('api::feature-tab.feature-tab').findFirst({
+      filters: { title: tab.title },
+    });
+    
+    if (!sectionWithDocId || !tabWithDocId) {
+      console.warn(`[SEED] Could not find Feature Section or Tab for linking`);
+      continue;
+    }
+    
     try {
-      await strapi.db.query('api::feature-section.feature-section').update({
-        where: { id: section.id },
+      await strapi.documents('api::feature-section.feature-section').update({
+        documentId: sectionWithDocId.documentId,
         data: {
-          tabs: [tab.id],
+          tabs: [tabWithDocId.documentId],
         },
       });
       console.info(`[SEED] Linked Feature Section "${section.Title}" to Tab "${tab.title}"`);
@@ -535,18 +559,32 @@ async function linkFeatureSectionsToTabs(strapi: StrapiAny, sections: any[], tab
   }
 }
 
-// Helper function to add ContactInfo relations to ContactSections after creation
+// Helper function to add ContactInfo relations to ContactSections after creation using Document Service
 async function linkContactSectionsToInfos(strapi: StrapiAny, sections: any[], infos: any[]): Promise<void> {
   console.info('[SEED] Linking Contact Sections to Contact Infos...');
   for (let i = 0; i < sections.length && i < infos.length; i++) {
     const section = sections[i];
     const info = infos[i];
     
+    // Get the documentId - for db.query created entities, we need to find them again
+    const sectionWithDocId = await strapi.documents('api::contact-section.contact-section').findFirst({
+      filters: { heading: section.heading },
+    });
+    
+    const infoWithDocId = await strapi.documents('api::contact-info.contact-info').findFirst({
+      filters: { title: info.title },
+    });
+    
+    if (!sectionWithDocId || !infoWithDocId) {
+      console.warn(`[SEED] Could not find Contact Section or Info for linking`);
+      continue;
+    }
+    
     try {
-      await strapi.db.query('api::contact-section.contact-section').update({
-        where: { id: section.id },
+      await strapi.documents('api::contact-section.contact-section').update({
+        documentId: sectionWithDocId.documentId,
         data: {
-          contactInfo: [info.id],
+          contactInfo: [infoWithDocId.documentId],
         },
       });
       console.info(`[SEED] Linked Contact Section "${section.heading}" to Info "${info.title}"`);
@@ -680,7 +718,7 @@ async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
+async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < STEPS_CONTAINER_SEEDS.length; i++) {
     const container = STEPS_CONTAINER_SEEDS[i];
@@ -689,15 +727,31 @@ async function seedStepsContainers(strapi: StrapiAny): Promise<any[]> {
       filters: { heading: container.heading },
     });
     if (!existing) {
-      // Create using Document Service (without components - they can be added via Strapi admin)
+      // Build steps component data
+      const stepsData = container.steps.map((step) => ({
+        title: step.title,
+        description: step.description,
+        icon: step.icon,
+      }));
+      
+      // Build the create payload with steps and action
+      const createData: any = {
+        heading: container.heading,
+        content: container.content,
+        steps: stepsData,
+      };
+      
+      // Add CTA action relation if available
+      if (ctas.length > 0 && ctas[i % ctas.length]) {
+        createData.action = ctas[i % ctas.length].documentId;
+      }
+      
+      // Create using Document Service with steps component data
       const created = await strapi.documents('api::steps-container.steps-container').create({
-        data: {
-          heading: container.heading,
-          content: container.content,
-        },
+        data: createData,
         status: 'published',
       });
-      console.info(`[SEED] Created Steps Container: ${container.heading}`);
+      console.info(`[SEED] Created Steps Container: ${container.heading} (with ${stepsData.length} steps${createData.action ? ' and CTA action' : ''})`);
       results.push(created);
     } else {
       console.info(`[SEED] Steps Container already exists: ${container.heading}`);
@@ -822,7 +876,7 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
 export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }) {
   console.info('[SEED] Starting content type seeding...');
   
-  // Seed CTAs first (needed for Hero Block relations)
+  // Seed CTAs first (needed for Hero Block and Steps Container relations)
   const ctas = await seedCTAs(strapi);
   
   // Seed Hero Blocks (without CTA relations first)
@@ -849,8 +903,8 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }
   // Link Contact Sections to Contact Infos after creation
   await linkContactSectionsToInfos(strapi, contactSections, contactInfos);
   
-  // Seed Steps Containers
-  await seedStepsContainers(strapi);
+  // Seed Steps Containers with steps and CTA action
+  await seedStepsContainers(strapi, ctas);
   
   // Seed Image Sliders (with slides containing references to Hero Blocks)
   await seedImageSliders(strapi, heroBlocks);

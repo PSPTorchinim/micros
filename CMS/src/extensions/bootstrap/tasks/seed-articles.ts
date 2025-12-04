@@ -446,8 +446,44 @@ async function seedArticles(strapi: StrapiAny): Promise<any[]> {
     }
   }
   
+  // After all articles are created, update each article block to set its articles relation
+  await linkArticleBlocksToArticles(strapi, articleBlocks);
+  
   console.info('[SEED] Article seeding completed.');
   return results;
+}
+
+// Link Article Blocks to their Articles (the inverse side of the relation)
+async function linkArticleBlocksToArticles(strapi: StrapiAny, articleBlocks: any[]): Promise<void> {
+  console.info('[SEED] Linking Article Blocks to Articles...');
+  
+  // Get all articles with their article_block relations
+  const allArticles = await strapi.documents('api::article.article').findMany({
+    populate: ['article_block'],
+  });
+  
+  for (const block of articleBlocks) {
+    // Find all articles that reference this block
+    const articlesForBlock = allArticles.filter(
+      (a: any) => a.article_block?.documentId === block.documentId
+    );
+    
+    if (articlesForBlock.length > 0) {
+      try {
+        // Update the article block to set its articles relation
+        await strapi.documents('api::article-block.article-block').update({
+          documentId: block.documentId,
+          data: {
+            articles: articlesForBlock.map((a: any) => a.documentId),
+          },
+          status: 'published',
+        });
+        console.info(`[SEED] Linked Article Block "${block.Title}" to ${articlesForBlock.length} article(s)`);
+      } catch (error) {
+        console.warn(`[SEED] Could not link Article Block to Articles: ${(error as Error).message}`);
+      }
+    }
+  }
 }
 
 // ============================================================================
