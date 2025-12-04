@@ -345,6 +345,12 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
   // Get all article blocks for content references
   const articleBlocks = await strapi.db.query('api::article-block.article-block').findMany({});
   
+  // Get the Articles parent page to set as parent for article pages
+  const articlesPage = await strapi.documents('api::page.page').findFirst({
+    filters: { Slug: '/articles' },
+  });
+  const articlesPageDocId = articlesPage?.documentId;
+  
   let orderNum = 100; // Start at 100 for article pages
   
   for (const article of articles) {
@@ -415,11 +421,16 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
         pagePayload.configuration = configurationDocId;
       }
       
+      // Add parent relation to Articles page
+      if (articlesPageDocId) {
+        pagePayload.Parents = [articlesPageDocId];
+      }
+      
       const created = await strapi.documents('api::page.page').create({
         data: pagePayload,
         status: 'published',
       });
-      console.info(`[SEED] Created Article Page: ${article.Title} (${articleSlug}) with template: ${templateName}`);
+      console.info(`[SEED] Created Article Page: ${article.Title} (${articleSlug}) with template: ${templateName} and parent: Articles`);
       results.push(created);
     } else {
       console.info(`[SEED] Article Page already exists: ${article.Title} (${articleSlug})`);
