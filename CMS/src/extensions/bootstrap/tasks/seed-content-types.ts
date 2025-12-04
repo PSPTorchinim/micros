@@ -774,11 +774,13 @@ async function seedImageSliders(strapi: StrapiAny, heroBlocks: any[]): Promise<a
       const slides: any[] = [];
       
       // Each slider gets a reference to a hero block as a slide
-      if (heroBlocks[i % heroBlocks.length]) {
-        const heroBlock = heroBlocks[i % heroBlocks.length];
+      // Get the hero block with documentId
+      const heroBlocksWithDocId = await strapi.documents('api::hero-block.hero-block').findMany({});
+      if (heroBlocksWithDocId.length > 0) {
+        const heroBlock = heroBlocksWithDocId[i % heroBlocksWithDocId.length];
         slides.push({
           __component: 'hero-block-ref.hero-block-ref',
-          hero_block: heroBlock.id,
+          hero_block: heroBlock.documentId,
         });
       }
       
