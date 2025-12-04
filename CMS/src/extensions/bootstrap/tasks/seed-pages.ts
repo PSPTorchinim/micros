@@ -36,6 +36,10 @@ const TEMPLATE_SEEDS = [
     Name: 'Article Template',
     TemplateType: 'Standard',
   },
+  {
+    Name: 'Article Detail Template',
+    TemplateType: 'Standard',
+  },
 ];
 
 // ============================================================================
@@ -108,26 +112,91 @@ const PAGE_SEEDS = [
 ];
 
 // ============================================================================
-// Build Template Content (returns empty - relations have issues with strapi.db.query)
+// Build Template Content with references to seeded content types
 // ============================================================================
 
 async function buildHomeTemplateContent(strapi: StrapiAny): Promise<any[]> {
-  return [];
+  const content: any[] = [];
+  
+  // Add hero block reference
+  const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
+  if (heroBlocks.length > 0) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: heroBlocks[0].id,
+    });
+  }
+  
+  // Add feature section reference
+  const featureSections = await strapi.db.query('api::feature-section.feature-section').findMany({});
+  if (featureSections.length > 0) {
+    content.push({
+      __component: 'feature-section-ref.feature-section-ref',
+      feature_section: featureSections[0].id,
+    });
+  }
+  
+  return content;
 }
 
 async function buildAboutTemplateContent(strapi: StrapiAny): Promise<any[]> {
-  // Return empty content - relations in dynamic zones have issues with strapi.db.query
-  return [];
+  const content: any[] = [];
+  
+  // Add a hero block for about page
+  const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
+  if (heroBlocks.length > 1) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: heroBlocks[1].id,
+    });
+  }
+  
+  return content;
 }
 
 async function buildEventsTemplateContent(strapi: StrapiAny): Promise<any[]> {
-  // Return empty content - relations in dynamic zones have issues with strapi.db.query
-  return [];
+  const content: any[] = [];
+  
+  // Add a hero block for events page
+  const heroBlocks = await strapi.db.query('api::hero-block.hero-block').findMany({});
+  if (heroBlocks.length > 2) {
+    content.push({
+      __component: 'hero-block-ref.hero-block-ref',
+      hero_block: heroBlocks[2].id,
+    });
+  }
+  
+  return content;
 }
 
 async function buildContactTemplateContent(strapi: StrapiAny): Promise<any[]> {
-  // Return empty content - relations in dynamic zones have issues with strapi.db.query
-  return [];
+  const content: any[] = [];
+  
+  // Add contact section reference
+  const contactSections = await strapi.db.query('api::contact-section.contact-section').findMany({});
+  if (contactSections.length > 0) {
+    content.push({
+      __component: 'contact-section-ref.contact-section-ref',
+      contact_section: contactSections[0].id,
+    });
+  }
+  
+  return content;
+}
+
+async function buildArticleTemplateContent(strapi: StrapiAny): Promise<any[]> {
+  const content: any[] = [];
+  
+  // Add article block reference
+  const articleBlocks = await strapi.documents('api::article-block.article-block').findMany({});
+  if (articleBlocks.length > 0) {
+    content.push({
+      __component: 'article-block-ref.article-block-ref',
+      block: articleBlocks[0].id,
+    });
+  }
+  
+  return content;
 }
 
 // ============================================================================
@@ -155,6 +224,8 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         content = await buildEventsTemplateContent(strapi);
       } else if (templateData.Name === 'Contact Template') {
         content = await buildContactTemplateContent(strapi);
+      } else if (templateData.Name === 'Article Template') {
+        content = await buildArticleTemplateContent(strapi);
       }
       // Login and Forgot Password templates use built-in blocks, no Content needed
       // Create and publish using Document Service
@@ -166,7 +237,7 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         },
         status: 'published',
       });
-      console.info(`[SEED] Created Template: ${templateData.Name}`);
+      console.info(`[SEED] Created Template: ${templateData.Name} (with ${content.length} content block(s))`);
     } else {
       console.info(`[SEED] Template already exists: ${templateData.Name}`);
     }
@@ -175,7 +246,7 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
   console.info('[SEED] Template seeding completed.');
 }
 
-async function seedPages(strapi: StrapiAny): Promise<any[]> {
+async function seedPages(strapi: StrapiAny, configurationDocId: string | null): Promise<any[]> {
   console.info('[SEED] Starting page seeding...');
   
   const results: any[] = [];
@@ -212,6 +283,11 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
         pagePayload.template = templateDocId;
       }
       
+      // Add configuration relation if it exists
+      if (configurationDocId) {
+        pagePayload.configuration = configurationDocId;
+      }
+      
       const created = await strapi.documents('api::page.page').create({
         data: pagePayload,
         status: 'published',
@@ -228,6 +304,104 @@ async function seedPages(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
+// Seed individual article pages
+async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | null): Promise<any[]> {
+  console.info('[SEED] Starting article pages seeding...');
+  
+  const results: any[] = [];
+  
+  // Get article detail template
+  const articleDetailTemplate = await strapi.documents('api::template.template').findFirst({
+    filters: { Name: 'Article Detail Template' },
+  });
+  
+  // Get all articles to create pages for
+  const articles = await strapi.documents('api::article.article').findMany({});
+  
+  let orderNum = 100; // Start at 100 for article pages (not in main navigation)
+  
+  for (const article of articles) {
+    // Generate slug from article title
+    const articleSlug = `/articles/${article.Title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+    
+    // Check if page already exists
+    const existing = await strapi.documents('api::page.page').findFirst({
+      filters: { Slug: articleSlug },
+    });
+    
+    if (!existing) {
+      const pagePayload: any = {
+        Title: article.Title,
+        Slug: articleSlug,
+        Menu: 'NotVisible', // Article pages are not in navigation
+        AuthState: 'All',
+        NavigationOrder: orderNum++,
+        NavigationAction: 'Link',
+      };
+      
+      // Add template relation
+      if (articleDetailTemplate) {
+        pagePayload.template = articleDetailTemplate.documentId;
+      }
+      
+      // Add configuration relation
+      if (configurationDocId) {
+        pagePayload.configuration = configurationDocId;
+      }
+      
+      const created = await strapi.documents('api::page.page').create({
+        data: pagePayload,
+        status: 'published',
+      });
+      console.info(`[SEED] Created Article Page: ${article.Title} (${articleSlug})`);
+      results.push(created);
+    } else {
+      console.info(`[SEED] Article Page already exists: ${article.Title} (${articleSlug})`);
+      results.push(existing);
+    }
+  }
+  
+  console.info('[SEED] Article pages seeding completed.');
+  return results;
+}
+
+// Link Configuration to Footer
+async function linkConfigurationToFooter(strapi: StrapiAny): Promise<string | null> {
+  console.info('[SEED] Linking Configuration to Footer...');
+  
+  // Get the configuration
+  const configurations = await strapi.documents('api::configuration.configuration').findMany({});
+  if (configurations.length === 0) {
+    console.warn('[SEED] No configuration found to link');
+    return null;
+  }
+  const configuration = configurations[0];
+  
+  // Get the footer
+  const footers = await strapi.documents('api::footer.footer').findMany({});
+  if (footers.length === 0) {
+    console.warn('[SEED] No footer found to link');
+    return configuration.documentId;
+  }
+  const footer = footers[0];
+  
+  // Update footer to link to configuration
+  try {
+    await strapi.documents('api::footer.footer').update({
+      documentId: footer.documentId,
+      data: {
+        configuration: configuration.documentId,
+      },
+      status: 'published',
+    });
+    console.info(`[SEED] Linked Footer to Configuration`);
+  } catch (error) {
+    console.warn(`[SEED] Could not link Footer to Configuration: ${(error as Error).message}`);
+  }
+  
+  return configuration.documentId;
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
@@ -236,6 +410,12 @@ export default async function seedPagesTask({ strapi }: { strapi: StrapiAny }) {
   // Seed templates first
   await seedTemplates(strapi);
   
-  // Seed pages (relations can be set up via Strapi admin)
-  await seedPages(strapi);
+  // Link configuration to footer and get config documentId
+  const configurationDocId = await linkConfigurationToFooter(strapi);
+  
+  // Seed pages with configuration relation
+  await seedPages(strapi, configurationDocId);
+  
+  // Seed individual article pages
+  await seedArticlePages(strapi, configurationDocId);
 }

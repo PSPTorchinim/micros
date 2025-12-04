@@ -406,27 +406,30 @@ Treating DJing like a business doesn't diminish the art - it protects it. When t
 async function seedArticles(strapi: StrapiAny): Promise<any[]> {
   console.info('[SEED] Starting article seeding...');
   
-  // Get the first article block to link articles to
+  // Get all article blocks to link articles to (distribute articles across blocks)
   const articleBlocks = await strapi.documents('api::article-block.article-block').findMany({});
-  const firstArticleBlockDocId = articleBlocks.length > 0 ? articleBlocks[0].documentId : null;
   
   const results: any[] = [];
   
-  for (const article of ARTICLE_SEEDS) {
+  for (let i = 0; i < ARTICLE_SEEDS.length; i++) {
+    const article = ARTICLE_SEEDS[i];
     // Use Document Service for draftAndPublish: true content types
     const existing = await strapi.documents('api::article.article').findFirst({
       filters: { Title: article.Title },
     });
     
     if (!existing) {
-      // Build article data with optional article_block relation
+      // Build article data with article_block relation
       const articleData: any = {
         ...article,
       };
       
-      // Link to article block if one exists
-      if (firstArticleBlockDocId) {
-        articleData.article_block = firstArticleBlockDocId;
+      // Link to an article block if any exist (use documentId for Document Service)
+      if (articleBlocks.length > 0) {
+        // Distribute articles across article blocks
+        const blockIndex = i % articleBlocks.length;
+        const articleBlock = articleBlocks[blockIndex];
+        articleData.article_block = articleBlock.documentId;
       }
       
       // Create and publish using Document Service
@@ -435,7 +438,7 @@ async function seedArticles(strapi: StrapiAny): Promise<any[]> {
         locale: 'en',
         status: 'published',
       });
-      console.info(`[SEED] Created Article: ${article.Title}${firstArticleBlockDocId ? ' (linked to article block)' : ''}`);
+      console.info(`[SEED] Created Article: ${article.Title}${articleBlocks.length > 0 ? ' (linked to article block)' : ''}`);
       results.push(created);
     } else {
       console.info(`[SEED] Article already exists: ${article.Title}`);
