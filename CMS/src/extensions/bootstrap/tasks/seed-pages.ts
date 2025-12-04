@@ -48,10 +48,7 @@ const TEMPLATE_SEEDS = [
     Name: 'Article Template',
     TemplateType: 'Standard',
   },
-  {
-    Name: 'Article Detail Template',
-    TemplateType: 'Standard',
-  },
+  // Note: Individual article templates are created dynamically in seedArticlePages
 ];
 
 // ============================================================================
@@ -334,33 +331,71 @@ async function seedPages(strapi: StrapiAny, configurationDocId: string | null): 
   return results;
 }
 
-// Seed individual article pages
+// Seed individual article pages with dedicated templates
 async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | null): Promise<any[]> {
-  console.info('[SEED] Starting article pages seeding...');
+  console.info('[SEED] Starting article pages seeding (with dedicated templates)...');
   
   const results: any[] = [];
   
-  // Get article detail template
-  const articleDetailTemplate = await strapi.documents('api::template.template').findFirst({
-    filters: { Name: 'Article Detail Template' },
+  // Get all articles to create pages for
+  const articles = await strapi.documents('api::article.article').findMany({
+    populate: ['article_block'],
   });
   
-  // Get all articles to create pages for
-  const articles = await strapi.documents('api::article.article').findMany({});
+  // Get all article blocks for content references
+  const articleBlocks = await strapi.db.query('api::article-block.article-block').findMany({});
   
-  let orderNum = 100; // Start at 100 for article pages (not in main navigation)
+  let orderNum = 100; // Start at 100 for article pages
   
   for (const article of articles) {
     // Generate slug from article title - just the slug without /articles prefix
     // Frontend calculates the full path using Articles page as parent
     const articleSlug = generateSlug(article.Title);
+    const templateName = `${article.Title} Template`;
     
-    // Check if page already exists
-    const existing = await strapi.documents('api::page.page').findFirst({
+    // 1. Create a dedicated template for this article
+    let articleTemplate = await strapi.documents('api::template.template').findFirst({
+      filters: { Name: templateName },
+    });
+    
+    if (!articleTemplate) {
+      // Build template content - include article_block reference if article has one
+      const content: any[] = [];
+      
+      // If the article has an article_block, add it to the template content
+      const articleBlockId = article.article_block?.id;
+      if (articleBlockId) {
+        content.push({
+          __component: 'article-block-ref.article-block-ref',
+          block: articleBlockId,
+        });
+      } else if (articleBlocks.length > 0) {
+        // Fallback: use first article block
+        content.push({
+          __component: 'article-block-ref.article-block-ref',
+          block: articleBlocks[0].id,
+        });
+      }
+      
+      articleTemplate = await strapi.documents('api::template.template').create({
+        data: {
+          Name: templateName,
+          TemplateType: 'Standard',
+          Content: content,
+        },
+        status: 'published',
+      });
+      console.info(`[SEED] Created Article Template: ${templateName}`);
+    } else {
+      console.info(`[SEED] Article Template already exists: ${templateName}`);
+    }
+    
+    // 2. Create the page for this article
+    const existingPage = await strapi.documents('api::page.page').findFirst({
       filters: { Slug: articleSlug },
     });
     
-    if (!existing) {
+    if (!existingPage) {
       const pagePayload: any = {
         Title: article.Title,
         Slug: articleSlug,
@@ -370,9 +405,9 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
         NavigationAction: 'Link',
       };
       
-      // Add template relation
-      if (articleDetailTemplate) {
-        pagePayload.template = articleDetailTemplate.documentId;
+      // Add template relation (use the dedicated template we just created)
+      if (articleTemplate) {
+        pagePayload.template = articleTemplate.documentId;
       }
       
       // Add configuration relation
@@ -384,11 +419,11 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
         data: pagePayload,
         status: 'published',
       });
-      console.info(`[SEED] Created Article Page: ${article.Title} (${articleSlug})`);
+      console.info(`[SEED] Created Article Page: ${article.Title} (${articleSlug}) with template: ${templateName}`);
       results.push(created);
     } else {
       console.info(`[SEED] Article Page already exists: ${article.Title} (${articleSlug})`);
-      results.push(existing);
+      results.push(existingPage);
     }
   }
   
