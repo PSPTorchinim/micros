@@ -338,12 +338,7 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
   const results: any[] = [];
   
   // Get all articles to create pages for
-  const articles = await strapi.documents('api::article.article').findMany({
-    populate: ['article_block'],
-  });
-  
-  // Get all article blocks for content references
-  const articleBlocks = await strapi.db.query('api::article-block.article-block').findMany({});
+  const articles = await strapi.documents('api::article.article').findMany({});
   
   // Get the Articles parent page to set as parent for article pages
   const articlesPage = await strapi.documents('api::page.page').findFirst({
@@ -365,23 +360,14 @@ async function seedArticlePages(strapi: StrapiAny, configurationDocId: string | 
     });
     
     if (!articleTemplate) {
-      // Build template content - include article_block reference if article has one
+      // Build template content - include article reference directly
       const content: any[] = [];
       
-      // If the article has an article_block, add it to the template content
-      const articleBlockId = article.article_block?.id;
-      if (articleBlockId) {
-        content.push({
-          __component: 'article-block-ref.article-block-ref',
-          block: articleBlockId,
-        });
-      } else if (articleBlocks.length > 0) {
-        // Fallback: use first article block
-        content.push({
-          __component: 'article-block-ref.article-block-ref',
-          block: articleBlocks[0].id,
-        });
-      }
+      // Add article reference directly to the template content
+      content.push({
+        __component: 'article-ref.article-ref',
+        article: article.id,
+      });
       
       articleTemplate = await strapi.documents('api::template.template').create({
         data: {
