@@ -11,7 +11,7 @@ const ARTICLE_SEEDS = [
     Title: 'The Art of Reading a Dance Floor: Tips from 15 Years of DJing',
     Summary:
       'Learn the essential skills every DJ needs to keep the crowd moving. From energy management to reading body language, discover what separates good DJs from great ones.',
-    coverUrl: '/images/articles/reading-dancefloor.jpg',
+    coverUrl: 'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80',
     Body: `
 ## Introduction
 
@@ -59,7 +59,7 @@ Reading a dance floor is a skill that develops over time. Every crowd teaches yo
     Title: 'Essential DJ Equipment Guide 2024: From Bedroom to Main Stage',
     Summary:
       'A comprehensive breakdown of the gear you need at every stage of your DJ career. From starter controllers to professional rider requirements.',
-    coverUrl: '/images/articles/dj-equipment-guide.jpg',
+    coverUrl: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80',
     Body: `
 ## Starting Your DJ Journey
 
@@ -127,7 +127,7 @@ Start with what you can afford and upgrade as your skills and gigs demand. The b
     Title: 'Building Your DJ Brand: Social Media Strategies That Actually Work',
     Summary:
       'Discover proven strategies for growing your DJ brand online. From Instagram content calendars to TikTok viral moments, learn what gets you noticed.',
-    coverUrl: '/images/articles/dj-social-media.jpg',
+    coverUrl: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
     Body: `
 ## Why Branding Matters
 
@@ -218,7 +218,7 @@ Building a DJ brand is a marathon, not a sprint. Be authentic, be consistent, an
     Title: 'From Vinyl to Digital: The Evolution of DJ Technology',
     Summary:
       'A journey through the history of DJ equipment and how technology has transformed the art form. From 1970s disco to today\'s AI-powered mixing.',
-    coverUrl: '/images/articles/dj-technology-evolution.jpg',
+    coverUrl: 'https://images.unsplash.com/photo-1465101178521-c1a4c8a0f8a0?auto=format&fit=crop&w=800&q=80',
     Body: `
 ## The Birth of Disc Jockeying
 
@@ -299,7 +299,7 @@ Technology has democratized DJing, making it accessible to anyone with a laptop.
     Title: 'The Business of DJing: Contracts, Riders, and Getting Paid',
     Summary:
       'Navigate the professional side of DJing with confidence. Learn about contract essentials, technical riders, and negotiation strategies.',
-    coverUrl: '/images/articles/dj-business.jpg',
+    coverUrl: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80',
     Body: `
 ## Treating DJing as a Business
 

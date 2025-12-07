@@ -73,35 +73,35 @@ const FEATURE_TAB_SEEDS = [
     title: 'Club Performances',
     description:
       'High-energy DJ sets at premier nightclubs across Europe and North America. From intimate underground venues to massive festival stages.',
-    imgSrc: '/images/feature-club.jpg',
+    imgSrc: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ performing at a nightclub',
   },
   {
     title: 'Music Production',
     description:
       'Original tracks and remixes released on top electronic music labels. Crafting sounds that push the boundaries of dance music.',
-    imgSrc: '/images/feature-production.jpg',
+    imgSrc: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'Music production studio setup',
   },
   {
     title: 'Festival Headlining',
     description:
       'Main stage performances at major electronic music festivals. Delivering unforgettable moments to thousands of passionate fans.',
-    imgSrc: '/images/feature-festival.jpg',
+    imgSrc: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ performing at a music festival',
   },
   {
     title: 'Private Events',
     description:
       'Exclusive performances for corporate events, weddings, and private parties. Custom-tailored sets for your special occasion.',
-    imgSrc: '/images/feature-private.jpg',
+    imgSrc: 'https://images.unsplash.com/photo-1526178613658-3f1622045544?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'Private event DJ setup',
   },
   {
     title: 'Radio Shows',
     description:
       'Weekly radio show featuring the latest releases, exclusive premieres, and guest mixes from industry-leading artists.',
-    imgSrc: '/images/feature-radio.jpg',
+    imgSrc: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ hosting a radio show',
   },
 ];
