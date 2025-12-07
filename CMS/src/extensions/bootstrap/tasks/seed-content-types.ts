@@ -871,6 +871,63 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
   }
 }
 
+async function seedLoginBlock(strapi: StrapiAny): Promise<any> {
+  // Login Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::login-block.login-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create login block with DJ-themed content
+    const created = await strapi.db.query('api::login-block.login-block').create({
+      data: {
+        title: 'Welcome Back, DJ',
+        emailLabel: 'Email Address',
+        passwordLabel: 'Password',
+        submitButtonText: 'Sign In',
+        forgotPasswordText: 'Forgot your password?',
+        resetPasswordLinkText: 'Reset it here',
+        emailPlaceholder: 'your@email.com',
+        passwordPlaceholder: 'Enter your password',
+        redirectPath: '/',
+        forgotPasswordUrl: '/forgot-password',
+      },
+    });
+    console.info(`[SEED] Created Login Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Login Block already exists`);
+    return existingEntries[0];
+  }
+}
+
+async function seedForgotPasswordBlock(strapi: StrapiAny): Promise<any> {
+  // Forgot Password Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::forgot-password-block.forgot-password-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create forgot password block with DJ-themed content
+    const created = await strapi.db.query('api::forgot-password-block.forgot-password-block').create({
+      data: {
+        title: 'Reset Your Password',
+        description: 'Enter your email address and we\'ll send you a link to reset your password.',
+        emailLabel: 'Email Address',
+        submitButtonText: 'Send Reset Link',
+        backToLoginText: 'Remember your password?',
+        loginLinkText: 'Back to Login',
+        emailPlaceholder: 'your@email.com',
+        successRedirectPath: '/login',
+        loginUrl: '/login',
+      },
+    });
+    console.info(`[SEED] Created Forgot Password Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Forgot Password Block already exists`);
+    return existingEntries[0];
+  }
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
@@ -919,6 +976,12 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }
   
   // Seed Footer
   await seedFooter(strapi);
+  
+  // Seed Login Block (singleType for login page)
+  await seedLoginBlock(strapi);
+  
+  // Seed Forgot Password Block (singleType for forgot password page)
+  await seedForgotPasswordBlock(strapi);
   
   console.info('[SEED] Content type seeding completed.');
 }
