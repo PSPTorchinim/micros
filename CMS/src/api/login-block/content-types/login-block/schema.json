@@ -50,7 +50,7 @@
     },
     "forgotPasswordUrl": {
       "type": "string",
-      "default": "/users/forgot-password"
+      "default": "/forgot-password"
     }
   }
 }
