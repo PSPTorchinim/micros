@@ -64,7 +64,7 @@ describe('App Component', () => {
   it('renders without crashing', () => {
     render(<App />);
     // App should render the router structure
-    expect(document.querySelector('.hash-router')).toBeDefined();
+    expect(document.querySelector('.browser-router')).toBeDefined();
   });
 
   it('wraps content with ThemeProvider', () => {
@@ -73,9 +73,9 @@ describe('App Component', () => {
     expect(document.documentElement.hasAttribute('data-theme')).toBe(true);
   });
 
-  it('initializes with HashRouter', () => {
+  it('initializes with BrowserRouter', () => {
     const { container } = render(<App />);
-    // HashRouter should be initialized (we can verify by checking if Routes is rendered)
+    // BrowserRouter should be initialized (we can verify by checking if Routes is rendered)
     expect(container).toBeInTheDocument();
   });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './layout';
 import './index.css';
 import { AuthProvider } from './providers/auth-provider';
@@ -13,7 +13,7 @@ import { useDynamicRoutes } from './components/DynamicRoutes';
 export default function App() {
   const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ThemeProvider>
         <ServicesProvider>
           <AuthProvider>
@@ -29,6 +29,6 @@ export default function App() {
           </AuthProvider>
         </ServicesProvider>
       </ThemeProvider>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

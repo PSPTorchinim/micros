@@ -22,6 +22,13 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
     })();
   }, [pageId]);
 
+  // Update document title when page loads
+  useEffect(() => {
+    if (page?.Title) {
+      document.title = page.Title;
+    }
+  }, [page]);
+
   if (page === null) {
     return <p>Page not found.</p>;
   }
