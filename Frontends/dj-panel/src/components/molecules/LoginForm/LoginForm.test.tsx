@@ -68,7 +68,9 @@ describe('LoginForm Component', () => {
   });
 
   it('displays error message when provided', () => {
-    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} error="Invalid credentials" />);
+    renderWithRouter(
+      <LoginForm onSubmit={mockOnSubmit} error="Invalid credentials" />,
+    );
 
     expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
     expect(screen.getByText(/invalid credentials/i)).toHaveClass(
@@ -128,7 +130,9 @@ describe('LoginForm Component', () => {
   });
 
   it('uses full width inputs and button', () => {
-    const { container } = renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
+    const { container } = renderWithRouter(
+      <LoginForm onSubmit={mockOnSubmit} />,
+    );
 
     const inputs = container.querySelectorAll('.atom-input--full-width');
     expect(inputs.length).toBe(2);
