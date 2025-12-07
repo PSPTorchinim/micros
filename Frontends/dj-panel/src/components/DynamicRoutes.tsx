@@ -102,7 +102,9 @@ function buildRoutesAndNav(
 }
 
 export function useDynamicRoutes() {
-  const [routes, setRoutes] = useState<React.ReactElement[]>([]);
+  const [routes, setRoutes] = useState<React.ReactElement[]>([
+    <Route key="loading" path="*" element={<ContentSkeleton type="page" />} />,
+  ]);
   const [navigation, setNavigation] = useState<NavigationItem[]>([]);
 
   async function fetchAllChildren(page: Page): Promise<Page> {

@@ -1,10 +1,15 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { LoginForm } from './LoginForm';
 
 describe('LoginForm Component', () => {
   const mockOnSubmit = jest.fn();
+
+  const renderWithRouter = (ui: React.ReactElement) => {
+    return render(<MemoryRouter>{ui}</MemoryRouter>);
+  };
 
   beforeEach(() => {
     mockOnSubmit.mockClear();
@@ -12,7 +17,7 @@ describe('LoginForm Component', () => {
   });
 
   it('renders login form with all fields', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -21,15 +26,15 @@ describe('LoginForm Component', () => {
   });
 
   it('displays forgot password link', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     const link = screen.getByRole('link', { name: /reset password/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/forgot-password');
+    expect(link).toHaveAttribute('href', '/users/forgot-password');
   });
 
   it('allows user to input email and password', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
     const passwordInput = screen.getByLabelText(
@@ -44,7 +49,7 @@ describe('LoginForm Component', () => {
   });
 
   it('submits form with email and password', async () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -63,7 +68,9 @@ describe('LoginForm Component', () => {
   });
 
   it('displays error message when provided', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} error="Invalid credentials" />);
+    renderWithRouter(
+      <LoginForm onSubmit={mockOnSubmit} error="Invalid credentials" />,
+    );
 
     expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
     expect(screen.getByText(/invalid credentials/i)).toHaveClass(
@@ -75,7 +82,7 @@ describe('LoginForm Component', () => {
     const slowSubmit = jest.fn(
       () => new Promise((resolve) => setTimeout(resolve, 100)),
     );
-    render(<LoginForm onSubmit={slowSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={slowSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -93,7 +100,7 @@ describe('LoginForm Component', () => {
   });
 
   it('re-enables submit button after submission completes', async () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -113,7 +120,7 @@ describe('LoginForm Component', () => {
   });
 
   it('prevents form submission without required fields', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
+    renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -123,7 +130,9 @@ describe('LoginForm Component', () => {
   });
 
   it('uses full width inputs and button', () => {
-    const { container } = render(<LoginForm onSubmit={mockOnSubmit} />);
+    const { container } = renderWithRouter(
+      <LoginForm onSubmit={mockOnSubmit} />,
+    );
 
     const inputs = container.querySelectorAll('.atom-input--full-width');
     expect(inputs.length).toBe(2);
