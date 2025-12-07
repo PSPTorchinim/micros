@@ -25,7 +25,7 @@ describe('LoginForm Component', () => {
 
     const link = screen.getByRole('link', { name: /reset password/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '#/users/forgot-password');
+    expect(link).toHaveAttribute('href', '/forgot-password');
   });
 
   it('allows user to input email and password', () => {
