@@ -8,7 +8,7 @@ type StrapiAny = any;
 // ============================================================================
 const CTA_SEEDS = [
   {
-    Label: 'Book DJ Torchinim',
+    Label: 'Book DJ Beat Blaster',
     url: '/booking',
     OpenInNewTab: false,
   },
@@ -19,7 +19,7 @@ const CTA_SEEDS = [
   },
   {
     Label: 'Listen on SoundCloud',
-    url: 'https://soundcloud.com/dj-torchinim',
+    url: 'https://soundcloud.com/djbeatblaster',
     OpenInNewTab: true,
   },
   {
@@ -39,7 +39,7 @@ const CTA_SEEDS = [
 // ============================================================================
 const HERO_BLOCK_SEEDS = [
   {
-    heading: 'DJ Torchinim - Electronic Music Producer',
+    heading: 'DJ Beat Blaster - Electronic Music Producer',
     content:
       'Bringing high-energy beats and unforgettable experiences to dance floors worldwide. From underground techno to melodic house, crafting sonic journeys that move your soul.',
   },
@@ -56,7 +56,7 @@ const HERO_BLOCK_SEEDS = [
   {
     heading: 'Private Events & Club Residencies',
     content:
-      'Looking for the perfect soundtrack for your venue or event? With over 15 years of experience, DJ Torchinim delivers sets tailored to your audience.',
+      'Looking for the perfect soundtrack for your venue or event? With over 15 years of experience, DJ Beat Blaster delivers sets tailored to your audience.',
   },
   {
     heading: 'Music Production Masterclass',
@@ -115,7 +115,7 @@ const FEATURE_SECTION_SEEDS = [
     reversed: false,
   },
   {
-    Title: 'Why Choose DJ Torchinim',
+    Title: 'Why Choose DJ Beat Blaster',
     reversed: true,
   },
   {
@@ -138,13 +138,13 @@ const FEATURE_SECTION_SEEDS = [
 const CONTACT_INFO_SEEDS = [
   {
     title: 'Booking Inquiries',
-    content: 'booking@djtorchinim.com',
+    content: 'contact@djbeatblaster.com',
     detail: 'For event bookings and performance requests',
     iconName: 'calendar',
   },
   {
     title: 'Management',
-    content: 'management@djtorchinim.com',
+    content: 'management@djbeatblaster.com',
     detail: 'For press, interviews, and business inquiries',
     iconName: 'briefcase',
   },
@@ -162,7 +162,7 @@ const CONTACT_INFO_SEEDS = [
   },
   {
     title: 'Social Media',
-    content: '@djtorchinim',
+    content: '@djbeatblaster',
     detail: 'Follow for latest updates and behind-the-scenes',
     iconName: 'share-2',
   },
@@ -182,7 +182,7 @@ const CONTACT_SECTION_SEEDS = [
     introText: 'Collaborate With Us',
     heading: 'Music Production Partnerships',
     description:
-      'Looking for a collaborator on your next track? DJ Torchinim is open to working with producers, vocalists, and labels worldwide.',
+      'Looking for a collaborator on your next track? DJ Beat Blaster is open to working with producers, vocalists, and labels worldwide.',
   },
   {
     introText: 'Press & Media',
@@ -209,7 +209,7 @@ const CONTACT_SECTION_SEEDS = [
 // ============================================================================
 const STEPS_CONTAINER_SEEDS = [
   {
-    heading: 'How to Book DJ Torchinim',
+    heading: 'How to Book DJ Beat Blaster',
     content:
       'Follow these simple steps to secure a memorable performance for your event.',
     steps: [
@@ -240,7 +240,7 @@ const STEPS_CONTAINER_SEEDS = [
       {
         title: 'Show Time',
         description:
-          'Sit back and enjoy as DJ Torchinim delivers an unforgettable performance.',
+          'Sit back and enjoy as DJ Beat Blaster delivers an unforgettable performance.',
         icon: 'music',
       },
     ],
@@ -420,7 +420,7 @@ const ARTICLE_BLOCK_SEEDS = [
 // ============================================================================
 const CONFIGURATION_SEEDS = [
   {
-    Title: 'DJ Torchinim Website',
+    Title: 'DJ Beat Blaster Website',
   },
 ];
 
@@ -428,7 +428,7 @@ const CONFIGURATION_SEEDS = [
 // Footer - Site footer with DJ-oriented links
 // ============================================================================
 const FOOTER_SEED = {
-  copyright: '© 2024 DJ Torchinim. All rights reserved.',
+  copyright: '© 2024 DJ Beat Blaster. All rights reserved.',
   columns: [
     {
       title: 'Music',
@@ -459,9 +459,9 @@ const FOOTER_SEED = {
   socialLinks: [
     { platform: 'Instagram', url: 'https://instagram.com/djtorchinim', icon: 'instagram', detail: '@djtorchinim' },
     { platform: 'Twitter', url: 'https://twitter.com/djtorchinim', icon: 'twitter', detail: '@djtorchinim' },
-    { platform: 'Facebook', url: 'https://facebook.com/djtorchinim', icon: 'facebook', detail: 'DJ Torchinim' },
-    { platform: 'YouTube', url: 'https://youtube.com/@djtorchinim', icon: 'youtube', detail: 'DJ Torchinim' },
-    { platform: 'SoundCloud', url: 'https://soundcloud.com/dj-torchinim', icon: 'headphones', detail: 'DJ Torchinim' },
+    { platform: 'Facebook', url: 'https://facebook.com/djtorchinim', icon: 'facebook', detail: 'DJ Beat Blaster' },
+    { platform: 'YouTube', url: 'https://youtube.com/@djtorchinim', icon: 'youtube', detail: 'DJ Beat Blaster' },
+    { platform: 'SoundCloud', url: 'https://soundcloud.com/dj-torchinim', icon: 'headphones', detail: 'DJ Beat Blaster' },
   ],
 };
 
