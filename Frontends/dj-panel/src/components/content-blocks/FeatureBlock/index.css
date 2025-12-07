@@ -1,1 +1,80 @@
 /* Placeholder for FeatureBlock styles */
+.content-container {
+  max-width: var(--dl-size-size-maxwidth);
+  width: 100%;
+}
+
+.features-container {
+  display: flex;
+  gap: var(--dl-space-space-threeunits);
+  align-items: center;
+  flex-direction: row;
+}
+
+.features-container.reversed {
+  flex-direction: row-reverse;
+}
+
+.features-image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.features-image {
+  width: 100%;
+  max-width: 500px;
+}
+
+.features-tabs-menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+}
+
+.features-tab-horizontal {
+  display: flex;
+  gap: var(--dl-space-space-unit);
+  cursor: pointer;
+  padding: var(--dl-space-space-unit);
+  border-radius: var(--dl-radius-radius-cardradius);
+  transition: background-color 0.3s ease;
+}
+
+.features-tab-horizontal:hover {
+  background-color: var(--dl-color-theme-surface);
+}
+
+.features-divider-container {
+  width: 4px;
+  display: flex;
+  align-items: stretch;
+  background-color: var(--dl-color-theme-border);
+  border-radius: 2px;
+}
+
+.features-container-line {
+  width: 100%;
+  background-color: var(--dl-color-theme-primary1);
+  border-radius: 2px;
+}
+
+.features-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-halfunit);
+}
+
+@media (max-width: 991px) {
+  .features-container {
+    flex-direction: column;
+  }
+
+  .features-container.reversed {
+    flex-direction: column;
+  }
+}
+

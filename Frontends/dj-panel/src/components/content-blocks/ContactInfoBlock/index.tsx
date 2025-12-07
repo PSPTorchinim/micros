@@ -1,4 +1,5 @@
 import React from 'react';
+import './index.css';
 import type { ContactInfo } from '../../../models/strapi/strapiMap';
 
 export const ContactInfoBlock = (props: ContactInfo) => (
