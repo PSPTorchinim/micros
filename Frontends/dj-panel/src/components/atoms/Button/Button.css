@@ -48,6 +48,19 @@
   color: var(--dl-color-theme-button-text);
 }
 
+/* Ensure text inside buttons inherits button text color */
+.atom-button--filled span,
+.atom-button--filled .thq-body-small,
+.atom-button--filled .thq-body-large,
+.atom-button--outline:hover span,
+.atom-button--outline:hover .thq-body-small,
+.atom-button--outline:hover .thq-body-large,
+.atom-button--flat:hover span,
+.atom-button--flat:hover .thq-body-small,
+.atom-button--flat:hover .thq-body-large {
+  color: inherit;
+}
+
 /* Sizes */
 .atom-button--small {
   padding: var(--dl-space-space-halfunit) var(--dl-space-space-unit);

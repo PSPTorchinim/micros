@@ -187,6 +187,19 @@ body {
   background-color: var(--dl-color-theme-primary2);
 }
 
+/* Ensure text inside buttons inherits button text color */
+.thq-button-filled .thq-body-small,
+.thq-button-filled .thq-body-large,
+.thq-button-filled span,
+.thq-button-outline:hover .thq-body-small,
+.thq-button-outline:hover .thq-body-large,
+.thq-button-outline:hover span,
+.thq-button-flat:hover .thq-body-small,
+.thq-button-flat:hover .thq-body-large,
+.thq-button-flat:hover span {
+  color: inherit;
+}
+
 .thq-heading-1 {
   font-size: 48px;
   font-family: STIX Two Text;
