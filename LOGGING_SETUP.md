@@ -105,12 +105,13 @@ The platform uses a modern logging stack consisting of:
    - `type`: Service type (microservice, frontend, infrastructure)
    - `environment`: Deployment environment
    - `compose_project`: Docker Compose project name
-4. **Pre-built Dashboards**: 18 dashboards are automatically provisioned for DJ Panel services:
+4. **Pre-built Dashboards**: 19 dashboards are automatically provisioned for DJ Panel services:
    
    **Aggregate Dashboards:**
    - **DJ Panel - Overview**: Comprehensive view of all DJ Panel services with log rates, error counts, and real-time logs
    - **DJ Panel - Microservices**: Detailed monitoring of backend services (identity_be, music_be, gear_be, documents_be, brand_be, party_be, mailing_be, apigateway)
    - **DJ Panel - Frontend Services**: Focused view of frontend services (host_fe, strapi)
+   - **DJ Panel - Request Flow Tracing**: Full request flow visualization from frontend through microservices to databases
    - **Database - Overview**: Real-time metrics for all databases (SQL Server, MongoDB, PostgreSQL, Redis)
    
    **Individual Service Dashboards:**
@@ -139,11 +140,44 @@ The platform uses a modern logging stack consisting of:
 4. Select one of the pre-configured dashboards:
    - Use **DJ Panel - Overview** for a quick health check of all services
    - Use **DJ Panel - Microservices** or **DJ Panel - Frontend Services** for grouped monitoring with filtering
+   - Use **DJ Panel - Request Flow Tracing** to visualize complete request flows from frontend to databases
    - Use **Database - Overview** for a comprehensive view of all database metrics
    - Use individual service dashboards (e.g., **Identity Service**, **Music Service**) for deep-dive analysis of a specific service
    - Use individual database dashboards (e.g., **Database - SQL Server**, **Database - MongoDB**) for detailed database performance monitoring
 
 Application dashboards automatically filter to show only logs from DJ Panel services (excluding infrastructure services). Database dashboards combine both Prometheus metrics and Loki logs for comprehensive monitoring.
+
+### Request Flow Tracing Dashboard
+
+The **DJ Panel - Request Flow Tracing** dashboard provides comprehensive visibility into how requests flow through the entire system, from the frontend to the databases. This dashboard is essential for:
+
+- **Debugging** distributed request flows and identifying bottlenecks
+- **Performance analysis** of end-to-end request processing
+- **Understanding** service dependencies and communication patterns
+- **Monitoring** the health of the entire request pipeline
+
+#### Dashboard Panels:
+
+1. **Request Flow Rate - System Overview**: Shows the overall request rate across frontend, API gateway, and backend services
+2. **Frontend HTTP Requests by Method**: Visualizes HTTP methods (GET, POST, PUT, DELETE) initiated from the frontend
+3. **API Gateway → Backend Service Routing**: Tracks how the API Gateway routes requests to different microservices
+4. **Backend Microservices Activity**: Real-time activity levels of all backend services
+5. **Database Queries by Service**: Shows which services are making database queries and their frequency
+6. **Database Operations Count**: Summary of operations against SQL Server, MongoDB, Redis, and PostgreSQL
+7. **Request Flow Logs - Full Trace**: Real-time log stream showing the complete journey of requests with service labels
+8. **Errors Across Request Flow**: Error tracking at each layer to quickly identify where failures occur
+9. **Performance Indicators**: Logs containing duration/timing information for performance analysis
+10. **Service Integration Points**: Inter-service calls, message queue operations, and cache usage
+11. **HTTP Response Status Distribution**: Pie chart showing 2xx, 4xx, and 5xx response codes
+12. **Total Events in Time Range**: Summary statistics for frontend, gateway, and backend events
+
+#### Usage Tips:
+
+- Set the time range to narrow windows (5-15 minutes) for detailed trace analysis
+- Use the auto-refresh (10 seconds) to monitor live request flows
+- Correlate errors across panels to trace failure propagation through services
+- Look for patterns in routing to understand service dependencies
+- Monitor database operations to identify services with heavy database usage
 
 ### Creating Your First Dashboard
 
