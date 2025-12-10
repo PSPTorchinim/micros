@@ -1,0 +1,26 @@
+.feature-tab-block {
+  padding: 2rem 1rem;
+  background: #f5f7fa;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.feature-tab-block img {
+  margin: 0 auto 1rem;
+  border-radius: 0.75rem;
+  display: block;
+}
+
+.feature-tab-block h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--dl-color-theme-text-primary);
+}
+
+.feature-tab-block p {
+  font-size: 1rem;
+  color: var(--dl-color-theme-text-primary);
+  line-height: 1.6;
+}

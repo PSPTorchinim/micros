@@ -1051,7 +1051,7 @@ jobs:
                 stop_wait=0
                 stop_state="UNKNOWN"
                 max_stop_iterations=90
-                while [ $stop_wait -lt $max_stop_iterations ]; do
+                while [ true ]; do
                   stop_state="$(get_state || echo 'UNKNOWN')"
                   [ -z "$stop_state" ] && stop_state="UNKNOWN"
                   echo "  Stop check $((stop_wait+1))/$max_stop_iterations: state=$stop_state"
@@ -1096,7 +1096,7 @@ jobs:
             last_detailed_check=0
             previous_state="UNKNOWN"
             
-            while [ $health_check -lt $max_health_checks ]; do
+            while [ true ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
               

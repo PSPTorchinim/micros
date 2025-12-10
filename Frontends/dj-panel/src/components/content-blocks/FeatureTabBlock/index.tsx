@@ -1,4 +1,5 @@
 import React from 'react';
+import './index.css';
 import type { FeatureTab } from '../../../models/strapi/strapiMap';
 
 export const FeatureTabBlock = (props: FeatureTab) => (

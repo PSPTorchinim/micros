@@ -158,7 +158,7 @@ export const RenderTemplate: React.FC<Props> = ({
   }, [tpl, populateDeep, pageTitle]);
 
   return (
-    <div>
+    <div className="render-template-wrapper">
       {loading && <ContentSkeleton type="block" count={2} />}
       {!loading && error && (
         <div

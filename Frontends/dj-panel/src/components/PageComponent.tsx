@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './PageComponent.css';
 import type { Page } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { RenderTemplate } from './RenderTemplate';
@@ -37,7 +38,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
   }
 
   return (
-    <div>
+    <div className="page-component-wrapper">
       <RenderTemplate
         template={page?.template?.documentId}
         pageTitle={page?.Title}
