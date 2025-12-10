@@ -9,50 +9,35 @@
  * ---------------------------------------------------------------
  */
 
-import {
-  Api as BrandApi,
-  ContentType as BrandContentType,
-  HttpClient as BrandHttpClient,
-} from './brand/apiMap';
-import {
-  Api as DocumentsApi,
-  ContentType as DocumentsContentType,
-  HttpClient as DocumentsHttpClient,
-} from './documents/apiMap';
-import {
-  Api as GearApi,
-  ContentType as GearContentType,
-  HttpClient as GearHttpClient,
-} from './gear/apiMap';
-import {
-  Api as IdentityApi,
-  ContentType as IdentityContentType,
-  HttpClient as IdentityHttpClient,
-} from './identity/apiMap';
-import {
-  Api as MailingApi,
-  ContentType as MailingContentType,
-  HttpClient as MailingHttpClient,
-} from './mailing/apiMap';
-import {
-  Api as MusicApi,
-  ContentType as MusicContentType,
-  HttpClient as MusicHttpClient,
-} from './music/apiMap';
-import {
-  Api as PartyApi,
-  ContentType as PartyContentType,
-  HttpClient as PartyHttpClient,
-} from './party/apiMap';
+import { Api as BrandApi, ContentType as BrandContentType, HttpClient as BrandHttpClient } from './brand/apiMap';
+import { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient } from './documents/apiMap';
+import { Api as GearApi, ContentType as GearContentType, HttpClient as GearHttpClient } from './gear/apiMap';
+import { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as IdentityHttpClient } from './identity/apiMap';
+import { Api as MailingApi, ContentType as MailingContentType, HttpClient as MailingHttpClient } from './mailing/apiMap';
+import { Api as MusicApi, ContentType as MusicContentType, HttpClient as MusicHttpClient } from './music/apiMap';
+import { Api as PartyApi, ContentType as PartyContentType, HttpClient as PartyHttpClient } from './party/apiMap';
 
-export { BrandApi, BrandContentType, BrandHttpClient };
-export { DocumentsApi, DocumentsContentType, DocumentsHttpClient };
-export { GearApi, GearContentType, GearHttpClient };
-export { IdentityApi, IdentityContentType, IdentityHttpClient };
-export { MailingApi, MailingContentType, MailingHttpClient };
-export { MusicApi, MusicContentType, MusicHttpClient };
-export { PartyApi, PartyContentType, PartyHttpClient };
+export { BrandApi, BrandContentType, BrandHttpClient } from './brand/apiMap';
+export { DocumentsApi, DocumentsContentType, DocumentsHttpClient } from './documents/apiMap';
+export { GearApi, GearContentType, GearHttpClient } from './gear/apiMap';
+export { IdentityApi, IdentityContentType, IdentityHttpClient } from './identity/apiMap';
+export { MailingApi, MailingContentType, MailingHttpClient } from './mailing/apiMap';
+export { MusicApi, MusicContentType, MusicHttpClient } from './music/apiMap';
+export { PartyApi, PartyContentType, PartyHttpClient } from './party/apiMap';
 
+
+// Injected secure_key header interceptor for all services
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+const __servicesWithInterceptor = [microservicesClient?.brand?.instance, microservicesClient?.documents?.instance, microservicesClient?.gear?.instance, microservicesClient?.identity?.instance, microservicesClient?.mailing?.instance, microservicesClient?.music?.instance, microservicesClient?.party?.instance];
+__servicesWithInterceptor.forEach(instance => {
+  if (instance && instance.interceptors && instance.interceptors.request && __secureKey) {
+    instance.interceptors.request.use(config => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = __secureKey;
+      return config;
+    });
+  }
+});
 import { ApiConfig } from './brand/apiMap';
 
 const NUMBER_OF_RETRIES = 3;
@@ -179,7 +164,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
  * Create a new unified API instance with custom configuration
  */
 export function createApi<SecurityDataType extends unknown>(
-  config: ApiConfig<SecurityDataType> = {},
+  config: ApiConfig<SecurityDataType> = {}
 ): UnifiedApi<SecurityDataType> {
   return new UnifiedApi<SecurityDataType>(config);
 }
@@ -191,11 +176,9 @@ export const microservicesClient = createApi();
 
 // Export individual service clients for direct access if needed
 export const createBrandApi = (config?: ApiConfig) => new BrandApi(config);
-export const createDocumentsApi = (config?: ApiConfig) =>
-  new DocumentsApi(config);
+export const createDocumentsApi = (config?: ApiConfig) => new DocumentsApi(config);
 export const createGearApi = (config?: ApiConfig) => new GearApi(config);
-export const createIdentityApi = (config?: ApiConfig) =>
-  new IdentityApi(config);
+export const createIdentityApi = (config?: ApiConfig) => new IdentityApi(config);
 export const createMailingApi = (config?: ApiConfig) => new MailingApi(config);
 export const createMusicApi = (config?: ApiConfig) => new MusicApi(config);
 export const createPartyApi = (config?: ApiConfig) => new PartyApi(config);
