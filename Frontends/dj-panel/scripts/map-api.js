@@ -148,7 +148,55 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     mergedContent += `    this.${name} = new ${className}(defaultConfig);\n`;
   }
 
-  mergedContent += `  }
+  // Add secure_key header interceptor setup
+  // This automatically adds the secure_key header from REACT_APP_API_SECURE_KEY
+  // to all API requests for backend authentication
+  mergedContent += `
+    // Setup secure_key header interceptor for all services
+    this.setupSecureKeyInterceptor();
+  }
+
+  /**
+   * Setup request interceptor to add secure_key header to all requests
+   */
+  private setupSecureKeyInterceptor() {
+    const secureKey = process.env.REACT_APP_API_SECURE_KEY;
+    
+    if (!secureKey) {
+      console.warn('REACT_APP_API_SECURE_KEY is not set. API requests may fail authentication.');
+      return;
+    }
+
+    // Add interceptor to all service instances
+    const services = [
+`;
+
+  // Add service names to the array
+  for (const { name } of serviceNames) {
+    mergedContent += `      this.${name},\n`;
+  }
+
+  mergedContent += `    ];
+
+    services.forEach((service) => {
+      if (service.instance) {
+        service.instance.interceptors.request.use(
+          (config) => {
+            // Ensure headers object exists
+            if (!config.headers) {
+              config.headers = {} as any;
+            }
+            // Add secure_key header to all requests
+            config.headers['secure_key'] = secureKey;
+            return config;
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+      }
+    });
+  }
 
   /**
    * Set security data for all services
