@@ -74,18 +74,10 @@ export function renderBlock(
       return (
         <div key={index} className="article-detail">
           {coverUrl && (
-            <img
-              src={coverUrl}
-              alt={title}
-              className="article-detail__cover"
-            />
+            <img src={coverUrl} alt={title} className="article-detail__cover" />
           )}
           <h1 className="article-detail__title">{title}</h1>
-          {summary && (
-            <p className="article-detail__summary">
-              {summary}
-            </p>
-          )}
+          {summary && <p className="article-detail__summary">{summary}</p>}
           {htmlBody && (
             <div
               className="article-detail__body"
