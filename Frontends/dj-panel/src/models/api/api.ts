@@ -85,6 +85,47 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     this.mailing = new MailingApi(defaultConfig);
     this.music = new MusicApi(defaultConfig);
     this.party = new PartyApi(defaultConfig);
+
+    // Setup secure_key header interceptor for all services
+    this.setupSecureKeyInterceptor();
+  }
+
+  /**
+   * Setup request interceptor to add secure_key header to all requests
+   */
+  private setupSecureKeyInterceptor() {
+    const secureKey = process.env.REACT_APP_API_SECURE_KEY;
+    
+    if (!secureKey) {
+      console.warn('REACT_APP_API_SECURE_KEY is not set. API requests may fail authentication.');
+      return;
+    }
+
+    // Add interceptor to all service instances
+    const services = [
+      this.brand,
+      this.documents,
+      this.gear,
+      this.identity,
+      this.mailing,
+      this.music,
+      this.party,
+    ];
+
+    services.forEach((service) => {
+      if (service.instance) {
+        service.instance.interceptors.request.use(
+          (config: any) => {
+            // Add secure_key header to all requests
+            config.headers['secure_key'] = secureKey;
+            return config;
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+      }
+    });
   }
 
   /**
