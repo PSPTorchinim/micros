@@ -1,3 +1,16 @@
+.image-slider-block {
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
+}
+
+.image-slider-block__title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: var(--dl-color-theme-text-primary);
+}
+
 .hero-column {
   gap: var(--dl-space-space-oneandhalfunits);
   width: auto;

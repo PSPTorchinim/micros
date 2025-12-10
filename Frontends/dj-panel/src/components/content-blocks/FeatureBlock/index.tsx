@@ -7,7 +7,7 @@ export const FeatureBlock = (props: FeatureSection) => {
   const tabs = Array.isArray(props.tabs) ? props.tabs : [];
 
   return (
-    <div className="thq-section-padding content-comntainer">
+    <div className="thq-section-padding content-container">
       <div
         className={
           props.reversed ? 'features-container reversed' : 'features-container'

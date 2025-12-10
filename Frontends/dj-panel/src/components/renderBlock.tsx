@@ -1,5 +1,6 @@
 import React from 'react';
 import { marked } from 'marked';
+import './renderBlock.css';
 import {
   HeroBlock,
   ImageSliderBlock,
@@ -73,35 +74,14 @@ export function renderBlock(
       return (
         <div key={index} className="article-detail">
           {coverUrl && (
-            <img
-              src={coverUrl}
-              alt={title}
-              style={{
-                width: '100%',
-                maxHeight: '400px',
-                objectFit: 'cover',
-                borderRadius: '8px',
-                marginBottom: '24px',
-              }}
-            />
+            <img src={coverUrl} alt={title} className="article-detail__cover" />
           )}
-          <h1>{title}</h1>
-          {summary && (
-            <p
-              style={{
-                fontSize: '1.2em',
-                fontStyle: 'italic',
-                marginBottom: '24px',
-                color: '#666',
-              }}
-            >
-              {summary}
-            </p>
-          )}
+          <h1 className="article-detail__title">{title}</h1>
+          {summary && <p className="article-detail__summary">{summary}</p>}
           {htmlBody && (
             <div
+              className="article-detail__body"
               dangerouslySetInnerHTML={{ __html: htmlBody }}
-              style={{ lineHeight: '1.6' }}
             />
           )}
         </div>

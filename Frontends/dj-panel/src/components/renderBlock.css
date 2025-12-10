@@ -1,0 +1,118 @@
+.article-detail {
+  padding: 2rem 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.article-detail__cover {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.article-detail__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--dl-color-theme-text-primary);
+  line-height: 1.2;
+}
+
+.article-detail__summary {
+  font-size: 1.2em;
+  font-style: italic;
+  margin-bottom: 24px;
+  color: var(--dl-color-theme-text-secondary);
+  line-height: 1.5;
+}
+
+.article-detail__body {
+  line-height: 1.6;
+  color: var(--dl-color-theme-text-primary);
+}
+
+.article-detail__body h1,
+.article-detail__body h2,
+.article-detail__body h3,
+.article-detail__body h4,
+.article-detail__body h5,
+.article-detail__body h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--dl-color-theme-text-primary);
+}
+
+.article-detail__body p {
+  margin-bottom: 1em;
+}
+
+.article-detail__body ul,
+.article-detail__body ol {
+  margin-bottom: 1em;
+  padding-left: 2em;
+}
+
+.article-detail__body li {
+  margin-bottom: 0.5em;
+}
+
+.article-detail__body a {
+  color: var(--dl-color-theme-primary1);
+  text-decoration: underline;
+}
+
+.article-detail__body a:hover {
+  color: var(--dl-color-theme-primary2);
+}
+
+.article-detail__body code {
+  background-color: var(--dl-color-theme-surface);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.article-detail__body pre {
+  background-color: var(--dl-color-theme-surface);
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.article-detail__body pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.article-detail__body blockquote {
+  border-left: 4px solid var(--dl-color-theme-primary1);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--dl-color-theme-text-secondary);
+  font-style: italic;
+}
+
+.article-detail__body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
+@media (max-width: 767px) {
+  .article-detail {
+    padding: 1.5rem 1rem;
+  }
+
+  .article-detail__title {
+    font-size: 2rem;
+  }
+
+  .article-detail__summary {
+    font-size: 1.1em;
+  }
+}
