@@ -37,11 +37,13 @@
   box-shadow: 0 4px 6px var(--dl-color-theme-shadow);
   padding: var(--dl-space-space-unit);
   z-index: 1000;
-  min-width: 10rem;
-  max-width: 30rem;
-  width: fit-content;
-  white-space: nowrap;
+  min-width: 12rem;
+  max-width: 20rem;
+  width: auto;
   border-radius: var(--dl-radius-radius-radius4);
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
 }
 
 .navbar-dropdown.visible {
@@ -63,6 +65,14 @@
 
 .navbar-dropdown .navbar-item {
   position: relative;
+  padding: var(--dl-space-space-halfunit);
+}
+
+.navbar-dropdown .navbar-item .thq-link {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  display: block;
 }
 
 .navbar-dropdown .navbar-item:focus {
@@ -76,9 +86,10 @@
 
 .navbar-dropdown .navbar-dropdown {
   top: 0;
-  left: 75%; /* Position the next layer to the right of its parent */
-  margin-left: 0.5rem; /* Add some spacing between parent and child dropdowns */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better visibility */
+  left: 100%;
+  margin-left: 0.5rem;
+  margin-top: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 767px) {

@@ -1,5 +1,6 @@
 // components/RenderTemplate.tsx
 import React from 'react';
+import './RenderTemplate.css';
 import { strapiAPI } from '../services/strapi-api';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
@@ -158,7 +159,7 @@ export const RenderTemplate: React.FC<Props> = ({
   }, [tpl, populateDeep, pageTitle]);
 
   return (
-    <div>
+    <div className="render-template-wrapper">
       {loading && <ContentSkeleton type="block" count={2} />}
       {!loading && error && (
         <div
