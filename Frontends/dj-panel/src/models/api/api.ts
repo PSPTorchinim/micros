@@ -120,8 +120,10 @@ export class UnifiedApi<SecurityDataType extends unknown> {
             if (!config.headers) {
               config.headers = {} as any;
             }
-            // Add secure_key header to all requests
-            config.headers['secure_key'] = secureKey;
+            // Add secure_key header to all requests if not already set
+            if (!config.headers['secure_key']) {
+              config.headers['secure_key'] = secureKey;
+            }
             return config;
           },
           (error) => {
