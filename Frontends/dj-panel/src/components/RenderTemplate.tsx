@@ -1,6 +1,5 @@
 // components/RenderTemplate.tsx
 import React from 'react';
-import './RenderTemplate.css';
 import { strapiAPI } from '../services/strapi-api';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
