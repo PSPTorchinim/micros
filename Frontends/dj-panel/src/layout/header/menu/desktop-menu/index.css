@@ -37,8 +37,8 @@
   box-shadow: 0 4px 6px var(--dl-color-theme-shadow);
   padding: var(--dl-space-space-unit);
   z-index: 1000;
-  min-width: 12rem;
-  max-width: 20rem;
+  min-width: 16rem;
+  max-width: 28rem;
   width: auto;
   border-radius: var(--dl-radius-radius-radius4);
   top: 100%;
