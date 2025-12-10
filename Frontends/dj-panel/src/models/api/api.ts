@@ -115,7 +115,11 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     services.forEach((service) => {
       if (service.instance) {
         service.instance.interceptors.request.use(
-          (config: any) => {
+          (config) => {
+            // Ensure headers object exists
+            if (!config.headers) {
+              config.headers = {} as any;
+            }
             // Add secure_key header to all requests
             config.headers['secure_key'] = secureKey;
             return config;
