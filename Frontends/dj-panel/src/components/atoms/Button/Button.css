@@ -15,14 +15,14 @@
 /* Variants */
 .atom-button--filled {
   background-color: var(--dl-color-theme-primary1);
-  color: var(--dl-color-theme-neutral-light) !important;
+  color: var(--dl-color-theme-button-text);
   border-color: var(--dl-color-theme-primary1);
 }
 
 .atom-button--filled:hover {
   background-color: var(--dl-color-theme-primary2);
   border-color: var(--dl-color-theme-primary2);
-  color: var(--dl-color-theme-neutral-light) !important;
+  color: var(--dl-color-theme-button-text);
 }
 
 .atom-button--outline {
@@ -34,7 +34,7 @@
 .atom-button--outline:hover {
   background-color: var(--dl-color-theme-primary2);
   border-color: var(--dl-color-theme-primary2);
-  color: var(--dl-color-theme-neutral-light) !important;
+  color: var(--dl-color-theme-button-text);
 }
 
 .atom-button--flat {
@@ -45,7 +45,7 @@
 
 .atom-button--flat:hover {
   background-color: var(--dl-color-theme-primary2);
-  color: var(--dl-color-theme-neutral-light) !important;
+  color: var(--dl-color-theme-button-text);
 }
 
 /* Sizes */
