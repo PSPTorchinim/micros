@@ -87,9 +87,11 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install yamllint
-        run: pip install yamllint
+        run: pip install yamllint==1.37.1
 
       - name: Validate Docker Compose YAML
+        # Using 'relaxed' config to focus on syntax errors rather than style
+        # Docker Compose files don't require YAML document markers (---)
         run: |
           yamllint -d relaxed Docker/dj-panel-composer.yml
 
