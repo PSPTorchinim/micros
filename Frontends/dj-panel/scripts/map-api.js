@@ -45,7 +45,7 @@ const microservices = {
 };
 
 function generateTypesForService(serviceName, config) {
-  const swaggerUrl = `${process.env.REACT_APP_API_GATEWAY}${config.swaggerPath}`;
+  const swaggerUrl = `${process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000'}${config.swaggerPath}`;
 
   console.log(`🔄 Generating ${serviceName} API types from: ${swaggerUrl}`);
   console.log(`📁 Output file: ${config.outputFile}`);
