@@ -74,6 +74,8 @@ export const DesktopMenu = (props: any) => {
                     openDropdown === element.text ? 'visible' : 'hidden'
                   }`}
                   role="menu" // Indicate this is a menu
+                  onMouseEnter={() => toggleDropdown(element.text)}
+                  onMouseLeave={() => toggleDropdown(null)}
                 >
                   {renderLinks(element.children)}
                 </div>
