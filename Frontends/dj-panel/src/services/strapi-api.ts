@@ -365,11 +365,11 @@ class StrapiAPI {
 
   async getLoginBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.loginBlock.getLoginBlocks({
+      const res = await this.api.loginBlock.getLoginBlock({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error(`Error fetching login-block by documentId ${id}:`, e);
       return null;
@@ -378,11 +378,11 @@ class StrapiAPI {
 
   async getForgotPasswordBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlocks({
+      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlock({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error(
         `Error fetching forgot-password-block by documentId ${id}:`,
