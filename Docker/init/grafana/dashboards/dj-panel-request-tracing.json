@@ -254,7 +254,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum by (method) (count_over_time({compose_project=\"djpanel\", service=\"host_fe\"} |~ \"(?i)(GET|POST|PUT|DELETE|PATCH)\" [5m]))",
+          "expr": "sum by (method) (count_over_time({compose_project=\"djpanel\", service=\"host_fe\"} | regexp \"(?P<method>GET|POST|PUT|DELETE|PATCH)\" [5m]))",
           "legendFormat": "{{method}}",
           "queryType": "range",
           "refId": "A"
@@ -347,8 +347,8 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum by (service) (count_over_time({compose_project=\"djpanel\", service=\"apigateway\"} |~ \"(?i)(proxy|forward|route)\" |~ \"(?i)(identity|music|gear|documents|brand|party|mailing)\" [5m]))",
-          "legendFormat": "→ {{service}}",
+          "expr": "sum by (target_service) (count_over_time({compose_project=\"djpanel\", service=\"apigateway\"} | regexp \"(?P<target_service>identity_be|music_be|gear_be|documents_be|brand_be|party_be|mailing_be)\" [5m]))",
+          "legendFormat": "→ {{target_service}}",
           "queryType": "range",
           "refId": "A"
         }
