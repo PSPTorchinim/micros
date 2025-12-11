@@ -293,4 +293,44 @@ describe('DynamicRoutes - Route Path Construction', () => {
     const logoutItems = queryAllByTestId('nav-item-Logout');
     expect(logoutItems).toHaveLength(1);
   });
+
+  it('should not add duplicate logout button for variations like "Log Out"', async () => {
+    // Mock data: Pages with logout button from CMS using different text
+    const mockPages: Page[] = [
+      {
+        documentId: 'page-1',
+        id: 1,
+        Title: 'Log Out', // Different capitalization/spacing
+        Slug: '/logout',
+        Visible: true,
+        Menu: PageMenuEnum1.Login,
+        AuthState: PageAuthStateEnum1.OnlyAuthenticated,
+        NavigationAction: PageNavigationActionEnum1.Action,
+        NavigationOrder: 1,
+      } as Page,
+    ];
+
+    mockGetRootPages.mockResolvedValue(mockPages);
+    mockGetPagesByParentId.mockResolvedValue([]);
+
+    const { findByTestId, queryAllByTestId } = render(
+      <MemoryRouter>
+        <TestNavigationComponent />
+      </MemoryRouter>,
+    );
+
+    // Wait for navigation to be built
+    await waitFor(() => {
+      const navItem = queryAllByTestId('nav-item-Log Out');
+      expect(navItem.length).toBeGreaterThan(0);
+    });
+
+    // Check that only the CMS logout exists (Log Out), no duplicate fallback (Logout) added
+    const logOutItems = queryAllByTestId('nav-item-Log Out');
+    expect(logOutItems).toHaveLength(1);
+    
+    // Verify no "Logout" fallback was added
+    const logoutItems = queryAllByTestId('nav-item-Logout');
+    expect(logoutItems).toHaveLength(0);
+  });
 });
