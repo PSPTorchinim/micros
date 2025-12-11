@@ -30,6 +30,28 @@ export const MobileMenu = (props: any) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleAction = (actionText: string) => {
+    // Map action text to action functions
+    // This could be extended with a more robust action mapping system
+    const actionMap: Record<string, () => void> = {
+      logout: () => {
+        logout();
+        setIsMenuOpen(false);
+      },
+      // Future actions can be added here
+      // 'toggle-theme': () => toggleTheme(),
+    };
+
+    const actionKey = actionText.toLowerCase();
+    const actionFn = actionMap[actionKey];
+
+    if (actionFn) {
+      actionFn();
+    } else {
+      console.warn(`Unknown action: ${actionText}`);
+    }
+  };
+
   const renderLinks = (links: any[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
@@ -44,9 +66,29 @@ export const MobileMenu = (props: any) => {
         if (shouldShow) {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
+          const isAction = element.NavigationAction === 'Action';
+
           return (
             <div key={element.text} className="navbar-mobile-item">
-              {element.url ? (
+              {isAction ? (
+                <button
+                  className="thq-link thq-body-small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAction(element.text);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                  }}
+                >
+                  {element.text}
+                </button>
+              ) : element.url ? (
                 <Link
                   to={element.url}
                   className="thq-link thq-body-small"
@@ -111,9 +153,8 @@ export const MobileMenu = (props: any) => {
                 ? props.links
                     .filter(
                       (element: any) =>
-                        (element.Menu === ConfigurationMenuEnum.Main ||
-                          element.Menu === undefined) &&
-                        element.url,
+                        element.Menu === ConfigurationMenuEnum.Main ||
+                        element.Menu === undefined,
                     )
                     .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
                 : props.links,
@@ -126,23 +167,10 @@ export const MobileMenu = (props: any) => {
               ? props.links
                   .filter(
                     (element: any) =>
-                      element.Menu === ConfigurationMenuEnum.Login &&
-                      element.url,
+                      element.Menu === ConfigurationMenuEnum.Login,
                   )
                   .sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
               : [],
-          )}
-          {isAuthenticated() && (
-            <Link
-              to="#"
-              className="thq-link thq-body-small"
-              onClick={(e) => {
-                e.preventDefault();
-                logout();
-              }}
-            >
-              Logout
-            </Link>
           )}
         </div>
       </div>

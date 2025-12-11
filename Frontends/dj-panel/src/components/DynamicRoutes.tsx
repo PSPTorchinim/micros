@@ -92,6 +92,7 @@ function buildRoutesAndNav(
       NavigationOrder: page.NavigationOrder ?? 0,
       Menu: page.Menu ?? PageMenuEnum1.Main,
       AuthState: page.AuthState ?? PageAuthStateEnum1.All,
+      NavigationAction: page.NavigationAction,
     });
   });
 
