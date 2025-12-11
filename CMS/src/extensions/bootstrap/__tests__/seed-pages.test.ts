@@ -82,6 +82,15 @@ describe('Seed Pages', () => {
         templateName: 'Login Template',
       },
       {
+        Title: 'Logout',
+        Slug: '#',
+        Menu: 'Login',
+        AuthState: 'OnlyAuthenticated',
+        NavigationOrder: 2,
+        NavigationAction: 'Action',
+        templateName: null,
+      },
+      {
         Title: 'Forgot Password',
         Slug: '/forgot-password',
         Menu: 'NotVisible',
@@ -100,7 +109,10 @@ describe('Seed Pages', () => {
       PAGE_SEEDS.forEach((page) => {
         expect(page.Title).toBeDefined();
         expect(page.Slug).toBeDefined();
-        expect(page.Slug.startsWith('/')).toBe(true);
+        // Link pages should start with '/', action pages can use '#'
+        if (page.NavigationAction === 'Link') {
+          expect(page.Slug.startsWith('/')).toBe(true);
+        }
         expect(page.Menu).toBeDefined();
         expect(page.AuthState).toBeDefined();
         expect(page.NavigationOrder).toBeDefined();
@@ -111,7 +123,12 @@ describe('Seed Pages', () => {
     it('should have unique slugs for each page', () => {
       const slugs = PAGE_SEEDS.map((p) => p.Slug);
       const uniqueSlugs = new Set(slugs);
-      expect(uniqueSlugs.size).toBe(PAGE_SEEDS.length);
+      // Action items can share '#' as slug since they don't navigate
+      const actionPages = PAGE_SEEDS.filter((p) => p.NavigationAction === 'Action');
+      const linkPages = PAGE_SEEDS.filter((p) => p.NavigationAction === 'Link');
+      const linkSlugs = linkPages.map((p) => p.Slug);
+      const uniqueLinkSlugs = new Set(linkSlugs);
+      expect(uniqueLinkSlugs.size).toBe(linkPages.length);
     });
 
     it('should have valid Menu values', () => {
@@ -151,7 +168,12 @@ describe('Seed Pages', () => {
       const templateNames = new Set(TEMPLATE_SEEDS.map((t) => t.Name));
       
       PAGE_SEEDS.forEach((page) => {
-        expect(templateNames.has(page.templateName)).toBe(true);
+        // Action items don't require templates
+        if (page.NavigationAction === 'Action') {
+          expect(page.templateName).toBeNull();
+        } else {
+          expect(templateNames.has(page.templateName)).toBe(true);
+        }
       });
     });
 
@@ -165,6 +187,14 @@ describe('Seed Pages', () => {
       const forgotPage = PAGE_SEEDS.find((p) => p.Slug === '/forgot-password');
       expect(forgotPage).toBeDefined();
       expect(forgotPage?.Menu).toBe('NotVisible');
+    });
+
+    it('should have Logout action restricted to authenticated users', () => {
+      const logoutPage = PAGE_SEEDS.find((p) => p.Title === 'Logout');
+      expect(logoutPage).toBeDefined();
+      expect(logoutPage?.AuthState).toBe('OnlyAuthenticated');
+      expect(logoutPage?.NavigationAction).toBe('Action');
+      expect(logoutPage?.Menu).toBe('Login');
     });
   });
 });

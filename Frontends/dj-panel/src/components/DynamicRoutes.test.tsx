@@ -4,6 +4,11 @@ import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
 import { useDynamicRoutes } from './DynamicRoutes';
 import type { Page } from '../models/strapi/strapiMap';
+import {
+  PageMenuEnum1,
+  PageAuthStateEnum1,
+  PageNavigationActionEnum1,
+} from '../models/strapi/strapiMap';
 
 // Mock the strapi API
 const mockGetRootPages = jest.fn();
@@ -33,6 +38,20 @@ jest.mock('./atoms/Skeleton', () => ({
 const TestComponent = () => {
   const [routes] = useDynamicRoutes();
   return <Routes>{routes}</Routes>;
+};
+
+// Test component that exposes navigation
+const TestNavigationComponent = () => {
+  const [, navigation] = useDynamicRoutes();
+  return (
+    <div data-testid="navigation">
+      {navigation.map((item) => (
+        <div key={item.id} data-testid={`nav-item-${item.text}`}>
+          {item.text} - {item.Menu} - {item.AuthState} - {item.NavigationAction}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 describe('DynamicRoutes - Route Path Construction', () => {
@@ -205,5 +224,117 @@ describe('DynamicRoutes - Route Path Construction', () => {
     // The home page should be accessible at /
     const pageElement = await findByTestId('page-page-home');
     expect(pageElement).toBeInTheDocument();
+  });
+
+  it('should add logout button when not present in CMS', async () => {
+    // Mock data: Pages without logout button
+    const mockPages: Page[] = [
+      {
+        documentId: 'page-1',
+        id: 1,
+        Title: 'Home',
+        Slug: '/',
+        Visible: true,
+        Menu: PageMenuEnum1.Main,
+        NavigationOrder: 0,
+      } as Page,
+    ];
+
+    mockGetRootPages.mockResolvedValue(mockPages);
+    mockGetPagesByParentId.mockResolvedValue([]);
+
+    const { findByTestId } = render(
+      <MemoryRouter>
+        <TestNavigationComponent />
+      </MemoryRouter>,
+    );
+
+    // Wait for navigation to be built
+    const navElement = await findByTestId('navigation');
+    expect(navElement).toBeInTheDocument();
+
+    // Check that logout button was added
+    const logoutItem = await findByTestId('nav-item-Logout');
+    expect(logoutItem).toBeInTheDocument();
+    expect(logoutItem).toHaveTextContent('Logout');
+    expect(logoutItem).toHaveTextContent(PageMenuEnum1.Login);
+    expect(logoutItem).toHaveTextContent(PageAuthStateEnum1.OnlyAuthenticated);
+    expect(logoutItem).toHaveTextContent(PageNavigationActionEnum1.Action);
+  });
+
+  it('should not add duplicate logout button if already in CMS', async () => {
+    // Mock data: Pages with logout button from CMS
+    const mockPages: Page[] = [
+      {
+        documentId: 'page-1',
+        id: 1,
+        Title: 'Logout',
+        Slug: '/logout',
+        Visible: true,
+        Menu: PageMenuEnum1.Login,
+        AuthState: PageAuthStateEnum1.OnlyAuthenticated,
+        NavigationAction: PageNavigationActionEnum1.Action,
+        NavigationOrder: 1,
+      } as Page,
+    ];
+
+    mockGetRootPages.mockResolvedValue(mockPages);
+    mockGetPagesByParentId.mockResolvedValue([]);
+
+    const { findByTestId, queryAllByTestId } = render(
+      <MemoryRouter>
+        <TestNavigationComponent />
+      </MemoryRouter>,
+    );
+
+    // Wait for navigation to be built
+    await waitFor(() => {
+      const navElement = queryAllByTestId('nav-item-Logout');
+      expect(navElement.length).toBeGreaterThan(0);
+    });
+
+    // Check that only one logout button exists
+    const logoutItems = queryAllByTestId('nav-item-Logout');
+    expect(logoutItems).toHaveLength(1);
+  });
+
+  it('should not add duplicate logout button for variations like "Log Out"', async () => {
+    // Mock data: Pages with logout button from CMS using different text
+    const mockPages: Page[] = [
+      {
+        documentId: 'page-1',
+        id: 1,
+        Title: 'Log Out', // Different capitalization/spacing
+        Slug: '/logout',
+        Visible: true,
+        Menu: PageMenuEnum1.Login,
+        AuthState: PageAuthStateEnum1.OnlyAuthenticated,
+        NavigationAction: PageNavigationActionEnum1.Action,
+        NavigationOrder: 1,
+      } as Page,
+    ];
+
+    mockGetRootPages.mockResolvedValue(mockPages);
+    mockGetPagesByParentId.mockResolvedValue([]);
+
+    const { findByTestId, queryAllByTestId } = render(
+      <MemoryRouter>
+        <TestNavigationComponent />
+      </MemoryRouter>,
+    );
+
+    // Wait for navigation to be built
+    await waitFor(() => {
+      const navItem = queryAllByTestId('nav-item-Log Out');
+      expect(navItem.length).toBeGreaterThan(0);
+    });
+
+    // Check that only the CMS logout exists (Log Out), no duplicate fallback (Logout) added
+    const logOutItems = queryAllByTestId('nav-item-Log Out');
+    expect(logOutItems).toHaveLength(1);
+
+    // Verify no "Logout" fallback was added
+    const logoutItems = queryAllByTestId('nav-item-Logout');
+    expect(logoutItems).toHaveLength(0);
   });
 });
