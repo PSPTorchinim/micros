@@ -39,14 +39,21 @@ export const DesktopMenu = (props: any) => {
   };
 
   const handleAction = (actionText: string) => {
-    // Handle different actions based on the text
-    switch (actionText.toLowerCase()) {
-      case 'logout':
-        logout();
-        break;
+    // Map action text to action functions
+    // This could be extended with a more robust action mapping system
+    const actionMap: Record<string, () => void> = {
+      logout: () => logout(),
       // Future actions can be added here
-      default:
-        console.warn(`Unknown action: ${actionText}`);
+      // 'toggle-theme': () => toggleTheme(),
+    };
+
+    const actionKey = actionText.toLowerCase();
+    const actionFn = actionMap[actionKey];
+    
+    if (actionFn) {
+      actionFn();
+    } else {
+      console.warn(`Unknown action: ${actionText}`);
     }
   };
 
@@ -76,16 +83,16 @@ export const DesktopMenu = (props: any) => {
               aria-expanded={openDropdown === element.text} // Indicate if the submenu is open
             >
               {isAction ? (
-                <Link
-                  to="#"
+                <button
                   className="thq-link thq-body-small"
                   onClick={(e) => {
                     e.preventDefault();
                     handleAction(element.text);
                   }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                 >
                   {element.text}
-                </Link>
+                </button>
               ) : element.url ? (
                 <Link to={element.url} className="thq-link thq-body-small">
                   {element.text}
