@@ -151,8 +151,8 @@ jobs:
         if: matrix.language == 'javascript-typescript'
         run: |
           npm install
-          cd Frontends/dj-panel && npm install
-          cd ../../CMS && npm install
+          cd ${{ github.workspace }}/Frontends/dj-panel && npm install
+          cd ${{ github.workspace }}/CMS && npm install
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
@@ -197,7 +197,7 @@ jobs:
 
       - name: Audit dj-panel npm packages
         run: |
-          cd Frontends/dj-panel
+          cd ${{ github.workspace }}/Frontends/dj-panel
           echo "=========================================="
           echo "Auditing dj-panel package.json dependencies"
           echo "=========================================="
@@ -221,7 +221,7 @@ jobs:
 
       - name: Audit CMS npm packages
         run: |
-          cd CMS
+          cd ${{ github.workspace }}/CMS
           echo "=========================================="
           echo "Auditing CMS package.json dependencies"
           echo "=========================================="
