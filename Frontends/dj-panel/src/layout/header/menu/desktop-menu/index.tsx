@@ -105,7 +105,21 @@ export const DesktopMenu = (props: any) => {
   return (
     <div data-thq="thq-navbar-nav" className="navbar-desktop-menu">
       <nav className="navbar-links">{renderLinks(mainLinks)}</nav>
-      <div className="navbar-links">{renderLinks(loginLinks)}</div>
+      <div className="navbar-links">
+        {renderLinks(loginLinks)}
+        {isAuthenticated() && (
+          <Link
+            to="#"
+            className="thq-link thq-body-small"
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+          >
+            Logout
+          </Link>
+        )}
+      </div>
     </div>
   );
 };
