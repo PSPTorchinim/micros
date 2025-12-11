@@ -49,7 +49,7 @@ export const DesktopMenu = (props: any) => {
 
     const actionKey = actionText.toLowerCase();
     const actionFn = actionMap[actionKey];
-    
+
     if (actionFn) {
       actionFn();
     } else {
@@ -70,7 +70,7 @@ export const DesktopMenu = (props: any) => {
 
         if (shouldShow) {
           const isAction = element.NavigationAction === 'Action';
-          
+
           return (
             <div
               key={element.text}
@@ -89,7 +89,12 @@ export const DesktopMenu = (props: any) => {
                     e.preventDefault();
                     handleAction(element.text);
                   }}
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
                 >
                   {element.text}
                 </button>
@@ -129,8 +134,7 @@ export const DesktopMenu = (props: any) => {
     : [];
   const loginLinks = props.links
     ? props.links.filter(
-        (element: any) =>
-          element.Menu === ConfigurationMenuEnum.Login,
+        (element: any) => element.Menu === ConfigurationMenuEnum.Login,
       )
     : [];
 

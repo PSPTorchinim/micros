@@ -44,7 +44,7 @@ export const MobileMenu = (props: any) => {
 
     const actionKey = actionText.toLowerCase();
     const actionFn = actionMap[actionKey];
-    
+
     if (actionFn) {
       actionFn();
     } else {
@@ -67,7 +67,7 @@ export const MobileMenu = (props: any) => {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
           const isAction = element.NavigationAction === 'Action';
-          
+
           return (
             <div key={element.text} className="navbar-mobile-item">
               {isAction ? (
@@ -77,7 +77,14 @@ export const MobileMenu = (props: any) => {
                     e.preventDefault();
                     handleAction(element.text);
                   }}
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                  }}
                 >
                   {element.text}
                 </button>
