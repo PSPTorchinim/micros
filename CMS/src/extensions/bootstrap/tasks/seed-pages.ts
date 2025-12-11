@@ -101,6 +101,15 @@ const PAGE_SEEDS = [
     templateName: 'Login Template',
   },
   {
+    Title: 'Logout',
+    Slug: '#', // No actual page needed for action items
+    Menu: 'Login',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 2,
+    NavigationAction: 'Action',
+    templateName: null, // No template needed for action items
+  },
+  {
     Title: 'Forgot Password',
     Slug: '/forgot-password',
     Menu: 'NotVisible',
