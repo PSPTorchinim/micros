@@ -1,31 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.css';
-import { useAuth } from '../../../../hooks/use-auth';
+import { useMenuLogic } from '../menuUtils';
 
 import { NavigationItem } from '../../../../models/strapi/navigation-item';
 import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
+import { Button } from '../../../../components/atoms';
 
 export const DesktopMenu = (props: any) => {
-  const { token, user, logout } = useAuth();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
-  const hasPermission = (permissions: string[]) => {
-    const userPermissions =
-      user?.roles.flatMap((r: { permissions: any[] }) =>
-        r.permissions.map((p) => p.name),
-      ) || [];
-    if (!permissions) return true;
-    if (!userPermissions) return false;
-    for (const permission of permissions) {
-      if (!userPermissions.includes(permission)) return false;
-    }
-    return true;
-  };
-
-  const isAuthenticated = () => {
-    return token !== null && token !== undefined && token !== '';
-  };
+  const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
 
   const toggleDropdown = (text: string | null) => {
     setOpenDropdown(openDropdown === text ? null : text);
@@ -38,30 +22,11 @@ export const DesktopMenu = (props: any) => {
     }
   };
 
-  const handleAction = (actionText: string) => {
-    // Map action text to action functions
-    // This could be extended with a more robust action mapping system
-    const actionMap: Record<string, () => void> = {
-      logout: () => logout(),
-      // Future actions can be added here
-      // 'toggle-theme': () => toggleTheme(),
-    };
-
-    const actionKey = actionText.toLowerCase();
-    const actionFn = actionMap[actionKey];
-
-    if (actionFn) {
-      actionFn();
-    } else {
-      console.warn(`Unknown action: ${actionText}`);
-    }
-  };
-
   const renderLinks = (links: NavigationItem[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        // Check AuthState field to determine if link should be shown based on authentication
+        const text = element.text || element.Title;
         const authState = element.AuthState || 'All';
         const shouldShow =
           authState === 'All' ||
@@ -70,48 +35,41 @@ export const DesktopMenu = (props: any) => {
 
         if (shouldShow) {
           const isAction = element.NavigationAction === 'Action';
-
           return (
             <div
-              key={element.text}
+              key={text}
               className="navbar-item"
-              onMouseEnter={() => toggleDropdown(element.text)}
+              onMouseEnter={() => toggleDropdown(text)}
               onMouseLeave={() => toggleDropdown(null)}
-              onKeyDown={(e) => handleKeyDown(e, element.text)}
-              tabIndex={0} // Make the element focusable
-              aria-haspopup={!!element.children} // Indicate if it has a submenu
-              aria-expanded={openDropdown === element.text} // Indicate if the submenu is open
+              onKeyDown={(e) => handleKeyDown(e, text)}
+              tabIndex={0}
+              aria-haspopup={!!element.children}
+              aria-expanded={openDropdown === text}
             >
               {isAction ? (
-                <button
+                <Button
+                  variant="flat"
                   className="thq-link thq-body-small"
+                  children={text}
                   onClick={(e) => {
                     e.preventDefault();
-                    handleAction(element.text);
+                    handleAction(text);
                   }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {element.text}
-                </button>
+                />
               ) : element.url ? (
                 <Link to={element.url} className="thq-link thq-body-small">
-                  {element.text}
+                  {text}
                 </Link>
               ) : (
-                <span className="thq-link thq-body-small">{element.text}</span>
+                <span className="thq-link thq-body-small">{text}</span>
               )}
               {element.children && (
                 <div
                   className={`navbar-dropdown ${
-                    openDropdown === element.text ? 'visible' : 'hidden'
+                    openDropdown === text ? 'visible' : 'hidden'
                   }`}
-                  role="menu" // Indicate this is a menu
-                  onMouseEnter={() => toggleDropdown(element.text)}
+                  role="menu"
+                  onMouseEnter={() => toggleDropdown(text)}
                   onMouseLeave={() => toggleDropdown(null)}
                 >
                   {renderLinks(element.children)}
@@ -125,16 +83,22 @@ export const DesktopMenu = (props: any) => {
   };
 
   // If menu property is missing, treat all as main
+  const menuValueEquals = (menuValue: any, enumValue: any) => {
+    if (!menuValue && !enumValue) return true;
+    if (!menuValue || !enumValue) return false;
+    return String(menuValue).toLowerCase() === String(enumValue).toLowerCase();
+  };
+
   const mainLinks = props.links
     ? props.links.filter(
         (element: any) =>
-          element.Menu === ConfigurationMenuEnum.Main ||
+          menuValueEquals(element.Menu, ConfigurationMenuEnum.Main) ||
           element.Menu === undefined,
       )
     : [];
   const loginLinks = props.links
-    ? props.links.filter(
-        (element: any) => element.Menu === ConfigurationMenuEnum.Login,
+    ? props.links.filter((element: any) =>
+        menuValueEquals(element.Menu, ConfigurationMenuEnum.Login),
       )
     : [];
 

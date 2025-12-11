@@ -2,61 +2,22 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import './index.css';
-import { useAuth } from '../../../../hooks/use-auth';
+import { useMenuLogic } from '../menuUtils';
 import { ConfigurationMenuEnum } from '../../../../models/strapi/strapiMap';
+import { Button } from '../../../../components/atoms';
 
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { token, user, logout } = useAuth();
-
-  const hasPermission = (permissions: string[]) => {
-    const userPermissions =
-      user?.roles.flatMap((r: { permissions: any[] }) =>
-        r.permissions.map((p) => p.name),
-      ) || [];
-    if (!permissions) return true;
-    if (!userPermissions) return false;
-    for (const permission of permissions) {
-      if (!userPermissions.includes(permission)) return false;
-    }
-    return true;
-  };
-
-  const isAuthenticated = () => {
-    return token !== null && token !== undefined && token !== '';
-  };
+  const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleAction = (actionText: string) => {
-    // Map action text to action functions
-    // This could be extended with a more robust action mapping system
-    const actionMap: Record<string, () => void> = {
-      logout: () => {
-        logout();
-        setIsMenuOpen(false);
-      },
-      // Future actions can be added here
-      // 'toggle-theme': () => toggleTheme(),
-    };
-
-    const actionKey = actionText.toLowerCase();
-    const actionFn = actionMap[actionKey];
-
-    if (actionFn) {
-      actionFn();
-    } else {
-      console.warn(`Unknown action: ${actionText}`);
-    }
   };
 
   const renderLinks = (links: any[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
       .map((element: any) => {
-        // Check AuthState field to determine if link should be shown based on authentication
         const authState = element.AuthState || 'All';
         const shouldShow =
           authState === 'All' ||
@@ -71,23 +32,16 @@ export const MobileMenu = (props: any) => {
           return (
             <div key={element.text} className="navbar-mobile-item">
               {isAction ? (
-                <button
+                <Button
+                  variant="flat"
                   className="thq-link thq-body-small"
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.preventDefault();
-                    handleAction(element.text);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    width: '100%',
+                    handleAction(element.text, () => setIsMenuOpen(false));
                   }}
                 >
                   {element.text}
-                </button>
+                </Button>
               ) : element.url ? (
                 <Link
                   to={element.url}

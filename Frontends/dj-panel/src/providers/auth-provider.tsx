@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setToken(null);
     setRefreshToken(null);
-    navigate('/users/login'); // Redirect to login page
+    navigate('/login');
   };
 
   return (
