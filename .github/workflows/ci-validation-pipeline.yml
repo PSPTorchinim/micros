@@ -7,7 +7,7 @@ name: PR Validation
 # 4. Validates Docker Compose configurations with YAML linting
 # 5. Lints GitHub Actions workflow files
 # 6. Performs CodeQL security analysis on code (C# and JavaScript/TypeScript)
-# 7. Audits npm packages for security vulnerabilities
+# 7. Audits npm packages for security vulnerabilities (root, dj-panel, CMS)
 # 8. Audits .NET NuGet packages for security vulnerabilities
 # All checks must pass before PR can be merged
 
@@ -147,11 +147,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies for React app
+      - name: Install dependencies for JavaScript/TypeScript projects
         if: matrix.language == 'javascript-typescript'
         run: |
           npm install
           cd Frontends/dj-panel && npm install
+          cd ../../CMS && npm install
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
@@ -217,6 +218,30 @@ jobs:
           fi
           
           echo "✅ No critical or high severity vulnerabilities found in dj-panel dependencies"
+
+      - name: Audit CMS npm packages
+        run: |
+          cd CMS
+          echo "=========================================="
+          echo "Auditing CMS package.json dependencies"
+          echo "=========================================="
+          npm audit --audit-level=moderate || true
+          npm audit --audit-level=moderate --json > /tmp/cms-audit.json || true
+          
+          # Check for high or critical vulnerabilities
+          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' /tmp/cms-audit.json)
+          HIGH=$(jq '.metadata.vulnerabilities.high // 0' /tmp/cms-audit.json)
+          
+          echo "Critical vulnerabilities: $CRITICAL"
+          echo "High vulnerabilities: $HIGH"
+          
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "❌ Found critical or high severity vulnerabilities in CMS dependencies"
+            npm audit --audit-level=high
+            exit 1
+          fi
+          
+          echo "✅ No critical or high severity vulnerabilities found in CMS dependencies"
 
   security_dotnet_audit:
     name: .NET Package Security Audit
