@@ -3,6 +3,7 @@ import {
   Page,
   PageAuthStateEnum1,
   PageMenuEnum1,
+  PageNavigationActionEnum1,
 } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { Route, Outlet } from 'react-router-dom';
@@ -151,6 +152,33 @@ export function useDynamicRoutes() {
           ...routes,
         ];
       }
+
+      // Add logout button if it doesn't exist in CMS navigation
+      const hasLogout = nav.some(
+        (item) =>
+          item.NavigationAction === PageNavigationActionEnum1.Action &&
+          item.text?.toLowerCase().replace(/\s+/g, '') === 'logout',
+      );
+
+      if (!hasLogout) {
+        // Use a negative ID to avoid conflicts with CMS-generated IDs
+        const logoutId = -1;
+        // Place at the end by using max NavigationOrder + 1
+        const maxOrder = nav.length > 0 
+          ? Math.max(...nav.map((item) => item.NavigationOrder ?? 0)) 
+          : 0;
+        
+        nav.push({
+          id: logoutId,
+          text: 'Logout',
+          url: '#', // Not used for action items
+          NavigationOrder: maxOrder + 1,
+          Menu: PageMenuEnum1.Login,
+          AuthState: PageAuthStateEnum1.OnlyAuthenticated,
+          NavigationAction: PageNavigationActionEnum1.Action,
+        });
+      }
+
       setRoutes(routes);
       setNavigation(nav);
     })();
