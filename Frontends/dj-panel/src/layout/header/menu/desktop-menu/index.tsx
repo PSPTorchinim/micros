@@ -38,6 +38,25 @@ export const DesktopMenu = (props: any) => {
     }
   };
 
+  const handleAction = (actionText: string) => {
+    // Map action text to action functions
+    // This could be extended with a more robust action mapping system
+    const actionMap: Record<string, () => void> = {
+      logout: () => logout(),
+      // Future actions can be added here
+      // 'toggle-theme': () => toggleTheme(),
+    };
+
+    const actionKey = actionText.toLowerCase();
+    const actionFn = actionMap[actionKey];
+
+    if (actionFn) {
+      actionFn();
+    } else {
+      console.warn(`Unknown action: ${actionText}`);
+    }
+  };
+
   const renderLinks = (links: NavigationItem[]) => {
     return links
       .filter((element: any) => hasPermission(element.permissions))
@@ -50,6 +69,8 @@ export const DesktopMenu = (props: any) => {
           (authState === 'OnlyUnauthenticated' && !isAuthenticated());
 
         if (shouldShow) {
+          const isAction = element.NavigationAction === 'Action';
+
           return (
             <div
               key={element.text}
@@ -61,7 +82,23 @@ export const DesktopMenu = (props: any) => {
               aria-haspopup={!!element.children} // Indicate if it has a submenu
               aria-expanded={openDropdown === element.text} // Indicate if the submenu is open
             >
-              {element.url ? (
+              {isAction ? (
+                <button
+                  className="thq-link thq-body-small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAction(element.text);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {element.text}
+                </button>
+              ) : element.url ? (
                 <Link to={element.url} className="thq-link thq-body-small">
                   {element.text}
                 </Link>
@@ -97,8 +134,7 @@ export const DesktopMenu = (props: any) => {
     : [];
   const loginLinks = props.links
     ? props.links.filter(
-        (element: any) =>
-          element.Menu === ConfigurationMenuEnum.Login && element.url,
+        (element: any) => element.Menu === ConfigurationMenuEnum.Login,
       )
     : [];
 
