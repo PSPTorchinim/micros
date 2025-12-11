@@ -164,10 +164,11 @@ export function useDynamicRoutes() {
         // Use a negative ID to avoid conflicts with CMS-generated IDs
         const logoutId = -1;
         // Place at the end by using max NavigationOrder + 1
-        const maxOrder = nav.length > 0 
-          ? Math.max(...nav.map((item) => item.NavigationOrder ?? 0)) 
-          : 0;
-        
+        const maxOrder =
+          nav.length > 0
+            ? Math.max(...nav.map((item) => item.NavigationOrder ?? 0))
+            : 0;
+
         nav.push({
           id: logoutId,
           text: 'Logout',

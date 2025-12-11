@@ -4,7 +4,11 @@ import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
 import { useDynamicRoutes } from './DynamicRoutes';
 import type { Page } from '../models/strapi/strapiMap';
-import { PageMenuEnum1, PageAuthStateEnum1, PageNavigationActionEnum1 } from '../models/strapi/strapiMap';
+import {
+  PageMenuEnum1,
+  PageAuthStateEnum1,
+  PageNavigationActionEnum1,
+} from '../models/strapi/strapiMap';
 
 // Mock the strapi API
 const mockGetRootPages = jest.fn();
@@ -328,7 +332,7 @@ describe('DynamicRoutes - Route Path Construction', () => {
     // Check that only the CMS logout exists (Log Out), no duplicate fallback (Logout) added
     const logOutItems = queryAllByTestId('nav-item-Log Out');
     expect(logOutItems).toHaveLength(1);
-    
+
     // Verify no "Logout" fallback was added
     const logoutItems = queryAllByTestId('nav-item-Logout');
     expect(logoutItems).toHaveLength(0);
