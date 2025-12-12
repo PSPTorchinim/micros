@@ -83,10 +83,14 @@ export const RenderTemplate: React.FC<Props> = ({
       if (templateType === 'Login') {
         try {
           const loginBlock = await strapiAPI.getLoginBlockSingleton();
-          if (mounted && loginBlock) {
-            setBlocks([
-              { __kind: 'login-block', ...loginBlock } as ContentBlock,
-            ]);
+          if (mounted) {
+            if (loginBlock) {
+              setBlocks([
+                { __kind: 'login-block', ...loginBlock } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
@@ -99,13 +103,17 @@ export const RenderTemplate: React.FC<Props> = ({
         try {
           const forgotPasswordBlock =
             await strapiAPI.getForgotPasswordBlockSingleton();
-          if (mounted && forgotPasswordBlock) {
-            setBlocks([
-              {
-                __kind: 'forgot-password-block',
-                ...forgotPasswordBlock,
-              } as ContentBlock,
-            ]);
+          if (mounted) {
+            if (forgotPasswordBlock) {
+              setBlocks([
+                {
+                  __kind: 'forgot-password-block',
+                  ...forgotPasswordBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
@@ -132,12 +140,20 @@ export const RenderTemplate: React.FC<Props> = ({
       ) {
         try {
           const article = await strapiAPI.getArticleByTitle(pageTitle);
-          if (mounted && article) {
-            setBlocks([{ __kind: 'article', ...article } as ContentBlock]);
-            return;
+          if (mounted) {
+            if (article) {
+              setBlocks([{ __kind: 'article', ...article } as ContentBlock]);
+            } else {
+              setBlocks([]);
+            }
           }
+          return;
         } catch (e) {
           console.error('Error fetching article by title:', e);
+          if (mounted) {
+            setBlocks([]);
+          }
+          return;
         }
       }
 
