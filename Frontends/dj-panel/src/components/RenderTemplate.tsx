@@ -94,7 +94,10 @@ export const RenderTemplate: React.FC<Props> = ({
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
-          if (mounted) setBlocks([]);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
         }
         return;
       }
@@ -117,7 +120,10 @@ export const RenderTemplate: React.FC<Props> = ({
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
-          if (mounted) setBlocks([]);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
         }
         return;
       }
@@ -152,6 +158,7 @@ export const RenderTemplate: React.FC<Props> = ({
           console.error('Error fetching article by title:', e);
           if (mounted) {
             setBlocks([]);
+            setError(null);
           }
           return;
         }
