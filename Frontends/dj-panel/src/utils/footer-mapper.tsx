@@ -6,7 +6,7 @@ import {
   AiFillTikTok,
   AiFillTwitterCircle,
   AiFillYoutube,
-  AiFillSoundCloud,
+  AiFillSound,
 } from 'react-icons/ai';
 import type { Footer } from '../models/strapi/strapiMap';
 
@@ -19,8 +19,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   mail: AiFillMail,
   email: AiFillMail,
   tiktok: AiFillTikTok,
-  soundcloud: AiFillSoundCloud,
-  headphones: AiFillSoundCloud,
+  soundcloud: AiFillSound,
+  headphones: AiFillSound,
 };
 
 export function mapFooterData(footerData: Footer | null) {
