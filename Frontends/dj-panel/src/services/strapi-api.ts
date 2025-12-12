@@ -425,7 +425,7 @@ class StrapiAPI {
           socialLinks: true,
         },
       });
-      return res?.data || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error('Error fetching footer singleton:', e);
       return null;
