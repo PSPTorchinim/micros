@@ -25,14 +25,21 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function mapFooterData(footerData: Footer | null) {
   if (!footerData) {
+    console.log('[Footer Mapper] No footer data provided');
     return null;
   }
+
+  console.log('[Footer Mapper] Received footer data:', footerData);
 
   // Map columns with links
   // Filter out columns that don't have links or have empty links arrays
   const links =
     footerData.columns
-      ?.filter((column) => column.links && column.links.length > 0)
+      ?.filter((column) => {
+        const hasLinks = column.links && column.links.length > 0;
+        console.log(`[Footer Mapper] Column "${column.title}" has links:`, hasLinks, column.links);
+        return hasLinks;
+      })
       .map((column) => ({
         title: column.title || '',
         items:
@@ -41,6 +48,8 @@ export function mapFooterData(footerData: Footer | null) {
             text: link.label || '',
           })) || [],
       })) || [];
+
+  console.log('[Footer Mapper] Mapped links:', links);
 
   // Map social links
   const socialLinks =
@@ -55,7 +64,9 @@ export function mapFooterData(footerData: Footer | null) {
       };
     }) || [];
 
-  return {
+  console.log('[Footer Mapper] Mapped social links:', socialLinks);
+
+  const result = {
     content3:
       footerData.copyright || '© 2024 DJ Beat Blaster. All rights reserved.',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
@@ -69,4 +80,7 @@ export function mapFooterData(footerData: Footer | null) {
     action1: '',
     content2: '',
   };
+
+  console.log('[Footer Mapper] Final mapped result:', result);
+  return result;
 }
