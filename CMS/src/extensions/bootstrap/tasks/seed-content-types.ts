@@ -851,9 +851,7 @@ async function seedConfigurations(strapi: StrapiAny): Promise<any[]> {
 async function seedFooter(strapi: StrapiAny): Promise<any> {
   // Footer is a singleType with draftAndPublish: true
   // Use Document Service for proper handling
-  const existing = await strapi.documents('api::footer.footer').findFirst({
-    filters: { copyright: FOOTER_SEED.copyright },
-  });
+  const existing = await strapi.documents('api::footer.footer').findFirst({});
   
   if (!existing) {
     // Create footer with full data including columns and social links
@@ -868,9 +866,20 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
     console.info(`[SEED] Created Footer with ${FOOTER_SEED.columns.length} columns and ${FOOTER_SEED.socialLinks.length} social links`);
     return created;
   } else {
-    console.info(`[SEED] Footer already exists`);
-    return existing;
+    // Update existing footer with seed data
+    const updated = await strapi.documents('api::footer.footer').update({
+      documentId: existing.documentId,
+      data: {
+        copyright: FOOTER_SEED.copyright,
+        columns: FOOTER_SEED.columns,
+        socialLinks: FOOTER_SEED.socialLinks,
+      },
+      status: 'published',
+    });
+    console.info(`[SEED] Updated Footer with ${FOOTER_SEED.columns.length} columns and ${FOOTER_SEED.socialLinks.length} social links`);
+    return updated;
   }
+}
 }
 
 async function seedLoginBlock(strapi: StrapiAny): Promise<any> {
