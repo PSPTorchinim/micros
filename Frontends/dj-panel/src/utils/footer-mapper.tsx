@@ -11,7 +11,7 @@ import {
 import type { Footer } from '../models/strapi/strapiMap';
 
 // Map icon names to React Icon components
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   instagram: AiFillInstagram,
   facebook: AiFillFacebook,
   twitter: AiFillTwitterCircle,
