@@ -53,7 +53,8 @@ export function mapFooterData(footerData: Footer | null) {
     }) || [];
 
   return {
-    content3: footerData.copyright || '© 2024 DJ Beat Blaster. All rights reserved.',
+    content3:
+      footerData.copyright || '© 2024 DJ Beat Blaster. All rights reserved.',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Management Logo',
     socialLinkTitleCategory: 'Connect with Us',
