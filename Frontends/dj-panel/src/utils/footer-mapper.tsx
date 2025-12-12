@@ -29,15 +29,18 @@ export function mapFooterData(footerData: Footer | null) {
   }
 
   // Map columns with links
+  // Filter out columns that don't have links or have empty links arrays
   const links =
-    footerData.columns?.map((column) => ({
-      title: column.title || '',
-      items:
-        column.links?.map((link) => ({
-          href: link.url || '#',
-          text: link.label || '',
-        })) || [],
-    })) || [];
+    footerData.columns
+      ?.filter((column) => column.links && column.links.length > 0)
+      .map((column) => ({
+        title: column.title || '',
+        items:
+          column.links?.map((link) => ({
+            href: link.url || '#',
+            text: link.label || '',
+          })) || [],
+      })) || [];
 
   // Map social links
   const socialLinks =
