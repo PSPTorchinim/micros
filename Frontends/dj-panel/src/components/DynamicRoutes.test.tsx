@@ -13,11 +13,13 @@ import {
 // Mock the strapi API
 const mockGetRootPages = jest.fn();
 const mockGetPagesByParentId = jest.fn();
+const mockGetFooterSingleton = jest.fn();
 
 jest.mock('../services/strapi-api', () => ({
   strapiAPI: {
     getRootPages: () => mockGetRootPages(),
     getPagesByParentId: (id: number) => mockGetPagesByParentId(id),
+    getFooterSingleton: () => mockGetFooterSingleton(),
     fetchPageById: jest.fn(),
   },
 }));
@@ -57,6 +59,8 @@ const TestNavigationComponent = () => {
 describe('DynamicRoutes - Route Path Construction', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock footer to return null by default
+    mockGetFooterSingleton.mockResolvedValue(null);
   });
 
   it('should build root-level routes with full path', async () => {

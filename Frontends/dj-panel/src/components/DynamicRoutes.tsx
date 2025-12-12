@@ -4,6 +4,7 @@ import {
   PageAuthStateEnum1,
   PageMenuEnum1,
   PageNavigationActionEnum1,
+  Footer,
 } from '../models/strapi/strapiMap';
 import { strapiAPI } from '../services/strapi-api';
 import { Route, Outlet } from 'react-router-dom';
@@ -108,6 +109,7 @@ export function useDynamicRoutes() {
     <Route key="loading" path="*" element={<ContentSkeleton type="page" />} />,
   ]);
   const [navigation, setNavigation] = useState<NavigationItem[]>([]);
+  const [footer, setFooter] = useState<Footer | null>(null);
 
   async function fetchAllChildren(page: Page): Promise<Page> {
     if (!page.id) return page;
@@ -180,10 +182,14 @@ export function useDynamicRoutes() {
         });
       }
 
+      // Fetch footer data from CMS
+      const footerData = await strapiAPI.getFooterSingleton();
+      setFooter(footerData);
+
       setRoutes(routes);
       setNavigation(nav);
     })();
   }, []);
 
-  return [routes, navigation] as const;
+  return [routes, navigation, footer] as const;
 }

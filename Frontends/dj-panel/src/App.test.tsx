@@ -20,7 +20,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock the useDynamicRoutes hook
 jest.mock('./components/DynamicRoutes', () => ({
-  useDynamicRoutes: jest.fn(() => [[], []]),
+  useDynamicRoutes: jest.fn(() => [[], [], null]),
 }));
 
 // Mock the microservices client

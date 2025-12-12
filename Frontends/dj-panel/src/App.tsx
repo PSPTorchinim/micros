@@ -11,7 +11,7 @@ import { ServicesProvider } from './providers/services-provider';
 import { useDynamicRoutes } from './components/DynamicRoutes';
 
 export default function App() {
-  const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
+  const [dynamicRoutes, dynamicNavigation, footerData] = useDynamicRoutes();
   return (
     <BrowserRouter>
       <ThemeProvider>
@@ -20,7 +20,12 @@ export default function App() {
             <Routes>
               <Route
                 path="/"
-                element={<Layout navigation={{ links: dynamicNavigation }} />}
+                element={
+                  <Layout
+                    navigation={{ links: dynamicNavigation }}
+                    footer={footerData}
+                  />
+                }
               >
                 {dynamicRoutes}
                 <Route path="*" element={<NotFoundComponent />} />
