@@ -856,14 +856,16 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
   });
   
   if (!existing) {
-    // Create footer without components (they can be added via Strapi admin)
+    // Create footer with full data including columns and social links
     const created = await strapi.documents('api::footer.footer').create({
       data: {
         copyright: FOOTER_SEED.copyright,
+        columns: FOOTER_SEED.columns,
+        socialLinks: FOOTER_SEED.socialLinks,
       },
       status: 'published',
     });
-    console.info(`[SEED] Created Footer`);
+    console.info(`[SEED] Created Footer with ${FOOTER_SEED.columns.length} columns and ${FOOTER_SEED.socialLinks.length} social links`);
     return created;
   } else {
     console.info(`[SEED] Footer already exists`);

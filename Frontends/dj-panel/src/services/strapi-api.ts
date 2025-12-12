@@ -413,6 +413,18 @@ class StrapiAPI {
     }
   }
 
+  async getFooterSingleton() {
+    try {
+      const res = await this.api.footer.getFooter({
+        populate: '*',
+      });
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching footer singleton:', e);
+      return null;
+    }
+  }
+
   // --------------------------------------
   // ARTICLES
   // --------------------------------------
