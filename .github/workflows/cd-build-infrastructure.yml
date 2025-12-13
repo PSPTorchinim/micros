@@ -893,7 +893,12 @@ jobs:
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
           ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
+          BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Map environment names to short aliases for URLs
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/')
+          echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Deploy worker to Cloudflare
           WORKER_NAME="maintenance-page-${ENV_SLUG}"
@@ -911,12 +916,16 @@ jobs:
             echo "⚠️  Worker upload response: $response"
           fi
 
-          # For each external service, create a route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          # For each external service, create a route with new URL pattern
           echo "🔗 Creating maintenance routes..."
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
-              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              if [ "$svc" = "dj-panel" ]; then
+                PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+              else
+                PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+              fi
               ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
               echo "  - Creating route for: $PATTERN"
               curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
@@ -1214,22 +1223,39 @@ jobs:
           echo "$EXTERNAL_MAP" | jq .
 
           # Build env-scoped dynamic ingress
-          DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
+          # Map environment names to short aliases for URLs
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/')
+          echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
+          
+          DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
             to_entries
-            | map({
-                hostname: ("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base),
-                service: ("http://" + $ip + ":" + .key)
-              })
+            | map(
+                .value | split(":")[0] as $service |
+                if $service == "dj-panel" then
+                  {
+                    hostname: ($env + "." + $base),
+                    service: ("http://" + $ip + ":" + (.key | tostring))
+                  }
+                else
+                  {
+                    hostname: ($service + "." + $env + "." + $base),
+                    service: ("http://" + $ip + ":" + (.key | tostring))
+                  }
+                end
+              )
           ')
 
           # Fetch current config to preserve non-env hostnames
           CURRENT="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}")"
-          KEEP=$(echo "$CURRENT" | jq -c --arg env "$ENV_SLUG" '
+          KEEP=$(echo "$CURRENT" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" '
             .result.config.ingress
             | map(select(.hostname? != null))
-            | map(select(.hostname | test("^dj-panel-" + $env + "-"; "i") | not))
+            | map(select(
+                (.hostname == ($env + "." + $base)) or
+                (.hostname | endswith("." + $env + "." + $base))
+              ) | not)
           ')
 
           # Merge KEEP + DYN + 404
@@ -1281,7 +1307,12 @@ jobs:
           CF_KEY="${{ secrets.CLOUDFLARE_API_KEY }}"
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
           ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
+          BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+
+          # Map environment names to short aliases for URLs
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/')
+          echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Get routes
           echo "🔍 Fetching existing routes..."
@@ -1290,12 +1321,16 @@ jobs:
             -H "X-Auth-Key: ${CF_KEY}" \
             -H "Content-Type: application/json")
 
-          # For each external service, delete the route for dj-panel-{env_slug}-{service}.djbeatblaster.com/*
+          # For each external service, delete the route with new URL pattern
           echo "🗑️  Deleting maintenance routes..."
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
-              PATTERN="dj-panel-${ENV_SLUG}-${svc}.djbeatblaster.com/*"
+              if [ "$svc" = "dj-panel" ]; then
+                PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+              else
+                PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+              fi
               ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
               if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
                 echo "  - Deleting route: $ROUTE_ID ($PATTERN)"
@@ -1367,10 +1402,21 @@ jobs:
             EXTERNAL_MAP="{}"
           fi
 
+          # Map environment names to short aliases for URLs
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/')
+          echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
+
           # Build desired env-scoped FQDNs from EXTERNAL_MAP
-          DYNAMIC_FQDNS=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SLUG" --arg base "$BASE_DOMAIN" '
+          DYNAMIC_FQDNS=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" '
             to_entries
-            | map("dj-panel-" + $env + "-" + (.value | split(":")[0]) + "." + $base)
+            | map(
+                .value | split(":")[0] as $service |
+                if $service == "dj-panel" then
+                  $env + "." + $base
+                else
+                  $service + "." + $env + "." + $base
+                end
+              )
           ')
           echo "Desired env FQDNs:"
           echo "$DYNAMIC_FQDNS" | jq .
