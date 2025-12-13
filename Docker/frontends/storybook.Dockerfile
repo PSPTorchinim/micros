@@ -22,6 +22,6 @@ RUN npm install -g serve@14.2.0 && apk add --no-cache wget
 # hadolint ignore=DL3002
 USER root
 
-EXPOSE 6006
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:6006 || exit 1
-CMD ["serve", "-s", "storybook-static", "-l", "6006"]
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+CMD ["serve", "-s", "storybook-static", "-l", "3000"]
