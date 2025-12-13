@@ -897,7 +897,7 @@ jobs:
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/' -e 's/test/test/')
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Deploy worker to Cloudflare
@@ -1224,7 +1224,7 @@ jobs:
 
           # Build env-scoped dynamic ingress
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/' -e 's/test/test/')
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
           
           DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
@@ -1315,7 +1315,7 @@ jobs:
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/' -e 's/test/test/')
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Get routes
@@ -1407,7 +1407,7 @@ jobs:
           fi
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/' -e 's/test/test/')
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Build desired env-scoped FQDNs from EXTERNAL_MAP
