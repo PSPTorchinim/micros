@@ -897,7 +897,8 @@ jobs:
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
+          # Production uses empty string to get root domain (djbeatblaster.com)
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/^production$//' -e 's/development/dev/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Deploy worker to Cloudflare
@@ -921,10 +922,20 @@ jobs:
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
-              if [ "$svc" = "dj-panel" ]; then
-                PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+              if [ -z "$ENV_SHORT" ]; then
+                # Production: no environment prefix
+                if [ "$svc" = "dj-panel" ]; then
+                  PATTERN="${BASE_DOMAIN}/*"
+                else
+                  PATTERN="${svc}.${BASE_DOMAIN}/*"
+                fi
               else
-                PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+                # Other environments: include environment prefix
+                if [ "$svc" = "dj-panel" ]; then
+                  PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+                else
+                  PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+                fi
               fi
               ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
               echo "  - Creating route for: $PATTERN"
@@ -1224,7 +1235,8 @@ jobs:
 
           # Build env-scoped dynamic ingress
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
+          # Production uses empty string to get root domain (djbeatblaster.com)
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/^production$//' -e 's/development/dev/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
           
           DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
@@ -1232,16 +1244,32 @@ jobs:
             | map(
                 (.value | split(":")[0]) as $service |
                 .key as $port |
-                if $service == "dj-panel" then
-                  {
-                    hostname: ($env + "." + $base),
-                    service: ("http://" + $ip + ":" + $port)
-                  }
+                if $env == "" then
+                  # Production: no environment prefix
+                  if $service == "dj-panel" then
+                    {
+                      hostname: $base,
+                      service: ("http://" + $ip + ":" + $port)
+                    }
+                  else
+                    {
+                      hostname: ($service + "." + $base),
+                      service: ("http://" + $ip + ":" + $port)
+                    }
+                  end
                 else
-                  {
-                    hostname: ($service + "." + $env + "." + $base),
-                    service: ("http://" + $ip + ":" + $port)
-                  }
+                  # Other environments: include environment prefix
+                  if $service == "dj-panel" then
+                    {
+                      hostname: ($env + "." + $base),
+                      service: ("http://" + $ip + ":" + $port)
+                    }
+                  else
+                    {
+                      hostname: ($service + "." + $env + "." + $base),
+                      service: ("http://" + $ip + ":" + $port)
+                    }
+                  end
                 end
               )
           ')
@@ -1251,14 +1279,22 @@ jobs:
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}")"
           # Filter to keep only hostnames that DON'T belong to current environment
-          # This preserves other environments (prod, stage) when updating dev
-          # Filters out: dev.djbeatblaster.com and *.dev.djbeatblaster.com
+          # This preserves other environments when updating one
+          # For production (empty env): only keeps hostnames with env prefixes (dev, test, stage, preprod)
+          # For other envs: excludes env.base and *.env.base
           KEEP=$(echo "$CURRENT" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" '
             .result.config.ingress
             | map(select(.hostname? != null))
             | map(select(
-                ((.hostname == ($env + "." + $base)) or
-                 (.hostname | endswith("." + $env + "." + $base))) | not
+                if $env == "" then
+                  # Production: keep only hostnames that contain known environment prefixes
+                  (.hostname | test("\\.(dev|test|stage|preprod)\\." + ($base | gsub("\\."; "\\."))))
+                  or (.hostname | test("^(dev|test|stage|preprod)\\." + ($base | gsub("\\."; "\\."))))
+                else
+                  # Other environments: exclude env.domain and *.env.domain
+                  ((.hostname == ($env + "." + $base)) or
+                   (.hostname | endswith("." + $env + "." + $base))) | not
+                end
               ))
           ')
 
@@ -1315,7 +1351,8 @@ jobs:
           EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
+          # Production uses empty string to get root domain (djbeatblaster.com)
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/^production$//' -e 's/development/dev/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Get routes
@@ -1330,10 +1367,20 @@ jobs:
           for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
             for pair in $(echo "$entry" | tr ',' '\n'); do
               svc=$(echo "$pair" | cut -d: -f1)
-              if [ "$svc" = "dj-panel" ]; then
-                PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+              if [ -z "$ENV_SHORT" ]; then
+                # Production: no environment prefix
+                if [ "$svc" = "dj-panel" ]; then
+                  PATTERN="${BASE_DOMAIN}/*"
+                else
+                  PATTERN="${svc}.${BASE_DOMAIN}/*"
+                fi
               else
-                PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+                # Other environments: include environment prefix
+                if [ "$svc" = "dj-panel" ]; then
+                  PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+                else
+                  PATTERN="${svc}.${ENV_SHORT}.${BASE_DOMAIN}/*"
+                fi
               fi
               ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")
               if [ -n "$ROUTE_ID" ] && [ "$ROUTE_ID" != "null" ]; then
@@ -1407,7 +1454,8 @@ jobs:
           fi
 
           # Map environment names to short aliases for URLs
-          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/development/dev/' -e 's/production/prod/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
+          # Production uses empty string to get root domain (djbeatblaster.com)
+          ENV_SHORT=$(echo "$ENV_SLUG" | sed -e 's/^production$//' -e 's/development/dev/' -e 's/staging/stage/' -e 's/preproduction/preprod/')
           echo "Using environment alias: $ENV_SHORT (from $ENV_SLUG)"
 
           # Build desired env-scoped FQDNs from EXTERNAL_MAP
@@ -1415,10 +1463,20 @@ jobs:
             to_entries
             | map(
                 .value | split(":")[0] as $service |
-                if $service == "dj-panel" then
-                  $env + "." + $base
+                if $env == "" then
+                  # Production: no environment prefix
+                  if $service == "dj-panel" then
+                    $base
+                  else
+                    $service + "." + $base
+                  end
                 else
-                  $service + "." + $env + "." + $base
+                  # Other environments: include environment prefix
+                  if $service == "dj-panel" then
+                    $env + "." + $base
+                  else
+                    $service + "." + $env + "." + $base
+                  end
                 end
               )
           ')
