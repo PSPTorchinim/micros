@@ -1230,16 +1230,17 @@ jobs:
           DYN=$(echo "$EXTERNAL_MAP" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" --arg ip "$HOST_LAN_IP" '
             to_entries
             | map(
-                .value | split(":")[0] as $service |
+                (.value | split(":")[0]) as $service |
+                .key as $port |
                 if $service == "dj-panel" then
                   {
                     hostname: ($env + "." + $base),
-                    service: ("http://" + $ip + ":" + (.key | tostring))
+                    service: ("http://" + $ip + ":" + $port)
                   }
                 else
                   {
                     hostname: ($service + "." + $env + "." + $base),
-                    service: ("http://" + $ip + ":" + (.key | tostring))
+                    service: ("http://" + $ip + ":" + $port)
                   }
                 end
               )
@@ -1253,9 +1254,9 @@ jobs:
             .result.config.ingress
             | map(select(.hostname? != null))
             | map(select(
-                (.hostname == ($env + "." + $base)) or
-                (.hostname | endswith("." + $env + "." + $base))
-              ) | not)
+                ((.hostname == ($env + "." + $base)) or
+                 (.hostname | endswith("." + $env + "." + $base))) | not
+              ))
           ')
 
           # Merge KEEP + DYN + 404
