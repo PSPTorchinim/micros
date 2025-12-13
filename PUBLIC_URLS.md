@@ -38,13 +38,15 @@ The URL routing is implemented in the GitHub Actions workflow `.github/workflows
 
 ## Service Mapping
 
-| Service Name | URL Example (Development) |
-|--------------|---------------------------|
-| dj-panel | `dev.djbeatblaster.com` |
-| apigateway | `apigateway.dev.djbeatblaster.com` |
-| strapi | `strapi.dev.djbeatblaster.com` |
-| storybook-dj-panel | `storybook-dj-panel.dev.djbeatblaster.com` |
-| grafana | `grafana.dev.djbeatblaster.com` |
+| Service Name | URL Example (Development) | Notes |
+|--------------|---------------------------|-------|
+| dj-panel | `dev.djbeatblaster.com` | Main frontend - uses root env subdomain |
+| apigateway | `apigateway.dev.djbeatblaster.com` | |
+| strapi | `strapi.dev.djbeatblaster.com` | |
+| storybook-dj-panel | `storybook-dj-panel.dev.djbeatblaster.com` | Uses hyphenated name from docker-compose |
+| grafana | `grafana.dev.djbeatblaster.com` | |
+
+**Note**: Service names in URLs match their names in `docker-compose.yml`, including hyphens.
 
 ## Legacy Format
 

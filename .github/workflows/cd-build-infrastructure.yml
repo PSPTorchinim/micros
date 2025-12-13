@@ -1250,6 +1250,9 @@ jobs:
           CURRENT="$(curl -sS -X GET "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_UUID}/configurations" \
             -H "X-Auth-Email: ${CF_EMAIL}" \
             -H "X-Auth-Key: ${CF_KEY}")"
+          # Filter to keep only hostnames that DON'T belong to current environment
+          # This preserves other environments (prod, stage) when updating dev
+          # Filters out: dev.djbeatblaster.com and *.dev.djbeatblaster.com
           KEEP=$(echo "$CURRENT" | jq -c --arg env "$ENV_SHORT" --arg base "$BASE_DOMAIN" '
             .result.config.ingress
             | map(select(.hostname? != null))
