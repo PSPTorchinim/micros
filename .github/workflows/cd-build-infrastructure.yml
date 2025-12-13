@@ -1289,7 +1289,7 @@ jobs:
                 if $env == "" then
                   # Production: keep only hostnames that contain known environment prefixes
                   (.hostname | test("\\.(dev|test|stage|preprod)\\." + ($base | gsub("\\."; "\\."))))
-                  or (.hostname | test("^(dev|test|stage|preprod)\\." + ($base | gsub("\\."; "\\."))))
+                  or (.hostname | test("^(dev|test|stage|preprod)\\." + ($base | gsub("\\."; "\\.")) + "$"))
                 else
                   # Other environments: exclude env.domain and *.env.domain
                   ((.hostname == ($env + "." + $base)) or
