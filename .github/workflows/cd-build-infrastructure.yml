@@ -1081,7 +1081,7 @@ jobs:
               fi
             fi
 
-            # Wait for healthy state (10 minutes timeout)
+            # Wait for healthy state (30 minutes timeout)
             echo "⏳ Waiting for app to become healthy..."
             is_good_state() {
               case "$1" in
@@ -1091,7 +1091,7 @@ jobs:
             }
 
             health_check=0
-            max_health_checks=60
+            max_health_checks=180
             app_state="UNKNOWN"
             last_detailed_check=0
             previous_state="UNKNOWN"
@@ -1119,7 +1119,7 @@ jobs:
 
             if ! is_good_state "$app_state"; then
               echo ""
-              echo "❌ ERROR: App failed to reach healthy state after 10 minutes (final state=$app_state)"
+              echo "❌ ERROR: App failed to reach healthy state after 30 minutes (final state=$app_state)"
               echo ""
               echo "🔍 TROUBLESHOOTING INFORMATION:"
               echo "================================"
