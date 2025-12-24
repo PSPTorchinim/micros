@@ -24,7 +24,7 @@ on:
 # Prevent duplicate builds when multiple triggers occur simultaneously
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 # Minimal permissions - jobs that need more will specify them
 permissions:
