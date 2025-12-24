@@ -6,11 +6,17 @@ name: Build Artifacts
 # 3. Builds React frontends with environment-specific configurations
 # 4. Builds infrastructure images (databases, message brokers, monitoring tools)
 # All images are pushed to GitHub Container Registry (GHCR)
+#
+# Triggers:
+# - Push to releases/** branches (when PRs are merged to releases)
+# - Monthly schedule on 1st day at midnight UTC (for Production environment)
+# - Manual workflow_dispatch
 
 on:
+  push:
+    branches:
+      - "releases/**"
   schedule:
-    # Daily at midnight (00:00 UTC) for Development environment
-    - cron: "0 0 * * *"
     # Monthly on the 1st at midnight (00:00 UTC) for Production environment
     - cron: "0 0 1 * *"
   workflow_dispatch:
