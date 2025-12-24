@@ -159,9 +159,6 @@ services:
         SECURE_KEY: ${SECURE_KEY}
         JWT_TOKEN: ${JWT_KEY}
         CMS_HOST: ${CMS_HOST}
-        CMS_PORT: ${CMS_PORT}
-        CMS_PROTOCOL: ${CMS_PROTOCOL}
-        CMS_API_PATH: ${CMS_API_PATH}
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -196,7 +193,7 @@ services:
       dockerfile: Docker/infra/strapi.Dockerfile
       args:
         CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
-        CMS_NODE_ENV: ${CMS_NODE_ENV}
+        CMS_NODE_ENV: ${ENVIRONMENT}
         CMS_DATABASE_HOST: ${CMS_DATABASE_HOST}
         CMS_DATABASE_PORT: ${CMS_DATABASE_PORT}
         DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}

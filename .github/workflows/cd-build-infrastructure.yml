@@ -450,7 +450,6 @@ jobs:
             echo "CMS_DATABASE_USERNAME=${{ vars.CMS_DATABASE_USERNAME }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_PASSWORD=${{ secrets.CMS_DATABASE_PASSWORD }}" >> "$ENV_FILE"
             echo "CMS_DATABASE_CLIENT=${{ vars.CMS_DATABASE_CLIENT }}" >> "$ENV_FILE"
-            echo "CMS_NODE_ENV=${{ vars.CMS_NODE_ENV }}" >> "$ENV_FILE"
             
             # Redis
             echo "REDIS_HOST=${{ vars.REDIS_HOST }}" >> "$ENV_FILE"
@@ -494,9 +493,6 @@ jobs:
             
             # CMS (Strapi)
             echo "CMS_HOST=${{ vars.CMS_HOST }}" >> "$ENV_FILE"
-            echo "CMS_PORT=${{ vars.CMS_PORT }}" >> "$ENV_FILE"
-            echo "CMS_PROTOCOL=${{ vars.CMS_PROTOCOL }}" >> "$ENV_FILE"
-            echo "CMS_API_PATH=${{ vars.CMS_API_PATH }}" >> "$ENV_FILE"
             echo "CMS_JWT_SECRET=${{ secrets.CMS_JWT_SECRET }}" >> "$ENV_FILE"
             echo "CMS_ADMIN_JWT_SECRET=${{ secrets.CMS_ADMIN_JWT_SECRET }}" >> "$ENV_FILE"
             echo "CMS_APP_KEYS=${{ secrets.CMS_APP_KEYS }}" >> "$ENV_FILE"
@@ -935,14 +931,14 @@ jobs:
                 if [ "$svc" = "dj-panel" ]; then
                   PATTERN="${BASE_DOMAIN}/*"
                 else
-                  PATTERN="${svc}-${BASE_DOMAIN}/*"
+                  PATTERN="${svc}.${BASE_DOMAIN}/*"
                 fi
               else
                 # Other environments: include environment prefix
                 if [ "$svc" = "dj-panel" ]; then
                   PATTERN="${ENV_SHORT}-${BASE_DOMAIN}/*"
                 else
-                  PATTERN="${svc}-${ENV_SHORT}-${BASE_DOMAIN}/*"
+                  PATTERN="${svc}-${ENV_SHORT}.${BASE_DOMAIN}/*"
                 fi
               fi
               ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
@@ -1261,7 +1257,7 @@ jobs:
                     }
                   else
                     {
-                      hostname: ($service + "." + $base),
+                      hostname: ($service + "-" + $base),
                       service: ("http://" + $ip + ":" + $port)
                     }
                   end
@@ -1274,7 +1270,7 @@ jobs:
                     }
                   else
                     {
-                      hostname: ($service + "." + $env + "." + $base),
+                      hostname: ($service + "-" + $env + "." + $base),
                       service: ("http://" + $ip + ":" + $port)
                     }
                   end
@@ -1301,7 +1297,7 @@ jobs:
                 else
                   # Other environments: exclude env.domain and *.env.domain
                   ((.hostname == ($env + "." + $base)) or
-                   (.hostname | endswith("." + $env + "." + $base))) | not
+                   (.hostname | endswith("-" + $env + "." + $base))) | not
                 end
               ))
           ')
@@ -1380,14 +1376,14 @@ jobs:
                 if [ "$svc" = "dj-panel" ]; then
                   PATTERN="${BASE_DOMAIN}/*"
                 else
-                  PATTERN="${svc}-${BASE_DOMAIN}/*"
+                  PATTERN="${svc}.${BASE_DOMAIN}/*"
                 fi
               else
                 # Other environments: include environment prefix
                 if [ "$svc" = "dj-panel" ]; then
-                  PATTERN="${ENV_SHORT}-${BASE_DOMAIN}/*"
+                  PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
                 else
-                  PATTERN="${svc}-${ENV_SHORT}-${BASE_DOMAIN}/*"
+                  PATTERN="${svc}-${ENV_SHORT}.${BASE_DOMAIN}/*"
                 fi
               fi
               ROUTE_ID=$(echo "$ROUTES" | jq -r ".result[] | select(.pattern == \"$PATTERN\") | .id")

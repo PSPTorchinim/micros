@@ -56,11 +56,8 @@ class StrapiAPI {
   private baseURL: string;
 
   constructor() {
-    const protocol = process.env.REACT_APP_CMS_PROTOCOL || 'http';
-    const host = process.env.REACT_APP_CMS_HOST || 'localhost';
-    const port = process.env.REACT_APP_CMS_PORT || '1337';
-    const apiPath = process.env.REACT_APP_CMS_API_PATH || '/api';
-    this.baseURL = `${protocol}://${host}:${port}${apiPath}`;
+    this.baseURL =
+      process.env.REACT_APP_CMS_HOST || `http://localhost:1337/api`;
     this.api = new Api({ baseURL: this.baseURL });
   }
 
