@@ -18,7 +18,7 @@ on:
     types:
       - completed
     branches:
-      - "releases/R*"
+      - "releases/**"
       - "production"
 
 # Prevent concurrent deployments to the same environment
