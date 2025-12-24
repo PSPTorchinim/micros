@@ -10,6 +10,12 @@ name: Build TrueNAS Infrastructure
 # 7. Updates Cloudflare tunnel and DNS for service routing
 # 8. Disables maintenance page after successful deployment
 # 9. Includes automatic rollback on failure
+#
+# Triggers:
+# - Automatically after "Build Artifacts" workflow completes (on any branch)
+# - Manual workflow_dispatch
+#
+# Note: This workflow runs on the same branch as the "Build Artifacts" workflow that triggered it.
 
 on:
   workflow_dispatch:
@@ -17,9 +23,6 @@ on:
     workflows: ["Build Artifacts"]
     types:
       - completed
-    branches:
-      - "releases/**"
-      - "production"
 
 # Prevent concurrent deployments to the same environment
 concurrency:
@@ -201,7 +204,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Calculate unused internal ports (40000-49999)
         uses: ./.github/templates/calculate-unused-ports
@@ -239,7 +242,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install yq on runner
         run: |
@@ -864,6 +867,8 @@ jobs:
     steps:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Enable Cloudflare maintenance mode for all external service hostnames
         run: |

@@ -59,7 +59,7 @@ For future deployments, always ensure:
 
 The workflows are configured to run automatically:
 - **Build Artifacts**: Triggered when PRs are merged to releases/** branches, monthly schedule (1st day) for production, and workflow_dispatch
-- **Build Infrastructure**: Triggered after Build Artifacts completes successfully on releases/** or production branches
+- **Build Infrastructure**: Triggered after Build Artifacts completes successfully on **any branch** (runs on the same branch as Build Artifacts)
 
 For feature branches, you may need to trigger **Build Artifacts** manually first.
 
