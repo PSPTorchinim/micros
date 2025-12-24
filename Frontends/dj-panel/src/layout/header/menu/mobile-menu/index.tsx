@@ -19,13 +19,14 @@ export const MobileMenu = (props: any) => {
     }
   };
 
-  const toggleDropdown = (text: string) => {
+  const toggleDropdown = (id: string | number) => {
     setOpenDropdowns((prev) => {
       const next = new Set(prev);
-      if (next.has(text)) {
-        next.delete(text);
+      const key = String(id);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(text);
+        next.add(key);
       }
       return next;
     });
@@ -45,7 +46,8 @@ export const MobileMenu = (props: any) => {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
           const isAction = element.NavigationAction === 'Action';
-          const isDropdownOpen = openDropdowns.has(element.text);
+          const itemId = element.id || element.text;
+          const isDropdownOpen = openDropdowns.has(String(itemId));
 
           return (
             <div key={element.text} className="navbar-mobile-item">
@@ -62,6 +64,7 @@ export const MobileMenu = (props: any) => {
                     {element.text}
                   </Button>
                 ) : element.url && !hasChildren ? (
+                  // Items with URLs and no children are direct links
                   <Link
                     to={element.url}
                     className="thq-link thq-body-small"
@@ -70,13 +73,9 @@ export const MobileMenu = (props: any) => {
                     {element.text}
                   </Link>
                 ) : (
+                  // Items without URLs or with children are expandable/static labels
                   <span
                     className={`thq-link thq-body-small ${hasChildren ? 'navbar-mobile-item-with-children' : ''}`}
-                    onClick={() => {
-                      if (hasChildren) {
-                        toggleDropdown(element.text);
-                      }
-                    }}
                   >
                     {element.text}
                   </span>
@@ -84,7 +83,7 @@ export const MobileMenu = (props: any) => {
                 {hasChildren && (
                   <button
                     className="navbar-mobile-dropdown-toggle"
-                    onClick={() => toggleDropdown(element.text)}
+                    onClick={() => toggleDropdown(itemId)}
                     aria-label={`Toggle ${element.text} submenu`}
                     aria-expanded={isDropdownOpen}
                   >
