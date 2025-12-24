@@ -1075,7 +1075,7 @@ jobs:
                 echo "⏳ Waiting for app to stop..."
                 stop_wait=0
                 stop_state="UNKNOWN"
-                max_stop_iterations=90
+                max_stop_iterations=1000
                 while [ $stop_wait -lt $max_stop_iterations ]; do
                   stop_state="$(get_state || echo 'UNKNOWN')"
                   [ -z "$stop_state" ] && stop_state="UNKNOWN"
@@ -1116,7 +1116,7 @@ jobs:
             }
 
             health_check=0
-            max_health_checks=180
+            max_health_checks=1000
             app_state="UNKNOWN"
             last_detailed_check=0
             previous_state="UNKNOWN"
