@@ -8,10 +8,27 @@ import { Button } from '../../../../components/atoms';
 
 export const MobileMenu = (props: any) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
   const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+    // Reset all dropdowns when closing the menu
+    if (isMenuOpen) {
+      setOpenDropdowns(new Set());
+    }
+  };
+
+  const toggleDropdown = (text: string) => {
+    setOpenDropdowns((prev) => {
+      const next = new Set(prev);
+      if (next.has(text)) {
+        next.delete(text);
+      } else {
+        next.add(text);
+      }
+      return next;
+    });
   };
 
   const renderLinks = (links: any[]) => {
@@ -28,34 +45,59 @@ export const MobileMenu = (props: any) => {
           const hasChildren =
             Array.isArray(element.children) && element.children.length > 0;
           const isAction = element.NavigationAction === 'Action';
+          const isDropdownOpen = openDropdowns.has(element.text);
 
           return (
             <div key={element.text} className="navbar-mobile-item">
-              {isAction ? (
-                <Button
-                  variant="flat"
-                  className="thq-link thq-body-small"
-                  onClick={(e: React.MouseEvent) => {
-                    e.preventDefault();
-                    handleAction(element.text, () => setIsMenuOpen(false));
-                  }}
-                >
-                  {element.text}
-                </Button>
-              ) : element.url ? (
-                <Link
-                  to={element.url}
-                  className="thq-link thq-body-small"
-                  onClick={() => {
-                    if (!hasChildren) setIsMenuOpen(false);
-                  }}
-                >
-                  {element.text}
-                </Link>
-              ) : (
-                <span className="thq-link thq-body-small">{element.text}</span>
-              )}
-              {hasChildren && (
+              <div className="navbar-mobile-item-content">
+                {isAction ? (
+                  <Button
+                    variant="flat"
+                    className="thq-link thq-body-small"
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      handleAction(element.text, () => setIsMenuOpen(false));
+                    }}
+                  >
+                    {element.text}
+                  </Button>
+                ) : element.url && !hasChildren ? (
+                  <Link
+                    to={element.url}
+                    className="thq-link thq-body-small"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {element.text}
+                  </Link>
+                ) : (
+                  <span
+                    className={`thq-link thq-body-small ${hasChildren ? 'navbar-mobile-item-with-children' : ''}`}
+                    onClick={() => {
+                      if (hasChildren) {
+                        toggleDropdown(element.text);
+                      }
+                    }}
+                  >
+                    {element.text}
+                  </span>
+                )}
+                {hasChildren && (
+                  <button
+                    className="navbar-mobile-dropdown-toggle"
+                    onClick={() => toggleDropdown(element.text)}
+                    aria-label={`Toggle ${element.text} submenu`}
+                    aria-expanded={isDropdownOpen}
+                  >
+                    <svg
+                      viewBox="0 0 1024 1024"
+                      className={`navbar-mobile-dropdown-icon ${isDropdownOpen ? 'open' : ''}`}
+                    >
+                      <path d="M316 366l196 196 196-196 60 60-256 256-256-256z"></path>
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {hasChildren && isDropdownOpen && (
                 <div className="navbar-mobile-dropdown">
                   {renderLinks(element.children)}
                 </div>
