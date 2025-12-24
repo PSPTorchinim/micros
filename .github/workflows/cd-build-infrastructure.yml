@@ -53,6 +53,9 @@ jobs:
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
+        env:
+          # Override GITHUB_REF when triggered by workflow_run to use the triggering workflow's branch
+          GITHUB_REF: ${{ github.event_name == 'workflow_run' && format('refs/heads/{0}', github.event.workflow_run.head_branch) || github.ref }}
 
       - name: Compute env slug
         id: compute_slug
