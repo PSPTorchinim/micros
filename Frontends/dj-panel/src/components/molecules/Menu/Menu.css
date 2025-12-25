@@ -100,6 +100,11 @@
   gap: var(--dl-space-space-halfunit);
 }
 
+.menu-item-content > *:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .menu-item-with-children {
   cursor: pointer;
   user-select: none;
@@ -116,6 +121,7 @@
   justify-content: center;
   color: var(--dl-color-theme-text-primary);
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .menu-dropdown-toggle:hover {
