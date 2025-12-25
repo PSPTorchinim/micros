@@ -17,7 +17,9 @@ const meta = {
       useEffect(() => {
         // Auto-open the mobile menu after a short delay
         const timer = setTimeout(() => {
-          const burgerMenu = document.querySelector('.navbar-burger-menu') as HTMLElement;
+          const burgerMenu = document.querySelector(
+            '.navbar-burger-menu',
+          ) as HTMLElement;
           if (burgerMenu) {
             burgerMenu.click();
           }

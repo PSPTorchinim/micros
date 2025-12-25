@@ -115,7 +115,8 @@ export const AllSkeletonTypes: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Display all available skeleton types in one story for comparison',
+        story:
+          'Display all available skeleton types in one story for comparison',
       },
     },
   },
