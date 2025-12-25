@@ -9,13 +9,6 @@ const meta = {
     layout: 'padded',
   },
   tags: ['autodocs'],
-  argTypes: {
-    variant: {
-      control: 'radio',
-      options: ['mobile', 'desktop'],
-      description: 'Menu variant - mobile or desktop',
-    },
-  },
 } satisfies Meta<typeof Menu>;
 
 export default meta;
@@ -256,36 +249,40 @@ const linksWithNestedDropdowns = [
   },
 ];
 
-// Desktop Stories
-export const DesktopDefault: Story = {
+// Responsive stories - component adapts based on viewport
+export const Default: Story = {
   args: {
-    variant: 'desktop',
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Beat Blaster Logo',
     links: sampleLinks,
   },
 };
 
-export const DesktopWithLoginLinks: Story = {
+export const WithLoginLinks: Story = {
   args: {
-    variant: 'desktop',
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithAuth,
   },
 };
 
-export const DesktopWithDropdowns: Story = {
+export const WithDropdowns: Story = {
   args: {
-    variant: 'desktop',
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithDropdowns,
   },
 };
 
-export const DesktopWithNestedDropdowns: Story = {
+export const WithNestedDropdowns: Story = {
   args: {
-    variant: 'desktop',
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithNestedDropdowns,
   },
 };
 
-// Mobile Stories
+// Mobile viewport stories - same component, different viewport
 const MobileDecorator = (Story: any) => {
   useEffect(() => {
     // Auto-open the mobile menu after a short delay
@@ -302,9 +299,8 @@ const MobileDecorator = (Story: any) => {
   return <Story />;
 };
 
-export const MobileDefault: Story = {
+export const MobileViewDefault: Story = {
   args: {
-    variant: 'mobile',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
     links: sampleLinks,
@@ -317,9 +313,8 @@ export const MobileDefault: Story = {
   decorators: [MobileDecorator],
 };
 
-export const MobileWithLoginLinks: Story = {
+export const MobileViewWithLoginLinks: Story = {
   args: {
-    variant: 'mobile',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithAuth,
@@ -332,9 +327,8 @@ export const MobileWithLoginLinks: Story = {
   decorators: [MobileDecorator],
 };
 
-export const MobileWithDropdowns: Story = {
+export const MobileViewWithDropdowns: Story = {
   args: {
-    variant: 'mobile',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithDropdowns,
@@ -347,9 +341,8 @@ export const MobileWithDropdowns: Story = {
   decorators: [MobileDecorator],
 };
 
-export const MobileWithNestedDropdowns: Story = {
+export const MobileViewWithNestedDropdowns: Story = {
   args: {
-    variant: 'mobile',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithNestedDropdowns,
@@ -362,9 +355,8 @@ export const MobileWithNestedDropdowns: Story = {
   decorators: [MobileDecorator],
 };
 
-export const MobileTabletView: Story = {
+export const TabletView: Story = {
   args: {
-    variant: 'mobile',
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
     links: linksWithDropdowns,

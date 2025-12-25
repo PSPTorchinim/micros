@@ -23,14 +23,12 @@ export interface MenuNavigationItem {
 }
 
 export interface MenuProps {
-  variant: 'mobile' | 'desktop';
   links?: MenuNavigationItem[];
   logoSrc?: string;
   logoAlt?: string;
 }
 
 export const Menu: React.FC<MenuProps> = ({
-  variant,
   links = [],
   logoSrc,
   logoAlt,
@@ -39,8 +37,6 @@ export const Menu: React.FC<MenuProps> = ({
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
   const [hoverDropdown, setHoverDropdown] = useState<string | null>(null);
   const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
-
-  const isMobile = variant === 'mobile';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -63,9 +59,7 @@ export const Menu: React.FC<MenuProps> = ({
   };
 
   const handleHoverDropdown = (text: string | null) => {
-    if (!isMobile) {
-      setHoverDropdown(text);
-    }
+    setHoverDropdown(text);
   };
 
   const handleKeyDown = (
@@ -74,13 +68,13 @@ export const Menu: React.FC<MenuProps> = ({
   ): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      if (!isMobile && text) {
+      if (text) {
         handleHoverDropdown(hoverDropdown === text ? null : text);
       }
     }
   };
 
-  const renderLinks = (items: MenuNavigationItem[]) => {
+  const renderMobileLinks = (items: MenuNavigationItem[]) => {
     return items
       .filter((element) => hasPermission(element.permissions))
       .map((element) => {
@@ -97,109 +91,124 @@ export const Menu: React.FC<MenuProps> = ({
           Array.isArray(element.children) && element.children.length > 0;
         const isAction = element.NavigationAction === 'Action';
         const itemId = element.id || text;
-        const isDropdownOpen = isMobile
-          ? openDropdowns.has(String(itemId))
-          : hoverDropdown === text;
+        const isDropdownOpen = openDropdowns.has(String(itemId));
 
-        if (isMobile) {
-          return (
-            <div key={text} className="menu-mobile-item">
-              <div className="menu-mobile-item-content">
-                {isAction ? (
-                  <Button
-                    variant="flat"
-                    className="thq-link thq-body-small"
-                    onClick={(e: React.MouseEvent) => {
-                      e.preventDefault();
-                      handleAction(text, () => setIsMenuOpen(false));
-                    }}
-                  >
-                    {text}
-                  </Button>
-                ) : element.url && !hasChildren ? (
-                  <Link
-                    to={element.url}
-                    className="thq-link thq-body-small"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {text}
-                  </Link>
-                ) : (
-                  <span
-                    className={`thq-link thq-body-small ${hasChildren ? 'menu-mobile-item-with-children' : ''}`}
-                  >
-                    {text}
-                  </span>
-                )}
-                {hasChildren && (
-                  <button
-                    className="menu-mobile-dropdown-toggle"
-                    onClick={() => toggleDropdown(itemId)}
-                    aria-label={`Toggle ${text} submenu`}
-                    aria-expanded={isDropdownOpen}
-                  >
-                    <svg
-                      viewBox="0 0 1024 1024"
-                      className={`menu-mobile-dropdown-icon ${isDropdownOpen ? 'open' : ''}`}
-                    >
-                      <path d="M316 366l196 196 196-196 60 60-256 256-256-256z"></path>
-                    </svg>
-                  </button>
-                )}
-              </div>
-              {hasChildren && isDropdownOpen && (
-                <div className="menu-mobile-dropdown">
-                  {renderLinks(element.children)}
-                </div>
-              )}
-            </div>
-          );
-        } else {
-          // Desktop rendering
-          return (
-            <div
-              key={text}
-              className="menu-desktop-item"
-              onMouseEnter={() => handleHoverDropdown(text)}
-              onMouseLeave={() => handleHoverDropdown(null)}
-              onKeyDown={(e) => handleKeyDown(e, text)}
-              tabIndex={0}
-              aria-haspopup={!!element.children}
-              aria-expanded={isDropdownOpen}
-            >
+        return (
+          <div key={text} className="menu-mobile-item">
+            <div className="menu-mobile-item-content">
               {isAction ? (
                 <Button
                   variant="flat"
                   className="thq-link thq-body-small"
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.preventDefault();
-                    handleAction(text);
+                    handleAction(text, () => setIsMenuOpen(false));
                   }}
                 >
                   {text}
                 </Button>
-              ) : element.url ? (
-                <Link to={element.url} className="thq-link thq-body-small">
+              ) : element.url && !hasChildren ? (
+                <Link
+                  to={element.url}
+                  className="thq-link thq-body-small"
+                  onClick={() => setIsMenuOpen(false)}
+                >
                   {text}
                 </Link>
               ) : (
-                <span className="thq-link thq-body-small">{text}</span>
-              )}
-              {element.children && (
-                <div
-                  className={`menu-desktop-dropdown ${
-                    isDropdownOpen ? 'visible' : 'hidden'
-                  }`}
-                  role="menu"
-                  onMouseEnter={() => handleHoverDropdown(text)}
-                  onMouseLeave={() => handleHoverDropdown(null)}
+                <span
+                  className={`thq-link thq-body-small ${hasChildren ? 'menu-mobile-item-with-children' : ''}`}
                 >
-                  {renderLinks(element.children)}
-                </div>
+                  {text}
+                </span>
+              )}
+              {hasChildren && (
+                <button
+                  className="menu-mobile-dropdown-toggle"
+                  onClick={() => toggleDropdown(itemId)}
+                  aria-label={`Toggle ${text} submenu`}
+                  aria-expanded={isDropdownOpen}
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    className={`menu-mobile-dropdown-icon ${isDropdownOpen ? 'open' : ''}`}
+                  >
+                    <path d="M316 366l196 196 196-196 60 60-256 256-256-256z"></path>
+                  </svg>
+                </button>
               )}
             </div>
-          );
-        }
+            {hasChildren && isDropdownOpen && (
+              <div className="menu-mobile-dropdown">
+                {renderMobileLinks(element.children)}
+              </div>
+            )}
+          </div>
+        );
+      });
+  };
+
+  const renderDesktopLinks = (items: MenuNavigationItem[]) => {
+    return items
+      .filter((element) => hasPermission(element.permissions))
+      .map((element) => {
+        const text = element.text;
+        const authState = element.AuthState || 'All';
+        const shouldShow =
+          authState === 'All' ||
+          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
+          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
+
+        if (!shouldShow) return null;
+
+        const hasChildren =
+          Array.isArray(element.children) && element.children.length > 0;
+        const isAction = element.NavigationAction === 'Action';
+        const isDropdownOpen = hoverDropdown === text;
+
+        return (
+          <div
+            key={text}
+            className="menu-desktop-item"
+            onMouseEnter={() => handleHoverDropdown(text)}
+            onMouseLeave={() => handleHoverDropdown(null)}
+            onKeyDown={(e) => handleKeyDown(e, text)}
+            tabIndex={0}
+            aria-haspopup={!!element.children}
+            aria-expanded={isDropdownOpen}
+          >
+            {isAction ? (
+              <Button
+                variant="flat"
+                className="thq-link thq-body-small"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAction(text);
+                }}
+              >
+                {text}
+              </Button>
+            ) : element.url ? (
+              <Link to={element.url} className="thq-link thq-body-small">
+                {text}
+              </Link>
+            ) : (
+              <span className="thq-link thq-body-small">{text}</span>
+            )}
+            {element.children && (
+              <div
+                className={`menu-desktop-dropdown ${
+                  isDropdownOpen ? 'visible' : 'hidden'
+                }`}
+                role="menu"
+                onMouseEnter={() => handleHoverDropdown(text)}
+                onMouseLeave={() => handleHoverDropdown(null)}
+              >
+                {renderDesktopLinks(element.children)}
+              </div>
+            )}
+          </div>
+        );
       });
   };
 
@@ -218,7 +227,7 @@ export const Menu: React.FC<MenuProps> = ({
       ),
     [links, menuValueEquals],
   );
-  
+
   const loginLinks = useMemo(
     () =>
       links.filter((element) =>
@@ -227,60 +236,58 @@ export const Menu: React.FC<MenuProps> = ({
     [links, menuValueEquals],
   );
 
-  if (isMobile) {
-    return (
-      <>
-        <div
-          data-thq="thq-burger-menu"
-          className="menu-burger-menu"
-          onClick={toggleMenu}
-        >
-          <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
-            <path d="M128 554.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 298.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 810.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-          </svg>
-        </div>
-        <div
-          data-thq="thq-mobile-menu"
-          className="menu-mobile-menu"
-          style={{ display: isMenuOpen ? 'block' : 'none' }}
-        >
-          <div className="menu-mobile-nav">
-            <div className="menu-mobile-top">
-              <img
-                alt={logoAlt}
-                src={logoSrc}
-                className="menu-mobile-logo"
-              />
-              <div
-                data-thq="thq-close-menu"
-                className="menu-mobile-close-menu"
-                onClick={toggleMenu}
-              >
-                <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
-                  <path d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"></path>
-                </svg>
-              </div>
-            </div>
-            <nav className="menu-mobile-links">
-              {renderLinks(
-                mainLinks.sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0)),
-              )}
-            </nav>
-          </div>
-          <div className="menu-mobile-buttons">
-            {renderLinks(
-              loginLinks.sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0)),
-            )}
-          </div>
-        </div>
-      </>
-    );
-  } else {
-    return (
+  return (
+    <>
+      {/* Desktop Menu */}
       <div data-thq="thq-navbar-nav" className="menu-desktop-menu">
-        <nav className="menu-desktop-links">{renderLinks(mainLinks)}</nav>
-        <div className="menu-desktop-links">{renderLinks(loginLinks)}</div>
+        <nav className="menu-desktop-links">{renderDesktopLinks(mainLinks)}</nav>
+        <div className="menu-desktop-links">{renderDesktopLinks(loginLinks)}</div>
       </div>
-    );
-  }
+
+      {/* Mobile Menu */}
+      <div
+        data-thq="thq-burger-menu"
+        className="menu-burger-menu"
+        onClick={toggleMenu}
+      >
+        <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
+          <path d="M128 554.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 298.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 810.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
+        </svg>
+      </div>
+      <div
+        data-thq="thq-mobile-menu"
+        className="menu-mobile-menu"
+        style={{ display: isMenuOpen ? 'block' : 'none' }}
+      >
+        <div className="menu-mobile-nav">
+          <div className="menu-mobile-top">
+            <img
+              alt={logoAlt}
+              src={logoSrc}
+              className="menu-mobile-logo"
+            />
+            <div
+              data-thq="thq-close-menu"
+              className="menu-mobile-close-menu"
+              onClick={toggleMenu}
+            >
+              <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
+                <path d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"></path>
+              </svg>
+            </div>
+          </div>
+          <nav className="menu-mobile-links">
+            {renderMobileLinks(
+              mainLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
+            )}
+          </nav>
+        </div>
+        <div className="menu-mobile-buttons">
+          {renderMobileLinks(
+            loginLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
+          )}
+        </div>
+      </div>
+    </>
+  );
 };

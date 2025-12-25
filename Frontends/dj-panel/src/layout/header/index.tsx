@@ -9,15 +9,13 @@ export const Header = (props: any): React.ReactElement => {
     <header className="navbar-container">
       <header data-thq="thq-navbar" className="navbar-navbar-interactive">
         <img alt={props.logoAlt} src={props.logoSrc} className="navbar-image" />
-        <Menu variant="desktop" links={props.links} />
+        <Menu
+          links={props.links}
+          logoAlt={props.logoAlt}
+          logoSrc={props.logoSrc}
+        />
         <div className="navbar-actions">
           <ThemeToggle />
-          <Menu
-            variant="mobile"
-            links={props.links}
-            logoAlt={props.logoAlt}
-            logoSrc={props.logoSrc}
-          />
         </div>
       </header>
     </header>
