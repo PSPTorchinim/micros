@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useEffect } from 'react';
 import { MobileMenu } from './index';
 
 const meta = {
@@ -11,6 +12,21 @@ const meta = {
     },
   },
   tags: ['autodocs'],
+  decorators: [
+    (Story) => {
+      useEffect(() => {
+        // Auto-open the mobile menu after a short delay
+        const timer = setTimeout(() => {
+          const burgerMenu = document.querySelector('.navbar-burger-menu') as HTMLElement;
+          if (burgerMenu) {
+            burgerMenu.click();
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }, []);
+      return <Story />;
+    },
+  ],
 } satisfies Meta<typeof MobileMenu>;
 
 export default meta;
