@@ -26,8 +26,19 @@ export { MusicApi, MusicContentType, MusicHttpClient } from './music/apiMap';
 export { PartyApi, PartyContentType, PartyHttpClient } from './party/apiMap';
 
 
+// Injected secure_key header interceptor for all services
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+const __servicesWithInterceptor = [microservicesClient?.brand?.instance, microservicesClient?.documents?.instance, microservicesClient?.gear?.instance, microservicesClient?.identity?.instance, microservicesClient?.mailing?.instance, microservicesClient?.music?.instance, microservicesClient?.party?.instance];
+__servicesWithInterceptor.forEach(instance => {
+  if (instance && instance.interceptors && instance.interceptors.request && __secureKey) {
+    instance.interceptors.request.use(config => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = __secureKey;
+      return config;
+    });
+  }
+});
 import { ApiConfig } from './brand/apiMap';
-
 
 const NUMBER_OF_RETRIES = 3;
 
