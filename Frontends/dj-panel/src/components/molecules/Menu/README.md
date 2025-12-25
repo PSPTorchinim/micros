@@ -5,12 +5,20 @@ A unified, responsive menu component that automatically adapts between mobile an
 ## Features
 
 - **Truly Responsive**: Automatically switches between mobile and desktop modes via CSS media queries (no prop needed)
-- **Single Codebase**: One component that renders both mobile and desktop markup
+- **Unified Rendering**: Single `renderLinks` function for both mobile and desktop with CSS handling visual differences
 - **Authentication Support**: Show/hide menu items based on auth state
 - **Permission-based Filtering**: Control menu visibility based on user permissions
 - **Nested Dropdowns**: Support for multi-level navigation (both mobile and desktop)
 - **Action Handling**: Support for action items (e.g., logout)
 - **Menu Categories**: Separate Main and Login menu sections
+
+## Implementation
+
+The component uses a unified approach:
+- **One render function**: Single `renderLinks()` function generates the same markup for both mobile and desktop
+- **CSS-driven styling**: Media queries control layout, visibility, and interaction patterns
+- **Responsive behavior**: Click-based dropdowns on mobile, hover-based on desktop (via CSS)
+- **No duplicate code**: Shared logic and markup with styling differences handled by CSS
 
 ## Usage
 

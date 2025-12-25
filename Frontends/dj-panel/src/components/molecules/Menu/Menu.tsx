@@ -74,7 +74,7 @@ export const Menu: React.FC<MenuProps> = ({
     }
   };
 
-  const renderMobileLinks = (items: MenuNavigationItem[]) => {
+  const renderLinks = (items: MenuNavigationItem[]): React.ReactNode => {
     return items
       .filter((element) => hasPermission(element.permissions))
       .map((element) => {
@@ -91,11 +91,21 @@ export const Menu: React.FC<MenuProps> = ({
           Array.isArray(element.children) && element.children.length > 0;
         const isAction = element.NavigationAction === 'Action';
         const itemId = element.id || text;
-        const isDropdownOpen = openDropdowns.has(String(itemId));
+        const isClickDropdownOpen = openDropdowns.has(String(itemId));
+        const isHoverDropdownOpen = hoverDropdown === text;
 
         return (
-          <div key={text} className="menu-mobile-item">
-            <div className="menu-mobile-item-content">
+          <div
+            key={text}
+            className="menu-item"
+            onMouseEnter={() => handleHoverDropdown(text)}
+            onMouseLeave={() => handleHoverDropdown(null)}
+            onKeyDown={(e) => handleKeyDown(e, text)}
+            tabIndex={0}
+            aria-haspopup={!!element.children}
+            aria-expanded={isClickDropdownOpen || isHoverDropdownOpen}
+          >
+            <div className="menu-item-content">
               {isAction ? (
                 <Button
                   variant="flat"
@@ -117,94 +127,37 @@ export const Menu: React.FC<MenuProps> = ({
                 </Link>
               ) : (
                 <span
-                  className={`thq-link thq-body-small ${hasChildren ? 'menu-mobile-item-with-children' : ''}`}
+                  className={`thq-link thq-body-small ${hasChildren ? 'menu-item-with-children' : ''}`}
                 >
                   {text}
                 </span>
               )}
               {hasChildren && (
                 <button
-                  className="menu-mobile-dropdown-toggle"
+                  className="menu-dropdown-toggle"
                   onClick={() => toggleDropdown(itemId)}
                   aria-label={`Toggle ${text} submenu`}
-                  aria-expanded={isDropdownOpen}
+                  aria-expanded={isClickDropdownOpen}
                 >
                   <svg
                     viewBox="0 0 1024 1024"
-                    className={`menu-mobile-dropdown-icon ${isDropdownOpen ? 'open' : ''}`}
+                    className={`menu-dropdown-icon ${isClickDropdownOpen ? 'open' : ''}`}
                   >
                     <path d="M316 366l196 196 196-196 60 60-256 256-256-256z"></path>
                   </svg>
                 </button>
               )}
             </div>
-            {hasChildren && isDropdownOpen && (
-              <div className="menu-mobile-dropdown">
-                {renderMobileLinks(element.children)}
-              </div>
-            )}
-          </div>
-        );
-      });
-  };
-
-  const renderDesktopLinks = (items: MenuNavigationItem[]) => {
-    return items
-      .filter((element) => hasPermission(element.permissions))
-      .map((element) => {
-        const text = element.text;
-        const authState = element.AuthState || 'All';
-        const shouldShow =
-          authState === 'All' ||
-          (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
-          (authState === 'OnlyUnauthenticated' && !isAuthenticated());
-
-        if (!shouldShow) return null;
-
-        const hasChildren =
-          Array.isArray(element.children) && element.children.length > 0;
-        const isAction = element.NavigationAction === 'Action';
-        const isDropdownOpen = hoverDropdown === text;
-
-        return (
-          <div
-            key={text}
-            className="menu-desktop-item"
-            onMouseEnter={() => handleHoverDropdown(text)}
-            onMouseLeave={() => handleHoverDropdown(null)}
-            onKeyDown={(e) => handleKeyDown(e, text)}
-            tabIndex={0}
-            aria-haspopup={!!element.children}
-            aria-expanded={isDropdownOpen}
-          >
-            {isAction ? (
-              <Button
-                variant="flat"
-                className="thq-link thq-body-small"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleAction(text);
-                }}
-              >
-                {text}
-              </Button>
-            ) : element.url ? (
-              <Link to={element.url} className="thq-link thq-body-small">
-                {text}
-              </Link>
-            ) : (
-              <span className="thq-link thq-body-small">{text}</span>
-            )}
             {element.children && (
               <div
-                className={`menu-desktop-dropdown ${
-                  isDropdownOpen ? 'visible' : 'hidden'
+                className={`menu-dropdown ${
+                  isClickDropdownOpen || isHoverDropdownOpen ? 'visible' : 'hidden'
                 }`}
                 role="menu"
                 onMouseEnter={() => handleHoverDropdown(text)}
                 onMouseLeave={() => handleHoverDropdown(null)}
               >
-                {renderDesktopLinks(element.children)}
+                {renderLinks(element.children)}
               </div>
             )}
           </div>
@@ -240,8 +193,8 @@ export const Menu: React.FC<MenuProps> = ({
     <>
       {/* Desktop Menu */}
       <div data-thq="thq-navbar-nav" className="menu-desktop-menu">
-        <nav className="menu-desktop-links">{renderDesktopLinks(mainLinks)}</nav>
-        <div className="menu-desktop-links">{renderDesktopLinks(loginLinks)}</div>
+        <nav className="menu-links">{renderLinks(mainLinks)}</nav>
+        <div className="menu-links">{renderLinks(loginLinks)}</div>
       </div>
 
       {/* Mobile Menu */}
@@ -250,7 +203,7 @@ export const Menu: React.FC<MenuProps> = ({
         className="menu-burger-menu"
         onClick={toggleMenu}
       >
-        <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
+        <svg viewBox="0 0 1024 1024" className="menu-icon">
           <path d="M128 554.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 298.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 810.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
         </svg>
       </div>
@@ -271,19 +224,19 @@ export const Menu: React.FC<MenuProps> = ({
               className="menu-mobile-close-menu"
               onClick={toggleMenu}
             >
-              <svg viewBox="0 0 1024 1024" className="menu-mobile-icon">
+              <svg viewBox="0 0 1024 1024" className="menu-icon">
                 <path d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"></path>
               </svg>
             </div>
           </div>
-          <nav className="menu-mobile-links">
-            {renderMobileLinks(
+          <nav className="menu-links">
+            {renderLinks(
               mainLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
             )}
           </nav>
         </div>
         <div className="menu-mobile-buttons">
-          {renderMobileLinks(
+          {renderLinks(
             loginLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
           )}
         </div>
