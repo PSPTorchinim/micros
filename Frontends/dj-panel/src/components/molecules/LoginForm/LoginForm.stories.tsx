@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { LoginForm } from './LoginForm';
-import { MemoryRouter } from 'react-router-dom';
 
 const meta = {
   title: 'Molecules/LoginForm',
@@ -9,13 +8,6 @@ const meta = {
     layout: 'centered',
   },
   tags: ['autodocs'],
-  decorators: [
-    (Story) => (
-      <MemoryRouter>
-        <Story />
-      </MemoryRouter>
-    ),
-  ],
   argTypes: {
     onSubmit: {
       action: 'submitted',

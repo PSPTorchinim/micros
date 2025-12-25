@@ -1,14 +1,35 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Header } from './index';
+import { useEffect } from 'react';
+import { MobileMenu } from './index';
 
 const meta = {
-  title: 'Layout/Header',
-  component: Header,
+  title: 'Layout/Header/Menu/MobileMenu',
+  component: MobileMenu,
   parameters: {
-    layout: 'fullscreen',
+    layout: 'padded',
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof Header>;
+  decorators: [
+    (Story) => {
+      useEffect(() => {
+        // Auto-open the mobile menu after a short delay
+        const timer = setTimeout(() => {
+          const burgerMenu = document.querySelector(
+            '.navbar-burger-menu',
+          ) as HTMLElement;
+          if (burgerMenu) {
+            burgerMenu.click();
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }, []);
+      return <Story />;
+    },
+  ],
+} satisfies Meta<typeof MobileMenu>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -104,7 +125,7 @@ export const WithLoginLinks: Story = {
   },
 };
 
-export const MinimalHeader: Story = {
+export const WithNestedMenus: Story = {
   args: {
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
@@ -119,82 +140,75 @@ export const MinimalHeader: Story = {
       },
       {
         id: 2,
-        text: 'Contact',
-        url: '/contact',
+        text: 'Services',
         NavigationOrder: 1,
         Menu: 'Main',
         AuthState: 'All',
-      },
-    ],
-  },
-};
-
-export const ExtendedNavigation: Story = {
-  args: {
-    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
-    logoAlt: 'DJ Beat Blaster Logo',
-    links: [
-      {
-        id: 1,
-        text: 'Home',
-        url: '/',
-        NavigationOrder: 0,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 2,
-        text: 'About',
-        url: '/about',
-        NavigationOrder: 1,
-        Menu: 'Main',
-        AuthState: 'All',
+        children: [
+          {
+            id: 21,
+            text: 'DJ Sets',
+            url: '/services/dj-sets',
+            NavigationOrder: 0,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 22,
+            text: 'Private Events',
+            url: '/services/private-events',
+            NavigationOrder: 1,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 23,
+            text: 'Corporate Events',
+            url: '/services/corporate',
+            NavigationOrder: 2,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+        ],
       },
       {
         id: 3,
-        text: 'Events',
-        url: '/events',
+        text: 'Media',
         NavigationOrder: 2,
         Menu: 'Main',
         AuthState: 'All',
+        children: [
+          {
+            id: 31,
+            text: 'Photos',
+            url: '/media/photos',
+            NavigationOrder: 0,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 32,
+            text: 'Videos',
+            url: '/media/videos',
+            NavigationOrder: 1,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+        ],
       },
       {
         id: 4,
-        text: 'Music',
-        url: '/music',
+        text: 'Contact',
+        url: '/contact',
         NavigationOrder: 3,
         Menu: 'Main',
         AuthState: 'All',
       },
-      {
-        id: 5,
-        text: 'Gallery',
-        url: '/gallery',
-        NavigationOrder: 4,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 6,
-        text: 'Blog',
-        url: '/blog',
-        NavigationOrder: 5,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 7,
-        text: 'Contact',
-        url: '/contact',
-        NavigationOrder: 6,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
     ],
   },
 };
 
-export const WithNestedMenus: Story = {
+export const WithDeeplyNestedMenus: Story = {
   args: {
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
@@ -307,5 +321,68 @@ export const WithNestedMenus: Story = {
         AuthState: 'OnlyUnauthenticated',
       },
     ],
+  },
+};
+
+export const TabletView: Story = {
+  args: {
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Beat Blaster Logo',
+    links: [
+      {
+        id: 1,
+        text: 'Home',
+        url: '/',
+        NavigationOrder: 0,
+        Menu: 'Main',
+        AuthState: 'All',
+      },
+      {
+        id: 2,
+        text: 'Services',
+        NavigationOrder: 1,
+        Menu: 'Main',
+        AuthState: 'All',
+        children: [
+          {
+            id: 21,
+            text: 'DJ Sets',
+            url: '/services/dj-sets',
+            NavigationOrder: 0,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 22,
+            text: 'Private Events',
+            url: '/services/private-events',
+            NavigationOrder: 1,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+        ],
+      },
+      {
+        id: 3,
+        text: 'Media',
+        url: '/media',
+        NavigationOrder: 2,
+        Menu: 'Main',
+        AuthState: 'All',
+      },
+      {
+        id: 4,
+        text: 'Contact',
+        url: '/contact',
+        NavigationOrder: 3,
+        Menu: 'Main',
+        AuthState: 'All',
+      },
+    ],
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: 'tablet',
+    },
   },
 };

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ContentSkeleton } from './Skeleton';
+import { ContentSkeleton } from './ContentSkeleton';
 
 const meta = {
   title: 'Atoms/ContentSkeleton',
@@ -112,6 +112,14 @@ export const MultipleCards: Story = {
 };
 
 export const AllSkeletonTypes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Display all available skeleton types in one story for comparison',
+      },
+    },
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>

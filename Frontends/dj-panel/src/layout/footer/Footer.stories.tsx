@@ -15,13 +15,7 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-  decorators: [
-    (Story) => (
-      <BrowserRouter>
-        <Story />
-      </BrowserRouter>
-    ),
-  ],
+  decorators: [(Story) => <Story />],
 } satisfies Meta<typeof Footer>;
 
 export default meta;

@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Header } from './index';
+import { DesktopMenu } from './index';
 
 const meta = {
-  title: 'Layout/Header',
-  component: Header,
+  title: 'Layout/Header/Menu/DesktopMenu',
+  component: DesktopMenu,
   parameters: {
-    layout: 'fullscreen',
+    layout: 'padded',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof Header>;
+} satisfies Meta<typeof DesktopMenu>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -104,7 +104,7 @@ export const WithLoginLinks: Story = {
   },
 };
 
-export const MinimalHeader: Story = {
+export const WithDropdowns: Story = {
   args: {
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
@@ -119,82 +119,75 @@ export const MinimalHeader: Story = {
       },
       {
         id: 2,
-        text: 'Contact',
-        url: '/contact',
+        text: 'Services',
         NavigationOrder: 1,
         Menu: 'Main',
         AuthState: 'All',
-      },
-    ],
-  },
-};
-
-export const ExtendedNavigation: Story = {
-  args: {
-    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
-    logoAlt: 'DJ Beat Blaster Logo',
-    links: [
-      {
-        id: 1,
-        text: 'Home',
-        url: '/',
-        NavigationOrder: 0,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 2,
-        text: 'About',
-        url: '/about',
-        NavigationOrder: 1,
-        Menu: 'Main',
-        AuthState: 'All',
+        children: [
+          {
+            id: 21,
+            text: 'DJ Sets',
+            url: '/services/dj-sets',
+            NavigationOrder: 0,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 22,
+            text: 'Private Events',
+            url: '/services/private-events',
+            NavigationOrder: 1,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 23,
+            text: 'Corporate Events',
+            url: '/services/corporate',
+            NavigationOrder: 2,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+        ],
       },
       {
         id: 3,
-        text: 'Events',
-        url: '/events',
+        text: 'Media',
         NavigationOrder: 2,
         Menu: 'Main',
         AuthState: 'All',
+        children: [
+          {
+            id: 31,
+            text: 'Photos',
+            url: '/media/photos',
+            NavigationOrder: 0,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+          {
+            id: 32,
+            text: 'Videos',
+            url: '/media/videos',
+            NavigationOrder: 1,
+            Menu: 'Main',
+            AuthState: 'All',
+          },
+        ],
       },
       {
         id: 4,
-        text: 'Music',
-        url: '/music',
+        text: 'Contact',
+        url: '/contact',
         NavigationOrder: 3,
         Menu: 'Main',
         AuthState: 'All',
       },
-      {
-        id: 5,
-        text: 'Gallery',
-        url: '/gallery',
-        NavigationOrder: 4,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 6,
-        text: 'Blog',
-        url: '/blog',
-        NavigationOrder: 5,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
-      {
-        id: 7,
-        text: 'Contact',
-        url: '/contact',
-        NavigationOrder: 6,
-        Menu: 'Main',
-        AuthState: 'All',
-      },
     ],
   },
 };
 
-export const WithNestedMenus: Story = {
+export const WithNestedDropdowns: Story = {
   args: {
     logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
     logoAlt: 'DJ Beat Blaster Logo',
@@ -297,14 +290,6 @@ export const WithNestedMenus: Story = {
         NavigationOrder: 3,
         Menu: 'Main',
         AuthState: 'All',
-      },
-      {
-        id: 5,
-        text: 'Login',
-        url: '/login',
-        NavigationOrder: 4,
-        Menu: 'Login',
-        AuthState: 'OnlyUnauthenticated',
       },
     ],
   },
