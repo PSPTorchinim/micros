@@ -111,10 +111,7 @@ export const MultipleCards: Story = {
   },
 };
 
-export const AllSkeletonTypes: Story = {
-  args: {
-    type: 'page',
-  },
+export const AllSkeletonTypes = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
