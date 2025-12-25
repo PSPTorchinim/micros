@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import './Menu.css';
 import { useMenuLogic } from './menuUtils';
 import { ConfigurationMenuEnum } from '../../../models/strapi/strapiMap';
 import { Button } from '../../atoms';
+import type {
+  PageAuthStateEnum1,
+  PageMenuEnum1,
+  PageNavigationActionEnum1,
+} from '../../../models/strapi/strapiMap';
+
+export interface MenuNavigationItem {
+  id: number;
+  text: string;
+  url?: string;
+  children?: MenuNavigationItem[];
+  NavigationOrder?: number;
+  Menu?: PageMenuEnum1;
+  AuthState?: PageAuthStateEnum1;
+  NavigationAction?: PageNavigationActionEnum1;
+  permissions?: string[];
+}
 
 export interface MenuProps {
   variant: 'mobile' | 'desktop';
-  links?: any[];
+  links?: MenuNavigationItem[];
   logoSrc?: string;
   logoAlt?: string;
 }
@@ -63,11 +80,11 @@ export const Menu: React.FC<MenuProps> = ({
     }
   };
 
-  const renderLinks = (items: any[]) => {
+  const renderLinks = (items: MenuNavigationItem[]) => {
     return items
-      .filter((element: any) => hasPermission(element.permissions))
-      .map((element: any) => {
-        const text = element.text || element.Title;
+      .filter((element) => hasPermission(element.permissions))
+      .map((element) => {
+        const text = element.text;
         const authState = element.AuthState || 'All';
         const shouldShow =
           authState === 'All' ||
@@ -186,19 +203,28 @@ export const Menu: React.FC<MenuProps> = ({
       });
   };
 
-  const menuValueEquals = (menuValue: any, enumValue: any) => {
+  const menuValueEquals = useCallback((menuValue: any, enumValue: any) => {
     if (!menuValue && !enumValue) return true;
     if (!menuValue || !enumValue) return false;
     return String(menuValue).toLowerCase() === String(enumValue).toLowerCase();
-  };
+  }, []);
 
-  const mainLinks = links.filter(
-    (element: any) =>
-      menuValueEquals(element.Menu, ConfigurationMenuEnum.Main) ||
-      element.Menu === undefined,
+  const mainLinks = useMemo(
+    () =>
+      links.filter(
+        (element) =>
+          menuValueEquals(element.Menu, ConfigurationMenuEnum.Main) ||
+          element.Menu === undefined,
+      ),
+    [links, menuValueEquals],
   );
-  const loginLinks = links.filter((element: any) =>
-    menuValueEquals(element.Menu, ConfigurationMenuEnum.Login),
+  
+  const loginLinks = useMemo(
+    () =>
+      links.filter((element) =>
+        menuValueEquals(element.Menu, ConfigurationMenuEnum.Login),
+      ),
+    [links, menuValueEquals],
   );
 
   if (isMobile) {
