@@ -111,7 +111,14 @@ export const MultipleCards: Story = {
   },
 };
 
-export const AllSkeletonTypes = {
+export const AllSkeletonTypes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Display all available skeleton types in one story for comparison',
+      },
+    },
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
