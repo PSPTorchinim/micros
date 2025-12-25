@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/react-webpack5';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../src/context/theme-context';
-import { AuthProvider } from '../src/providers/auth-provider';
+import { MockAuthProvider } from './mock-providers';
 import React from 'react';
 import '../src/index.css';
 
@@ -10,9 +10,9 @@ const preview: Preview = {
     (Story) => (
       <BrowserRouter>
         <ThemeProvider>
-          <AuthProvider>
+          <MockAuthProvider>
             <Story />
-          </AuthProvider>
+          </MockAuthProvider>
         </ThemeProvider>
       </BrowserRouter>
     ),
