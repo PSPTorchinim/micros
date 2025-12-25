@@ -137,11 +137,11 @@ export const Menu: React.FC<MenuProps> = ({
                   className="menu-dropdown-toggle"
                   onClick={() => toggleDropdown(itemId)}
                   aria-label={`Toggle ${text} submenu`}
-                  aria-expanded={isClickDropdownOpen}
+                  aria-expanded={isClickDropdownOpen || isHoverDropdownOpen}
                 >
                   <svg
                     viewBox="0 0 1024 1024"
-                    className={`menu-dropdown-icon ${isClickDropdownOpen ? 'open' : ''}`}
+                    className={`menu-dropdown-icon ${isClickDropdownOpen || isHoverDropdownOpen ? 'open' : ''}`}
                   >
                     <path d="M316 366l196 196 196-196 60 60-256 256-256-256z"></path>
                   </svg>
