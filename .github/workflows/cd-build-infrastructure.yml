@@ -1257,7 +1257,7 @@ jobs:
                     }
                   else
                     {
-                      hostname: ($service + "-" + $base),
+                      hostname: ($service + "." + $base),
                       service: ("http://" + $ip + ":" + $port)
                     }
                   end
@@ -1477,9 +1477,9 @@ jobs:
                 else
                   # Other environments: include environment prefix
                   if $service == "dj-panel" then
-                    $env + "-" + $base
+                    $env + "." + $base
                   else
-                    $service + "-" + $env + "." + $base
+                    $service + "." + $env + "." + $base
                   end
                 end
               )
