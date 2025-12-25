@@ -1,10 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-webpack5';
 import webpack from 'webpack';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -23,13 +18,15 @@ const config: StorybookConfig = {
     config.plugins = config.plugins || [];
     config.plugins.push(
       new webpack.DefinePlugin({
-        'process.env': JSON.stringify({
-          REACT_APP_API_SECURE_KEY: process.env.REACT_APP_API_SECURE_KEY || '',
-        }),
+        'process.env.REACT_APP_API_SECURE_KEY': JSON.stringify(
+          process.env.REACT_APP_API_SECURE_KEY || ''
+        ),
+        'process.env.REACT_APP_API_GATEWAY': JSON.stringify(
+          process.env.REACT_APP_API_GATEWAY || ''
+        ),
       }),
       new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
-        process: 'process/browser',
       })
     );
 
@@ -37,8 +34,8 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      buffer: path.resolve(__dirname, '../node_modules/buffer'),
-      process: path.resolve(__dirname, '../node_modules/process/browser'),
+      buffer: false,
+      process: false,
     };
 
     return config;
