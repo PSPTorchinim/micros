@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Header } from './index';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../../providers/auth-provider';
+import { ThemeProvider } from '../../context/theme-context';
 
 const meta = {
   title: 'Layout/Header',
@@ -13,9 +14,11 @@ const meta = {
   decorators: [
     (Story) => (
       <BrowserRouter>
-        <AuthProvider>
-          <Story />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Story />
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     ),
   ],
