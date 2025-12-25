@@ -56,6 +56,8 @@ export const Menu: React.FC<MenuProps> = ({
       }
       return next;
     });
+    // Clear hover state to prevent interference on touch devices
+    setHoverDropdown(null);
   };
 
   const handleHoverDropdown = (text: string | null) => {
