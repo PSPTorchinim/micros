@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StepsContainerBlock } from './index';
 
 const meta = {
-  title: 'Content Blocks/StepsContainerBlock',
+  title: 'Molecules/StepsContainerBlock',
   component: StepsContainerBlock,
   parameters: {
     layout: 'fullscreen',

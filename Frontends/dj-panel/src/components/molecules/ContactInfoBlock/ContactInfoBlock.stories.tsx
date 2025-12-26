@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ContactInfoBlock } from './index';
 
 const meta = {
-  title: 'Content Blocks/ContactInfoBlock',
+  title: 'Molecules/ContactInfoBlock',
   component: ContactInfoBlock,
   parameters: {
     layout: 'centered',

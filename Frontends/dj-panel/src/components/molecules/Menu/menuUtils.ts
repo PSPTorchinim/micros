@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useAuth } from '../../../hooks/use-auth';
+import { useAuth } from '../../../hooks/use-auth/use-auth';
 
 export function useMenuLogic() {
   const { token, user, logout } = useAuth();

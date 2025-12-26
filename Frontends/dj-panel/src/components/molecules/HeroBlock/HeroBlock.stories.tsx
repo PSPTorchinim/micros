@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HeroBlock } from './index';
 
 const meta = {
-  title: 'Content Blocks/HeroBlock',
+  title: 'Molecules/HeroBlock',
   component: HeroBlock,
   parameters: {
     layout: 'fullscreen',

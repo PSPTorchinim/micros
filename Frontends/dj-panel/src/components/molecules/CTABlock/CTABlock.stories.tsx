@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { CTABlock } from './index';
 
 const meta = {
-  title: 'Content Blocks/CTABlock',
+  title: 'Molecules/CTABlock',
   component: CTABlock,
   parameters: {
     layout: 'fullscreen',

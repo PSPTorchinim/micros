@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ArticleBlock } from './index';
 
 const meta = {
-  title: 'Content Blocks/ArticleBlock',
+  title: 'Molecules/ArticleBlock',
   component: ArticleBlock,
   parameters: {
     layout: 'padded',
