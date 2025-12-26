@@ -1,18 +1,13 @@
-using Xunit;
-using Moq;
-using IdentityAPI.Services;
-using IdentityAPI.Repositories;
+using AutoMapper;
 using IdentityAPI.Data.DTO.Permission;
 using IdentityAPI.Entities;
-using Microsoft.Extensions.Logging;
-using AutoMapper;
+using IdentityAPI.Repositories;
+using IdentityAPI.Services;
 using Microsoft.AspNetCore.Http;
-using Shared.Services.MessagesBroker.RabbitMQ;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shared.Services.Cache;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Shared.Services.MessagesBroker.RabbitMQ;
 
 namespace IdentityAPI.Tests
 {
@@ -30,25 +25,25 @@ namespace IdentityAPI.Tests
         {
             _serviceProviderMock.Setup(x => x.GetService(typeof(IPermissionsRepository))).Returns(_permissionsRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
-            
+
             // Setup default cache behavior - GetOrCreateAsync calls factory function (simulates cache miss)
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<GetPermissionsDTO>>(
-                It.IsAny<string>(), 
-                It.IsAny<Func<Task<List<GetPermissionsDTO>?>>>(), 
+                It.IsAny<string>(),
+                It.IsAny<Func<Task<List<GetPermissionsDTO>?>>>(),
                 It.IsAny<TimeSpan?>()))
                 .Returns<string, Func<Task<List<GetPermissionsDTO>?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
-            
+
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetPermissionDTO>(
-                It.IsAny<string>(), 
-                It.IsAny<Func<Task<GetPermissionDTO?>>>(), 
+                It.IsAny<string>(),
+                It.IsAny<Func<Task<GetPermissionDTO?>>>(),
                 It.IsAny<TimeSpan?>()))
                 .Returns<string, Func<Task<GetPermissionDTO?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
-            
+
             _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
                 .Returns(Task.CompletedTask);
             _cacheServiceMock.Setup(x => x.RemoveAsync(It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            
+
             return new PermissionsService(
                 _loggerMock.Object,
                 _mapperMock.Object,
@@ -88,7 +83,6 @@ namespace IdentityAPI.Tests
             _permissionsRepositoryMock.Setup(r => r.Exists(It.IsAny<System.Linq.Expressions.Expression<Func<Permission, bool>>>())).ReturnsAsync(false);
             _mapperMock.Setup(m => m.Map<Permission>(dto)).Returns(new Permission { Name = "perm2" });
             _permissionsRepositoryMock.Setup(r => r.Add(It.IsAny<Permission>())).ReturnsAsync(true);
-            _permissionsRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var result = await service.AddPermission(dto);
             Assert.True(result);
         }
@@ -136,7 +130,6 @@ namespace IdentityAPI.Tests
             var dto = new EditPermissionDTO { Name = "newname", Description = "newdesc" };
             _permissionsRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<Func<Permission, bool>>>())).ReturnsAsync(new List<Permission> { permission });
             _permissionsRepositoryMock.Setup(r => r.Update(permission)).ReturnsAsync(true);
-            _permissionsRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var result = await service.EditPermission(id, dto);
             Assert.True(result);
             Assert.Equal("newname", permission.Name);
@@ -161,7 +154,6 @@ namespace IdentityAPI.Tests
             var permission = new Permission { Id = id, Name = "perm1" };
             _permissionsRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<Func<Permission, bool>>>())).ReturnsAsync(new List<Permission> { permission });
             _permissionsRepositoryMock.Setup(r => r.Delete(permission)).ReturnsAsync(true);
-            _permissionsRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var result = await service.DeletePermission(id);
             Assert.True(result);
         }

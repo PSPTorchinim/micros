@@ -1,17 +1,14 @@
-using Xunit;
-using Moq;
-using IdentityAPI.Services;
-using IdentityAPI.Repositories;
-using IdentityAPI.Data.DTO.User;
-using IdentityAPI.Entities;
-using Microsoft.Extensions.Logging;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Shared.Services.MessagesBroker.RabbitMQ;
-using System;
-using System.Threading.Tasks;
+using IdentityAPI.Data.DTO.User;
 using IdentityAPI.DTO.User;
+using IdentityAPI.Entities;
+using IdentityAPI.Repositories;
+using IdentityAPI.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shared.Data.Exceptions;
+using Shared.Services.MessagesBroker.RabbitMQ;
 using System.Security.Claims;
 
 namespace IdentityAPI.Tests
@@ -59,7 +56,6 @@ namespace IdentityAPI.Tests
             var registerDto = new RegisterUserRequestDTO { Email = "new@example.com", Password = "pass", Username = "user" };
             _usersRepositoryMock.Setup(r => r.Count(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(0);
             _usersRepositoryMock.Setup(r => r.Add(It.IsAny<User>())).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var result = await service.Register(registerDto);
             Assert.True(result);
         }
@@ -152,7 +148,6 @@ namespace IdentityAPI.Tests
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>())).ReturnsAsync(new List<User> { user });
             _authServiceMock.Setup(a => a.GenerateAccessToken(user)).Returns(new LoginResponseDTO { AccessToken = "token", RefreshToken = "refresh" });
             _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             _mapperMock.Setup(m => m.Map<GetUserDTO>(user)).Returns(new GetUserDTO());
             var loginDto = new LoginUserRequestDTO { Email = "user@example.com", Password = "pass" };
             var result = await service.Login(loginDto);
@@ -167,7 +162,6 @@ namespace IdentityAPI.Tests
             var user = new User { Email = "user@example.com", Passwords = new List<Password>(), Blocks = new List<Block>() };
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
             _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var dto = new ForgotPasswordRequestDTO { Email = "user@example.com" };
             var result = await service.ForgotPassword(dto);
             Assert.True(result);
@@ -181,7 +175,6 @@ namespace IdentityAPI.Tests
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
             _mapperMock.Setup(m => m.Map<Block>(It.IsAny<BlockUserDTO>())).Returns(new Block());
             _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var dto = new BlockUserDTO { UserId = user.Id, Reason = "test", Pernament = false };
             var result = await service.BlockUser(dto);
             Assert.True(result);
@@ -203,7 +196,6 @@ namespace IdentityAPI.Tests
 
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
             _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var dto = new ChangePasswordRequestDTO { OldPassword = "old", NewPassword = "new" };
             var result = await service.ChangePassword(dto);
             Assert.True(result);
@@ -216,7 +208,6 @@ namespace IdentityAPI.Tests
             var user = new User { Email = "user@example.com", ActivationCode = "code", Blocks = new List<Block>(), Passwords = new List<Password>() };
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>())).ReturnsAsync(new List<User> { user });
             _usersRepositoryMock.Setup(r => r.Update(user)).ReturnsAsync(true);
-            _usersRepositoryMock.Setup(r => r.Save()).ReturnsAsync(true);
             var dto = new ActivateAccountRequestDTO { Email = "user@example.com", ActivationCode = "code" };
             var result = await service.ActivateAccount(dto);
             Assert.True(result);
