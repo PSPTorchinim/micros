@@ -19,9 +19,8 @@ WORKDIR /
 COPY Services/${MICROSERVICE_NAME}/*.csproj ./Services/${MICROSERVICE_NAME}/
 COPY Services/Shared/*.csproj ./Services/Shared/
 
-# Restore dependencies with cache optimization
-RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
+# Restore dependencies
+RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
 
 # Copy remaining source code
 COPY Services/${MICROSERVICE_NAME}/ ./Services/${MICROSERVICE_NAME}/
