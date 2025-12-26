@@ -1123,6 +1123,7 @@ jobs:
         backup_current_state,
         test_docker_compose,
         enable_maintenance_page,
+        stop_services
       ]
     outputs:
       start_stdout: ${{ steps.rolling_update.outputs.stdout }}
