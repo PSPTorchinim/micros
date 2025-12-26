@@ -38,11 +38,14 @@ export const Menu: React.FC<MenuProps> = ({
   const [hoverDropdown, setHoverDropdown] = useState<string | null>(null);
   const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
 
-  // Close mobile menu when viewport becomes desktop-sized
+  // Close mobile menu and clear dropdown states when viewport becomes desktop-sized
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 767 && isMenuOpen) {
-        setIsMenuOpen(false);
+      if (window.innerWidth > 767) {
+        if (isMenuOpen) {
+          setIsMenuOpen(false);
+        }
+        // Always clear dropdown states when switching to desktop
         setOpenDropdowns(new Set());
       }
     };
