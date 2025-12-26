@@ -206,7 +206,6 @@ jobs:
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
-          script_stop: false
           script: |
             #!/bin/bash
             set -euo pipefail
@@ -267,7 +266,6 @@ jobs:
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
-          script_stop: false
           script: |
             #!/bin/bash
             set -euo pipefail
@@ -1750,7 +1748,6 @@ jobs:
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
-          script_stop: false
           script: |
             #!/bin/bash
             set -euo pipefail
