@@ -328,7 +328,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
-    needs: [stop_services]
+    needs: [setup, backup_data_volumes]
     outputs:
       ports: ${{ steps.get_netstat_ports.outputs.stdout }}
     steps:
