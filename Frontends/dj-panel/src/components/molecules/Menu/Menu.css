@@ -103,6 +103,8 @@
 .menu-item-content > *:first-child {
   flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-item-with-children {
@@ -225,6 +227,7 @@
   /* Mobile menu items fill width */
   .menu-mobile-menu .menu-item {
     width: 100%;
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
   }
@@ -232,6 +235,7 @@
   .menu-mobile-menu .menu-item-content {
     width: 100%;
     justify-content: space-between;
+    flex-shrink: 0;
   }
 
   /* Show dropdown toggle on mobile */
