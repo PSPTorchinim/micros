@@ -66,6 +66,9 @@ jobs:
       - name: Determine Docker tag
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
+        env:
+          # Override GITHUB_REF when triggered by workflow_run to use the triggering workflow's branch
+          GITHUB_REF: ${{ github.event_name == 'workflow_run' && format('refs/heads/{0}', github.event.workflow_run.head_branch) || github.ref }}
 
       - name: Determine compose timestamp
         id: timestamp_set
