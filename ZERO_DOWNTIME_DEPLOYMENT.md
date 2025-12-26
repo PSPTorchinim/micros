@@ -49,7 +49,7 @@ Instead of blue-green deployment with separate instances, we use **rolling updat
 5. Health Checks
    ├─ Poll app state via midclt
    ├─ Wait for RUNNING/HEALTHY status
-   └─ Fail if not healthy within 60 minutes
+   └─ Fail if not healthy within 10 minutes
 
 6. Manual Approval
    ├─ Deployment pauses for human verification
@@ -209,7 +209,7 @@ The **preferred method** for user-initiated rollback is to use the automated Git
 4. Verify Health
    ├─ Waits for app to reach healthy state
    ├─ Checks for RUNNING/ACTIVE/HEALTHY status
-   └─ Fails if not healthy within 60 minutes
+   └─ Fails if not healthy within 10 minutes
 
 5. Summary
    └─ Displays results and next steps
@@ -525,21 +525,18 @@ ls -la /mnt/Files/Apps/DJPanel/Production/Images/backups/
 
 ### Deployment Takes Too Long
 
-**Symptoms:** Health checks timeout after 60 minutes
+**Symptoms:** Health checks timeout after 10 minutes
 
 **Possible causes:**
 - Large Docker images (slow pull)
 - Insufficient resources on TrueNAS
 - Database migrations taking too long
-- Network connectivity issues
-- Container initialization taking longer than expected
 
 **Solutions:**
-- Increase timeout in workflow (line 1138: `command_timeout`)
+- Increase timeout in workflow (line 355)
 - Add more CPU/RAM to TrueNAS
 - Optimize Docker image sizes
 - Run heavy migrations separately before deployment
-- Check network bandwidth and connectivity
 
 ## Best Practices
 
