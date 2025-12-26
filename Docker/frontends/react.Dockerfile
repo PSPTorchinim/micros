@@ -32,10 +32,9 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 # Copy package files first for better caching
 COPY Frontends/${MICROFRONTEND_NAME}/package*.json ./
 
+# Install dependencies (webpack-cli is already in package.json devDependencies)
 RUN --mount=type=cache,target=/root/.npm \
-	npm install --prefer-offline --no-audit && \
-	# hadolint ignore=DL3016
-	npm install -D webpack-cli
+	npm install --prefer-offline --no-audit
 
 # Copy source files
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
