@@ -747,7 +747,7 @@ services:
       - "9080:9080"
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
     networks:
       - logging_net
     volumes:
@@ -810,7 +810,7 @@ services:
       - logging_net
     depends_on:
       sqlserver:
-        condition: service_healthy
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -838,7 +838,7 @@ services:
       - logging_net
     depends_on:
       mongodb_container:
-        condition: service_healthy
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -894,7 +894,7 @@ services:
       - logging_net
     depends_on:
       redis:
-        condition: service_healthy
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -919,9 +919,9 @@ services:
       - "3001:3001"
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
       prometheus:
-        condition: service_healthy
+        condition: service_started
     networks:
       - logging_net
       - public
