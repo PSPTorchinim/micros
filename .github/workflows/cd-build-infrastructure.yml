@@ -188,6 +188,16 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Prepare backup script for transfer
+        id: transfer_script
+        run: |
+          # Read the backup script and output it
+          SCRIPT_CONTENT=$(cat .github/scripts/backup-data-volumes.sh)
+          # Use multiline output for GitHub Actions
+          echo "script_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Backup data volumes (databases and persistent data)
         id: data_backup
         uses: appleboy/ssh-action@v1
@@ -226,16 +236,6 @@ jobs:
             # Cleanup
             rm -rf "$SCRIPT_DIR"
 
-      - name: Prepare backup script for transfer
-        id: transfer_script
-        run: |
-          # Read the backup script and output it
-          SCRIPT_CONTENT=$(cat .github/scripts/backup-data-volumes.sh)
-          # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
   stop_services:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Stop application services
@@ -248,6 +248,16 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Prepare stop script for transfer
+        id: transfer_stop_script
+        run: |
+          # Read the stop script and output it
+          SCRIPT_CONTENT=$(cat .github/scripts/stop-app-services.sh)
+          # Use multiline output for GitHub Actions
+          echo "script_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Stop application services (keep databases running)
         id: stop
@@ -285,16 +295,6 @@ jobs:
 
             # Cleanup
             rm -rf "$SCRIPT_DIR"
-
-      - name: Prepare stop script for transfer
-        id: transfer_stop_script
-        run: |
-          # Read the stop script and output it
-          SCRIPT_CONTENT=$(cat .github/scripts/stop-app-services.sh)
-          # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
   get_truenas_ports:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
@@ -1678,6 +1678,17 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Prepare restore script for transfer
+        id: transfer_restore_script
+        if: ${{ needs.backup_data_volumes.outputs.data_backup_created == 'true' }}
+        run: |
+          # Read the restore script and output it
+          SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
+          # Use multiline output for GitHub Actions
+          echo "script_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Trigger automatic rollback
         uses: appleboy/ssh-action@v1
         with:
@@ -1772,17 +1783,6 @@ jobs:
 
             # Cleanup
             rm -rf "$SCRIPT_DIR"
-
-      - name: Prepare restore script for transfer
-        id: transfer_restore_script
-        if: ${{ needs.backup_data_volumes.outputs.data_backup_created == 'true' }}
-        run: |
-          # Read the restore script and output it
-          SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
-          # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Send rollback notification
         run: |

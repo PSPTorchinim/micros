@@ -334,6 +334,16 @@ jobs:
           echo "Extracted timestamp: $timestamp"
           echo "timestamp=$timestamp" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare restore script for transfer
+        id: transfer_restore_script
+        run: |
+          # Read the restore script and output it
+          SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
+          # Use multiline output for GitHub Actions
+          echo "script_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Restore data volumes from backup archives
         id: restore
         uses: appleboy/ssh-action@v1
@@ -380,16 +390,6 @@ jobs:
 
             # Cleanup
             rm -rf "$SCRIPT_DIR"
-
-      - name: Prepare restore script for transfer
-        id: transfer_restore_script
-        run: |
-          # Read the restore script and output it
-          SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
-          # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Restart application after data restoration
         uses: appleboy/ssh-action@v1
