@@ -40,8 +40,6 @@ namespace IdentityAPI.Data
                 _logger?.LogInformation("Seeding users at {Time}", DateTime.UtcNow);
                 await SeedUsers();
             }
-            await usersRepository.Save();
-            _logger?.LogInformation("Database initialization completed at {Time}", DateTime.UtcNow);
         }
 
         private async Task SeedUsers()
@@ -131,7 +129,7 @@ namespace IdentityAPI.Data
                         Description = $"create {entry}"
                     }));
 
-                    
+
                     _logger?.LogDebug("Permission seeded: {Permission}", $"{entry}:create");
                 });
 

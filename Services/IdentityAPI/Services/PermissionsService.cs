@@ -37,7 +37,7 @@ namespace IdentityAPI.Services
             return await ExceptionHandler.Handle(async () =>
             {
                 var cacheKey = $"{PermissionsCachePrefix}All";
-                
+
                 // Use GetOrCreateAsync to simplify cache-aside pattern
                 var permissions = await _cacheService.GetOrCreateAsync(
                     cacheKey,
@@ -49,7 +49,7 @@ namespace IdentityAPI.Services
                     },
                     DefaultCacheExpiration
                 );
-                
+
                 // GetOrCreateAsync will never return null for list factories that return non-null
                 var result = permissions ?? new List<GetPermissionsDTO>();
                 _logger.LogInformation("Retrieved {Count} permissions.", result.Count);
@@ -71,23 +71,22 @@ namespace IdentityAPI.Services
                 var req = _mapper.Map<Permission>(request);
                 _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
-                await _permissionsRepository.Save();
-                
+
                 // Invalidate cache so it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
-                
+
                 _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", request.Name, result);
                 return result;
             }, _logger);
         }
 
-    public async Task<GetPermissionDTO?> GetPermission(Guid id)
+        public async Task<GetPermissionDTO?> GetPermission(Guid id)
         {
             _logger.LogInformation("Getting permission with id: {Id}", id);
             return await ExceptionHandler.Handle(async () =>
             {
                 var cacheKey = $"{PermissionsCachePrefix}{id}";
-                
+
                 // Use GetOrCreateAsync to simplify cache-aside pattern
                 // Returns null if not found (null values are not cached)
                 var permission = await _cacheService.GetOrCreateAsync(
@@ -107,7 +106,7 @@ namespace IdentityAPI.Services
                     },
                     DefaultCacheExpiration
                 );
-                
+
                 return permission;
             }, _logger);
         }
@@ -128,15 +127,14 @@ namespace IdentityAPI.Services
                 permission.Name = request.Name;
                 permission.Description = request.Description;
                 var result = await _permissionsRepository.Update(permission);
-                await _permissionsRepository.Save();
-                
+
                 // Update cache with new data
                 var updatedPermission = _mapper.Map<GetPermissionDTO>(permission);
                 await _cacheService.SetAsync($"{PermissionsCachePrefix}{id}", updatedPermission, DefaultCacheExpiration);
-                
+
                 // Invalidate the all permissions cache so it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
-                
+
                 _logger.LogInformation("Permission with id {Id} updated and cache refreshed: {Result}", id, result);
                 return result;
             }, _logger);
@@ -153,14 +151,13 @@ namespace IdentityAPI.Services
                 {
                     _logger.LogDebug("Permission found. Proceeding to delete id: {Id}", id);
                     var result = await _permissionsRepository.Delete(permission);
-                    await _permissionsRepository.Save();
-                    
+
                     // Invalidate the specific permission cache
                     await _cacheService.RemoveAsync($"{PermissionsCachePrefix}{id}");
-                    
+
                     // Invalidate the "All" permissions cache so it will be lazily loaded on next read
                     await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
-                    
+
                     _logger.LogInformation("Permission with id {Id} deleted and cache invalidated: {Result}", id, result);
                     return result;
                 }

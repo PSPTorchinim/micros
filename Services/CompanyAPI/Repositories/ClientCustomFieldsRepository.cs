@@ -1,6 +1,6 @@
 using CompanyAPI.Data;
 using CompanyAPI.Entities;
-
+using Microsoft.EntityFrameworkCore;
 using Shared.Repositories;
 namespace CompanyAPI.Repositories
 {
@@ -10,7 +10,7 @@ namespace CompanyAPI.Repositories
     }
     public class ClientCustomFieldsRepository : Repository<ClientCustomField, BrandContext>, IClientCustomFieldsRepository
     {
-        public ClientCustomFieldsRepository(BrandContext context, ILogger<IClientCustomFieldsRepository> logger) : base(context, logger)
+        public ClientCustomFieldsRepository(IDbContextFactory<BrandContext> context, ILogger<IClientCustomFieldsRepository> logger) : base(context, logger)
         {
         }
     }

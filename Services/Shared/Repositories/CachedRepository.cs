@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Shared.Repositories;
-using Shared.Services.Cache;
 using Shared.Data.Specifications;
+using Shared.Services.Cache;
 using System.Linq.Expressions;
 
 namespace Shared.Repositories
@@ -182,16 +181,6 @@ namespace Shared.Repositories
             return result;
         }
         #endregion
-
-        public async Task<bool> Save()
-        {
-            var result = await _innerRepository.Save();
-            if (result)
-            {
-                await RefreshCacheAfterWriteAsync();
-            }
-            return result;
-        }
 
         /// <summary>
         /// Invalidates the cache after write operations.

@@ -1,6 +1,7 @@
 ﻿using IdentityAPI.Data;
 using IdentityAPI.Data.Specifications;
 using IdentityAPI.Entities;
+using Microsoft.EntityFrameworkCore;
 using Shared.Repositories;
 using System.Linq.Expressions;
 
@@ -8,7 +9,7 @@ namespace IdentityAPI.Repositories
 {
     public class UsersRepository : Repository<User, IdentityContext>, IUsersRepository
     {
-        public UsersRepository(IdentityContext context, ILogger<IUsersRepository> logger) : base(context, logger)
+        public UsersRepository(IDbContextFactory<IdentityContext> context, ILogger<IUsersRepository> logger) : base(context, logger)
         {
         }
 
@@ -18,7 +19,7 @@ namespace IdentityAPI.Repositories
             try
             {
                 var config = new UserWithRolesAndPermissions(expression);
-                var result = await Get(config);
+                var result = await base.Get(config);
                 _logger.LogInformation("UsersRepository.Get succeeded with {Count} users at {Time}", result?.Count, DateTime.UtcNow);
                 return result;
             }

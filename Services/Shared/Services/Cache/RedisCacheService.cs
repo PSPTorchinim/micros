@@ -12,10 +12,10 @@ namespace Shared.Services.Cache
         private readonly IConnectionMultiplexer? _connectionMultiplexer;
         private readonly ILogger<RedisCacheService> _logger;
         private readonly string _instanceName;
-        
+
         // Lock dictionary to prevent cache stampede (multiple concurrent requests for same key)
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
-        
+
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -23,7 +23,7 @@ namespace Shared.Services.Cache
         };
 
         public RedisCacheService(
-            IDistributedCache distributedCache, 
+            IDistributedCache distributedCache,
             ILogger<RedisCacheService> logger,
             IConnectionMultiplexer? connectionMultiplexer = null,
             string instanceName = "")
@@ -75,7 +75,7 @@ namespace Shared.Services.Cache
 
             // Get or create a lock for this specific key to prevent cache stampede
             var keyLock = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
-            
+
             await keyLock.WaitAsync();
             try
             {
@@ -128,9 +128,9 @@ namespace Shared.Services.Cache
                     var db = _connectionMultiplexer.GetDatabase();
                     var endpoints = _connectionMultiplexer.GetEndPoints();
                     var server = _connectionMultiplexer.GetServer(endpoints.First());
-                    
+
                     var pattern = $"{_instanceName}{prefix}*";
-                    
+
                     // Use SCAN instead of KEYS for better performance in production
                     // SCAN doesn't block the server like KEYS does
                     var keys = new List<RedisKey>();
@@ -138,7 +138,7 @@ namespace Shared.Services.Cache
                     {
                         keys.Add(key);
                     }
-                    
+
                     if (keys.Count > 0)
                     {
                         await db.KeyDeleteAsync(keys.ToArray());

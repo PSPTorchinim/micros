@@ -40,14 +40,14 @@ namespace IdentityAPI.Services
             return await ExceptionHandler.Handle(async () =>
             {
                 var cacheKey = $"{RolesCachePrefix}All";
-                
+
                 // Use GetOrCreateAsync to simplify cache-aside pattern
                 var roles = await _cacheService.GetOrCreateAsync(
                     cacheKey,
                     async () => (await _rolesRepository.Get()).ToList(),
                     DefaultCacheExpiration
                 );
-                
+
                 // GetOrCreateAsync will never return null for list factories that return non-null
                 var result = roles ?? new List<Role>();
                 _logger.LogInformation("Retrieved {Count} roles.", result.Count);
@@ -61,7 +61,7 @@ namespace IdentityAPI.Services
             return await ExceptionHandler.Handle(async () =>
             {
                 var cacheKey = $"{RolesCachePrefix}{id}";
-                
+
                 // Use GetOrCreateAsync to simplify cache-aside pattern
                 // Returns null if role not found (null is not cached)
                 var result = await _cacheService.GetOrCreateAsync(
@@ -81,7 +81,7 @@ namespace IdentityAPI.Services
                     },
                     DefaultCacheExpiration
                 );
-                
+
                 return result;
             }, _logger);
         }
@@ -110,13 +110,12 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Adding role '{RoleName}' to repository.", request.Name);
                 var result = await _rolesRepository.Add(toAdd);
-                await _rolesRepository.Save();
-                
+
                 // Update cache with new data instead of just invalidating
                 // 1. Cache the newly added role
                 var roleDto = _mapper.Map<GetRoleDTO>(toAdd);
                 await _cacheService.SetAsync($"{RolesCachePrefix}{toAdd.Id}", roleDto, DefaultCacheExpiration);
-                
+
                 // 2. Update the all roles cache by appending the new role if cache exists
                 var cachedAllRoles = await _cacheService.GetAsync<List<Role>>($"{RolesCachePrefix}All");
                 if (cachedAllRoles != null)
@@ -125,9 +124,9 @@ namespace IdentityAPI.Services
                     await _cacheService.SetAsync($"{RolesCachePrefix}All", cachedAllRoles, DefaultCacheExpiration);
                 }
                 // If cache doesn't exist, it will be lazily loaded on next read
-                
+
                 _logger.LogInformation("Role '{RoleName}' added successfully and cache updated: {Result}", request.Name, result);
-                
+
                 return result;
             }, _logger);
         }
@@ -152,20 +151,19 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Updating role with Id: {RoleId} in repository.", id);
                 var result = await _rolesRepository.Update(foundByName);
-                await _rolesRepository.Save();
-                
+
                 // Update cache with new data instead of just invalidating
                 // Use the already-updated entity for the DTO instead of fetching again
                 var roleDto = _mapper.Map<GetRoleDTO>(foundByName);
-                
+
                 // Update the specific role cache
                 await _cacheService.SetAsync($"{RolesCachePrefix}{id}", roleDto, DefaultCacheExpiration);
-                
+
                 // Invalidate the all roles cache; it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
-                
+
                 _logger.LogInformation("Role with Id: {RoleId} updated and cache refreshed: {Result}", id, result);
-                
+
                 return result;
             }, _logger);
         }
@@ -191,11 +189,11 @@ namespace IdentityAPI.Services
 
                 _logger.LogDebug("Deleting role with Id: {RoleId} from repository.", id);
                 var result = await _rolesRepository.Delete(foundByName);
-                
+
                 // Invalidate cache after deleting
                 await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
                 _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated: {Result}", id, result);
-                
+
                 return result;
             }, _logger);
         }
