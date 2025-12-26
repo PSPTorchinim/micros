@@ -1,6 +1,6 @@
 # hadolint global ignore=DL3059
 # Stage 1: Build Storybook
-FROM node:25-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Build-time args
@@ -21,7 +21,7 @@ RUN NODE_OPTIONS="--localstorage-file=/tmp/localstorage" npm run build-storybook
 	npm cache clean --force
 
 # Stage 2: Runtime image
-FROM node:25-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Install serve and wget in single layer
