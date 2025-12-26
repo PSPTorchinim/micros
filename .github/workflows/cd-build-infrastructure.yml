@@ -1135,6 +1135,7 @@ jobs:
           host: ${{ vars.SSH_HOST }}
           username: ${{ vars.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 65m
           capture_stdout: true
           script: |
             #!/bin/sh
