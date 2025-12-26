@@ -1,10 +1,14 @@
 
 # Stage 1: Build the application
 # hadolint global ignore=DL3059
-FROM node:25-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Build-time args for all environment variables
+# WARNING: SECURE_KEY and JWT_TOKEN are stored as GitHub secrets but must be embedded
+# in the React bundle at build time. Once embedded, they become visible in browser DevTools
+# and network requests. This is an architectural limitation of client-side React apps.
+# Consider using these only for API endpoint identification, not for authentication.
 ARG MICROFRONTEND_NAME
 ARG API_GATEWAY
 ARG SECURE_KEY
@@ -15,6 +19,7 @@ ARG CMS_PROTOCOL
 ARG CMS_API_PATH
 
 # Set as ENV for build and runtime
+# These values are embedded in the client-side bundle and exposed to browsers
 ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 	REACT_APP_API_SECURE_KEY=$SECURE_KEY \
 	REACT_APP_API_JWT_TOKEN=$JWT_TOKEN \
@@ -27,12 +32,10 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 # Copy package files first for better caching
 COPY Frontends/${MICROFRONTEND_NAME}/package*.json ./
 
-# Install dependencies - dev dependencies are needed for build process
-# Using npm ci for reproducible builds (faster than npm install)
-# --prefer-offline uses cached packages when available
-# --no-audit skips security audit for faster installs
 RUN --mount=type=cache,target=/root/.npm \
-	npm ci --prefer-offline --no-audit
+	npm install --prefer-offline --no-audit && \
+	# hadolint ignore=DL3016
+	npm install -D webpack-cli
 
 # Copy source files
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
@@ -43,10 +46,11 @@ RUN npm run build && \
 
 
 # Stage 2: Runtime image
-FROM node:25-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Accept the same ARGs for runtime (for docker-compose or build-time substitution)
+# These values are already embedded in the static bundle from the build stage
 ARG API_GATEWAY
 ARG SECURE_KEY
 ARG JWT_TOKEN
@@ -56,6 +60,7 @@ ARG CMS_PROTOCOL
 ARG CMS_API_PATH
 
 # Set as ENV for runtime
+# These values are already baked into the static bundle and exposed to browsers
 ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 	REACT_APP_API_SECURE_KEY=$SECURE_KEY \
 	REACT_APP_API_JWT_TOKEN=$JWT_TOKEN \
