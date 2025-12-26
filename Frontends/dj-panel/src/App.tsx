@@ -5,7 +5,7 @@ import './index.css';
 import { AuthProvider } from './providers/auth-provider';
 import { ThemeProvider } from './context/theme-context';
 
-import { NotFoundComponent } from './components/molecules/not-found';
+import { NotFoundComponent } from './components/molecules/ErrorPage/NotFound';
 import { ServicesProvider } from './providers/services-provider';
 
 import { useDynamicRoutes } from './components/DynamicRoutes';
