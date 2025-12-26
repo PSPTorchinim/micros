@@ -32,9 +32,9 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 # Copy package files first for better caching
 COPY Frontends/${MICROFRONTEND_NAME}/package*.json ./
 
-RUN npm install --prefer-offline --no-audit && \
-	npm install -g webpack-cli@5.1.4 && \
-	npm cache clean --force
+# Install dependencies (webpack-cli is already in package.json devDependencies)
+# Need to install devDependencies for build tools (webpack-cli) even with NODE_ENV=production
+RUN npm install --include=dev --prefer-offline --no-audit
 
 # Copy source files
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
