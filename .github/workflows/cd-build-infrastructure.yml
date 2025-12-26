@@ -1088,7 +1088,7 @@ jobs:
               else
                 # Other environments: include environment prefix
                 if [ "$svc" = "dj-panel" ]; then
-                  PATTERN="${ENV_SHORT}-${BASE_DOMAIN}/*"
+                  PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
                 else
                   PATTERN="${svc}-${ENV_SHORT}.${BASE_DOMAIN}/*"
                 fi
