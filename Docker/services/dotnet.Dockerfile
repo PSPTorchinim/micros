@@ -6,7 +6,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG MICROSERVICE_NAME
 
 # Install dependencies and update in single layer
-# hadolint ignore=DL3009
+# Note: Not pinning curl version as it's a system utility that should track OS security updates
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
@@ -47,6 +48,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 SHELL ["/bin/bash","-lc"]
 
 # Install curl in single layer and clean up
+# Note: Not pinning curl version as it's a system utility that should track OS security updates
 # hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
