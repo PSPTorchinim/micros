@@ -28,13 +28,12 @@ services:
           memory: 512M
 
   strapi_db:
-    build:
-      context: ../
-      dockerfile: Docker/infra/postgres.Dockerfile
-      args:
-        DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}
-        DATABASE_USERNAME_POSTGRES: ${CMS_DATABASE_USERNAME}
-        DATABASE_PASSWORD_POSTGRES: ${CMS_DATABASE_PASSWORD}
+    image: postgres:18
+    environment:
+      - POSTGRES_DB=${CMS_DATABASE_NAME}
+      - POSTGRES_USER=${CMS_DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${CMS_DATABASE_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -44,6 +43,12 @@ services:
       - public
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER", "-d", "$POSTGRES_DB", "-h", "127.0.0.1", "-p", "5432"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -83,11 +88,11 @@ services:
           memory: 256M
 
   redis:
-    build:
-      context: ../
-      dockerfile: Docker/infra/redis.Dockerfile
-      args:
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    image: redis:8-alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    user: root
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -97,6 +102,12 @@ services:
       - public
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -107,11 +118,11 @@ services:
           memory: 128M
 
   sqlserver:
-    build:
-      context: ../
-      dockerfile: Docker/infra/sqlserver.Dockerfile
-      args:
-        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+    user: root
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -121,6 +132,12 @@ services:
       - public
     volumes:
       - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-U", "sa", "-P", "$MSSQL_SA_PASSWORD", "-Q", "SELECT 1", "-C"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -793,14 +810,13 @@ services:
           memory: 128M
 
   sqlserver-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/sqlserver-exporter.Dockerfile
-      args:
-        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
-        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
-        DATABASE_HOST_SQLSERVER: sqlserver
-        DATABASE_PORT_SQLSERVER: "1433"
+    image: awaragi/prometheus-mssql-exporter:latest
+    environment:
+      - SERVER=sqlserver
+      - PORT=1433
+      - USERNAME=${DATABASE_USER_SQLSERVER}
+      - PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+      - DEBUG=false
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -819,16 +835,15 @@ services:
         reservations:
           cpus: '0.05'
           memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   mongodb-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/mongodb-exporter.Dockerfile
-      args:
-        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
-        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
-        DATABASE_HOST_MONGODB: mongodb_container
-        DATABASE_PORT_MONGODB: "27017"
+    image: percona/mongodb_exporter:0.40
+    environment:
+      - MONGODB_URI=mongodb://${DATABASE_USER_MONGODB}:${DATABASE_PASSWORD_MONGODB}@mongodb_container:27017
+    command: ["--collect-all"]
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -849,15 +864,9 @@ services:
           memory: 64M
 
   postgres-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/postgres-exporter.Dockerfile
-      args:
-        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
-        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
-        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
-        CMS_DATABASE_HOST: strapi_db
-        CMS_DATABASE_PORT: "5432"
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${CMS_DATABASE_USERNAME}:${CMS_DATABASE_PASSWORD}@strapi_db:5432/${CMS_DATABASE_NAME}?sslmode=disable
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -867,7 +876,7 @@ services:
       - logging_net
     depends_on:
       strapi_db:
-        condition: service_healthy
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -878,13 +887,10 @@ services:
           memory: 64M
 
   redis-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/redis-exporter.Dockerfile
-      args:
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        REDIS_HOST: redis
-        REDIS_PORT: "6379"
+    image: oliver006/redis_exporter:latest
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     restart: unless-stopped
     pull_policy: always
     ports:

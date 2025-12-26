@@ -359,14 +359,24 @@ while IFS= read -r service; do
 
   echo "  ${service}:" >> "$OUTPUT_FILE"
 
-  dockerfile=$(yq eval ".services.${service}.build.dockerfile" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-  microservice_name=$(yq eval ".services.${service}.build.args.MICROSERVICE_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
-
-  if [[ "$dockerfile" != "null" && -n "$dockerfile" ]]; then
-    image=$(dockerfile_to_image "$dockerfile" "$service" "$microservice_name")
-    echo "    image: $image" >> "$OUTPUT_FILE"
+  # Check if service already has an image directive (official images)
+  existing_image=$(yq eval ".services.${service}.image" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+  
+  if [[ "$existing_image" != "null" && -n "$existing_image" ]]; then
+    # Service uses official image directly
+    log_info "  Using official image for $service: $existing_image"
+    echo "    image: $existing_image" >> "$OUTPUT_FILE"
   else
-    log_warn "No dockerfile for $service; image not set"
+    # Check for dockerfile (custom build)
+    dockerfile=$(yq eval ".services.${service}.build.dockerfile" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    microservice_name=$(yq eval ".services.${service}.build.args.MICROSERVICE_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+
+    if [[ "$dockerfile" != "null" && -n "$dockerfile" ]]; then
+      image=$(dockerfile_to_image "$dockerfile" "$service" "$microservice_name")
+      echo "    image: $image" >> "$OUTPUT_FILE"
+    else
+      log_warn "No dockerfile or image for $service; image not set"
+    fi
   fi
 
 
@@ -387,7 +397,19 @@ while IFS= read -r service; do
     yq eval ".services.${service}.healthcheck" "$SOURCE_COMPOSE" | sed 's/^/      /' >> "$OUTPUT_FILE"
   fi
 
-  port_function=$(get_port_function_for_service "$service" "$dockerfile")
+  # Determine port function - check if service has official image or dockerfile
+  if [[ "$existing_image" != "null" && -n "$existing_image" ]]; then
+    # For official images, infer port function from service name/pattern
+    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki)$ ]]; then
+      port_function="get_next_internal_port"
+    else
+      port_function="get_next_external_port"
+    fi
+  else
+    # For custom builds, use dockerfile-based logic
+    dockerfile=$(yq eval ".services.${service}.build.dockerfile" "$SOURCE_COMPOSE" 2>/dev/null || echo "null")
+    port_function=$(get_port_function_for_service "$service" "$dockerfile")
+  fi
   convert_ports "$service" "$port_function"
   [[ -n "$CONVERTED_PORTS" ]] && echo "$CONVERTED_PORTS" >> "$OUTPUT_FILE"
 
