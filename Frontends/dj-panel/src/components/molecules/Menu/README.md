@@ -15,6 +15,7 @@ A unified, responsive menu component that automatically adapts between mobile an
 ## Implementation
 
 The component uses a unified approach:
+
 - **One render function**: Single `renderLinks()` function generates the same markup for both mobile and desktop
 - **CSS-driven styling**: Media queries control layout, visibility, and interaction patterns
 - **Responsive behavior**: Click-based dropdowns on mobile, hover-based on desktop (via CSS)
@@ -27,24 +28,21 @@ The component uses a unified approach:
 ```tsx
 import { Menu } from '../../components/molecules/Menu';
 
-<Menu 
-  links={navigationLinks}
-  logoSrc="/logo.png"
-  logoAlt="Logo"
-/>
+<Menu links={navigationLinks} logoSrc="/logo.png" logoAlt="Logo" />;
 ```
 
 The component automatically displays:
+
 - **Desktop view** (viewport > 767px): Horizontal menu with hover dropdowns
 - **Mobile view** (viewport ≤ 767px): Burger menu icon with slide-out navigation
 
 ### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `links` | `Array<MenuNavigationItem>` | No | Array of navigation items |
-| `logoSrc` | `string` | No | Logo image source (shown in mobile menu) |
-| `logoAlt` | `string` | No | Logo alt text |
+| Prop      | Type                        | Required | Description                              |
+| --------- | --------------------------- | -------- | ---------------------------------------- |
+| `links`   | `Array<MenuNavigationItem>` | No       | Array of navigation items                |
+| `logoSrc` | `string`                    | No       | Logo image source (shown in mobile menu) |
+| `logoAlt` | `string`                    | No       | Logo alt text                            |
 
 ### Navigation Item Structure
 
@@ -72,11 +70,7 @@ const links = [
   { id: 2, text: 'About', url: '/about', Menu: 'Main', AuthState: 'All' },
 ];
 
-<Menu 
-  links={links} 
-  logoSrc="/logo.png"
-  logoAlt="My App"
-/>
+<Menu links={links} logoSrc="/logo.png" logoAlt="My App" />;
 ```
 
 ### Menu with Authentication
@@ -84,20 +78,20 @@ const links = [
 ```tsx
 const links = [
   { id: 1, text: 'Home', url: '/', Menu: 'Main', AuthState: 'All' },
-  { 
-    id: 2, 
-    text: 'Login', 
-    url: '/login', 
-    Menu: 'Login', 
-    AuthState: 'OnlyUnauthenticated' 
+  {
+    id: 2,
+    text: 'Login',
+    url: '/login',
+    Menu: 'Login',
+    AuthState: 'OnlyUnauthenticated',
   },
-  { 
-    id: 3, 
-    text: 'Logout', 
-    url: '#', 
-    Menu: 'Login', 
+  {
+    id: 3,
+    text: 'Logout',
+    url: '#',
+    Menu: 'Login',
     AuthState: 'OnlyAuthenticated',
-    NavigationAction: 'Action'
+    NavigationAction: 'Action',
   },
 ];
 ```
@@ -124,6 +118,7 @@ const links = [
 The component renders both mobile and desktop markup, but CSS media queries control which is visible:
 
 ### Desktop View (viewport > 767px)
+
 - Horizontal layout
 - Hover-based dropdowns
 - Dropdown opens on mouse enter
@@ -131,6 +126,7 @@ The component renders both mobile and desktop markup, but CSS media queries cont
 - Burger menu hidden
 
 ### Mobile View (viewport ≤ 767px)
+
 - Burger menu icon visible
 - Click/tap to open full-screen menu
 - Click/tap to expand dropdowns
@@ -164,6 +160,7 @@ npm run storybook
 This component replaces the old `MobileMenu` and `DesktopMenu` components and no longer requires a `variant` prop.
 
 ### Before
+
 ```tsx
 import { DesktopMenu } from './menu/desktop-menu';
 import { MobileMenu } from './menu/mobile-menu';
@@ -173,10 +170,11 @@ import { MobileMenu } from './menu/mobile-menu';
 ```
 
 ### After
+
 ```tsx
 import { Menu } from '../../components/molecules/Menu';
 
-<Menu links={links} logoSrc={logo} logoAlt={alt} />
+<Menu links={links} logoSrc={logo} logoAlt={alt} />;
 ```
 
 The component automatically adapts based on viewport size via CSS media queries.

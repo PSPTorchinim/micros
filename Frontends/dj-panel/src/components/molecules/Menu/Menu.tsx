@@ -28,11 +28,7 @@ export interface MenuProps {
   logoAlt?: string;
 }
 
-export const Menu: React.FC<MenuProps> = ({
-  links = [],
-  logoSrc,
-  logoAlt,
-}) => {
+export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
   const [hoverDropdown, setHoverDropdown] = useState<string | null>(null);
@@ -169,7 +165,9 @@ export const Menu: React.FC<MenuProps> = ({
             {element.children && (
               <div
                 className={`menu-dropdown ${
-                  isClickDropdownOpen || isHoverDropdownOpen ? 'visible' : 'hidden'
+                  isClickDropdownOpen || isHoverDropdownOpen
+                    ? 'visible'
+                    : 'hidden'
                 }`}
                 role="menu"
                 onMouseEnter={() => handleHoverDropdown(text)}
@@ -232,11 +230,7 @@ export const Menu: React.FC<MenuProps> = ({
       >
         <div className="menu-mobile-nav">
           <div className="menu-mobile-top">
-            <img
-              alt={logoAlt}
-              src={logoSrc}
-              className="menu-mobile-logo"
-            />
+            <img alt={logoAlt} src={logoSrc} className="menu-mobile-logo" />
             <div
               data-thq="thq-close-menu"
               className="menu-mobile-close-menu"
@@ -248,15 +242,11 @@ export const Menu: React.FC<MenuProps> = ({
             </div>
           </div>
           <nav className="menu-links">
-            {renderLinks(
-              mainLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
-            )}
+            {renderLinks(mainLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)))}
           </nav>
         </div>
         <div className="menu-mobile-buttons">
-          {renderLinks(
-            loginLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
-          )}
+          {renderLinks(loginLinks.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)))}
         </div>
       </div>
     </>
