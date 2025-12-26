@@ -194,9 +194,11 @@ jobs:
           # Read the backup script and output it
           SCRIPT_CONTENT=$(cat .github/scripts/backup-data-volumes.sh)
           # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "script_content<<EOF"
+            echo "$SCRIPT_CONTENT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Backup data volumes (databases and persistent data)
         id: data_backup
@@ -214,7 +216,7 @@ jobs:
             SCRIPT_DIR="/tmp/backup-scripts-$$"
             mkdir -p "$SCRIPT_DIR"
 
-            # Transfer backup script via base64
+            # Write backup script content to file via heredoc
             cat > "$SCRIPT_DIR/backup-data-volumes.sh" << 'BACKUP_SCRIPT_EOF'
             ${{ steps.transfer_script.outputs.script_content }}
             BACKUP_SCRIPT_EOF
@@ -225,7 +227,8 @@ jobs:
             if "$SCRIPT_DIR/backup-data-volumes.sh" \
               "${{ needs.setup.outputs.current_env }}" \
               "${{ needs.setup.outputs.env_slug }}" \
-              "/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}"; then
+              "/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}" \
+              "${{ needs.backup_current_state.outputs.backup_timestamp }}"; then
               echo "DATA_BACKUP_CREATED=true"
             else
               echo "⚠️  Data backup failed, but continuing deployment"
@@ -254,9 +257,11 @@ jobs:
           # Read the stop script and output it
           SCRIPT_CONTENT=$(cat .github/scripts/stop-app-services.sh)
           # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "script_content<<EOF"
+            echo "$SCRIPT_CONTENT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Stop application services (keep databases running)
         id: stop
@@ -276,7 +281,7 @@ jobs:
             SCRIPT_DIR="/tmp/stop-scripts-$$"
             mkdir -p "$SCRIPT_DIR"
 
-            # Transfer stop script via base64
+            # Write stop script content to file via heredoc
             cat > "$SCRIPT_DIR/stop-app-services.sh" << 'STOP_SCRIPT_EOF'
             ${{ steps.transfer_stop_script.outputs.script_content }}
             STOP_SCRIPT_EOF
@@ -1683,9 +1688,11 @@ jobs:
           # Read the restore script and output it
           SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
           # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "script_content<<EOF"
+            echo "$SCRIPT_CONTENT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Trigger automatic rollback
         uses: appleboy/ssh-action@v1
@@ -1760,7 +1767,7 @@ jobs:
             SCRIPT_DIR="/tmp/restore-scripts-$$"
             mkdir -p "$SCRIPT_DIR"
 
-            # Transfer restore script via base64
+            # Write restore script content to file via heredoc
             cat > "$SCRIPT_DIR/restore-data-volumes.sh" << 'RESTORE_SCRIPT_EOF'
             ${{ steps.transfer_restore_script.outputs.script_content }}
             RESTORE_SCRIPT_EOF

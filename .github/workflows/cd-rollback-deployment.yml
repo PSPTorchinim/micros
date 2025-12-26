@@ -340,9 +340,11 @@ jobs:
           # Read the restore script and output it
           SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
           # Use multiline output for GitHub Actions
-          echo "script_content<<EOF" >> $GITHUB_OUTPUT
-          echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "script_content<<EOF"
+            echo "$SCRIPT_CONTENT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Restore data volumes from backup archives
         id: restore
@@ -364,7 +366,7 @@ jobs:
             SCRIPT_DIR="/tmp/restore-scripts-$$"
             mkdir -p "$SCRIPT_DIR"
 
-            # Transfer restore script via base64
+            # Write restore script content to file via heredoc
             cat > "$SCRIPT_DIR/restore-data-volumes.sh" << 'RESTORE_SCRIPT_EOF'
             ${{ steps.transfer_restore_script.outputs.script_content }}
             RESTORE_SCRIPT_EOF

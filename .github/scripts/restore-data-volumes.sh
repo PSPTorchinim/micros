@@ -85,12 +85,20 @@ restore_volume() {
   
   # Extract archive
   # Using tar to extract, preserving permissions and timestamps
-  if tar -xzf "$backup_file" -C "$parent_dir" 2>/dev/null; then
-    local size=$(du -h "$full_path" | cut -f1 | tail -1)
-    log_info "✅ Restored: ${full_path} (${size})"
-    echo "RESTORED_VOLUME=$volume_path"
+  if tar_error=$(tar -xzf "$backup_file" -C "$parent_dir" 2>&1); then
+    # Verify that the restore target exists and contains files
+    if [ -d "$full_path" ] && find "$full_path" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+      local size
+      size=$(du -sh "$full_path" 2>/dev/null | cut -f1)
+      log_info "✅ Restored: ${full_path} (${size})"
+      echo "RESTORED_VOLUME=$volume_path"
+    else
+      log_error "❌ Restore completed but no files were found in: ${full_path}"
+      return 1
+    fi
   else
     log_error "❌ Failed to restore: ${volume_path}"
+    log_error "tar error output: ${tar_error}"
     return 1
   fi
   

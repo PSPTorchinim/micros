@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to backup data volumes from TrueNAS
 # This creates compressed archives of all critical data volumes for rollback purposes
-# Usage: ./backup-data-volumes.sh "environment" "env_slug" "base_dir"
+# Usage: ./backup-data-volumes.sh "environment" "env_slug" "base_dir" ["timestamp"]
 
 set -euo pipefail
 
@@ -14,15 +14,15 @@ log_warn() { echo -e "${YELLOW}[WARN] $1${NC}" >&2; }
 log_error() { echo -e "${RED}[ERROR] $1${NC}" >&2; }
 
 # ======================== Input Validation ==========================
-if [ $# -ne 3 ]; then
-  echo "Usage: $0 \"environment\" \"env_slug\" \"base_dir\""
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+  echo "Usage: $0 \"environment\" \"env_slug\" \"base_dir\" [\"timestamp\"]"
   exit 1
 fi
 
 ENVIRONMENT="$1"
 ENV_SLUG="$2"
 BASE_DIR="$3"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+TIMESTAMP="${4:-$(date +%Y%m%d_%H%M%S)}"
 
 DATA_DIR="${BASE_DIR}/data"
 BACKUP_DIR="${BASE_DIR}/Images/backups/data"
@@ -79,12 +79,13 @@ backup_volume() {
   
   # Create compressed archive of the volume
   # Using tar with gzip compression, preserving permissions and timestamps
-  if tar -czf "$backup_file" -C "$(dirname "$full_path")" "$(basename "$full_path")" 2>/dev/null; then
+  if tar_output=$(tar -czf "$backup_file" -C "$(dirname "$full_path")" "$(basename "$full_path")" 2>&1); then
     local size=$(du -h "$backup_file" | cut -f1)
     log_info "✅ Backup created: ${backup_file} (${size})"
     echo "BACKUP_FILE=$backup_file"
   else
     log_error "❌ Failed to backup: ${volume_path}"
+    log_error "tar output: ${tar_output}"
     return 1
   fi
 }
