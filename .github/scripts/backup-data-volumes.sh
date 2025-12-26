@@ -66,13 +66,13 @@ backup_volume() {
   # Check if volume exists
   if [ ! -d "$full_path" ]; then
     log_warn "Volume does not exist, skipping: ${full_path}"
-    return 0
+    return 2
   fi
   
   # Check if volume is empty
   if [ -z "$(ls -A "$full_path" 2>/dev/null)" ]; then
     log_warn "Volume is empty, skipping: ${full_path}"
-    return 0
+    return 3
   fi
   
   log_info "Backing up: ${volume_path}"
@@ -97,10 +97,15 @@ log_info ""
 
 backup_count=0
 failed_count=0
+skipped_count=0
 
 for volume in "${CRITICAL_VOLUMES[@]}"; do
-  if backup_volume "$volume"; then
+  backup_volume "$volume"
+  result=$?
+  if [ $result -eq 0 ]; then
     ((backup_count++))
+  elif [ $result -eq 2 ] || [ $result -eq 3 ]; then
+    ((skipped_count++))
   else
     ((failed_count++))
   fi
@@ -136,6 +141,7 @@ log_info "=========================================="
 log_info "Backup Summary"
 log_info "=========================================="
 log_info "Successful backups: ${backup_count}"
+log_info "Skipped volumes: ${skipped_count}"
 log_info "Failed backups: ${failed_count}"
 log_info "Backup timestamp: ${TIMESTAMP}"
 log_info "=========================================="
@@ -143,6 +149,7 @@ log_info "=========================================="
 # Output for GitHub Actions
 echo "BACKUP_TIMESTAMP=${TIMESTAMP}"
 echo "BACKUP_COUNT=${backup_count}"
+echo "SKIPPED_COUNT=${skipped_count}"
 echo "FAILED_COUNT=${failed_count}"
 
 # Exit with error if any backups failed
