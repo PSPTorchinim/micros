@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Menu.css';
 import { useMenuLogic } from './menuUtils';
@@ -37,6 +37,19 @@ export const Menu: React.FC<MenuProps> = ({
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
   const [hoverDropdown, setHoverDropdown] = useState<string | null>(null);
   const { hasPermission, isAuthenticated, handleAction } = useMenuLogic();
+
+  // Close mobile menu when viewport becomes desktop-sized
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 767 && isMenuOpen) {
+        setIsMenuOpen(false);
+        setOpenDropdowns(new Set());
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMenuOpen]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
