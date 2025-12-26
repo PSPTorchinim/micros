@@ -5,9 +5,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Build-time args for all environment variables
-# NOTE: SECURE_KEY and JWT_TOKEN are configuration identifiers for API communication,
-# not actual secret values. They are embedded in the React app bundle at build time
-# and are visible in the browser, so they are not secure for sensitive data.
+# WARNING: SECURE_KEY and JWT_TOKEN are stored as GitHub secrets but must be embedded
+# in the React bundle at build time. Once embedded, they become visible in browser DevTools
+# and network requests. This is an architectural limitation of client-side React apps.
+# Consider using these only for API endpoint identification, not for authentication.
 ARG MICROFRONTEND_NAME
 ARG API_GATEWAY
 ARG SECURE_KEY
@@ -18,8 +19,7 @@ ARG CMS_PROTOCOL
 ARG CMS_API_PATH
 
 # Set as ENV for build and runtime
-# These REACT_APP_* configuration identifiers are embedded in the client-side bundle during build
-# and are not secure for sensitive data
+# These values are embedded in the client-side bundle and exposed to browsers
 ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 	REACT_APP_API_SECURE_KEY=$SECURE_KEY \
 	REACT_APP_API_JWT_TOKEN=$JWT_TOKEN \
@@ -52,7 +52,7 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Accept the same ARGs for runtime (for docker-compose or build-time substitution)
-# NOTE: These are configuration identifiers, not secrets. Already embedded in the static bundle.
+# These values are already embedded in the static bundle from the build stage
 ARG API_GATEWAY
 ARG SECURE_KEY
 ARG JWT_TOKEN
@@ -62,7 +62,7 @@ ARG CMS_PROTOCOL
 ARG CMS_API_PATH
 
 # Set as ENV for runtime
-# These configuration identifiers are already in the static bundle and are not secure for sensitive data
+# These values are already baked into the static bundle and exposed to browsers
 ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 	REACT_APP_API_SECURE_KEY=$SECURE_KEY \
 	REACT_APP_API_JWT_TOKEN=$JWT_TOKEN \
