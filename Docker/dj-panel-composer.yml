@@ -18,12 +18,6 @@ services:
     volumes:
       - mongo_data:/data/db
       - mongo_config:/data/configdb
-    healthcheck:
-      test: ["CMD", "mongosh", "--username", "${DATABASE_USER_MONGODB}", "--password", "${DATABASE_PASSWORD_MONGODB}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')", "--quiet"]
-      interval: 30s
-      timeout: 15s
-      start_period: 90s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -50,12 +44,6 @@ services:
       - public
     volumes:
       - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${CMS_DATABASE_USERNAME} -d ${CMS_DATABASE_NAME} -h 127.0.0.1 -p 5432"]
-      interval: 30s
-      timeout: 15s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -85,12 +73,6 @@ services:
       - public
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -115,12 +97,6 @@ services:
       - public
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 30s
-      timeout: 10s
-      start_period: 30s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -145,12 +121,6 @@ services:
       - public
     volumes:
       - mssql_data:/var/opt/mssql
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -U sa -P \"${DATABASE_PASSWORD_SQLSERVER}\" -Q \"SELECT 1\" -C"]
-      interval: 30s
-      timeout: 15s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -218,12 +188,6 @@ services:
       - apigw_backends_net
       - apigw_fe_net
       - public
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -257,12 +221,6 @@ services:
         condition: service_healthy
       strapi:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 5s
-      start_period: 40s
-      retries: 3
     deploy:
       resources:
         limits:
@@ -284,12 +242,6 @@ services:
       - "6006:6006"
     networks:
       - public
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 5s
-      start_period: 40s
-      retries: 3
     deploy:
       resources:
         limits:
@@ -330,12 +282,6 @@ services:
         condition: service_healthy
     volumes:
       - strapi_app:/srv/app
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--timeout=10", "http://localhost:1337/api/health"]
-      interval: 30s
-      timeout: 15s
-      start_period: 120s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -396,12 +342,6 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -462,12 +402,6 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -528,12 +462,6 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -594,12 +522,6 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -660,12 +582,6 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -726,12 +642,6 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -792,12 +702,6 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz/live"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 5
     deploy:
       resources:
         limits:
