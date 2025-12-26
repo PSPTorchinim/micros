@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Menu } from './Menu';
 
 const meta = {
-  title: 'Components/Molecules/Menu',
+  title: 'Molecules/Menu',
   component: Menu,
   parameters: {
     layout: 'padded',

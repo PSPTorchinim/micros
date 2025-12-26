@@ -6,10 +6,9 @@ import {
   AiFillMail,
   AiFillTikTok,
 } from 'react-icons/ai';
-import { BrowserRouter } from 'react-router-dom';
 
 const meta = {
-  title: 'Layout/Footer',
+  title: 'Molecules/Footer',
   component: Footer,
   parameters: {
     layout: 'fullscreen',
