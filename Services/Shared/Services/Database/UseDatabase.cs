@@ -24,7 +24,7 @@ namespace Shared.Services.Database
             var port = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PORT_MONGODB");
             var user = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_USER_MONGODB");
             var password = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PASSWORD_MONGODB");
-            
+
             var encodedUser = Uri.EscapeDataString(user ?? "");
             var encodedPassword = Uri.EscapeDataString(password ?? "");
 
@@ -35,13 +35,13 @@ namespace Shared.Services.Database
         public static void ConfigureSqlServer<TContext>(IServiceCollection services) where TContext : DbContext
         {
             var connectionString = GetSQLConnectionString();
-            services.AddDbContext<TContext>((provider, opt) =>
+            services.AddDbContextFactory<TContext>((provider, opt) =>
             {
                 opt.UseSqlServer(connectionString, options =>
                 {
                     options.EnableRetryOnFailure(5);
                 })/*.AddInterceptors(provider.GetRequiredService<SecondLevelCacheInterceptor>())*/;
-            }, ServiceLifetime.Singleton);
+            });
         }
 
         public static void ConfigureMongoDBServer(IServiceCollection services)

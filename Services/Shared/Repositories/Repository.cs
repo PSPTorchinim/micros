@@ -8,12 +8,12 @@ namespace Shared.Repositories
 {
     public class Repository<T, C> : IRepository<T> where T : class where C : DbContext
     {
-        public readonly C _context;
+        public readonly IDbContextFactory<C> _factory;
         public readonly ILogger<IRepository<T>> _logger;
 
-        public Repository(C context, ILogger<IRepository<T>> logger)
+        public Repository(IDbContextFactory<C> factory, ILogger<IRepository<T>> logger)
         {
-            _context = context;
+            _factory = factory;
             _logger = logger;
         }
 
@@ -23,9 +23,10 @@ namespace Shared.Repositories
             _logger.LogInformation("Adding entity of type {EntityType}", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var result = await _context.AddAsync(entity);
+                await using var context = await _factory.CreateDbContextAsync();
+                var result = await context.AddAsync(entity);
                 result.State = EntityState.Added;
-                return true;
+                return await context.SaveChangesAsync() > 0;
             }, _logger);
         }
 
@@ -34,8 +35,9 @@ namespace Shared.Repositories
             _logger.LogInformation("Adding {Count} entities of type {EntityType}", entities.Count, typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                await _context.AddRangeAsync(entities);
-                var success = await _context.SaveChangesAsync() > 0;
+                await using var context = await _factory.CreateDbContextAsync();
+                await context.AddRangeAsync(entities);
+                var success = await context.SaveChangesAsync() > 0;
                 _logger.LogInformation("{Count} entities of type {EntityType} added: {Success}", entities.Count, typeof(T).Name, success);
                 return success;
             }, _logger);
@@ -48,7 +50,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Counting entities of type {EntityType} with expression", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var count = await _context.Set<T>().CountAsync(expression);
+                await using var context = await _factory.CreateDbContextAsync();
+                var count = await context.Set<T>().CountAsync(expression);
                 _logger.LogInformation("Counted {Count} entities of type {EntityType}", count, typeof(T).Name);
                 return count;
             }, _logger);
@@ -59,6 +62,7 @@ namespace Shared.Repositories
             _logger.LogInformation("Counting entities of type {EntityType} with specification", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
+                await using var context = await _factory.CreateDbContextAsync();
                 var count = (await Get(specification)).Count();
                 _logger.LogInformation("Counted {Count} entities of type {EntityType} with specification", count, typeof(T).Name);
                 return count;
@@ -72,13 +76,14 @@ namespace Shared.Repositories
             _logger.LogInformation("Deleting entity of type {EntityType}", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var entry = _context.Entry(entity);
+                await using var context = await _factory.CreateDbContextAsync();
+                var entry = context.Entry(entity);
                 if (entry.State == EntityState.Detached)
                 {
-                    _context.Attach(entity);
+                    context.Attach(entity);
                 }
-                _context.Remove(entity);
-                var success = await _context.SaveChangesAsync() > 0;
+                context.Remove(entity);
+                var success = await context.SaveChangesAsync() > 0;
                 _logger.LogInformation("Entity of type {EntityType} deleted: {Success}", typeof(T).Name, success);
                 return success;
             }, _logger);
@@ -89,8 +94,9 @@ namespace Shared.Repositories
             _logger.LogInformation("Deleting {Count} entities of type {EntityType}", entities.Count, typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                _context.RemoveRange(entities);
-                var success = await _context.SaveChangesAsync() > 0;
+                await using var context = await _factory.CreateDbContextAsync();
+                context.RemoveRange(entities);
+                var success = await context.SaveChangesAsync() > 0;
                 _logger.LogInformation("{Count} entities of type {EntityType} deleted: {Success}", entities.Count, typeof(T).Name, success);
                 return success;
             }, _logger);
@@ -103,7 +109,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Checking if set of type {EntityType} is empty", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var isEmpty = !await _context.Set<T>().AnyAsync();
+                await using var context = await _factory.CreateDbContextAsync();
+                var isEmpty = !await context.Set<T>().AnyAsync();
                 _logger.LogInformation("Set of type {EntityType} is empty: {IsEmpty}", typeof(T).Name, isEmpty);
                 return isEmpty;
             }, _logger);
@@ -116,7 +123,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Checking existence of entity of type {EntityType} with expression", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var exists = await _context.Set<T>().AnyAsync(expression);
+                await using var context = await _factory.CreateDbContextAsync();
+                var exists = await context.Set<T>().AnyAsync(expression);
                 _logger.LogInformation("Entity of type {EntityType} exists: {Exists}", typeof(T).Name, exists);
                 return exists;
             }, _logger);
@@ -140,7 +148,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Getting all entities of type {EntityType}", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var list = await _context.Set<T>().ToListAsync();
+                await using var context = await _factory.CreateDbContextAsync();
+                var list = await context.Set<T>().ToListAsync();
                 _logger.LogInformation("Retrieved {Count} entities of type {EntityType}", list.Count, typeof(T).Name);
                 return list;
             }, _logger);
@@ -151,7 +160,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Getting entities of type {EntityType} with expression", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var list = await _context.Set<T>().Where(expression).ToListAsync();
+                await using var context = await _factory.CreateDbContextAsync();
+                var list = await context.Set<T>().Where(expression).ToListAsync();
                 _logger.LogInformation("Retrieved {Count} entities of type {EntityType} with expression", list.Count, typeof(T).Name);
                 return list;
             }, _logger);
@@ -162,7 +172,8 @@ namespace Shared.Repositories
             _logger.LogInformation("Getting entities of type {EntityType} with specification", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var list = await SpecificationEvaluator<T>.GetQuery(_context.Set<T>().AsQueryable(), specification).ToListAsync();
+                await using var context = await _factory.CreateDbContextAsync();
+                var list = await SpecificationEvaluator<T>.GetQuery(context.Set<T>().AsQueryable(), specification).ToListAsync();
                 _logger.LogInformation("Retrieved {Count} entities of type {EntityType} with specification", list.Count, typeof(T).Name);
                 return list;
             }, _logger);
@@ -175,13 +186,14 @@ namespace Shared.Repositories
             _logger.LogInformation("Updating entity of type {EntityType}", typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                var entry = _context.Entry(entity);
+                await using var context = await _factory.CreateDbContextAsync();
+                var entry = context.Entry(entity);
                 if (entry.State == EntityState.Detached)
                 {
-                    _context.Attach(entity);
+                    context.Attach(entity);
                 }
-                _context.Update(entity);
-                var success = await _context.SaveChangesAsync() > 0;
+                context.Update(entity);
+                var success = await context.SaveChangesAsync() > 0;
                 _logger.LogInformation("Entity of type {EntityType} updated: {Success}", typeof(T).Name, success);
                 return success;
             }, _logger);
@@ -192,18 +204,13 @@ namespace Shared.Repositories
             _logger.LogInformation("Updating {Count} entities of type {EntityType}", entities.Count, typeof(T).Name);
             return await ExceptionHandler.Handle(async () =>
             {
-                _context.UpdateRange(entities);
-                var success = await _context.SaveChangesAsync() > 0;
+                await using var context = await _factory.CreateDbContextAsync();
+                context.UpdateRange(entities);
+                var success = await context.SaveChangesAsync() > 0;
                 _logger.LogInformation("{Count} entities of type {EntityType} updated: {Success}", entities.Count, typeof(T).Name, success);
                 return success;
             }, _logger);
         }
         #endregion
-
-        public virtual async Task<bool> Save()
-        {
-            return (await _context.SaveChangesAsync()) > 0;
-        }
-
     }
 }
