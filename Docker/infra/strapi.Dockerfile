@@ -92,9 +92,9 @@ COPY --from=builder /app .
 # hadolint ignore=DL3002
 USER root
 
-# Optimized health check - increased intervals and longer start period for Strapi
-HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider --timeout=10 http://localhost:1337/api/health || exit 1
+# Optimized health check - reduced start period for faster deployment
+HEALTHCHECK --interval=15s --timeout=10s --start-period=60s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider --timeout=8 http://localhost:1337/api/health || exit 1
 
 EXPOSE 1337
 ENTRYPOINT ["./docker-entrypoint.sh"]

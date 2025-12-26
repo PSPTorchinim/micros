@@ -11,8 +11,8 @@ ENV POSTGRES_DB=$DATABASE_NAME_POSTGRES \
     POSTGRES_PASSWORD=$DATABASE_PASSWORD_POSTGRES \
     PGDATA=/var/lib/postgresql/data
 
-# Optimized healthcheck with reduced frequency
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+# Optimized healthcheck - reduced start period and interval for faster deployment
+HEALTHCHECK --interval=15s --timeout=10s --start-period=40s --retries=5 \
   CMD pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432 || exit 1
 
 EXPOSE 5432

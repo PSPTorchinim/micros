@@ -32,6 +32,6 @@ ENTRYPOINT ["/bin/sh", "-c", "/usr/local/bin/fix-cookie && exec docker-entrypoin
 
 EXPOSE 5672 15672
 
-# Optimized healthcheck with longer intervals
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+# Optimized healthcheck - reduced start period and interval for faster deployment
+HEALTHCHECK --interval=15s --timeout=8s --start-period=40s --retries=5 \
   CMD rabbitmq-diagnostics -q ping

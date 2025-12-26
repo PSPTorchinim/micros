@@ -11,8 +11,8 @@ RUN mkdir -p /data && chown -R redis:redis /data
 # hadolint ignore=DL3002
 USER root
 
-# Optimized healthcheck with longer intervals
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
+# Optimized healthcheck - reduced interval for faster deployment  
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
   CMD redis-cli -a "$REDIS_PASSWORD" ping | grep PONG
 
 EXPOSE 6379

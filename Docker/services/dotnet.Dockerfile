@@ -67,8 +67,8 @@ ENV APP_EXE=${MICROSERVICE_NAME}.dll
 # Use JSON notation with shell -c for env var substitution
 ENTRYPOINT ["sh", "-c", "dotnet $APP_EXE"]
 
-# Optimized health check - reduced frequency but maintained reliability
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+# Optimized health check - reduced start period and interval for faster deployment
+HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
   CMD curl -fsS http://localhost:8080/healthz/live \
    || curl -fsS http://localhost:8080/health \
    || curl -fsS http://localhost:8080/ \

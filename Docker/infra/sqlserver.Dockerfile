@@ -12,8 +12,8 @@ RUN mkdir -p /var/opt/mssql
 # hadolint ignore=DL3002
 USER root
 
-# Optimized healthcheck with longer intervals
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+# Optimized healthcheck - reduced start period and interval for faster deployment
+HEALTHCHECK --interval=15s --timeout=10s --start-period=40s --retries=5 \
   CMD /opt/mssql-tools18/bin/sqlcmd -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" -C || exit 1
 
 EXPOSE 1433
