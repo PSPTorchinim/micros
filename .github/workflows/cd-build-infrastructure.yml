@@ -267,7 +267,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Stop application services
     runs-on: ubuntu-latest
-    needs: [setup, backup_data_volumes]
+    needs: [setup, backup_data_volumes, enable_maintenance_page]
     outputs:
       services_stopped: ${{ steps.stop.outputs.services_stopped }}
     steps:
@@ -1015,7 +1015,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
-    needs: [generate_and_upload_truenas_compose_file, setup, test_docker_compose]
+    needs: [setup, backup_data_volumes]
     steps:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
@@ -1051,7 +1051,10 @@ jobs:
           ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
           ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
           BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
-          EXTERNAL_MAP='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+          
+          # Predefined list of external services that need maintenance pages
+          # dj-panel is the main frontend, strapi-cms is the CMS service
+          EXTERNAL_SERVICES="dj-panel strapi-cms"
 
           # Map environment names to short aliases for URLs
           # Production uses empty string to get root domain (djbeatblaster.com)
@@ -1076,32 +1079,29 @@ jobs:
 
           # For each external service, create a route with new URL pattern
           echo "🔗 Creating maintenance routes..."
-          for entry in $(echo "$EXTERNAL_MAP" | jq -r '.[]'); do
-            for pair in $(echo "$entry" | tr ',' '\n'); do
-              svc=$(echo "$pair" | cut -d: -f1)
-              if [ -z "$ENV_SHORT" ]; then
-                # Production: no environment prefix
-                if [ "$svc" = "dj-panel" ]; then
-                  PATTERN="${BASE_DOMAIN}/*"
-                else
-                  PATTERN="${svc}.${BASE_DOMAIN}/*"
-                fi
+          for svc in $EXTERNAL_SERVICES; do
+            if [ -z "$ENV_SHORT" ]; then
+              # Production: no environment prefix
+              if [ "$svc" = "dj-panel" ]; then
+                PATTERN="${BASE_DOMAIN}/*"
               else
-                # Other environments: include environment prefix
-                if [ "$svc" = "dj-panel" ]; then
-                  PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
-                else
-                  PATTERN="${svc}-${ENV_SHORT}.${BASE_DOMAIN}/*"
-                fi
+                PATTERN="${svc}.${BASE_DOMAIN}/*"
               fi
-              ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
-              echo "  - Creating route for: $PATTERN"
-              curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
-                -H "X-Auth-Email: ${CF_EMAIL}" \
-                -H "X-Auth-Key: ${CF_KEY}" \
-                -H "Content-Type: application/json" \
-                --data "${ROUTE_DATA}" > /dev/null
-            done
+            else
+              # Other environments: include environment prefix
+              if [ "$svc" = "dj-panel" ]; then
+                PATTERN="${ENV_SHORT}.${BASE_DOMAIN}/*"
+              else
+                PATTERN="${svc}-${ENV_SHORT}.${BASE_DOMAIN}/*"
+              fi
+            fi
+            ROUTE_DATA=$(jq -n --arg pattern "$PATTERN" --arg script "$WORKER_NAME" '{pattern: $pattern, script: $script}')
+            echo "  - Creating route for: $PATTERN"
+            curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/workers/routes" \
+              -H "X-Auth-Email: ${CF_EMAIL}" \
+              -H "X-Auth-Key: ${CF_KEY}" \
+              -H "Content-Type: application/json" \
+              --data "${ROUTE_DATA}" > /dev/null
           done
 
           echo "✅ Maintenance page enabled for all external service hostnames."
