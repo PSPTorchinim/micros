@@ -33,7 +33,8 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 COPY Frontends/${MICROFRONTEND_NAME}/package*.json ./
 
 # Install dependencies (webpack-cli is already in package.json devDependencies)
-RUN npm install --prefer-offline --no-audit
+# Need to install devDependencies for build tools (webpack-cli) even with NODE_ENV=production
+RUN npm install --include=dev --prefer-offline --no-audit
 
 # Copy source files
 COPY Frontends/${MICROFRONTEND_NAME}/ ./
