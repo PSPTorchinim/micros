@@ -31,7 +31,10 @@ RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 # Copy package files first for better caching
 COPY CMS/package*.json ./
 
-# Install dependencies with cache mount for faster builds
+# Install dependencies - dev dependencies needed for build process (webpack, etc.)
+# Using npm ci for reproducible builds
+# --prefer-offline uses cached packages when available
+# --include=dev explicitly includes dev dependencies for the build stage
 RUN --mount=type=cache,target=/root/.npm \
 	npm ci --prefer-offline --no-audit --include=dev
 

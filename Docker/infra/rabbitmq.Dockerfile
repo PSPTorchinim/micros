@@ -20,6 +20,8 @@ USER root
 SHELL ["/bin/sh", "-c"]
 
 # Combine RUN commands to reduce layers
+# Creates data directory and cookie permission fix script
+# Note: Inline script is intentional - keeps image self-contained without external dependencies
 # hadolint ignore=SC2016
 RUN mkdir -p /var/lib/rabbitmq && \
     printf '#!/bin/sh\nCOOKIE="/var/lib/rabbitmq/.erlang.cookie"\nif [ -f "$COOKIE" ]; then\n  chmod 400 "$COOKIE" || true\nfi\nexec "$@"\n' > /usr/local/bin/fix-cookie && \

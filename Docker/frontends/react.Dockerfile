@@ -27,8 +27,10 @@ ENV REACT_APP_API_GATEWAY=$API_GATEWAY \
 # Copy package files first for better caching
 COPY Frontends/${MICROFRONTEND_NAME}/package*.json ./
 
-# Install dependencies with --production flag excluded dev dependencies are needed for build
-# Use cache mount for npm to speed up builds
+# Install dependencies - dev dependencies are needed for build process
+# Using npm ci for reproducible builds (faster than npm install)
+# --prefer-offline uses cached packages when available
+# --no-audit skips security audit for faster installs
 RUN --mount=type=cache,target=/root/.npm \
 	npm ci --prefer-offline --no-audit
 
