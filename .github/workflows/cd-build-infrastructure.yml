@@ -1015,7 +1015,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
-    needs: [setup, backup_data_volumes]
+    needs: [setup, generate_and_upload_truenas_compose_file]
     steps:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
@@ -1052,9 +1052,14 @@ jobs:
           ENV_SLUG="${{ needs.setup.outputs.env_slug }}"
           BASE_DOMAIN='${{ needs.setup.outputs.base_domain }}'
           
-          # Predefined list of external services that need maintenance pages
-          # dj-panel is the main frontend, strapi-cms is the CMS service
-          EXTERNAL_SERVICES="dj-panel strapi-cms"
+          # Get external services list from compose generation output
+          # This ensures maintenance pages match the actual services being deployed
+          EXTERNAL_MAP_JSON='${{ needs.generate_and_upload_truenas_compose_file.outputs.external_map_json }}'
+          echo "External services from compose: $EXTERNAL_MAP_JSON"
+          
+          # Extract service names from the external_map JSON
+          EXTERNAL_SERVICES=$(echo "$EXTERNAL_MAP_JSON" | jq -r 'keys[]' | tr '\n' ' ')
+          echo "Services to add maintenance pages: $EXTERNAL_SERVICES"
 
           # Map environment names to short aliases for URLs
           # Production uses empty string to get root domain (djbeatblaster.com)
