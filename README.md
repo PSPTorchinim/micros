@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-latest-47A248?style=for-the-badge&logo=mongodb)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?style=for-the-badge&logo=microsoftsqlserver)
-![Strapi](https://img.shields.io/badge/Strapi-5.31.2-2F2E8B?style=for-the-badge&logo=strapi)
+![Strapi](https://img.shields.io/badge/Strapi-5.33.0-2F2E8B?style=for-the-badge&logo=strapi)
 
 A comprehensive microservices platform for DJ services management, built with .NET 9, React, and modern cloud-native technologies.
 
