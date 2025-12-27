@@ -814,7 +814,7 @@ services:
     environment:
       - SERVER=sqlserver
       - PORT=1433
-      - USERNAME=${DATABASE_USER_SQLSERVER}
+      - USERNAME=sa
       - PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
       - DEBUG=false
     restart: unless-stopped
