@@ -1059,7 +1059,7 @@ jobs:
           echo "External services from compose: $EXTERNAL_MAP_JSON"
           
           # Extract service names from the external_map JSON
-          EXTERNAL_SERVICES=$(echo "$EXTERNAL_MAP_JSON" | jq -r 'keys[]' | tr '\n' ' ')
+          EXTERNAL_SERVICES=$(echo "$EXTERNAL_MAP_JSON" | jq -r '.[]' | cut -d: -f1 | tr '\n' ' ')
           echo "Services to add maintenance pages: $EXTERNAL_SERVICES"
 
           # Map environment names to short aliases for URLs
