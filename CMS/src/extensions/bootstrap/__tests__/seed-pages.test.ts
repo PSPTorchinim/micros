@@ -121,10 +121,7 @@ describe('Seed Pages', () => {
     });
 
     it('should have unique slugs for each page', () => {
-      const slugs = PAGE_SEEDS.map((p) => p.Slug);
-      const uniqueSlugs = new Set(slugs);
       // Action items can share '#' as slug since they don't navigate
-      const actionPages = PAGE_SEEDS.filter((p) => p.NavigationAction === 'Action');
       const linkPages = PAGE_SEEDS.filter((p) => p.NavigationAction === 'Link');
       const linkSlugs = linkPages.map((p) => p.Slug);
       const uniqueLinkSlugs = new Set(linkSlugs);
