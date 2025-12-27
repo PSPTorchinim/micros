@@ -9,13 +9,13 @@
  * ---------------------------------------------------------------
  */
 
-import { Api as BrandApi, ContentType as BrandContentType, HttpClient as BrandHttpClient } from './brand/apiMap';
-import { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient } from './documents/apiMap';
-import { Api as GearApi, ContentType as GearContentType, HttpClient as GearHttpClient } from './gear/apiMap';
-import { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as IdentityHttpClient } from './identity/apiMap';
-import { Api as MailingApi, ContentType as MailingContentType, HttpClient as MailingHttpClient } from './mailing/apiMap';
-import { Api as MusicApi, ContentType as MusicContentType, HttpClient as MusicHttpClient } from './music/apiMap';
-import { Api as PartyApi, ContentType as PartyContentType, HttpClient as PartyHttpClient } from './party/apiMap';
+import { Api as BrandApi } from './brand/apiMap';
+import { Api as DocumentsApi } from './documents/apiMap';
+import { Api as GearApi } from './gear/apiMap';
+import { Api as IdentityApi } from './identity/apiMap';
+import { Api as MailingApi } from './mailing/apiMap';
+import { Api as MusicApi } from './music/apiMap';
+import { Api as PartyApi } from './party/apiMap';
 
 export { BrandApi, BrandContentType, BrandHttpClient } from './brand/apiMap';
 export { DocumentsApi, DocumentsContentType, DocumentsHttpClient } from './documents/apiMap';

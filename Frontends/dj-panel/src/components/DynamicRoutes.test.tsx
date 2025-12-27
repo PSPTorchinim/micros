@@ -285,7 +285,7 @@ describe('DynamicRoutes - Route Path Construction', () => {
     mockGetRootPages.mockResolvedValue(mockPages);
     mockGetPagesByParentId.mockResolvedValue([]);
 
-    const { findByTestId, queryAllByTestId } = render(
+    const { queryAllByTestId } = render(
       <MemoryRouter>
         <TestNavigationComponent />
       </MemoryRouter>,
@@ -321,7 +321,7 @@ describe('DynamicRoutes - Route Path Construction', () => {
     mockGetRootPages.mockResolvedValue(mockPages);
     mockGetPagesByParentId.mockResolvedValue([]);
 
-    const { findByTestId, queryAllByTestId } = render(
+    const { queryAllByTestId } = render(
       <MemoryRouter>
         <TestNavigationComponent />
       </MemoryRouter>,
