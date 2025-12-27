@@ -415,13 +415,14 @@ jobs:
           OWNER="${{ github.repository_owner }}"
           REPO="micros"  # Hardcoded as per the generate script
 
-          # List of key images to check
+          # List of key images to check (only custom-built images)
+          # Note: Official images (redis, postgres, sqlserver, exporters) are not checked
+          # as they are pulled directly from Docker Hub / Microsoft registry
           images=(
             "ghcr.io/${OWNER,,}/${REPO,,}/services/djhostgateway:${DOCKER_TAG}"
             "ghcr.io/${OWNER,,}/${REPO,,}/services/companyapi:${DOCKER_TAG}"
             "ghcr.io/${OWNER,,}/${REPO,,}/frontends/dj-panel:${DOCKER_TAG}"
             "ghcr.io/${OWNER,,}/${REPO,,}/infra/mongodb:${DOCKER_TAG}"
-            "ghcr.io/${OWNER,,}/${REPO,,}/infra/sqlserver:${DOCKER_TAG}"
           )
 
           missing_images=()
@@ -1058,7 +1059,7 @@ jobs:
           echo "External services from compose: $EXTERNAL_MAP_JSON"
           
           # Extract service names from the external_map JSON
-          EXTERNAL_SERVICES=$(echo "$EXTERNAL_MAP_JSON" | jq -r 'keys[]' | tr '\n' ' ')
+          EXTERNAL_SERVICES=$(echo "$EXTERNAL_MAP_JSON" | jq -r '.[]' | cut -d: -f1 | tr '\n' ' ')
           echo "Services to add maintenance pages: $EXTERNAL_SERVICES"
 
           # Map environment names to short aliases for URLs
@@ -1638,7 +1639,7 @@ jobs:
                   if $service == "dj-panel" then
                     $env + "." + $base
                   else
-                    $service + "." + $env + "." + $base
+                    $service + "-" + $env + "." + $base
                   end
                 end
               )

@@ -208,22 +208,14 @@ jobs:
       matrix:
         image:
           - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
-          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
-          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
           - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
-          - {
-              name: "sqlserver",
-              dockerfile: "Docker/infra/sqlserver.Dockerfile",
-            }
           - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
           - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
-          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
-          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
-          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
-          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
+          # Note: redis, postgres, sqlserver, and 4x exporters now use official images
+          # configured directly in docker-compose.yml (no custom build required)
 
     steps:
       - name: Checkout Source Code

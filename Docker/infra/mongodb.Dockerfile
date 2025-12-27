@@ -24,8 +24,8 @@ USER root
 
 EXPOSE 27017
 
-# Optimized health check with longer intervals
+# Optimized health check - reduced start period and interval for faster deployment
 # Note: Complex mongosh command tests database connectivity and authentication
 # This is more reliable than a simple ping as it verifies full database functionality
-HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=5 \
+HEALTHCHECK --interval=15s --timeout=10s --start-period=45s --retries=5 \
   CMD mongosh --username="$MONGO_INITDB_ROOT_USERNAME" --password="$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase=admin --eval "try { db.adminCommand('ping').ok } catch(e) { print('Health check failed: ' + e); quit(1) }" --quiet || exit 1
