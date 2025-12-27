@@ -405,7 +405,8 @@ while IFS= read -r service; do
   # Determine port function - check if service has official image or dockerfile
   if [[ "$existing_image" != "null" && -n "$existing_image" ]]; then
     # For official images, infer port function from service name/pattern
-    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki)$ ]]; then
+    # Infrastructure services (databases, message queues, etc.) should NOT be exposed externally
+    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki|strapi_db|redis|sqlserver|mongodb_container|rabbitmq)$ ]]; then
       port_function="get_next_internal_port"
     else
       port_function="get_next_external_port"
