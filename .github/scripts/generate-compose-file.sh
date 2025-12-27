@@ -240,13 +240,18 @@ dockerfile_to_image() {
       echo "ghcr.io/${owner_lc}/${repo_lc}/services/${base_lc}:${DOCKER_TAG}"
     fi
   elif [[ "$normalized_dockerfile" == Docker/frontends/* || "$normalized_dockerfile" == *react.Dockerfile ]]; then
-    local microfrontend_name
-    microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
-    if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then
-      mfe_lc="$(to_lc "${microfrontend_name}")"
-      echo "ghcr.io/${owner_lc}/${repo_lc}/frontends/${mfe_lc}:${DOCKER_TAG}"
+    # For storybook, use the dockerfile base name instead of MICROFRONTEND_NAME
+    if [[ "$base_lc" == "storybook" ]]; then
+      echo "ghcr.io/${owner_lc}/${repo_lc}/frontends/storybook:${DOCKER_TAG}"
     else
-      echo "ghcr.io/${owner_lc}/${repo_lc}/frontends/${service_lc}:${DOCKER_TAG}"
+      local microfrontend_name
+      microfrontend_name=$(yq eval ".services.${service_name}.build.args.MICROFRONTEND_NAME" "$SOURCE_COMPOSE" 2>/dev/null || echo "")
+      if [[ -n "$microfrontend_name" && "$microfrontend_name" != "null" ]]; then
+        mfe_lc="$(to_lc "${microfrontend_name}")"
+        echo "ghcr.io/${owner_lc}/${repo_lc}/frontends/${mfe_lc}:${DOCKER_TAG}"
+      else
+        echo "ghcr.io/${owner_lc}/${repo_lc}/frontends/${service_lc}:${DOCKER_TAG}"
+      fi
     fi
   else
     log_warn "Unknown dockerfile pattern for $service_name; generic path"
