@@ -44,7 +44,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER", "-d", "$POSTGRES_DB", "-h", "127.0.0.1", "-p", "5432"]
+      test: ["CMD", "pg_isready", "-U", "${CMS_DATABASE_USERNAME}", "-d", "${CMS_DATABASE_NAME}", "-h", "127.0.0.1", "-p", "5432"]
       interval: 15s
       timeout: 10s
       start_period: 40s
