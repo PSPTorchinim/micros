@@ -122,6 +122,7 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+      - DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
     user: root
     restart: unless-stopped
     pull_policy: always
@@ -133,7 +134,7 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-U", "sa", "-P", "$MSSQL_SA_PASSWORD", "-Q", "SELECT 1", "-C"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-U", "sa", "-P", "${DATABASE_PASSWORD_SQLSERVER}", "-Q", "SELECT 1", "-C"]
       interval: 15s
       timeout: 10s
       start_period: 40s
