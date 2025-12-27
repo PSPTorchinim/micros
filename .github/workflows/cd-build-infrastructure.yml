@@ -1637,9 +1637,9 @@ jobs:
                 else
                   # Other environments: include environment prefix
                   if $service == "dj-panel" then
-                    $env + "." + $base
+                    $env + "-" + $base
                   else
-                    $service + "." + $env + "." + $base
+                    $service + "-" + $env + "." + $base
                   end
                 end
               )
