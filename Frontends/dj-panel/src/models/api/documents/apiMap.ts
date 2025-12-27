@@ -396,15 +396,3 @@ export class Api<
 
 // Aliased exports for unified API client
 export { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient };
-
-// Injected secure_key header interceptor
-if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
-  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
-    Api.prototype.instance.interceptors.request.use((config) => {
-      if (!config.headers) config.headers = {};
-      config.headers['secure_key'] = secureKey;
-      return config;
-    });
-  }
-}
