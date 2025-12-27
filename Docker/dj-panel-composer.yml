@@ -257,7 +257,7 @@ services:
     restart: unless-stopped
     pull_policy: always
     ports:
-      - "6006:6006"
+      - "6006:3000"
     networks:
       - public
     deploy:
