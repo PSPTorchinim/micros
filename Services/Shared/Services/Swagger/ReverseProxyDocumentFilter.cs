@@ -115,7 +115,7 @@ namespace Shared.Services.Swagger
         private bool IsDevelopmentEnvironment()
         {
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-            return environment == "Development";
+            return environment.Contains("Development");
         }
 
         private bool IsValidSwaggerUrl(string url)
