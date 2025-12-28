@@ -96,11 +96,21 @@ namespace IdentityAPI.Data
             _logger?.LogInformation("Seeding roles at {Time}", DateTime.UtcNow);
             try
             {
-                // Check if SuperOwner role already exists
-                var existingRole = await rolesRepository.Get(x => x.Name == "SuperOwner");
-                if (existingRole.Any())
+                // Check if SuperOwner role already exists with all permissions
+                var existingRoles = await rolesRepository.Get(x => x.Name == "SuperOwner");
+                var existingRole = existingRoles.FirstOrDefault();
+                
+                if (existingRole != null)
                 {
-                    _logger?.LogInformation("SuperOwner role already exists, skipping seed at {Time}", DateTime.UtcNow);
+                    _logger?.LogInformation("SuperOwner role already exists, updating permissions at {Time}", DateTime.UtcNow);
+                    
+                    // Update permissions for existing role
+                    var allPermissions = await permissionsRepository.Get();
+                    _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                    
+                    existingRole.Permissions = allPermissions;
+                    await rolesRepository.Update(existingRole);
+                    _logger?.LogInformation("Permissions updated for SuperOwner role successfully at {Time}", DateTime.UtcNow);
                     return;
                 }
 
@@ -111,15 +121,21 @@ namespace IdentityAPI.Data
                     Description = "Full access to all functions"
                 };
                 
-                await rolesRepository.Add(newRole);
+                var addResult = await rolesRepository.Add(newRole);
+                if (!addResult)
+                {
+                    _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
+                    return;
+                }
+                
                 _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
 
                 // Get the created role and assign permissions
                 var createdRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).First();
-                var allPermissions = await permissionsRepository.Get();
-                _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                var permissions = await permissionsRepository.Get();
+                _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", permissions.Count);
                 
-                createdRole.Permissions = allPermissions;
+                createdRole.Permissions = permissions;
                 await rolesRepository.Update(createdRole);
                 _logger?.LogInformation("Permissions assigned to SuperOwner role successfully at {Time}", DateTime.UtcNow);
                 
