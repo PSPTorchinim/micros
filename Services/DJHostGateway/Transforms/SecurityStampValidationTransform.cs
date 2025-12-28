@@ -29,19 +29,19 @@ namespace DJHostGateway.Transforms
         {
             var request = context.HttpContext.Request;
             
+            // Skip validation if user is not logged in (no JWT included)
+            var authHeader = request.Headers.Authorization.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader))
+            {
+                _logger.LogDebug("No authorization header found, skipping security stamp validation");
+                return;
+            }
+
             // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
             if (request.Path.StartsWithSegments("/identity/api", StringComparison.OrdinalIgnoreCase) &&
                 request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
             {
                 _logger.LogDebug("Skipping security stamp validation for ValidateSecurityStamp endpoint");
-                return;
-            }
-
-            // Skip validation for endpoints that don't require authentication
-            var authHeader = request.Headers.Authorization.FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(authHeader))
-            {
-                _logger.LogDebug("No authorization header found, skipping security stamp validation");
                 return;
             }
 
