@@ -72,11 +72,12 @@ The security stamp is added as a claim in the JWT:
 ### API Gateway Validation
 
 The gateway validation transform:
-1. Skips validation for `/identity` endpoints (to avoid circular calls)
-2. Skips validation for requests without Authorization header
-3. Extracts SecurityStamp from JWT claims
-4. Calls Identity API to validate against database/cache
-5. Returns 401 if stamp is invalid or mismatched
+1. Skips validation only for the `ValidateSecurityStamp` endpoint (to avoid circular calls)
+2. Validates all other requests, including other Identity API endpoints
+3. Skips validation for requests without Authorization header
+4. Extracts SecurityStamp from JWT claims
+5. Calls Identity API to validate against database/cache
+6. Returns 401 if stamp is invalid or mismatched
 
 ### Circuit Breaker
 

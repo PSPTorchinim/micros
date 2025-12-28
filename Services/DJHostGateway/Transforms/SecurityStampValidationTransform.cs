@@ -29,10 +29,11 @@ namespace DJHostGateway.Transforms
         {
             var request = context.HttpContext.Request;
             
-            // Skip validation for identity service endpoints (to avoid circular calls)
-            if (request.Path.StartsWithSegments("/identity", StringComparison.OrdinalIgnoreCase))
+            // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
+            if (request.Path.StartsWithSegments("/identity/api", StringComparison.OrdinalIgnoreCase) &&
+                request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                _logger.LogDebug("Skipping security stamp validation for identity endpoint");
+                _logger.LogDebug("Skipping security stamp validation for ValidateSecurityStamp endpoint");
                 return;
             }
 
