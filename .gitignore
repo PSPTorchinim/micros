@@ -2,7 +2,6 @@
 *.csproj.user
 obj/
 bin/
-Migrations/
 test
 *.log
 node_modules/
