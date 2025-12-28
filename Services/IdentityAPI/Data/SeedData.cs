@@ -104,20 +104,49 @@ namespace IdentityAPI.Data
                     return;
                 }
 
-                var allPermissions = await permissionsRepository.Get();
-                _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
-                
-                if (!allPermissions.Any())
-                {
-                    _logger?.LogWarning("No permissions found to assign to SuperOwner role at {Time}", DateTime.UtcNow);
-                }
-
-                await rolesRepository.Add(new Role()
+                // Create role without permissions first
+                var newRole = new Role()
                 {
                     Name = "SuperOwner",
-                    Description = "Full access to all functions",
-                    Permissions = allPermissions
-                });
+                    Description = "Full access to all functions"
+                };
+                
+                await rolesRepository.Add(newRole);
+                _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
+
+                // Now attach permissions using raw DbContext to avoid EF tracking issues
+                using (var context = await contextFactory.CreateDbContextAsync())
+                {
+                    var role = await context.Roles
+                        .Include(r => r.Permissions)
+                        .FirstOrDefaultAsync(r => r.Name == "SuperOwner");
+                    
+                    if (role != null)
+                    {
+                        var allPermissions = await context.Permissions.ToListAsync();
+                        _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                        
+                        if (allPermissions.Any())
+                        {
+                            // Clear and add permissions to avoid duplicate tracking
+                            foreach (var permission in allPermissions)
+                            {
+                                if (!role.Permissions.Any(p => p.Id == permission.Id))
+                                {
+                                    ((List<Permission>)role.Permissions).Add(permission);
+                                }
+                            }
+                            
+                            await context.SaveChangesAsync();
+                            _logger?.LogInformation("Permissions assigned to SuperOwner role successfully at {Time}", DateTime.UtcNow);
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("No permissions found to assign to SuperOwner role at {Time}", DateTime.UtcNow);
+                        }
+                    }
+                }
+                
                 _logger?.LogInformation("Roles seeded successfully at {Time}", DateTime.UtcNow);
             }
             catch (Exception ex)
