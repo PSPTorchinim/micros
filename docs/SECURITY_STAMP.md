@@ -143,9 +143,22 @@ The feature includes comprehensive unit tests:
 ### Environment Variables
 
 - `ASPNETCORE_IDENTITY_BE_ADDRESS`: URL of Identity API (required by Gateway)
+- `ASPNETCORE_STRAPI_ADDRESS`: URL of Strapi CMS (required by Gateway for proxying)
 - `ASPNETCORE_REDIS_HOST`: Redis host for caching (default: localhost)
 - `ASPNETCORE_REDIS_PORT`: Redis port (default: 6379)
 - `ASPNETCORE_REDIS_PASSWORD`: Redis password (optional)
+
+### Strapi Integration
+
+Strapi CMS is now proxied through the API Gateway to benefit from automatic security stamp validation:
+
+- **Gateway Route**: `/strapi/{**catch-all}` → `http://strapi:1337/{**catch-all}`
+- **Validation**: All authenticated Strapi requests are validated using the security stamp transform
+- **Frontend Changes**: Update frontend to use gateway URL instead of direct Strapi URL:
+  - Old: `http://localhost:1337/api/...`
+  - New: `http://localhost:3000/strapi/api/...`
+
+This ensures that users with invalid security stamps (after password change) are automatically logged out even when accessing Strapi content.
 
 ### Cache TTL
 
