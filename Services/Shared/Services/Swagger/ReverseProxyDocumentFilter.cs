@@ -22,6 +22,16 @@ namespace Shared.Services.Swagger
         private readonly ILogger<ReverseProxyDocumentFilter> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private const long MaxResponseSize = 10 * 1024 * 1024; // 10MB limit for swagger documents
+        
+        // IP address range constants for SSRF protection
+        private const byte LinkLocalFirstOctet = 169;
+        private const byte LinkLocalSecondOctet = 254;
+        private const byte PrivateClassAFirstOctet = 10;
+        private const byte PrivateClassBFirstOctet = 172;
+        private const byte PrivateClassBSecondOctetMin = 16;
+        private const byte PrivateClassBSecondOctetMax = 31;
+        private const byte PrivateClassCFirstOctet = 192;
+        private const byte PrivateClassCSecondOctet = 168;
 
         public ReverseProxyDocumentFilter(
             IOptions<ReverseProxyDocumentFilterConfig> config,
@@ -102,6 +112,12 @@ namespace Shared.Services.Swagger
             }
         }
 
+        private bool IsDevelopmentEnvironment()
+        {
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            return environment == "Development";
+        }
+
         private bool IsValidSwaggerUrl(string url)
         {
             // Validate URL format and prevent SSRF attacks
@@ -120,8 +136,7 @@ namespace Shared.Services.Swagger
             if (uri.IsLoopback)
             {
                 // Allow localhost only in development environment
-                var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-                if (environment != "Development")
+                if (!IsDevelopmentEnvironment())
                 {
                     return false;
                 }
@@ -138,13 +153,12 @@ namespace Shared.Services.Swagger
                     // IPv4 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
                     if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
-                        if (bytes[0] == 10 || 
-                            (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||
-                            (bytes[0] == 192 && bytes[1] == 168))
+                        if (bytes[0] == PrivateClassAFirstOctet || 
+                            (bytes[0] == PrivateClassBFirstOctet && bytes[1] >= PrivateClassBSecondOctetMin && bytes[1] <= PrivateClassBSecondOctetMax) ||
+                            (bytes[0] == PrivateClassCFirstOctet && bytes[1] == PrivateClassCSecondOctet))
                         {
                             // Allow private IPs only in development environment
-                            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-                            if (environment != "Development")
+                            if (!IsDevelopmentEnvironment())
                             {
                                 return false;
                             }
@@ -152,7 +166,7 @@ namespace Shared.Services.Swagger
                     }
                     
                     // Link-local addresses (169.254.0.0/16) - always block
-                    if (bytes[0] == 169 && bytes[1] == 254)
+                    if (bytes[0] == LinkLocalFirstOctet && bytes[1] == LinkLocalSecondOctet)
                     {
                         return false;
                     }
@@ -191,7 +205,15 @@ namespace Shared.Services.Swagger
                 var stream = await response.Content.ReadAsStreamAsync();
                 var reader = new OpenApiJsonReader();
                 var settings = new OpenApiReaderSettings();
-                var document = await reader.ReadAsync(stream, new Uri(url, UriKind.Absolute), settings);
+                
+                // Validate URL before creating Uri to prevent exceptions
+                if (!Uri.TryCreate(url, UriKind.Absolute, out var documentUri))
+                {
+                    _logger.LogWarning("Invalid URL format for OpenAPI reader: {Url}", url);
+                    return null;
+                }
+                
+                var document = await reader.ReadAsync(stream, documentUri, settings);
 
                 if (document.Diagnostic?.Errors != null && document.Diagnostic.Errors.Any())
                 {
