@@ -128,37 +128,14 @@ namespace IdentityAPI.Data
                     Description = "Full access to all functions"
                 };
                 
-                try
+                var addResult = await rolesRepository.Add(newRole);
+                if (!addResult)
                 {
-                    var addResult = await rolesRepository.Add(newRole);
-                    if (!addResult)
-                    {
-                        _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
-                        return;
-                    }
-                    
-                    _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
-                }
-                catch (Exception ex) when (ex.Message.Contains("DEFAULT_ERROR") || ex.InnerException?.Message.Contains("PK_Roles") == true)
-                {
-                    // Role was added concurrently by another instance
-                    _logger?.LogWarning("SuperOwner role was added concurrently, will update it instead at {Time}", DateTime.UtcNow);
-                    
-                    // Refresh the role from database
-                    existingRoles = await rolesRepository.Get(x => x.Name == "SuperOwner");
-                    existingRole = existingRoles.FirstOrDefault();
-                    
-                    if (existingRole != null)
-                    {
-                        var allPermissions = await permissionsRepository.Get();
-                        _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
-                        
-                        existingRole.Permissions = allPermissions;
-                        await rolesRepository.Update(existingRole);
-                        _logger?.LogInformation("Permissions updated for SuperOwner role successfully at {Time}", DateTime.UtcNow);
-                    }
+                    _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
                     return;
                 }
+                
+                _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
 
                 // Get the created role and assign permissions
                 var createdRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).First();
