@@ -66,23 +66,30 @@ namespace IdentityAPI.Data
                     return;
                 }
 
-                var roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner"));
-                _logger?.LogInformation("Retrieved {Count} roles for default user", roles.Count);
-                
-                await usersRepository.Add(new User()
+                // Create user without roles first
+                var newUser = new User()
                 {
-
                     Email = email,
                     Passwords = new List<Password>() {
                         new Password() { Value = password.computeHash() }
                     },
-                    Roles = roles,
                     Activated = true,
                     ActivationCode = StringHelper.GenerateRandomPassword(5),
                     SecurityStamp = Guid.NewGuid().ToString("N"),
                     LastPasswordChangeDate = DateTime.UtcNow
-                });
-                _logger?.LogInformation("Default user seeded successfully at {Time}", DateTime.UtcNow);
+                };
+                
+                await usersRepository.Add(newUser);
+                _logger?.LogInformation("Default user created at {Time}", DateTime.UtcNow);
+                
+                // Now retrieve the created user and assign roles
+                var createdUser = (await usersRepository.Get(x => x.Email == email)).First();
+                var roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner"));
+                _logger?.LogInformation("Retrieved {Count} roles for default user", roles.Count);
+                
+                createdUser.Roles = roles;
+                await usersRepository.Update(createdUser);
+                _logger?.LogInformation("Roles assigned to default user successfully at {Time}", DateTime.UtcNow);
             }
             catch (Exception ex)
             {
