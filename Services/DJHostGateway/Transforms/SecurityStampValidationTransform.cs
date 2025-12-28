@@ -140,9 +140,9 @@ namespace DJHostGateway.Transforms
                 Interlocked.Increment(ref _consecutiveFailures);
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation service error");
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
-                _logger.LogError(ex, "Unexpected error during security stamp validation");
+                _logger.LogError(ex, "JSON parsing error during security stamp validation");
                 Interlocked.Increment(ref _consecutiveFailures);
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
             }

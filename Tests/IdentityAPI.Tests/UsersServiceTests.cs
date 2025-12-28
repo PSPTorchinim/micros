@@ -285,7 +285,7 @@ namespace IdentityAPI.Tests
             var userId = Guid.NewGuid();
             var request = new ValidateSecurityStampRequestDTO { UserId = userId, SecurityStamp = "stamp" };
 
-            _securityStampServiceMock.Setup(s => s.GetUserSecurityDataAsync(userId)).ReturnsAsync((SecurityStampCacheData?)null);
+            _securityStampServiceMock.Setup(s => s.GetUserSecurityDataAsync(userId)).ReturnsAsync(null as SecurityStampCacheData);
 
             var result = await service.ValidateSecurityStamp(request);
             Assert.NotNull(result);

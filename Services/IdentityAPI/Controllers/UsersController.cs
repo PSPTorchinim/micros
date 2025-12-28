@@ -196,16 +196,16 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("ValidateSecurityStampV1 called for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                _logger.LogInformation("ValidateSecurityStampV1 called at {Time}", DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ValidateSecurityStamp(request);
-                    _logger.LogInformation("ValidateSecurityStampV1 succeeded for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    _logger.LogInformation("ValidateSecurityStampV1 succeeded at {Time}", DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ValidateSecurityStampV1 failed for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    _logger.LogError(ex, "ValidateSecurityStampV1 failed at {Time}", DateTime.UtcNow);
                     throw;
                 }
             });
