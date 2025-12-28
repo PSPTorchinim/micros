@@ -29,9 +29,9 @@ app.BuildBasicApp(null, options =>
 });
 
 // Add security stamp validation transform
-app.MapReverseProxy(proxyPipeline =>
+app.MapReverseProxy(async proxyPipeline =>
 {
-    proxyPipeline.Use((context, next) =>
+    proxyPipeline.Use(async (context, next) =>
     {
         var httpClientFactory = context.RequestServices.GetRequiredService<IHttpClientFactory>();
         var logger = context.RequestServices.GetRequiredService<ILogger<SecurityStampValidationTransform>>();
@@ -43,7 +43,8 @@ app.MapReverseProxy(proxyPipeline =>
             HttpContext = context
         };
         
-        return transform.ApplyAsync(transformContext).AsTask().ContinueWith(_ => next());
+        await transform.ApplyAsync(transformContext);
+        await next();
     });
     
     proxyPipeline.UseSessionAffinity();

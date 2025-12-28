@@ -71,6 +71,8 @@ namespace IdentityAPI.Services
 
         public string GenerateSecurityStamp()
         {
+            // Generate a security stamp using GUID in 'N' format (32 hex digits without dashes)
+            // This provides a compact, URL-safe identifier for security validation
             return Guid.NewGuid().ToString("N");
         }
 
