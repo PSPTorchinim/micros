@@ -22,22 +22,31 @@ The error occurs because cached assemblies from Swashbuckle 10.1.0 are incompati
 
 ## For Docker Deployments (TrueNAS/Docker Compose):
 
-The Dockerfile already includes proper restore steps, but Docker layer caching may cause issues.
+**IMPORTANT UPDATE:** The Dockerfile has been updated to include `--no-cache` flag in the 
+restore step to prevent this issue. However, existing Docker images must still be rebuilt.
 
-**Option 1 - Rebuild without cache (RECOMMENDED):**
+**Option 1 - Using Helper Script (RECOMMENDED):**
+   cd Docker/scripts
+   ./rebuild-clean.sh                # Rebuild all services
+   ./rebuild-clean.sh IdentityAPI    # Rebuild specific service only
+   
+   cd ..
+   docker-compose -f dj-panel-composer.yml up -d
+
+**Option 2 - Rebuild without cache:**
    cd Docker
    docker-compose -f dj-panel-composer.yml build --no-cache
    docker-compose -f dj-panel-composer.yml up -d
 
-**Option 2 - Force rebuild specific service:**
+**Option 3 - Force rebuild specific service:**
    cd Docker
    docker-compose -f dj-panel-composer.yml build --no-cache <service-name>
    docker-compose -f dj-panel-composer.yml up -d <service-name>
 
-**Option 3 - Nuclear option (removes all images and volumes):**
+**Option 4 - Nuclear option (if issues persist):**
    cd Docker
    docker-compose -f dj-panel-composer.yml down -v
-   docker system prune -af
+   docker system prune -af --volumes
    docker-compose -f dj-panel-composer.yml build --no-cache
    docker-compose -f dj-panel-composer.yml up -d
 
@@ -45,9 +54,11 @@ The Dockerfile already includes proper restore steps, but Docker layer caching m
    # Check that containers are running
    docker-compose -f dj-panel-composer.yml ps
    
-   # Check logs for the error
-   docker-compose -f dj-panel-composer.yml logs <service-name>
+   # Check logs for any TypeLoadException errors
+   docker-compose -f dj-panel-composer.yml logs IdentityAPI | grep -i "typeload"
+   docker-compose -f dj-panel-composer.yml logs DJHostGateway | grep -i "typeload"
 
-**Note:** The --no-cache flag ensures Docker doesn't use cached layers that may contain 
-the old Swashbuckle 10.1.0 assemblies. This forces a fresh download of all NuGet packages
-including the correct Swashbuckle 6.9.0 and OpenApi 1.6.22 versions.
+**Why This Happens:**
+Docker layer caching may preserve old Swashbuckle 10.1.0 assemblies in the restore layer.
+The Dockerfile now uses `dotnet restore --no-cache` to force fresh package downloads,
+but existing images built before this change need to be rebuilt with --no-cache flag.
