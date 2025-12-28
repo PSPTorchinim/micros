@@ -12,12 +12,12 @@ using Shared.Configurations;
 using Shared.Services.Database;
 using Shared.Services.MessagesBroker.RabbitMQ;
 using Shared.Services.Security;
+using Shared.Services.Swagger;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Yarp.ReverseProxy.Swagger;
-using Yarp.ReverseProxy.Swagger.Extensions;
+using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
 using Scope = Shared.Services.App.Scope;
 
@@ -37,6 +37,9 @@ namespace Shared.Services.Run
                     options.CacheProfiles.Add(profile.Key, profile.Value);
                 }
             }).AddJsonOptions(ConfigureJsonOptions);
+
+            // Add HttpClientFactory - required for swagger document filter in API Gateway
+            services.AddHttpClient();
 
             // Configure Serilog for structured logging with Loki
             ConfigureSerilog(name);

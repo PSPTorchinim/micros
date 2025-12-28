@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Yarp.ReverseProxy.Swagger;
+using Shared.Services.Swagger;
 
 namespace Shared.Services.Run
 {

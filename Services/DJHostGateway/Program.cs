@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using Shared.Services.App;
 using Shared.Services.Run;
+using Shared.Services.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Yarp.ReverseProxy.Swagger;
 using Yarp.ReverseProxy.Transforms;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +12,6 @@ builder.Host.UseSerilog();
 
 builder.Services.BuildBasicServices(builder.Configuration, "ApiGateway", "v0.0.1", true);
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-
-// Add HttpClientFactory for security stamp validation
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
