@@ -188,5 +188,27 @@ namespace IdentityAPI.Controllers
                 }
             });
         }
+
+        [AllowAnonymous]
+        [HttpPost("ValidateSecurityStamp")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<ValidateSecurityStampResponseDTO>))]
+        public async Task<IActionResult> ValidateSecurityStampV1(ValidateSecurityStampRequestDTO request)
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("ValidateSecurityStampV1 called for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                try
+                {
+                    var result = await _usersService.ValidateSecurityStamp(request);
+                    _logger.LogInformation("ValidateSecurityStampV1 succeeded for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "ValidateSecurityStampV1 failed for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
     }
 }

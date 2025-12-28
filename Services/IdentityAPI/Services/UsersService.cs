@@ -23,17 +23,20 @@ namespace IdentityAPI.Services
         Task<bool> ForgotPassword(ForgotPasswordRequestDTO request);
         Task<bool> ActivateAccount(ActivateAccountRequestDTO request);
         Task<LoginResponseDTO> GetLoggedUserData();
+        Task<ValidateSecurityStampResponseDTO> ValidateSecurityStamp(ValidateSecurityStampRequestDTO request);
     }
 
     public class UsersService : BaseService<IUsersService>, IUsersService
     {
         private readonly IUsersRepository _usersRepository;
         private readonly IAuthService _authService;
+        private readonly ISecurityStampService _securityStampService;
 
         public UsersService(ILogger<IUsersService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, RabbitMQProducerService rabbitMQProducerService, IServiceProvider serviceProvider) : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
             _usersRepository = serviceProvider.GetRequiredService<IUsersRepository>();
             _authService = serviceProvider.GetRequiredService<IAuthService>();
+            _securityStampService = serviceProvider.GetRequiredService<ISecurityStampService>();
         }
 
         public async Task<LoginResponseDTO?> Login(LoginUserRequestDTO loginUser)
@@ -115,7 +118,9 @@ namespace IdentityAPI.Services
                         }
                     },
                     Email = registerUser.Email,
-                    ActivationCode = StringHelper.GenerateRandomPassword(5)
+                    ActivationCode = StringHelper.GenerateRandomPassword(5),
+                    SecurityStamp = _securityStampService.GenerateSecurityStamp(),
+                    LastPasswordChangeDate = DateTime.UtcNow
                 };
 
                 await _usersRepository.Add(newUser);
@@ -243,9 +248,18 @@ namespace IdentityAPI.Services
                     var newPassword = new Password() { CreatedDate = DateTime.Now, Value = request.NewPassword };
                     user.Passwords.Add(newPassword);
                 }
+                
+                // Regenerate security stamp and update last password change date
+                user.SecurityStamp = _securityStampService.GenerateSecurityStamp();
+                user.LastPasswordChangeDate = DateTime.UtcNow;
+                
                 var result = await _usersRepository.Update(user);
                 if (result)
+                {
                     _logger.LogInformation("Password changed successfully for user id: {UserId}", id);
+                    // Invalidate cache to force logout on other devices
+                    await _securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
+                }
                 else
                     _logger.LogError("ChangePassword failed to update user: {UserId}", id);
                 return result;
@@ -273,11 +287,19 @@ namespace IdentityAPI.Services
                     UserId = foundByEmail.Id
                 });
 
+                // Regenerate security stamp and update last password change date
+                foundByEmail.SecurityStamp = _securityStampService.GenerateSecurityStamp();
+                foundByEmail.LastPasswordChangeDate = DateTime.UtcNow;
+
                 ///send mail about password change
 
                 var result = await _usersRepository.Update(foundByEmail);
                 if (result)
+                {
                     _logger.LogInformation("ForgotPassword: password reset for user {Email}", request.Email);
+                    // Invalidate cache to force logout on all devices
+                    await _securityStampService.InvalidateUserSecurityCacheAsync(foundByEmail.Id);
+                }
                 else
                     _logger.LogError("ForgotPassword failed to update user: {Email}", request.Email);
                 return result;
@@ -341,6 +363,62 @@ namespace IdentityAPI.Services
                 tokenResponse.User = _mapper.Map<GetUserDTO>(user);
                 _logger.LogInformation("GetLoggedUserData successful for user id: {UserId}", userId);
                 return tokenResponse;
+            }, _logger);
+        }
+
+        public async Task<ValidateSecurityStampResponseDTO> ValidateSecurityStamp(ValidateSecurityStampRequestDTO request)
+        {
+            _logger.LogInformation("ValidateSecurityStamp attempt for user: {UserId}", request.UserId);
+            return await ExceptionHandler.Handle(async () =>
+            {
+                if (string.IsNullOrWhiteSpace(request.SecurityStamp))
+                {
+                    _logger.LogWarning("ValidateSecurityStamp failed: empty security stamp for user {UserId}", request.UserId);
+                    return new ValidateSecurityStampResponseDTO
+                    {
+                        IsValid = false,
+                        Reason = "Invalid security stamp: stamp is empty"
+                    };
+                }
+
+                _logger.LogDebug("Fetching cached security data for user: {UserId}", request.UserId);
+                var cachedData = await _securityStampService.GetUserSecurityDataAsync(request.UserId);
+                
+                if (cachedData == null)
+                {
+                    _logger.LogWarning("ValidateSecurityStamp failed: user not found {UserId}", request.UserId);
+                    return new ValidateSecurityStampResponseDTO
+                    {
+                        IsValid = false,
+                        Reason = "User not found"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(cachedData.SecurityStamp))
+                {
+                    _logger.LogWarning("ValidateSecurityStamp failed: user has no security stamp {UserId}", request.UserId);
+                    return new ValidateSecurityStampResponseDTO
+                    {
+                        IsValid = false,
+                        Reason = "User security stamp not initialized"
+                    };
+                }
+
+                if (!cachedData.SecurityStamp.Equals(request.SecurityStamp, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("ValidateSecurityStamp failed: security stamp mismatch for user {UserId}. Password may have been changed.", request.UserId);
+                    return new ValidateSecurityStampResponseDTO
+                    {
+                        IsValid = false,
+                        Reason = "Security stamp mismatch - password was changed"
+                    };
+                }
+
+                _logger.LogInformation("ValidateSecurityStamp successful for user: {UserId}", request.UserId);
+                return new ValidateSecurityStampResponseDTO
+                {
+                    IsValid = true
+                };
             }, _logger);
         }
     }

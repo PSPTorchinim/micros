@@ -66,7 +66,9 @@ namespace IdentityAPI.Data
                     },
                     Roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner")),
                     Activated = true,
-                    ActivationCode = StringHelper.GenerateRandomPassword(5)
+                    ActivationCode = StringHelper.GenerateRandomPassword(5),
+                    SecurityStamp = Guid.NewGuid().ToString("N"),
+                    LastPasswordChangeDate = DateTime.UtcNow
                 });
                 _logger?.LogInformation("Default user seeded successfully at {Time}", DateTime.UtcNow);
             }
