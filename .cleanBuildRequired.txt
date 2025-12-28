@@ -1,0 +1,64 @@
+IMPORTANT: After downgrading Swashbuckle from 10.1.0 to 6.9.0, a clean rebuild is required.
+
+To resolve the TypeLoadException for AddHeaderParameter.Apply method:
+  System.TypeLoadException: Method 'Apply' in type 'Shared.Services.Security.AddHeaderParameter' 
+  from assembly 'Shared, Version=1.0.0.0' does not have an implementation.
+
+The error occurs because cached assemblies from Swashbuckle 10.1.0 are incompatible with 6.9.0.
+
+## For Local Development:
+
+1. Clear NuGet cache:
+   dotnet nuget locals all --clear
+
+2. Clean all build artifacts:
+   rm -rf Services/*/bin Services/*/obj
+
+3. Restore packages:
+   dotnet restore
+
+4. Rebuild:
+   dotnet build
+
+## For Docker Deployments (TrueNAS/Docker Compose):
+
+**IMPORTANT UPDATE:** The Dockerfile has been updated to include `--no-cache` flag in the 
+restore step to prevent this issue. However, existing Docker images must still be rebuilt.
+
+**Option 1 - Using Helper Script (RECOMMENDED):**
+   cd Docker/scripts
+   ./rebuild-clean.sh                # Rebuild all services
+   ./rebuild-clean.sh IdentityAPI    # Rebuild specific service only
+   
+   cd ..
+   docker-compose -f dj-panel-composer.yml up -d
+
+**Option 2 - Rebuild without cache:**
+   cd Docker
+   docker-compose -f dj-panel-composer.yml build --no-cache
+   docker-compose -f dj-panel-composer.yml up -d
+
+**Option 3 - Force rebuild specific service:**
+   cd Docker
+   docker-compose -f dj-panel-composer.yml build --no-cache <service-name>
+   docker-compose -f dj-panel-composer.yml up -d <service-name>
+
+**Option 4 - Nuclear option (if issues persist):**
+   cd Docker
+   docker-compose -f dj-panel-composer.yml down -v
+   docker system prune -af --volumes
+   docker-compose -f dj-panel-composer.yml build --no-cache
+   docker-compose -f dj-panel-composer.yml up -d
+
+**Verification:**
+   # Check that containers are running
+   docker-compose -f dj-panel-composer.yml ps
+   
+   # Check logs for any TypeLoadException errors
+   docker-compose -f dj-panel-composer.yml logs IdentityAPI | grep -i "typeload"
+   docker-compose -f dj-panel-composer.yml logs DJHostGateway | grep -i "typeload"
+
+**Why This Happens:**
+Docker layer caching may preserve old Swashbuckle 10.1.0 assemblies in the restore layer.
+The Dockerfile now uses `dotnet restore --no-cache` to force fresh package downloads,
+but existing images built before this change need to be rebuilt with --no-cache flag.
