@@ -16,8 +16,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Yarp.ReverseProxy.Swagger;
-using Yarp.ReverseProxy.Swagger.Extensions;
 using Yarp.ReverseProxy.Transforms;
 using Scope = Shared.Services.App.Scope;
 
@@ -214,9 +212,6 @@ namespace Shared.Services.Run
         {
             services.AddSwaggerGen(c =>
             {
-                if (isApiGW)
-                    c.DocumentFilter<ReverseProxyDocumentFilter>();
-
                 c.OperationFilter<AddHeaderParameter>();
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = $"{name} Microservice", Version = version });
 
@@ -297,7 +292,6 @@ namespace Shared.Services.Run
 
             services.AddReverseProxy()
                 .LoadFromConfig(reverseProxyConfiguration.GetSection("ReverseProxy"))
-                .AddSwagger(reverseProxyConfiguration.GetSection("ReverseProxy"))
                 .AddTransforms(builderContext =>
                 {
                     builderContext.AddRequestTransform(ctx =>

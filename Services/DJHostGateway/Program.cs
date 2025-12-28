@@ -3,7 +3,6 @@ using Serilog;
 using Shared.Services.App;
 using Shared.Services.Run;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Yarp.ReverseProxy.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
@@ -16,11 +15,8 @@ var app = builder.Build();
 app.BuildBasicApp(null, options =>
 {
     options.SwaggerEndpoint($"/swagger/v1/swagger.json", "Api Gateway");
-    var config = app.Services.GetRequiredService<IOptionsMonitor<ReverseProxyDocumentFilterConfig>>().CurrentValue;
-    foreach (var cluster in config.Clusters)
-    {
-        options.SwaggerEndpoint($"/swagger/{cluster.Key}/swagger.json", cluster.Key);
-    }
+    // Swagger endpoints for downstream services are now configured manually
+    // You can add individual service endpoints here if needed
 });
 app.MapReverseProxy();
 
