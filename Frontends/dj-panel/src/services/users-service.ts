@@ -47,4 +47,49 @@ export class UsersService {
         );
       });
   }
+
+  public static async GetMe(): Promise<LoginResponseDTOResponse> {
+    return microservicesClient.identity.users
+      .apiV1UsersMeList()
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: null,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
+      });
+  }
+
+  public static async ChangePassword(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<BooleanResponse> {
+    const hashedOldPassword = SHA256(oldPassword);
+    const hashedNewPassword = SHA256(newPassword);
+    const requestBody = {
+      oldPassword: hashedOldPassword.toString(),
+      newPassword: hashedNewPassword.toString(),
+    };
+    return microservicesClient.identity.users
+      .apiV1UsersChangePasswordUpdate(requestBody)
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: false,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
+      });
+  }
 }

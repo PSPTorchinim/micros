@@ -1,0 +1,102 @@
+.profile-block-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--dl-space-space-twounits);
+  min-height: 400px;
+}
+
+.profile-block-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+  padding: var(--dl-space-space-threeunits);
+  border-radius: var(--dl-radius-radius-cardradius);
+  background-color: var(--dl-color-theme-background);
+  box-shadow: 0 4px 6px var(--dl-color-theme-shadow);
+  max-width: 600px;
+  width: 100%;
+}
+
+.profile-block-title {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--dl-color-theme-text-primary);
+  margin: 0 0 var(--dl-space-space-unit) 0;
+}
+
+.profile-block-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+}
+
+.profile-block-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-halfunit);
+}
+
+.profile-block-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dl-color-theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-block-value {
+  font-size: 16px;
+  color: var(--dl-color-theme-text-primary);
+  margin: 0;
+  padding: var(--dl-space-space-unit);
+  background-color: var(--dl-color-theme-accent1);
+  border-radius: var(--dl-radius-radius-radius4);
+}
+
+.profile-block-status-active {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.profile-block-status-inactive {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.profile-block-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dl-space-space-halfunit);
+}
+
+.profile-block-role-badge {
+  display: inline-block;
+  padding: var(--dl-space-space-halfunit) var(--dl-space-space-unit);
+  background-color: var(--dl-color-theme-primary1);
+  color: white;
+  border-radius: var(--dl-radius-radius-radius4);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-block-error {
+  font-size: 14px;
+  color: #dc3545;
+  padding: var(--dl-space-space-unit);
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: var(--dl-radius-radius-radius4);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .profile-block-card {
+    padding: var(--dl-space-space-twounits);
+    max-width: 100%;
+  }
+
+  .profile-block-title {
+    font-size: 24px;
+  }
+}

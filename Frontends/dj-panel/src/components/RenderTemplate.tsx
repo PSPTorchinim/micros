@@ -128,6 +128,28 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      // For Profile, ChangePassword, and Dashboard templates, render static blocks
+      if (templateType === 'Profile') {
+        if (mounted) {
+          setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
+        }
+        return;
+      }
+
+      if (templateType === 'ChangePassword') {
+        if (mounted) {
+          setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
+        }
+        return;
+      }
+
+      if (templateType === 'Dashboard') {
+        if (mounted) {
+          setBlocks([{ __kind: 'dashboard-block' } as ContentBlock]);
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.attributes?.Content,
