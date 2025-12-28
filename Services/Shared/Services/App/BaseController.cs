@@ -36,8 +36,8 @@ namespace Shared.Services.App
         }
 
         public async Task<IActionResult> Handle<T>(
-            Func<Task<T>> action = null,
-            Func<T, IActionResult> customResponse = null)
+            Func<Task<T>>? action = null,
+            Func<T, IActionResult>? customResponse = null)
         {
             var response = new Response<T>(default);
             try

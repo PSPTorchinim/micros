@@ -5,7 +5,7 @@
 
         public RabbitMQResponse() { }
 
-        public RabbitMQResponse(T data, string message = null) : base(data, message)
+        public RabbitMQResponse(T data, string? message = null) : base(data, message)
         {
         }
 
