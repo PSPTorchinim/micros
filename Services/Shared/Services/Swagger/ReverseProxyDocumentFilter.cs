@@ -69,7 +69,8 @@ namespace Shared.Services.Swagger
                                 _logger.LogInformation("Fetching swagger from: {SwaggerUrl}", swaggerUrl);
 
                                 // Fetch and merge the swagger document
-                                var remoteDoc = FetchSwaggerDocumentAsync(swaggerUrl).GetAwaiter().GetResult();
+                                // Using ConfigureAwait(false) to reduce deadlock risk in sync context
+                                var remoteDoc = FetchSwaggerDocumentAsync(swaggerUrl).ConfigureAwait(false).GetAwaiter().GetResult();
                                 
                                 if (remoteDoc != null)
                                 {
