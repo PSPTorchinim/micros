@@ -57,6 +57,18 @@ namespace IdentityAPI.Data
                 {
                     throw new Exception("ASPNETCORE_DJPANEL_USER_PASSWORD environment variable is not set.");
                 }
+
+                // Check if user with this email already exists
+                var existingUsers = await usersRepository.Get(x => x.Email == email);
+                if (existingUsers.Any())
+                {
+                    _logger?.LogInformation("User with email {Email} already exists, skipping seed at {Time}", email, DateTime.UtcNow);
+                    return;
+                }
+
+                var roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner"));
+                _logger?.LogInformation("Retrieved {Count} roles for default user", roles.Count);
+                
                 await usersRepository.Add(new User()
                 {
 
@@ -64,7 +76,7 @@ namespace IdentityAPI.Data
                     Passwords = new List<Password>() {
                         new Password() { Value = password.computeHash() }
                     },
-                    Roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner")),
+                    Roles = roles,
                     Activated = true,
                     ActivationCode = StringHelper.GenerateRandomPassword(5),
                     SecurityStamp = Guid.NewGuid().ToString("N"),
@@ -84,11 +96,27 @@ namespace IdentityAPI.Data
             _logger?.LogInformation("Seeding roles at {Time}", DateTime.UtcNow);
             try
             {
+                // Check if SuperOwner role already exists
+                var existingRole = await rolesRepository.Get(x => x.Name == "SuperOwner");
+                if (existingRole.Any())
+                {
+                    _logger?.LogInformation("SuperOwner role already exists, skipping seed at {Time}", DateTime.UtcNow);
+                    return;
+                }
+
+                var allPermissions = await permissionsRepository.Get();
+                _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                
+                if (!allPermissions.Any())
+                {
+                    _logger?.LogWarning("No permissions found to assign to SuperOwner role at {Time}", DateTime.UtcNow);
+                }
+
                 await rolesRepository.Add(new Role()
                 {
                     Name = "SuperOwner",
                     Description = "Full access to all functions",
-                    Permissions = await permissionsRepository.Get()
+                    Permissions = allPermissions
                 });
                 _logger?.LogInformation("Roles seeded successfully at {Time}", DateTime.UtcNow);
             }
@@ -104,6 +132,15 @@ namespace IdentityAPI.Data
             _logger?.LogInformation("Seeding permissions at {Time}", DateTime.UtcNow);
             try
             {
+                // Check existing permissions to avoid duplicates
+                var existingPermissions = await permissionsRepository.Get();
+                var existingPermissionNames = new HashSet<string>(existingPermissions.Select(p => p.Name));
+                
+                if (existingPermissionNames.Any())
+                {
+                    _logger?.LogInformation("Found {Count} existing permissions, will skip duplicates", existingPermissionNames.Count);
+                }
+
                 // Build list of permissions first to avoid race conditions
                 var permissions = new List<Permission>();
                 
@@ -111,32 +148,56 @@ namespace IdentityAPI.Data
                 {
                     foreach (var command in new List<string>(["read", "update", "delete"]))
                     {
-                        permissions.Add(new Permission()
+                        var permName = $"{entry}:{command}";
+                        if (!existingPermissionNames.Contains(permName))
                         {
-                            Name = $"{entry}:{command}",
-                            Description = $"{command} {entry}"
-                        });
+                            permissions.Add(new Permission()
+                            {
+                                Name = permName,
+                                Description = $"{command} {entry}"
+                            });
+                        }
 
-                        permissions.Add(new Permission()
+                        var permNameAll = $"{entry}:{command}:all";
+                        if (!existingPermissionNames.Contains(permNameAll))
                         {
-                            Name = $"{entry}:{command}:all",
-                            Description = $"{command} all {entry}"
-                        });
+                            permissions.Add(new Permission()
+                            {
+                                Name = permNameAll,
+                                Description = $"{command} all {entry}"
+                            });
+                        }
                     }
 
+                    var createPermName = $"{entry}:create";
+                    if (!existingPermissionNames.Contains(createPermName))
+                    {
+                        permissions.Add(new Permission()
+                        {
+                            Name = createPermName,
+                            Description = $"create {entry}"
+                        });
+                    }
+                }
+
+                var blockPermName = "users:block";
+                if (!existingPermissionNames.Contains(blockPermName))
+                {
                     permissions.Add(new Permission()
                     {
-                        Name = $"{entry}:create",
-                        Description = $"create {entry}"
+                        Name = blockPermName,
+                        Description = "block users"
                     });
                 }
 
-                permissions.Add(new Permission()
+                if (!permissions.Any())
                 {
-                    Name = $"users:block",
-                    Description = $"block users"
-                });
+                    _logger?.LogInformation("All permissions already exist, skipping seed at {Time}", DateTime.UtcNow);
+                    return;
+                }
 
+                _logger?.LogInformation("Seeding {Count} new permissions", permissions.Count);
+                
                 // Add all permissions sequentially to avoid duplicate key issues
                 foreach (var permission in permissions)
                 {
