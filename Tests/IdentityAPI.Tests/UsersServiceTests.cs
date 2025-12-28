@@ -17,6 +17,7 @@ namespace IdentityAPI.Tests
     {
         private readonly Mock<IUsersRepository> _usersRepositoryMock = new();
         private readonly Mock<IAuthService> _authServiceMock = new();
+        private readonly Mock<ISecurityStampService> _securityStampServiceMock = new();
         private readonly Mock<ILogger<IUsersService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
@@ -27,6 +28,7 @@ namespace IdentityAPI.Tests
         {
             _serviceProviderMock.Setup(x => x.GetService(typeof(IUsersRepository))).Returns(_usersRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(IAuthService))).Returns(_authServiceMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(ISecurityStampService))).Returns(_securityStampServiceMock.Object);
             return new UsersService(
                 _loggerMock.Object,
                 _mapperMock.Object,
@@ -231,6 +233,112 @@ namespace IdentityAPI.Tests
             var result = await service.GetLoggedUserData();
             Assert.NotNull(result);
             Assert.Equal("refresh", result.RefreshToken);
+        }
+
+        [Fact]
+        public async Task ValidateSecurityStamp_ReturnsValid_WhenStampsMatch()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var securityStamp = "valid-stamp";
+            var request = new ValidateSecurityStampRequestDTO { UserId = userId, SecurityStamp = securityStamp };
+            var cachedData = new SecurityStampCacheData
+            {
+                UserId = userId,
+                SecurityStamp = securityStamp,
+                LastPasswordChangeDate = DateTime.UtcNow
+            };
+
+            _securityStampServiceMock.Setup(s => s.GetUserSecurityDataAsync(userId)).ReturnsAsync(cachedData);
+
+            var result = await service.ValidateSecurityStamp(request);
+            Assert.NotNull(result);
+            Assert.True(result.IsValid);
+            Assert.Null(result.Reason);
+        }
+
+        [Fact]
+        public async Task ValidateSecurityStamp_ReturnsInvalid_WhenStampsMismatch()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var request = new ValidateSecurityStampRequestDTO { UserId = userId, SecurityStamp = "old-stamp" };
+            var cachedData = new SecurityStampCacheData
+            {
+                UserId = userId,
+                SecurityStamp = "new-stamp",
+                LastPasswordChangeDate = DateTime.UtcNow
+            };
+
+            _securityStampServiceMock.Setup(s => s.GetUserSecurityDataAsync(userId)).ReturnsAsync(cachedData);
+
+            var result = await service.ValidateSecurityStamp(request);
+            Assert.NotNull(result);
+            Assert.False(result.IsValid);
+            Assert.Equal("Security stamp mismatch - password was changed", result.Reason);
+        }
+
+        [Fact]
+        public async Task ValidateSecurityStamp_ReturnsInvalid_WhenUserNotFound()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var request = new ValidateSecurityStampRequestDTO { UserId = userId, SecurityStamp = "stamp" };
+
+            _securityStampServiceMock.Setup(s => s.GetUserSecurityDataAsync(userId)).ReturnsAsync((SecurityStampCacheData?)null);
+
+            var result = await service.ValidateSecurityStamp(request);
+            Assert.NotNull(result);
+            Assert.False(result.IsValid);
+            Assert.Equal("User not found", result.Reason);
+        }
+
+        [Fact]
+        public async Task ValidateSecurityStamp_ReturnsInvalid_WhenStampEmpty()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var request = new ValidateSecurityStampRequestDTO { UserId = userId, SecurityStamp = "" };
+
+            var result = await service.ValidateSecurityStamp(request);
+            Assert.NotNull(result);
+            Assert.False(result.IsValid);
+            Assert.Equal("Invalid security stamp: stamp is empty", result.Reason);
+        }
+
+        [Fact]
+        public async Task ChangePassword_InvalidatesCacheAndRegeneratesStamp()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Passwords = new List<Password> { new Password { Value = "oldpass", CreatedDate = DateTime.Now } },
+                Blocks = new List<Block>(),
+                ActivationCode = "code",
+                Roles = new List<Role>(),
+                SecurityStamp = "old-stamp"
+            };
+            var request = new ChangePasswordRequestDTO { OldPassword = "oldpass", NewPassword = "newpass" };
+
+            _usersRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+                .ReturnsAsync(new List<User> { user });
+            _usersRepositoryMock.Setup(r => r.Update(It.IsAny<User>())).ReturnsAsync(true);
+            _securityStampServiceMock.Setup(s => s.GenerateSecurityStamp()).Returns("new-stamp");
+
+            var claims = new List<Claim> { new Claim("Id", userId.ToString()) };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = principal };
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+            var result = await service.ChangePassword(request);
+
+            Assert.True(result);
+            _securityStampServiceMock.Verify(s => s.GenerateSecurityStamp(), Times.Once);
+            _securityStampServiceMock.Verify(s => s.InvalidateUserSecurityCacheAsync(userId), Times.Once);
         }
     }
 }
