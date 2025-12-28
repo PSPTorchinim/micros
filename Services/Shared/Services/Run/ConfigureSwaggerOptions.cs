@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Yarp.ReverseProxy.Swagger;
 
 namespace Shared.Services.Run
 {
     using Microsoft.Extensions.Logging;
+    using Microsoft.OpenApi;
 
     public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
     {
