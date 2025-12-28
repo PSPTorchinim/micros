@@ -1,0 +1,20 @@
+IMPORTANT: After downgrading Swashbuckle from 10.1.0 to 6.9.0, a clean rebuild is required.
+
+To resolve the TypeLoadException for AddHeaderParameter.Apply method:
+
+1. Clear NuGet cache:
+   dotnet nuget locals all --clear
+
+2. Clean all build artifacts:
+   rm -rf Services/*/bin Services/*/obj
+
+3. Restore packages:
+   dotnet restore
+
+4. Rebuild:
+   dotnet build
+
+5. If using Docker, rebuild images:
+   docker-compose build --no-cache
+
+The error occurs because cached assemblies from Swashbuckle 10.1.0 are incompatible with 6.9.0.
