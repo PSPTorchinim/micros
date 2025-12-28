@@ -6,6 +6,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace Shared.Services.Swagger
         private readonly ReverseProxyDocumentFilterConfig _config;
         private readonly ILogger<ReverseProxyDocumentFilter> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private const long MaxResponseSize = 10 * 1024 * 1024; // 10MB limit for swagger documents
 
         public ReverseProxyDocumentFilter(
             IOptions<ReverseProxyDocumentFilterConfig> config,
@@ -66,6 +68,14 @@ namespace Shared.Services.Swagger
                             try
                             {
                                 var swaggerUrl = $"{destination.Address.TrimEnd('/')}/{path.TrimStart('/')}";
+                                
+                                // Validate URL before making request to prevent SSRF attacks
+                                if (!IsValidSwaggerUrl(swaggerUrl))
+                                {
+                                    _logger.LogWarning("Invalid or unsafe swagger URL rejected: {SwaggerUrl}", swaggerUrl);
+                                    continue;
+                                }
+                                
                                 _logger.LogInformation("Fetching swagger from: {SwaggerUrl}", swaggerUrl);
 
                                 // Fetch and merge the swagger document
@@ -92,17 +102,89 @@ namespace Shared.Services.Swagger
             }
         }
 
+        private bool IsValidSwaggerUrl(string url)
+        {
+            // Validate URL format and prevent SSRF attacks
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            // Only allow HTTP and HTTPS schemes
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                return false;
+            }
+
+            // Prevent access to localhost and loopback addresses to mitigate SSRF
+            if (uri.IsLoopback)
+            {
+                // Allow localhost only in development environment
+                var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+                if (environment != "Development")
+                {
+                    return false;
+                }
+            }
+
+            // Prevent access to private IP ranges to mitigate SSRF
+            if (uri.HostNameType == UriHostNameType.IPv4 || uri.HostNameType == UriHostNameType.IPv6)
+            {
+                if (IPAddress.TryParse(uri.Host, out var ipAddress))
+                {
+                    // Check if it's a private IP address
+                    var bytes = ipAddress.GetAddressBytes();
+                    
+                    // IPv4 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+                    if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        if (bytes[0] == 10 || 
+                            (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||
+                            (bytes[0] == 192 && bytes[1] == 168))
+                        {
+                            // Allow private IPs only in development environment
+                            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+                            if (environment != "Development")
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Link-local addresses (169.254.0.0/16) - always block
+                    if (bytes[0] == 169 && bytes[1] == 254)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private async Task<OpenApiDocument?> FetchSwaggerDocumentAsync(string url)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(10);
+                
+                // Set max response size to prevent resource exhaustion
+                client.MaxResponseContentBufferSize = MaxResponseSize;
 
                 var response = await client.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch swagger from {Url}: {StatusCode}", url, response.StatusCode);
+                    return null;
+                }
+
+                // Check content length before reading to prevent resource exhaustion
+                if (response.Content.Headers.ContentLength.HasValue && 
+                    response.Content.Headers.ContentLength.Value > MaxResponseSize)
+                {
+                    _logger.LogWarning("Swagger document at {Url} exceeds maximum size limit of {MaxSize} bytes", 
+                        url, MaxResponseSize);
                     return null;
                 }
 
