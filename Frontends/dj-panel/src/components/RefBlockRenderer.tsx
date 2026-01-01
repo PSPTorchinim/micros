@@ -1,5 +1,5 @@
 import React from 'react';
-import { strapiAPI } from '../services/strapi-api';
+import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
@@ -96,31 +96,32 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
         if (docId) {
           switch (base) {
             case 'article-block':
-              data = await strapiAPI.getArticleBlockByDocumentId(docId);
+              data = await StrapiService.getArticleBlockByDocumentId(docId);
               break;
             case 'hero-block':
-              data = await strapiAPI.getHeroBlockByDocumentId(docId);
+              data = await StrapiService.getHeroBlockByDocumentId(docId);
               break;
             case 'image-slider':
-              data = await strapiAPI.getImageSliderBlockByDocumentId(docId);
+              data = await StrapiService.getImageSliderBlockByDocumentId(docId);
               break;
             case 'steps-container':
-              data = await strapiAPI.getStepsContainerBlockByDocumentId(docId);
+              data =
+                await StrapiService.getStepsContainerBlockByDocumentId(docId);
               break;
             case 'cta':
-              data = await strapiAPI.getCTABlockByDocumentId(docId);
+              data = await StrapiService.getCTABlockByDocumentId(docId);
               break;
             case 'feature-section':
-              data = await strapiAPI.getFeatureSectionByDocumentId(docId);
+              data = await StrapiService.getFeatureSectionByDocumentId(docId);
               break;
             case 'contact-section':
-              data = await strapiAPI.getContactSectionByDocumentId(docId);
+              data = await StrapiService.getContactSectionByDocumentId(docId);
               break;
             case 'feature-tab':
-              data = await strapiAPI.getFeatureTabBlockByDocumentId(docId);
+              data = await StrapiService.getFeatureTabBlockByDocumentId(docId);
               break;
             case 'contact-info':
-              data = await strapiAPI.getContactInfoBlockByDocumentId(docId);
+              data = await StrapiService.getContactInfoBlockByDocumentId(docId);
               break;
             default:
               setError(`Unknown ref base: ${base}`);
@@ -132,31 +133,31 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
         if (!data && numericId) {
           switch (base) {
             case 'article-block':
-              data = await strapiAPI.getArticleBlockById(numericId);
+              data = await StrapiService.getArticleBlockById(numericId);
               break;
             case 'hero-block':
-              data = await strapiAPI.getHeroBlockById(numericId);
+              data = await StrapiService.getHeroBlockById(numericId);
               break;
             case 'image-slider':
-              data = await strapiAPI.getImageSliderBlockById(numericId);
+              data = await StrapiService.getImageSliderBlockById(numericId);
               break;
             case 'steps-container':
-              data = await strapiAPI.getStepsContainerBlockById(numericId);
+              data = await StrapiService.getStepsContainerBlockById(numericId);
               break;
             case 'cta':
-              data = await strapiAPI.getCTABlockById(numericId);
+              data = await StrapiService.getCTABlockById(numericId);
               break;
             case 'feature-section':
-              data = await strapiAPI.getFeatureSectionById(numericId);
+              data = await StrapiService.getFeatureSectionById(numericId);
               break;
             case 'contact-section':
-              data = await strapiAPI.getContactSectionById(numericId);
+              data = await StrapiService.getContactSectionById(numericId);
               break;
             case 'feature-tab':
-              data = await strapiAPI.getFeatureTabBlockById(numericId);
+              data = await StrapiService.getFeatureTabBlockById(numericId);
               break;
             case 'contact-info':
-              data = await strapiAPI.getContactInfoBlockById(numericId);
+              data = await StrapiService.getContactInfoBlockById(numericId);
               break;
             default:
               setError(`Unknown ref base: ${base}`);

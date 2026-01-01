@@ -240,17 +240,25 @@ namespace Shared.Services.Swagger
             }
 
             // Merge paths
-            foreach (var path in source.Paths)
+            if (source.Paths != null)
             {
-                var newPath = prefix + path.Key;
-                
-                if (!target.Paths.ContainsKey(newPath))
+                if (target.Paths == null)
                 {
-                    target.Paths.Add(newPath, path.Value);
+                    target.Paths = new OpenApiPaths();
                 }
-                else
+                
+                foreach (var path in source.Paths)
                 {
-                    _logger.LogDebug("Path {Path} already exists, skipping", newPath);
+                    var newPath = prefix + path.Key;
+                    
+                    if (!target.Paths.ContainsKey(newPath))
+                    {
+                        target.Paths.Add(newPath, path.Value);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Path {Path} already exists, skipping", newPath);
+                    }
                 }
             }
 
@@ -290,6 +298,11 @@ namespace Shared.Services.Swagger
             // Merge tags
             if (source.Tags != null)
             {
+                if (target.Tags == null)
+                {
+                    target.Tags = new HashSet<OpenApiTag>();
+                }
+                
                 foreach (var tag in source.Tags)
                 {
                     if (!target.Tags.Any(t => t.Name == tag.Name))

@@ -2,13 +2,13 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Menu.css';
 import { useMenuLogic } from './menuUtils';
-import { ConfigurationMenuEnum } from '../../../models/strapi/strapiMap';
+import { ConfigurationMenuEnum } from '../../../models/api/strapi/apiMap';
 import { Button } from '../../atoms';
 import type {
   PageAuthStateEnum1,
   PageMenuEnum1,
   PageNavigationActionEnum1,
-} from '../../../models/strapi/strapiMap';
+} from '../../../models/api/strapi/apiMap';
 
 export interface MenuNavigationItem {
   id: number;

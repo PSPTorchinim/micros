@@ -199,13 +199,13 @@ export class Api<
      * No description
      *
      * @tags Brands
-     * @name ApiV1BrandsList
-     * @request GET:/brand/api/v1/Brands
+     * @name V1BrandsList
+     * @request GET:/brand/v1/Brands
      * @secure
      */
-    apiV1BrandsList: (params: RequestParams = {}) =>
+    v1BrandsList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Brands`,
+        path: `/brand/v1/Brands`,
         method: "GET",
         secure: true,
         ...params,
@@ -215,13 +215,13 @@ export class Api<
      * No description
      *
      * @tags Brands
-     * @name ApiV1BrandsCreate
-     * @request POST:/brand/api/v1/Brands
+     * @name V1BrandsCreate
+     * @request POST:/brand/v1/Brands
      * @secure
      */
-    apiV1BrandsCreate: (data: RegisterBrandDTO, params: RequestParams = {}) =>
+    v1BrandsCreate: (data: RegisterBrandDTO, params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Brands`,
+        path: `/brand/v1/Brands`,
         method: "POST",
         body: data,
         secure: true,
@@ -233,13 +233,13 @@ export class Api<
      * No description
      *
      * @tags Brands
-     * @name ApiV1BrandsHelloList
-     * @request GET:/brand/api/v1/Brands/Hello
+     * @name V1BrandsHelloList
+     * @request GET:/brand/v1/Brands/Hello
      * @secure
      */
-    apiV1BrandsHelloList: (params: RequestParams = {}) =>
+    v1BrandsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Brands/Hello`,
+        path: `/brand/v1/Brands/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -250,13 +250,13 @@ export class Api<
      * No description
      *
      * @tags Clients
-     * @name ApiV1ClientsHelloList
-     * @request GET:/brand/api/v1/Clients/Hello
+     * @name V1ClientsHelloList
+     * @request GET:/brand/v1/Clients/Hello
      * @secure
      */
-    apiV1ClientsHelloList: (params: RequestParams = {}) =>
+    v1ClientsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Clients/Hello`,
+        path: `/brand/v1/Clients/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -267,13 +267,13 @@ export class Api<
      * No description
      *
      * @tags Company
-     * @name ApiV1CompanyList
-     * @request GET:/brand/api/v1/Company
+     * @name V1CompanyList
+     * @request GET:/brand/v1/Company
      * @secure
      */
-    apiV1CompanyList: (params: RequestParams = {}) =>
+    v1CompanyList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Company`,
+        path: `/brand/v1/Company`,
         method: "GET",
         secure: true,
         ...params,
@@ -283,13 +283,13 @@ export class Api<
      * No description
      *
      * @tags Company
-     * @name ApiV1CompanyHelloList
-     * @request GET:/brand/api/v1/Company/Hello
+     * @name V1CompanyHelloList
+     * @request GET:/brand/v1/Company/Hello
      * @secure
      */
-    apiV1CompanyHelloList: (params: RequestParams = {}) =>
+    v1CompanyHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Company/Hello`,
+        path: `/brand/v1/Company/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -300,13 +300,13 @@ export class Api<
      * No description
      *
      * @tags Elements
-     * @name ApiV1ElementsHelloList
-     * @request GET:/brand/api/v1/Elements/Hello
+     * @name V1ElementsHelloList
+     * @request GET:/brand/v1/Elements/Hello
      * @secure
      */
-    apiV1ElementsHelloList: (params: RequestParams = {}) =>
+    v1ElementsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Elements/Hello`,
+        path: `/brand/v1/Elements/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -317,13 +317,13 @@ export class Api<
      * No description
      *
      * @tags Packages
-     * @name ApiV1PackagesHelloList
-     * @request GET:/brand/api/v1/Packages/Hello
+     * @name V1PackagesHelloList
+     * @request GET:/brand/v1/Packages/Hello
      * @secure
      */
-    apiV1PackagesHelloList: (params: RequestParams = {}) =>
+    v1PackagesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/api/v1/Packages/Hello`,
+        path: `/brand/v1/Packages/Hello`,
         method: "GET",
         secure: true,
         ...params,

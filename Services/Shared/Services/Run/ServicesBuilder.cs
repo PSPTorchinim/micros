@@ -28,6 +28,8 @@ namespace Shared.Services.Run
         public static IServiceCollection BuildBasicServices(this IServiceCollection services, ConfigurationManager configuration, string name, string version, bool isApiGW = false)
         {
             var systemConfig = configuration.Get<SystemConfiguration>();
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+            
             services.AddControllers(options =>
             {
                 // Configure cache profiles
@@ -56,15 +58,24 @@ namespace Shared.Services.Run
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
 
-            if (!isApiGW)
+            // Configure Redis and Reverse Proxy based on environment and service type
+            var isDevelopmentLocal = environment == "DevelopmentLocal";
+            
+            if (isDevelopmentLocal)
             {
-                Console.WriteLine("Configuring Redis for service: " + name);
-                services.ConfigureRedis(name);
+                Console.WriteLine($"Skipping Redis configuration in {environment} environment.");
+                Console.WriteLine("Registering NoOpCacheService for DevelopmentLocal mode.");
+                services.ConfigureNoOpCache();
             }
             else
             {
-                Console.WriteLine("Configuring Redis for API Gateway.");
+                Console.WriteLine($"Configuring Redis for {(isApiGW ? "API Gateway" : "service: " + name)}.");
                 services.ConfigureRedis(name);
+            }
+
+            // Configure Reverse Proxy for API Gateway
+            if (isApiGW)
+            {
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
             }
@@ -265,6 +276,14 @@ namespace Shared.Services.Run
 
             Console.WriteLine($"Redis configured with connection: {connection}");
             // services.AddEFSecondLevelCache(options => options.UseStackExchangeRedisCacheProvider(connection, TimeSpan.FromMinutes(5)));
+        }
+
+        private static void ConfigureNoOpCache(this IServiceCollection services)
+        {
+            // Register NoOpCacheService for DevelopmentLocal environment
+            // This allows running without Redis by bypassing all caching operations
+            services.AddScoped<Shared.Services.Cache.ICacheService, Shared.Services.Cache.NoOpCacheService>();
+            Console.WriteLine("NoOpCacheService registered - all cache operations will be no-ops.");
         }
 
         private static IServiceCollection BuildReverseProxy(this IServiceCollection services, ConfigurationManager configuration)

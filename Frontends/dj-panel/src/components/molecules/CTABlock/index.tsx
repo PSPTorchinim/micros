@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { Cta } from '../../../models/strapi/strapiMap';
+import type { Cta } from '../../../models/api/strapi/apiMap';
 
 export const CTABlock = (props: Cta) => (
   <div className="thq-section-padding" id={props.id?.toString()}>
