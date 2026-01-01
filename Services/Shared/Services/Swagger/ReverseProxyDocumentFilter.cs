@@ -249,7 +249,18 @@ namespace Shared.Services.Swagger
                 
                 foreach (var path in source.Paths)
                 {
-                    var newPath = prefix + path.Key;
+                    // Strip /api prefix from source path if it exists
+                    var sourcePath = path.Key;
+                    if (sourcePath.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sourcePath = sourcePath.Substring(4); // Remove "/api"
+                    }
+                    else if (sourcePath.Equals("/api", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sourcePath = "/"; // If path is exactly "/api", replace with "/"
+                    }
+                    
+                    var newPath = prefix + sourcePath;
                     
                     if (!target.Paths.ContainsKey(newPath))
                     {
