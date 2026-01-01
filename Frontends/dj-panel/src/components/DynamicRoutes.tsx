@@ -6,7 +6,7 @@ import {
   PageNavigationActionEnum1,
   Footer,
 } from '../models/strapi/strapiMap';
-import { strapiAPI } from '../services/strapi-api';
+import { strapiAPI } from '../services/strapi-microservice';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
