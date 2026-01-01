@@ -413,14 +413,7 @@ class StrapiAPI {
   async getFooterSingleton() {
     try {
       const res = await this.api.footer.getFooter({
-        populate: {
-          columns: {
-            populate: {
-              links: true,
-            },
-          },
-          socialLinks: true,
-        },
+        populate: 'columns,columns.links,socialLinks',
       });
       return res?.data?.data || null;
     } catch (e) {
