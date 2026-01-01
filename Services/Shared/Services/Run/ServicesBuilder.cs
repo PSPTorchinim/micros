@@ -28,6 +28,8 @@ namespace Shared.Services.Run
         public static IServiceCollection BuildBasicServices(this IServiceCollection services, ConfigurationManager configuration, string name, string version, bool isApiGW = false)
         {
             var systemConfig = configuration.Get<SystemConfiguration>();
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+            
             services.AddControllers(options =>
             {
                 // Configure cache profiles
@@ -56,15 +58,30 @@ namespace Shared.Services.Run
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
 
-            if (!isApiGW)
+            // Skip Redis configuration in DevelopmentLocal environment
+            if (environment == "DevelopmentLocal")
             {
-                Console.WriteLine("Configuring Redis for service: " + name);
-                services.ConfigureRedis(name);
+                Console.WriteLine($"Skipping Redis configuration in {environment} environment.");
             }
             else
             {
-                Console.WriteLine("Configuring Redis for API Gateway.");
-                services.ConfigureRedis(name);
+                if (!isApiGW)
+                {
+                    Console.WriteLine("Configuring Redis for service: " + name);
+                    services.ConfigureRedis(name);
+                }
+                else
+                {
+                    Console.WriteLine("Configuring Redis for API Gateway.");
+                    services.ConfigureRedis(name);
+                    Console.WriteLine("Building Reverse Proxy for API Gateway.");
+                    services.BuildReverseProxy(configuration);
+                }
+            }
+
+            // For API Gateway, still build reverse proxy even if Redis is skipped
+            if (isApiGW && environment == "DevelopmentLocal")
+            {
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
             }
