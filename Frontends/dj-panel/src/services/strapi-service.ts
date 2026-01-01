@@ -88,7 +88,9 @@ export class StrapiService {
     }
   }
 
-  public static async fetchPageById(pageDocumentId: string): Promise<Page | null> {
+  public static async fetchPageById(
+    pageDocumentId: string,
+  ): Promise<Page | null> {
     try {
       const response = await microservicesClient.strapi.page.getPages({
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
@@ -142,7 +144,8 @@ export class StrapiService {
 
   public static async getFeatureTabBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
+      const response =
+        await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching feature tab block by ID ${id}:`, error);
@@ -152,7 +155,8 @@ export class StrapiService {
 
   public static async getContactInfoBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.contactInfo.getContactInfosId(id);
+      const response =
+        await microservicesClient.strapi.contactInfo.getContactInfosId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching contact info block by ID ${id}:`, error);
@@ -162,7 +166,8 @@ export class StrapiService {
 
   public static async getHeroBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
+      const response =
+        await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching hero block by ID ${id}:`, error);
@@ -172,7 +177,10 @@ export class StrapiService {
 
   public static async getFeatureSectionById(id: number) {
     try {
-      const response = await microservicesClient.strapi.featureSection.getFeatureSectionsId(id);
+      const response =
+        await microservicesClient.strapi.featureSection.getFeatureSectionsId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching feature section by ID ${id}:`, error);
@@ -182,7 +190,10 @@ export class StrapiService {
 
   public static async getContactSectionById(id: number) {
     try {
-      const response = await microservicesClient.strapi.contactSection.getContactSectionsId(id);
+      const response =
+        await microservicesClient.strapi.contactSection.getContactSectionsId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching contact section by ID ${id}:`, error);
@@ -192,7 +203,8 @@ export class StrapiService {
 
   public static async getImageSliderBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
+      const response =
+        await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching image slider block by ID ${id}:`, error);
@@ -202,7 +214,8 @@ export class StrapiService {
 
   public static async getArticleBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
+      const response =
+        await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching article block by ID ${id}:`, error);
@@ -212,7 +225,10 @@ export class StrapiService {
 
   public static async getStepsContainerBlockById(id: number) {
     try {
-      const response = await microservicesClient.strapi.stepsContainer.getStepsContainersId(id);
+      const response =
+        await microservicesClient.strapi.stepsContainer.getStepsContainersId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching steps container block by ID ${id}:`, error);
@@ -236,10 +252,11 @@ export class StrapiService {
 
   public static async getArticleBlockByDocumentId(id: string) {
     try {
-      const res = await microservicesClient.strapi.articleBlock.getArticleBlocks({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.articleBlock.getArticleBlocks({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching article-block by documentId ${id}:`, e);
@@ -275,10 +292,11 @@ export class StrapiService {
 
   public static async getStepsContainerBlockByDocumentId(id: string) {
     try {
-      const res = await microservicesClient.strapi.stepsContainer.getStepsContainers({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.stepsContainer.getStepsContainers({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching steps-container by documentId ${id}:`, e);
@@ -301,10 +319,11 @@ export class StrapiService {
 
   public static async getFeatureSectionByDocumentId(id: string) {
     try {
-      const res = await microservicesClient.strapi.featureSection.getFeatureSections({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.featureSection.getFeatureSections({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching feature-section by documentId ${id}:`, e);
@@ -314,10 +333,11 @@ export class StrapiService {
 
   public static async getContactSectionByDocumentId(id: string) {
     try {
-      const res = await microservicesClient.strapi.contactSection.getContactSections({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.contactSection.getContactSections({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching contact-section by documentId ${id}:`, e);
@@ -366,10 +386,13 @@ export class StrapiService {
 
   public static async getForgotPasswordBlockByDocumentId(id: string) {
     try {
-      const res = await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock(
+          {
+            filters: { documentId: { $eq: id } } as StrapiFilters,
+            populate: '*',
+          },
+        );
       return res?.data?.data || null;
     } catch (e) {
       console.error(
@@ -393,7 +416,8 @@ export class StrapiService {
 
   public static async getForgotPasswordBlockSingleton() {
     try {
-      const res = await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
+      const res =
+        await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching forgot-password-block singleton:', e);
@@ -404,7 +428,14 @@ export class StrapiService {
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
-        populate: 'columns,columns.links,socialLinks',
+        populate: {
+          columns: {
+            populate: {
+              links: true,
+            },
+          },
+          socialLinks: true,
+        },
       });
       return res?.data?.data || null;
     } catch (e) {
@@ -443,4 +474,3 @@ export class StrapiService {
     }
   }
 }
-

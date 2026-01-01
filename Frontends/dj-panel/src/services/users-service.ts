@@ -8,7 +8,7 @@ import {
 export class UsersService {
   public static async forgotPassword(email: string): Promise<BooleanResponse> {
     return microservicesClient.identity.users
-      .apiV1UsersForgotPasswordUpdate({ email: email })
+      .v1UsersForgotPasswordUpdate({ email: email })
       .then((response) => {
         return response.data;
       })
@@ -32,7 +32,7 @@ export class UsersService {
       password: hashedPassword.toString(),
     };
     return microservicesClient.identity.users
-      .apiV1UsersLoginCreate(requestBody)
+      .v1UsersLoginCreate(requestBody)
       .then((response) => {
         return response.data;
       })
