@@ -300,7 +300,7 @@ namespace Shared.Services.Swagger
             {
                 if (target.Tags == null)
                 {
-                    target.Tags = new List<OpenApiTag>();
+                    target.Tags = new HashSet<OpenApiTag>();
                 }
                 
                 foreach (var tag in source.Tags)
