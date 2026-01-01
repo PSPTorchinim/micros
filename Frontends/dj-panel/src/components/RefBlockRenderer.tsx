@@ -105,7 +105,8 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
               data = await StrapiService.getImageSliderBlockByDocumentId(docId);
               break;
             case 'steps-container':
-              data = await StrapiService.getStepsContainerBlockByDocumentId(docId);
+              data =
+                await StrapiService.getStepsContainerBlockByDocumentId(docId);
               break;
             case 'cta':
               data = await StrapiService.getCTABlockByDocumentId(docId);
