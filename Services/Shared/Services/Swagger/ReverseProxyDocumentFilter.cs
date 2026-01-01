@@ -240,17 +240,25 @@ namespace Shared.Services.Swagger
             }
 
             // Merge paths
-            foreach (var path in source.Paths)
+            if (source.Paths != null)
             {
-                var newPath = prefix + path.Key;
-                
-                if (!target.Paths.ContainsKey(newPath))
+                if (target.Paths == null)
                 {
-                    target.Paths.Add(newPath, path.Value);
+                    target.Paths = new OpenApiPaths();
                 }
-                else
+                
+                foreach (var path in source.Paths)
                 {
-                    _logger.LogDebug("Path {Path} already exists, skipping", newPath);
+                    var newPath = prefix + path.Key;
+                    
+                    if (!target.Paths.ContainsKey(newPath))
+                    {
+                        target.Paths.Add(newPath, path.Value);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Path {Path} already exists, skipping", newPath);
+                    }
                 }
             }
 
@@ -265,6 +273,11 @@ namespace Shared.Services.Swagger
                 // Merge schemas
                 if (source.Components.Schemas != null)
                 {
+                    if (target.Components.Schemas == null)
+                    {
+                        target.Components.Schemas = new Dictionary<string, OpenApiSchema>();
+                    }
+                    
                     foreach (var schema in source.Components.Schemas)
                     {
                         if (!target.Components.Schemas.ContainsKey(schema.Key))
@@ -277,6 +290,11 @@ namespace Shared.Services.Swagger
                 // Merge security schemes
                 if (source.Components.SecuritySchemes != null)
                 {
+                    if (target.Components.SecuritySchemes == null)
+                    {
+                        target.Components.SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>();
+                    }
+                    
                     foreach (var securityScheme in source.Components.SecuritySchemes)
                     {
                         if (!target.Components.SecuritySchemes.ContainsKey(securityScheme.Key))
@@ -290,6 +308,11 @@ namespace Shared.Services.Swagger
             // Merge tags
             if (source.Tags != null)
             {
+                if (target.Tags == null)
+                {
+                    target.Tags = new List<OpenApiTag>();
+                }
+                
                 foreach (var tag in source.Tags)
                 {
                     if (!target.Tags.Any(t => t.Name == tag.Name))
