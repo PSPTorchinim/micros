@@ -208,12 +208,12 @@ export class Api<
      *
      * @tags WeatherForecast
      * @name GetWeatherForecast
-     * @request GET:/gear/api/v1/WeatherForecast
+     * @request GET:/gear/v1/WeatherForecast
      * @secure
      */
     getWeatherForecast: (params: RequestParams = {}) =>
       this.request<WeatherForecast[], any>({
-        path: `/gear/api/v1/WeatherForecast`,
+        path: `/gear/v1/WeatherForecast`,
         method: "GET",
         secure: true,
         format: "json",
@@ -224,13 +224,13 @@ export class Api<
      * No description
      *
      * @tags WeatherForecast
-     * @name ApiV1WeatherForecastHelloList
-     * @request GET:/gear/api/v1/WeatherForecast/Hello
+     * @name V1WeatherForecastHelloList
+     * @request GET:/gear/v1/WeatherForecast/Hello
      * @secure
      */
-    apiV1WeatherForecastHelloList: (params: RequestParams = {}) =>
+    v1WeatherForecastHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/gear/api/v1/WeatherForecast/Hello`,
+        path: `/gear/v1/WeatherForecast/Hello`,
         method: "GET",
         secure: true,
         ...params,
