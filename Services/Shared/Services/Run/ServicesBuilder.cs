@@ -64,6 +64,8 @@ namespace Shared.Services.Run
             if (isDevelopmentLocal)
             {
                 Console.WriteLine($"Skipping Redis configuration in {environment} environment.");
+                Console.WriteLine("Registering NoOpCacheService for DevelopmentLocal mode.");
+                services.ConfigureNoOpCache();
             }
             else
             {
@@ -274,6 +276,14 @@ namespace Shared.Services.Run
 
             Console.WriteLine($"Redis configured with connection: {connection}");
             // services.AddEFSecondLevelCache(options => options.UseStackExchangeRedisCacheProvider(connection, TimeSpan.FromMinutes(5)));
+        }
+
+        private static void ConfigureNoOpCache(this IServiceCollection services)
+        {
+            // Register NoOpCacheService for DevelopmentLocal environment
+            // This allows running without Redis by bypassing all caching operations
+            services.AddScoped<Shared.Services.Cache.ICacheService, Shared.Services.Cache.NoOpCacheService>();
+            Console.WriteLine("NoOpCacheService registered - all cache operations will be no-ops.");
         }
 
         private static IServiceCollection BuildReverseProxy(this IServiceCollection services, ConfigurationManager configuration)
