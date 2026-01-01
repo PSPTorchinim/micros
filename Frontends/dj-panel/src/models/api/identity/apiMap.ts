@@ -110,6 +110,7 @@ export interface GetUserDTO {
 export interface LoginResponseDTO {
   accessToken?: string | null;
   refreshToken?: string | null;
+  securityStamp?: string | null;
   user?: GetUserDTO;
 }
 
@@ -185,11 +186,32 @@ export interface User {
   activationCode?: string | null;
   token?: string | null;
   refreshToken?: string | null;
+  securityStamp?: string | null;
+  /** @format date-time */
+  lastPasswordChangeDate?: string | null;
   roles?: Role[] | null;
   passwords?: Password[] | null;
   blocks?: Block[] | null;
   /** @format date-time */
   createdDate?: string;
+}
+
+export interface ValidateSecurityStampRequestDTO {
+  /** @format uuid */
+  userId?: string;
+  securityStamp?: string | null;
+}
+
+export interface ValidateSecurityStampResponseDTO {
+  isValid?: boolean;
+  reason?: string | null;
+}
+
+export interface ValidateSecurityStampResponseDTOResponse {
+  success?: boolean;
+  data?: ValidateSecurityStampResponseDTO;
+  message?: string | null;
+  errors?: string[] | null;
 }
 
 import type {
@@ -725,6 +747,28 @@ export class Api<
      * No description
      *
      * @tags Users
+     * @name ApiV1UsersValidateSecurityStampCreate
+     * @request POST:/identity/api/v1/Users/ValidateSecurityStamp
+     * @secure
+     */
+    apiV1UsersValidateSecurityStampCreate: (
+      data: ValidateSecurityStampRequestDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<ValidateSecurityStampResponseDTOResponse, any>({
+        path: `/identity/api/v1/Users/ValidateSecurityStamp`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users
      * @name ApiV1UsersHelloList
      * @request GET:/identity/api/v1/Users/Hello
      * @secure
@@ -741,3 +785,15 @@ export class Api<
 
 // Aliased exports for unified API client
 export { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as IdentityHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
+}

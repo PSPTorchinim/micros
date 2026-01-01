@@ -38,7 +38,6 @@
       "skipFiles": ["<node_internals>/**"],
       "preLaunchTask": "build-dj-panel",
       "env": {
-        "REACT_APP_CMS_HOST": "http://localhost:1337/api",
         "REACT_APP_API_GATEWAY": "http://localhost:5000",
         "REACT_APP_API_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "REACT_APP_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890"

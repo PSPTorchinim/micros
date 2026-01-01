@@ -42,6 +42,10 @@ const microservices = {
     swaggerPath: '/swagger/Party/swagger.json',
     outputFile: './src/models/api/party',
   },
+  strapi: {
+    swaggerPath: '/swagger/Strapi/swagger.json',
+    outputFile: './src/models/api/strapi',
+  },
 };
 
 function generateTypesForService(serviceName, config) {
@@ -313,6 +317,7 @@ export const createIdentityApi = (config?: ApiConfig) => new ${serviceNames.find
 export const createMailingApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'mailing')?.className || 'MailingApi'}(config);
 export const createMusicApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'music')?.className || 'MusicApi'}(config);
 export const createPartyApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'party')?.className || 'PartyApi'}(config);
+export const createStrapiApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'strapi')?.className || 'StrapiApi'}(config);
 `;
 
   // Write the merged API file
