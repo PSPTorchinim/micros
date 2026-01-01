@@ -1,6 +1,6 @@
 // components/RenderTemplate.tsx
 import React from 'react';
-import { StrapiService } from '../services/strapi-microservice';
+import { StrapiService } from '../services/strapi-service';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';

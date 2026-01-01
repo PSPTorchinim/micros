@@ -1,5 +1,5 @@
 import React from 'react';
-import { StrapiService } from '../services/strapi-microservice';
+import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
