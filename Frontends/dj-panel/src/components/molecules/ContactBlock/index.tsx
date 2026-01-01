@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { ContactSection } from '../../../models/strapi/strapiMap';
+import type { ContactSection } from '../../../models/api/strapi/apiMap';
 
 export const ContactBlock = (props: ContactSection) => {
   const contactInfoArray = Array.isArray(props.contactInfo)

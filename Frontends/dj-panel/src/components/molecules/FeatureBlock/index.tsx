@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './index.css';
-import type { FeatureSection } from '../../../models/strapi/strapiMap';
+import type { FeatureSection } from '../../../models/api/strapi/apiMap';
 
 export const FeatureBlock = (props: FeatureSection) => {
   const [activeTab, setActiveTab] = useState(0);

@@ -8,7 +8,7 @@ import {
   AiFillYoutube,
   AiFillSound,
 } from 'react-icons/ai';
-import type { Footer } from '../models/strapi/strapiMap';
+import type { Footer } from '../models/api/strapi/apiMap';
 
 // Map icon names to React Icon components
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { StepsContainer, Cta } from '../../../models/strapi/strapiMap';
+import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
 
 interface Step {
   id?: number;

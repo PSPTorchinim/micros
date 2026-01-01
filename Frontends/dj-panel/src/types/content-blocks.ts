@@ -17,7 +17,7 @@ import type {
   LoginBlock,
   ForgotPasswordBlock,
   Template,
-} from '../models/strapi/strapiMap';
+} from '../models/api/strapi/apiMap';
 
 /**
  * Base content block with kind identifier

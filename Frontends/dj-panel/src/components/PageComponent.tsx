@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './PageComponent.css';
-import type { Page } from '../models/strapi/strapiMap';
+import type { Page } from '../models/api/strapi/apiMap';
 import { strapiAPI } from '../services/strapi-microservice';
 import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';

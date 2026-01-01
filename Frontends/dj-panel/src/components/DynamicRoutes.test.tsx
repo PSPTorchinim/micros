@@ -3,12 +3,12 @@ import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
 import { useDynamicRoutes } from './DynamicRoutes';
-import type { Page } from '../models/strapi/strapiMap';
+import type { Page } from '../models/api/strapi/apiMap';
 import {
   PageMenuEnum1,
   PageAuthStateEnum1,
   PageNavigationActionEnum1,
-} from '../models/strapi/strapiMap';
+} from '../models/api/strapi/apiMap';
 
 // Mock the strapi API
 const mockGetRootPages = jest.fn();

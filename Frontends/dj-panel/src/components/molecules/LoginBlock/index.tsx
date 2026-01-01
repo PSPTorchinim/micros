@@ -5,7 +5,7 @@ import { useServices } from '../../../hooks/use-services/use-services';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
-import type { LoginBlock as LoginBlockType } from '../../../models/strapi/strapiMap';
+import type { LoginBlock as LoginBlockType } from '../../../models/api/strapi/apiMap';
 
 export const LoginBlock: React.FC<LoginBlockType> = ({
   title = 'Login',
