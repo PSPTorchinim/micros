@@ -273,11 +273,6 @@ namespace Shared.Services.Swagger
                 // Merge schemas
                 if (source.Components.Schemas != null)
                 {
-                    if (target.Components.Schemas == null)
-                    {
-                        target.Components.Schemas = new Dictionary<string, OpenApiSchema>();
-                    }
-                    
                     foreach (var schema in source.Components.Schemas)
                     {
                         if (!target.Components.Schemas.ContainsKey(schema.Key))
@@ -290,11 +285,6 @@ namespace Shared.Services.Swagger
                 // Merge security schemes
                 if (source.Components.SecuritySchemes != null)
                 {
-                    if (target.Components.SecuritySchemes == null)
-                    {
-                        target.Components.SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>();
-                    }
-                    
                     foreach (var securityScheme in source.Components.SecuritySchemes)
                     {
                         if (!target.Components.SecuritySchemes.ContainsKey(securityScheme.Key))
