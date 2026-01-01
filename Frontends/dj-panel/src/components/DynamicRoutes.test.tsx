@@ -15,7 +15,7 @@ const mockGetRootPages = jest.fn();
 const mockGetPagesByParentId = jest.fn();
 const mockGetFooterSingleton = jest.fn();
 
-jest.mock('../services/strapi-api', () => ({
+jest.mock('../services/strapi-microservice', () => ({
   strapiAPI: {
     getRootPages: () => mockGetRootPages(),
     getPagesByParentId: (id: number) => mockGetPagesByParentId(id),

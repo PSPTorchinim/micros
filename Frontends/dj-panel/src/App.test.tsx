@@ -51,7 +51,7 @@ jest.mock('./services/users-service', () => ({
   userService: {},
 }));
 
-jest.mock('./services/strapi-api', () => ({
+jest.mock('./services/strapi-microservice', () => ({
   strapiAPI: {},
 }));
 
