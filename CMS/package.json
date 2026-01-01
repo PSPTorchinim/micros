@@ -3,8 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "A Strapi application",
-  "author": "PSPTorchinim",
-  "license": "UNLICENSED",
   "scripts": {
     "build": "strapi build",
     "console": "strapi console",
@@ -20,43 +18,30 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },
   "dependencies": {
-    "@strapi/plugin-cloud": "5.33.0",
-    "@strapi/plugin-documentation": "5.33.0",
-    "@strapi/plugin-graphql": "5.33.0",
-    "@strapi/plugin-users-permissions": "5.33.0",
-    "@strapi/strapi": "^5.33.0",
-    "better-sqlite3": "^11.10.0",
-    "pg": "8.16.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.29.1",
-    "styled-components": "^6.1.19"
+    "@strapi/plugin-cloud": "5.33.1",
+    "@strapi/plugin-documentation": "^5.33.1",
+    "@strapi/plugin-graphql": "^5.33.1",
+    "@strapi/plugin-users-permissions": "5.33.1",
+    "@strapi/strapi": "5.33.1",
+    "better-sqlite3": "12.4.1",
+    "jest": "^30.2.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "styled-components": "^6.0.0"
   },
   "devDependencies": {
-    "@strapi/types": "5.33.0",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^22",
+    "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/supertest": "^6.0.3",
-    "baseline-browser-mapping": "^2.8.32",
-    "jest": "^30.2.0",
-    "supertest": "^7.1.4",
-    "ts-jest": "^29.4.5",
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=18.0.0 <=22.x.x",
+    "node": ">=20.0.0 <=24.x.x",
     "npm": ">=6.0.0"
   },
   "strapi": {
-    "uuid": "60658626-620e-4fcc-b60d-6154cd2bd285",
-    "installId": "d80f912ff305c32e5b67f4ddcc6ea1f8d38c67ba20ed02f156dafad68248165c"
-  },
-  "overrides": {
-    "glob": "^11.0.0",
-    "koa": "^3.0.0",
-    "ai": "^6.0.0-beta.145",
-    "tmp": "^0.2.5"
+    "uuid": "6b3468c5-2430-4839-ab3e-92b18296e8a9",
+    "installId": "a5743c4f144a826a58a4c1403446ded3c40cc2cbc94a53cac2ed69ab384460e9"
   }
 }
