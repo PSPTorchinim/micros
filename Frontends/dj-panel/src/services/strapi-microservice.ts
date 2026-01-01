@@ -3,8 +3,8 @@ import type { Page } from '../models/strapi/strapiMap';
 
 type StrapiFilters = Record<string, unknown>;
 
-// --- populate config dla Template.Content (dynamic zone) ---
-// Zapewnia, że w każdym ref-komponencie pojawi się pole relacyjne z documentId.
+// --- Populate config for Template.Content (dynamic zone) ---
+// Ensures that each ref-component contains the relational field with documentId.
 const TEMPLATE_CONTENT_POPULATE = {
   Content: {
     on: {
@@ -37,7 +37,7 @@ const TEMPLATE_CONTENT_POPULATE = {
       },
     },
   },
-  // przy okazji możesz mieć page z podstawowymi polami
+  // Include page with basic fields
   page: {
     fields: [
       'documentId',
@@ -56,7 +56,7 @@ class StrapiMicroserviceAPI {
   // PAGES
   // --------------------------------------
 
-  // Root pages (bez parenta)
+  // Root pages (without parent)
   async getRootPages(): Promise<Page[] | undefined> {
     try {
       const response = await microservicesClient.strapi.page.getPages({
@@ -78,7 +78,7 @@ class StrapiMicroserviceAPI {
           Parents: { id: { $eq: parentId } },
         } as StrapiFilters,
       });
-      // zależnie od generatora może być response.data.data
+      // Depending on the generator, it might be response.data.data
       return (
         (response as any).data?.data ?? (response.data as unknown as Page[])
       );
@@ -105,7 +105,7 @@ class StrapiMicroserviceAPI {
   // TEMPLATES
   // --------------------------------------
 
-  // DEPRECATED alias – zostawiamy dla zgodności, ale dorzucamy właściwy populate.on
+  // DEPRECATED alias – kept for compatibility, but includes proper populate.on
   async getTemplateById(templateDocumentId: string) {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
