@@ -58,29 +58,21 @@ namespace Shared.Services.Run
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
 
-            // Skip Redis configuration in DevelopmentLocal environment
-            if (environment == "DevelopmentLocal")
+            // Configure Redis and Reverse Proxy based on environment and service type
+            var isDevelopmentLocal = environment == "DevelopmentLocal";
+            
+            if (isDevelopmentLocal)
             {
                 Console.WriteLine($"Skipping Redis configuration in {environment} environment.");
             }
             else
             {
-                if (!isApiGW)
-                {
-                    Console.WriteLine("Configuring Redis for service: " + name);
-                    services.ConfigureRedis(name);
-                }
-                else
-                {
-                    Console.WriteLine("Configuring Redis for API Gateway.");
-                    services.ConfigureRedis(name);
-                    Console.WriteLine("Building Reverse Proxy for API Gateway.");
-                    services.BuildReverseProxy(configuration);
-                }
+                Console.WriteLine($"Configuring Redis for {(isApiGW ? "API Gateway" : "service: " + name)}.");
+                services.ConfigureRedis(name);
             }
 
-            // For API Gateway, still build reverse proxy even if Redis is skipped
-            if (isApiGW && environment == "DevelopmentLocal")
+            // Configure Reverse Proxy for API Gateway
+            if (isApiGW)
             {
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
