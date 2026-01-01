@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './PageComponent.css';
 import type { Page } from '../models/api/strapi/apiMap';
-import { strapiAPI } from '../services/strapi-microservice';
+import { StrapiService } from '../services/strapi-microservice';
 import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';
 
@@ -18,7 +18,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
         setPage(null);
         return;
       }
-      const fetchedPage = await strapiAPI.fetchPageById(pageId);
+      const fetchedPage = await StrapiService.fetchPageById(pageId);
       setPage(fetchedPage || null);
     })();
   }, [pageId]);

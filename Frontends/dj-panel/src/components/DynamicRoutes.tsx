@@ -6,7 +6,7 @@ import {
   PageNavigationActionEnum1,
   Footer,
 } from '../models/api/strapi/apiMap';
-import { strapiAPI } from '../services/strapi-microservice';
+import { StrapiService } from '../services/strapi-microservice';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
@@ -113,7 +113,7 @@ export function useDynamicRoutes() {
 
   async function fetchAllChildren(page: Page): Promise<Page> {
     if (!page.id) return page;
-    const children = await strapiAPI.getPagesByParentId(page.id);
+    const children = await StrapiService.getPagesByParentId(page.id);
     if (!children || children.length === 0) return page;
 
     if (Array.isArray(children)) {
@@ -127,7 +127,7 @@ export function useDynamicRoutes() {
 
   useEffect(() => {
     (async () => {
-      const rootPages = (await strapiAPI.getRootPages()) || [];
+      const rootPages = (await StrapiService.getRootPages()) || [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
@@ -183,7 +183,7 @@ export function useDynamicRoutes() {
       }
 
       // Fetch footer data from CMS
-      const footerData = await strapiAPI.getFooterSingleton();
+      const footerData = await StrapiService.getFooterSingleton();
       setFooter(footerData);
 
       setRoutes(routes);

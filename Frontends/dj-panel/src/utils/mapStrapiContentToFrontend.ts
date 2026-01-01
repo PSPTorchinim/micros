@@ -1,5 +1,5 @@
 // src/utils/mapStrapiContentToFrontend.ts
-import { strapiAPI } from '../services/strapi-microservice';
+import { StrapiService } from '../services/strapi-microservice';
 import type { ContentBlock, RefComponent } from '../types/content-blocks';
 
 // 1) Pomocnik do wyciągania documentId z różnych kształtów populate

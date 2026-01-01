@@ -51,13 +51,13 @@ const TEMPLATE_CONTENT_POPULATE = {
   },
 } as const;
 
-class StrapiMicroserviceAPI {
+export class StrapiService {
   // --------------------------------------
   // PAGES
   // --------------------------------------
 
   // Root pages (without parent)
-  async getRootPages(): Promise<Page[] | undefined> {
+  public static async getRootPages(): Promise<Page[] | undefined> {
     try {
       const response = await microservicesClient.strapi.page.getPages({
         filters: {
@@ -71,7 +71,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getPagesByParentId(parentId: number): Promise<Page[]> {
+  public static async getPagesByParentId(parentId: number): Promise<Page[]> {
     try {
       const response = await microservicesClient.strapi.page.getPages({
         filters: {
@@ -88,7 +88,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async fetchPageById(pageDocumentId: string): Promise<Page | null> {
+  public static async fetchPageById(pageDocumentId: string): Promise<Page | null> {
     try {
       const response = await microservicesClient.strapi.page.getPages({
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
@@ -106,7 +106,7 @@ class StrapiMicroserviceAPI {
   // --------------------------------------
 
   // DEPRECATED alias – kept for compatibility, but includes proper populate.on
-  async getTemplateById(templateDocumentId: string) {
+  public static async getTemplateById(templateDocumentId: string) {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
@@ -122,8 +122,8 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  // Rekomendowana nazwa – to samo, z populate.on
-  async getTemplateByDocumentId(documentId: string) {
+  // Recommended name – same as above, with populate.on
+  public static async getTemplateByDocumentId(documentId: string) {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: documentId } } as StrapiFilters,
@@ -137,10 +137,10 @@ class StrapiMicroserviceAPI {
   }
 
   // --------------------------------------
-  // BLOKI – BY NUMERIC ID (/:id)
+  // BLOCKS – BY NUMERIC ID (/:id)
   // --------------------------------------
 
-  async getFeatureTabBlockById(id: number) {
+  public static async getFeatureTabBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
       return response?.data?.data || null;
@@ -150,7 +150,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getContactInfoBlockById(id: number) {
+  public static async getContactInfoBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.contactInfo.getContactInfosId(id);
       return response?.data?.data || null;
@@ -160,7 +160,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getHeroBlockById(id: number) {
+  public static async getHeroBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
       return response?.data?.data || null;
@@ -170,7 +170,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getFeatureSectionById(id: number) {
+  public static async getFeatureSectionById(id: number) {
     try {
       const response = await microservicesClient.strapi.featureSection.getFeatureSectionsId(id);
       return response?.data?.data || null;
@@ -180,7 +180,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getContactSectionById(id: number) {
+  public static async getContactSectionById(id: number) {
     try {
       const response = await microservicesClient.strapi.contactSection.getContactSectionsId(id);
       return response?.data?.data || null;
@@ -190,7 +190,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getImageSliderBlockById(id: number) {
+  public static async getImageSliderBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
       return response?.data?.data || null;
@@ -200,7 +200,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getArticleBlockById(id: number) {
+  public static async getArticleBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
       return response?.data?.data || null;
@@ -210,7 +210,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getStepsContainerBlockById(id: number) {
+  public static async getStepsContainerBlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.stepsContainer.getStepsContainersId(id);
       return response?.data?.data || null;
@@ -220,7 +220,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getCTABlockById(id: number) {
+  public static async getCTABlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.cta.getCtasId(id);
       return response?.data?.data || null;
@@ -231,10 +231,10 @@ class StrapiMicroserviceAPI {
   }
 
   // --------------------------------------
-  // BLOKI – BY documentId (string)
+  // BLOCKS – BY documentId (string)
   // --------------------------------------
 
-  async getArticleBlockByDocumentId(id: string) {
+  public static async getArticleBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.articleBlock.getArticleBlocks({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -247,7 +247,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getHeroBlockByDocumentId(id: string) {
+  public static async getHeroBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.heroBlock.getHeroBlocks({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -260,7 +260,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getImageSliderBlockByDocumentId(id: string) {
+  public static async getImageSliderBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.imageSlider.getImageSliders({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -273,7 +273,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getStepsContainerBlockByDocumentId(id: string) {
+  public static async getStepsContainerBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.stepsContainer.getStepsContainers({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -286,7 +286,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getCTABlockByDocumentId(id: string) {
+  public static async getCTABlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.cta.getCtas({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -299,7 +299,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getFeatureSectionByDocumentId(id: string) {
+  public static async getFeatureSectionByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.featureSection.getFeatureSections({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -312,7 +312,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getContactSectionByDocumentId(id: string) {
+  public static async getContactSectionByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.contactSection.getContactSections({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -325,7 +325,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getFeatureTabBlockByDocumentId(id: string) {
+  public static async getFeatureTabBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.featureTab.getFeatureTabs({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -338,7 +338,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getContactInfoBlockByDocumentId(id: string) {
+  public static async getContactInfoBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.contactInfo.getContactInfos({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -351,7 +351,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getLoginBlockByDocumentId(id: string) {
+  public static async getLoginBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -364,7 +364,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getForgotPasswordBlockByDocumentId(id: string) {
+  public static async getForgotPasswordBlockByDocumentId(id: string) {
     try {
       const res = await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock({
         filters: { documentId: { $eq: id } } as StrapiFilters,
@@ -381,7 +381,7 @@ class StrapiMicroserviceAPI {
   }
 
   // Singleton methods for Login and ForgotPassword blocks
-  async getLoginBlockSingleton() {
+  public static async getLoginBlockSingleton() {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
       return res?.data || null;
@@ -391,7 +391,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getForgotPasswordBlockSingleton() {
+  public static async getForgotPasswordBlockSingleton() {
     try {
       const res = await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
       return res?.data || null;
@@ -401,7 +401,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getFooterSingleton() {
+  public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
         populate: 'columns,columns.links,socialLinks',
@@ -417,7 +417,7 @@ class StrapiMicroserviceAPI {
   // ARTICLES
   // --------------------------------------
 
-  async getArticleBySlug(slug: string) {
+  public static async getArticleBySlug(slug: string) {
     try {
       const res = await microservicesClient.strapi.article.getArticles({
         filters: { Slug: { $eq: slug } } as StrapiFilters,
@@ -430,7 +430,7 @@ class StrapiMicroserviceAPI {
     }
   }
 
-  async getArticleByTitle(title: string) {
+  public static async getArticleByTitle(title: string) {
     try {
       const res = await microservicesClient.strapi.article.getArticles({
         filters: { Title: { $eq: title } } as StrapiFilters,
@@ -444,4 +444,3 @@ class StrapiMicroserviceAPI {
   }
 }
 
-export const strapiAPI = new StrapiMicroserviceAPI();
