@@ -35,6 +35,18 @@ namespace DJHostGateway.Transforms
             _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
                 correlationId, requestPath, requestMethod);
             
+            // Skip validation for Strapi paths (Strapi has its own authentication)
+            if (request.Path.Value?.StartsWith("/strapi/", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - Strapi endpoint (uses own authentication) | CorrelationId: {CorrelationId} | Path: {Path}", 
+                    correlationId, requestPath);
+                
+                // Remove Authorization header from the incoming request for Strapi
+                context.HttpContext.Request.Headers.Remove("Authorization");
+                
+                return;
+            }
+            
             // Try to get JWT token from Authorization header or jwtToken cookie
             var authHeader = request.Headers.Authorization.FirstOrDefault();
             string? token = null;
