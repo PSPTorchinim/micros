@@ -36,23 +36,6 @@ namespace DJHostGateway.Transforms
             _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
                 correlationId, requestPath, requestMethod);
             
-            // Skip validation for Strapi paths (Strapi has its own authentication)
-            if (request.Path.Value?.StartsWith(StrapiPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - Strapi endpoint (uses own authentication) | CorrelationId: {CorrelationId} | Path: {Path}", 
-                    correlationId, requestPath);
-                
-                // Remove Authorization header from the incoming request for Strapi
-                if (context.HttpContext.Request.Headers.ContainsKey("Authorization"))
-                {
-                    context.HttpContext.Request.Headers.Remove("Authorization");
-                    _logger.LogDebug("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
-                        correlationId);
-                }
-                
-                return;
-            }
-            
             // Try to get JWT token from Authorization header or jwtToken cookie
             var authHeader = request.Headers.Authorization.FirstOrDefault();
             string? token = null;
@@ -191,6 +174,17 @@ namespace DJHostGateway.Transforms
                 Interlocked.Exchange(ref _consecutiveFailures, 0);
                 _logger.LogInformation("✓ [SecurityStamp] VALIDATION SUCCESSFUL | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path} | Method: {Method}", 
                     correlationId, userId, requestPath, requestMethod);
+                
+                // Remove Authorization header for Strapi paths (Strapi has its own authentication)
+                if (request.Path.Value?.StartsWith(StrapiPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    if (context.HttpContext.Request.Headers.ContainsKey("Authorization"))
+                    {
+                        context.HttpContext.Request.Headers.Remove("Authorization");
+                        _logger.LogDebug("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
+                            correlationId);
+                    }
+                }
             }
             catch (TaskCanceledException)
             {
