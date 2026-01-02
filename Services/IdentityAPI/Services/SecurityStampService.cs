@@ -34,22 +34,26 @@ namespace IdentityAPI.Services
 
         public async Task<SecurityStampCacheData?> GetUserSecurityDataAsync(Guid userId)
         {
-            _logger.LogInformation("Getting security data for user: {UserId}", userId);
+            _logger.LogInformation("🔍 [SecurityStampService] Fetching security data | UserId: {UserId}", userId);
             var cacheKey = GetCacheKey(userId);
             
             return await _cacheService.GetOrCreateAsync(
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug("Cache miss - fetching security data from database for user: {UserId}", userId);
+                    _logger.LogInformation("💾 [SecurityStampService] CACHE MISS - Loading from database | UserId: {UserId} | CacheKey: {CacheKey}", 
+                        userId, cacheKey);
                     var user = (await _usersRepository.Get(u => u.Id == userId)).FirstOrDefault();
                     
                     if (user == null)
                     {
-                        _logger.LogWarning("User not found: {UserId}", userId);
+                        _logger.LogWarning("❌ [SecurityStampService] USER NOT FOUND | UserId: {UserId}", userId);
                         return null;
                     }
 
+                    _logger.LogDebug("✓ [SecurityStampService] Security data loaded from database | UserId: {UserId} | SecurityStamp: {SecurityStamp} | LastPasswordChange: {LastPasswordChange}", 
+                        userId, user.SecurityStamp, user.LastPasswordChangeDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "null");
+                    
                     return new SecurityStampCacheData
                     {
                         UserId = user.Id,
@@ -63,17 +67,18 @@ namespace IdentityAPI.Services
 
         public async Task InvalidateUserSecurityCacheAsync(Guid userId)
         {
-            _logger.LogInformation("Invalidating security cache for user: {UserId}", userId);
+            _logger.LogInformation("🗑️ [SecurityStampService] Invalidating cache (forcing logout on all devices) | UserId: {UserId}", userId);
             var cacheKey = GetCacheKey(userId);
             await _cacheService.RemoveAsync(cacheKey);
-            _logger.LogDebug("Security cache invalidated for user: {UserId}", userId);
+            _logger.LogInformation("✓ [SecurityStampService] Cache invalidated successfully | UserId: {UserId} | CacheKey: {CacheKey} | Effect: User will be logged out on next request", 
+                userId, cacheKey);
         }
 
         public string GenerateSecurityStamp()
         {
-            // Generate a security stamp using GUID in 'N' format (32 hex digits without dashes)
-            // This provides a compact, URL-safe identifier for security validation
-            return Guid.NewGuid().ToString("N");
+            var stamp = Guid.NewGuid().ToString("N");
+            _logger.LogDebug("🔑 [SecurityStampService] Generated new security stamp | Stamp: {Stamp}", stamp);
+            return stamp;
         }
 
         private static string GetCacheKey(Guid userId)

@@ -28,12 +28,19 @@ namespace DJHostGateway.Transforms
         public override async ValueTask ApplyAsync(RequestTransformContext context)
         {
             var request = context.HttpContext.Request;
+            var requestPath = request.Path.Value ?? "unknown";
+            var requestMethod = request.Method;
+            var correlationId = context.HttpContext.TraceIdentifier;
+            
+            _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
+                correlationId, requestPath, requestMethod);
             
             // Skip validation if user is not logged in (no JWT included)
             var authHeader = request.Headers.Authorization.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(authHeader))
             {
-                _logger.LogDebug("No authorization header found, skipping security stamp validation");
+                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - No auth header | CorrelationId: {CorrelationId} | Path: {Path}", 
+                    correlationId, requestPath);
                 return;
             }
 
@@ -41,7 +48,8 @@ namespace DJHostGateway.Transforms
             if (request.Path.StartsWithSegments("/identity/api", StringComparison.OrdinalIgnoreCase) &&
                 request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                _logger.LogDebug("Skipping security stamp validation for ValidateSecurityStamp endpoint");
+                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - ValidateSecurityStamp endpoint (avoiding circular call) | CorrelationId: {CorrelationId}", 
+                    correlationId);
                 return;
             }
 
@@ -52,11 +60,14 @@ namespace DJHostGateway.Transforms
                     ? authHeader.Substring(7)
                     : authHeader;
 
+                _logger.LogDebug("📝 [SecurityStamp] Parsing JWT token | CorrelationId: {CorrelationId}", correlationId);
+                
                 // Parse JWT to extract claims
                 var handler = new JwtSecurityTokenHandler();
                 if (!handler.CanReadToken(token))
                 {
-                    _logger.LogWarning("Invalid JWT token format");
+                    _logger.LogWarning("❌ [SecurityStamp] INVALID TOKEN FORMAT | CorrelationId: {CorrelationId} | Path: {Path}", 
+                        correlationId, requestPath);
                     await WriteUnauthorizedResponse(context.HttpContext, "Invalid token format");
                     return;
                 }
@@ -67,27 +78,39 @@ namespace DJHostGateway.Transforms
 
                 if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
                 {
-                    _logger.LogWarning("User ID claim not found in token");
+                    _logger.LogWarning("❌ [SecurityStamp] MISSING USER ID | CorrelationId: {CorrelationId} | Path: {Path}", 
+                        correlationId, requestPath);
                     await WriteUnauthorizedResponse(context.HttpContext, "User ID not found in token");
                     return;
                 }
 
+                var userId = userIdClaim.Value;
+
                 if (securityStampClaim == null || string.IsNullOrWhiteSpace(securityStampClaim.Value))
                 {
-                    _logger.LogWarning("Security stamp claim not found in token for user {UserId}", userIdClaim.Value);
+                    _logger.LogWarning("❌ [SecurityStamp] MISSING STAMP IN TOKEN | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path}", 
+                        correlationId, userId, requestPath);
                     await WriteUnauthorizedResponse(context.HttpContext, "Security stamp not found in token");
                     return;
                 }
 
+                var tokenStamp = securityStampClaim.Value;
+                _logger.LogDebug("📋 [SecurityStamp] Token claims extracted | CorrelationId: {CorrelationId} | UserId: {UserId} | TokenStamp: {TokenStamp}", 
+                    correlationId, userId, tokenStamp);
+
                 // Circuit breaker: if too many consecutive failures, fail-secure
                 if (_consecutiveFailures >= MaxConsecutiveFailures)
                 {
-                    _logger.LogError("Circuit breaker open - too many validation service failures. Denying access.");
+                    _logger.LogError("⚠️ [SecurityStamp] CIRCUIT BREAKER OPEN | CorrelationId: {CorrelationId} | ConsecutiveFailures: {Failures} | Max: {Max} | Action: DENY ACCESS", 
+                        correlationId, _consecutiveFailures, MaxConsecutiveFailures);
                     await WriteUnauthorizedResponse(context.HttpContext, "Security validation service unavailable");
                     return;
                 }
 
                 // Call identity service to validate security stamp
+                _logger.LogDebug("🔄 [SecurityStamp] Calling validation endpoint | CorrelationId: {CorrelationId} | UserId: {UserId} | Endpoint: {Endpoint}", 
+                    correlationId, userId, $"{_identityServiceUrl}/api/Users/ValidateSecurityStamp");
+                
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(5); // Set reasonable timeout
                 
@@ -103,8 +126,8 @@ namespace DJHostGateway.Transforms
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Failed to validate security stamp for user {UserId}. Status: {StatusCode}",
-                        userIdClaim.Value, response.StatusCode);
+                    _logger.LogError("❌ [SecurityStamp] VALIDATION API CALL FAILED | CorrelationId: {CorrelationId} | UserId: {UserId} | StatusCode: {StatusCode} | ConsecutiveFailures: {Failures}", 
+                        correlationId, userId, response.StatusCode, _consecutiveFailures + 1);
                     Interlocked.Increment(ref _consecutiveFailures);
                     await WriteUnauthorizedResponse(context.HttpContext, "Security validation failed");
                     return;
@@ -114,35 +137,47 @@ namespace DJHostGateway.Transforms
                 
                 if (validationResult?.Data?.IsValid != true)
                 {
-                    _logger.LogWarning("Security stamp validation failed for user {UserId}. Reason: {Reason}",
-                        userIdClaim.Value, validationResult?.Data?.Reason ?? "Unknown");
+                    var reason = validationResult?.Data?.Reason ?? "Unknown";
+                    _logger.LogWarning("❌ [SecurityStamp] VALIDATION FAILED | CorrelationId: {CorrelationId} | UserId: {UserId} | Reason: {Reason} | Action: USER LOGGED OUT", 
+                        correlationId, userId, reason);
                     Interlocked.Exchange(ref _consecutiveFailures, 0); // Reset on successful call but invalid stamp
                     await WriteUnauthorizedResponse(
                         context.HttpContext, 
-                        "Unauthorized - " + (validationResult?.Data?.Reason ?? "Security validation failed"),
-                        validationResult?.Data?.Reason);
+                        "Unauthorized - " + reason,
+                        reason);
                     return;
                 }
 
                 // Success - reset failure counter
                 Interlocked.Exchange(ref _consecutiveFailures, 0);
-                _logger.LogDebug("Security stamp validated successfully for user {UserId}", userIdClaim.Value);
+                _logger.LogInformation("✓ [SecurityStamp] VALIDATION SUCCESSFUL | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path} | Method: {Method}", 
+                    correlationId, userId, requestPath, requestMethod);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogError("Security validation request timed out");
+                _logger.LogError("⏱️ [SecurityStamp] TIMEOUT | CorrelationId: {CorrelationId} | Timeout: 5s | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
+                    correlationId, _consecutiveFailures + 1);
                 Interlocked.Increment(ref _consecutiveFailures);
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation timeout");
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Network error during security stamp validation");
+                _logger.LogError(ex, "🌐 [SecurityStamp] NETWORK ERROR | CorrelationId: {CorrelationId} | Error: {Message} | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
+                    correlationId, ex.Message, _consecutiveFailures + 1);
                 Interlocked.Increment(ref _consecutiveFailures);
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation service error");
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "JSON parsing error during security stamp validation");
+                _logger.LogError(ex, "📄 [SecurityStamp] JSON PARSING ERROR | CorrelationId: {CorrelationId} | Error: {Message} | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
+                    correlationId, ex.Message, _consecutiveFailures + 1);
+                Interlocked.Increment(ref _consecutiveFailures);
+                await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 [SecurityStamp] UNEXPECTED ERROR | CorrelationId: {CorrelationId} | Type: {ExceptionType} | Message: {Message} | Action: DENY ACCESS", 
+                    correlationId, ex.GetType().Name, ex.Message);
                 Interlocked.Increment(ref _consecutiveFailures);
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
             }

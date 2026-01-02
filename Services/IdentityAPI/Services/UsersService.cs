@@ -203,28 +203,28 @@ namespace IdentityAPI.Services
 
         public async Task<bool> ChangePassword(ChangePasswordRequestDTO request)
         {
-            _logger.LogInformation("ChangePassword attempt");
+            _logger.LogInformation("🔐 [ChangePassword] Starting password change process");
             return await ExceptionHandler.Handle(async () =>
             {
                 var id = GetClaim("Id");
                 if (id == null)
                 {
-                    _logger.LogError("ChangePassword failed: corrupted token");
+                    _logger.LogError("❌ [ChangePassword] FAILED - Corrupted token (no user ID claim)");
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
 
-                _logger.LogDebug("Fetching user for password change by id: {UserId}", id);
+                _logger.LogInformation("👤 [ChangePassword] User authenticated | UserId: {UserId}", id);
                 var user = (await _usersRepository.Get(u => u.Id.Equals(Guid.Parse(id)))).FirstOrDefault();
                 if (user == null)
                 {
-                    _logger.LogWarning("ChangePassword failed: user not found for id {UserId}", id);
+                    _logger.LogWarning("❌ [ChangePassword] FAILED - User not found | UserId: {UserId}", id);
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
                 var password = user.Passwords.OrderByDescending(x => x.CreatedDate).First();
                 if (!password.Value.ToLower().Equals(request.OldPassword.ToLower()))
                 {
-                    _logger.LogWarning("ChangePassword failed: wrong old password for user id {UserId}", id);
+                    _logger.LogWarning("❌ [ChangePassword] FAILED - Incorrect old password | UserId: {UserId}", id);
                     throw new AppException(ExceptionCodes.LoginWrongPassword);
                 }
 
@@ -233,75 +233,91 @@ namespace IdentityAPI.Services
                 {
                     if (usedPassword.CreatedDate >= DateTime.Now.AddMonths(-6))
                     {
-                        _logger.LogWarning("ChangePassword failed: password already used recently for user id {UserId}", id);
+                        _logger.LogWarning("❌ [ChangePassword] FAILED - Password used recently (within 6 months) | UserId: {UserId} | LastUsed: {LastUsed}", 
+                            id, usedPassword.CreatedDate.ToString("yyyy-MM-dd"));
                         throw new AppException(ExceptionCodes.PasswordAlreadyUsed);
                     }
                     else
                     {
-                        _logger.LogDebug("Updating created date for reused password for user id {UserId}", id);
+                        _logger.LogDebug("📝 [ChangePassword] Updating creation date for reused password | UserId: {UserId}", id);
                         usedPassword.CreatedDate = DateTime.Now;
                     }
                 }
                 else
                 {
-                    _logger.LogDebug("Adding new password for user id {UserId}", id);
+                    _logger.LogDebug("➕ [ChangePassword] Adding new password to history | UserId: {UserId}", id);
                     var newPassword = new Password() { CreatedDate = DateTime.Now, Value = request.NewPassword };
                     user.Passwords.Add(newPassword);
                 }
                 
                 // Regenerate security stamp and update last password change date
+                var oldStamp = user.SecurityStamp;
                 user.SecurityStamp = _securityStampService.GenerateSecurityStamp();
                 user.LastPasswordChangeDate = DateTime.UtcNow;
+                
+                _logger.LogInformation("🔑 [ChangePassword] Security stamp regenerated | UserId: {UserId} | OldStamp: {OldStamp} | NewStamp: {NewStamp} | PasswordChangeDate: {ChangeDate}", 
+                    id, oldStamp, user.SecurityStamp, user.LastPasswordChangeDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
                 
                 var result = await _usersRepository.Update(user);
                 if (result)
                 {
-                    _logger.LogInformation("Password changed successfully for user id: {UserId}", id);
+                    _logger.LogInformation("✓ [ChangePassword] SUCCESS - Password updated in database | UserId: {UserId}", id);
                     // Invalidate cache to force logout on other devices
                     await _securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
+                    _logger.LogInformation("🚪 [ChangePassword] User will be logged out from all other devices | UserId: {UserId}", id);
                 }
                 else
-                    _logger.LogError("ChangePassword failed to update user: {UserId}", id);
+                    _logger.LogError("❌ [ChangePassword] FAILED - Database update failed | UserId: {UserId}", id);
                 return result;
             }, _logger);
         }
 
         public async Task<bool> ForgotPassword(ForgotPasswordRequestDTO request)
         {
-            _logger.LogInformation("ForgotPassword attempt for email: {Email}", request.Email);
+            _logger.LogInformation("🔐 [ForgotPassword] Password reset requested | Email: {Email}", request.Email);
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Fetching user for forgot password by email: {Email}", request.Email);
+                _logger.LogDebug("🔍 [ForgotPassword] Looking up user by email | Email: {Email}", request.Email);
                 var foundByEmail = (await _usersRepository.Get(x => x.Email.ToLower().Equals(request.Email.ToLower()))).FirstOrDefault();
                 if (foundByEmail == null)
                 {
-                    _logger.LogWarning("ForgotPassword failed: user not found for email {Email}", request.Email);
+                    _logger.LogWarning("❌ [ForgotPassword] FAILED - User not found | Email: {Email}", request.Email);
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
-                _logger.LogDebug("Adding new password for forgot password for user: {Email}", request.Email);
+                var newPassword = StringHelper.GenerateRandomPassword(10).computeHash();
+                _logger.LogInformation("🔑 [ForgotPassword] Generating new random password | Email: {Email} | UserId: {UserId}", 
+                    request.Email, foundByEmail.Id);
+                    
                 foundByEmail.Passwords.Add(new Password
                 {
                     CreatedDate = DateTime.Now,
-                    Value = StringHelper.GenerateRandomPassword(10).computeHash(),
+                    Value = newPassword,
                     UserId = foundByEmail.Id
                 });
 
                 // Regenerate security stamp and update last password change date
+                var oldStamp = foundByEmail.SecurityStamp;
                 foundByEmail.SecurityStamp = _securityStampService.GenerateSecurityStamp();
                 foundByEmail.LastPasswordChangeDate = DateTime.UtcNow;
+
+                _logger.LogInformation("🔑 [ForgotPassword] Security stamp regenerated | Email: {Email} | UserId: {UserId} | OldStamp: {OldStamp} | NewStamp: {NewStamp}", 
+                    request.Email, foundByEmail.Id, oldStamp, foundByEmail.SecurityStamp);
 
                 ///send mail about password change
 
                 var result = await _usersRepository.Update(foundByEmail);
                 if (result)
                 {
-                    _logger.LogInformation("ForgotPassword: password reset for user {Email}", request.Email);
+                    _logger.LogInformation("✓ [ForgotPassword] SUCCESS - Password reset | Email: {Email} | UserId: {UserId}", 
+                        request.Email, foundByEmail.Id);
                     // Invalidate cache to force logout on all devices
                     await _securityStampService.InvalidateUserSecurityCacheAsync(foundByEmail.Id);
+                    _logger.LogInformation("🚪 [ForgotPassword] User will be logged out from all devices | Email: {Email} | UserId: {UserId}", 
+                        request.Email, foundByEmail.Id);
                 }
                 else
-                    _logger.LogError("ForgotPassword failed to update user: {Email}", request.Email);
+                    _logger.LogError("❌ [ForgotPassword] FAILED - Database update failed | Email: {Email}", request.Email);
                 return result;
             }, _logger);
         }
@@ -368,12 +384,13 @@ namespace IdentityAPI.Services
 
         public async Task<ValidateSecurityStampResponseDTO> ValidateSecurityStamp(ValidateSecurityStampRequestDTO request)
         {
-            _logger.LogInformation("ValidateSecurityStamp attempt for user: {UserId}", request.UserId);
+            _logger.LogInformation("🔐 [ValidateSecurityStamp] Validation request received | UserId: {UserId} | ProvidedStamp: {ProvidedStamp}", 
+                request.UserId, request.SecurityStamp);
             return await ExceptionHandler.Handle(async () =>
             {
                 if (string.IsNullOrWhiteSpace(request.SecurityStamp))
                 {
-                    _logger.LogWarning("ValidateSecurityStamp failed: empty security stamp for user {UserId}", request.UserId);
+                    _logger.LogWarning("❌ [ValidateSecurityStamp] INVALID - Empty security stamp | UserId: {UserId}", request.UserId);
                     return new ValidateSecurityStampResponseDTO
                     {
                         IsValid = false,
@@ -381,12 +398,12 @@ namespace IdentityAPI.Services
                     };
                 }
 
-                _logger.LogDebug("Fetching cached security data for user: {UserId}", request.UserId);
+                _logger.LogDebug("🔍 [ValidateSecurityStamp] Fetching cached security data | UserId: {UserId}", request.UserId);
                 var cachedData = await _securityStampService.GetUserSecurityDataAsync(request.UserId);
                 
                 if (cachedData == null)
                 {
-                    _logger.LogWarning("ValidateSecurityStamp failed: user not found {UserId}", request.UserId);
+                    _logger.LogWarning("❌ [ValidateSecurityStamp] INVALID - User not found | UserId: {UserId}", request.UserId);
                     return new ValidateSecurityStampResponseDTO
                     {
                         IsValid = false,
@@ -394,9 +411,13 @@ namespace IdentityAPI.Services
                     };
                 }
 
+                _logger.LogDebug("📋 [ValidateSecurityStamp] Comparing stamps | UserId: {UserId} | ProvidedStamp: {ProvidedStamp} | CurrentStamp: {CurrentStamp} | LastPasswordChange: {LastPasswordChange}", 
+                    request.UserId, request.SecurityStamp, cachedData.SecurityStamp, 
+                    cachedData.LastPasswordChangeDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "null");
+
                 if (string.IsNullOrWhiteSpace(cachedData.SecurityStamp))
                 {
-                    _logger.LogWarning("ValidateSecurityStamp failed: user has no security stamp {UserId}", request.UserId);
+                    _logger.LogWarning("❌ [ValidateSecurityStamp] INVALID - User has no security stamp initialized | UserId: {UserId}", request.UserId);
                     return new ValidateSecurityStampResponseDTO
                     {
                         IsValid = false,
@@ -406,7 +427,9 @@ namespace IdentityAPI.Services
 
                 if (!cachedData.SecurityStamp.Equals(request.SecurityStamp, StringComparison.Ordinal))
                 {
-                    _logger.LogWarning("ValidateSecurityStamp failed: security stamp mismatch for user {UserId}. Password may have been changed.", request.UserId);
+                    _logger.LogWarning("❌ [ValidateSecurityStamp] MISMATCH - Stamps don't match (password was changed) | UserId: {UserId} | ProvidedStamp: {ProvidedStamp} | CurrentStamp: {CurrentStamp} | LastPasswordChange: {LastPasswordChange}", 
+                        request.UserId, request.SecurityStamp, cachedData.SecurityStamp, 
+                        cachedData.LastPasswordChangeDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "unknown");
                     return new ValidateSecurityStampResponseDTO
                     {
                         IsValid = false,
@@ -414,7 +437,7 @@ namespace IdentityAPI.Services
                     };
                 }
 
-                _logger.LogInformation("ValidateSecurityStamp successful for user: {UserId}", request.UserId);
+                _logger.LogInformation("✓ [ValidateSecurityStamp] VALID - Stamps match | UserId: {UserId}", request.UserId);
                 return new ValidateSecurityStampResponseDTO
                 {
                     IsValid = true
