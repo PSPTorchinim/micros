@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { HeroBlock as HeroBlockType } from '../../../models/strapi/strapiMap';
+import type { HeroBlock as HeroBlockType } from '../../../models/api/strapi/apiMap';
 
 export const HeroBlock = (props: HeroBlockType) => (
   <div className="hero-header">

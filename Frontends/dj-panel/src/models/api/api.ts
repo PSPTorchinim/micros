@@ -9,13 +9,14 @@
  * ---------------------------------------------------------------
  */
 
-import { Api as BrandApi } from './brand/apiMap';
-import { Api as DocumentsApi } from './documents/apiMap';
-import { Api as GearApi } from './gear/apiMap';
-import { Api as IdentityApi } from './identity/apiMap';
-import { Api as MailingApi } from './mailing/apiMap';
-import { Api as MusicApi } from './music/apiMap';
-import { Api as PartyApi } from './party/apiMap';
+import { Api as BrandApi, ContentType as BrandContentType, HttpClient as BrandHttpClient } from './brand/apiMap';
+import { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient } from './documents/apiMap';
+import { Api as GearApi, ContentType as GearContentType, HttpClient as GearHttpClient } from './gear/apiMap';
+import { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as IdentityHttpClient } from './identity/apiMap';
+import { Api as MailingApi, ContentType as MailingContentType, HttpClient as MailingHttpClient } from './mailing/apiMap';
+import { Api as MusicApi, ContentType as MusicContentType, HttpClient as MusicHttpClient } from './music/apiMap';
+import { Api as PartyApi, ContentType as PartyContentType, HttpClient as PartyHttpClient } from './party/apiMap';
+import { Api as StrapiApi, ContentType as StrapiContentType, HttpClient as StrapiHttpClient } from './strapi/apiMap';
 
 export { BrandApi, BrandContentType, BrandHttpClient } from './brand/apiMap';
 export { DocumentsApi, DocumentsContentType, DocumentsHttpClient } from './documents/apiMap';
@@ -24,7 +25,21 @@ export { IdentityApi, IdentityContentType, IdentityHttpClient } from './identity
 export { MailingApi, MailingContentType, MailingHttpClient } from './mailing/apiMap';
 export { MusicApi, MusicContentType, MusicHttpClient } from './music/apiMap';
 export { PartyApi, PartyContentType, PartyHttpClient } from './party/apiMap';
+export { StrapiApi, StrapiContentType, StrapiHttpClient } from './strapi/apiMap';
 
+
+// Injected secure_key header interceptor for all services
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+const __servicesWithInterceptor = [microservicesClient?.brand?.instance, microservicesClient?.documents?.instance, microservicesClient?.gear?.instance, microservicesClient?.identity?.instance, microservicesClient?.mailing?.instance, microservicesClient?.music?.instance, microservicesClient?.party?.instance, microservicesClient?.strapi?.instance];
+__servicesWithInterceptor.forEach(instance => {
+  if (instance && instance.interceptors && instance.interceptors.request && __secureKey) {
+    instance.interceptors.request.use(config => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = __secureKey;
+      return config;
+    });
+  }
+});
 import { ApiConfig } from './brand/apiMap';
 
 const NUMBER_OF_RETRIES = 3;
@@ -40,6 +55,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
   public mailing: MailingApi<SecurityDataType>;
   public music: MusicApi<SecurityDataType>;
   public party: PartyApi<SecurityDataType>;
+  public strapi: StrapiApi<SecurityDataType>;
 
   constructor(config: ApiConfig<SecurityDataType> = {}) {
     // Apply default configuration
@@ -57,6 +73,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     this.mailing = new MailingApi(defaultConfig);
     this.music = new MusicApi(defaultConfig);
     this.party = new PartyApi(defaultConfig);
+    this.strapi = new StrapiApi(defaultConfig);
 
     // Setup secure_key header interceptor for all services
     this.setupSecureKeyInterceptor();
@@ -82,6 +99,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
       this.mailing,
       this.music,
       this.party,
+      this.strapi,
     ];
 
     services.forEach((service) => {
@@ -117,6 +135,7 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     this.mailing.setSecurityData(data);
     this.music.setSecurityData(data);
     this.party.setSecurityData(data);
+    this.strapi.setSecurityData(data);
   }
 
   /**
@@ -144,6 +163,9 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     if (this.party.instance) {
       this.party.instance.defaults.baseURL = baseUrl;
     }
+    if (this.strapi.instance) {
+      this.strapi.instance.defaults.baseURL = baseUrl;
+    }
   }
 }
 
@@ -169,3 +191,4 @@ export const createIdentityApi = (config?: ApiConfig) => new IdentityApi(config)
 export const createMailingApi = (config?: ApiConfig) => new MailingApi(config);
 export const createMusicApi = (config?: ApiConfig) => new MusicApi(config);
 export const createPartyApi = (config?: ApiConfig) => new PartyApi(config);
+export const createStrapiApi = (config?: ApiConfig) => new StrapiApi(config);

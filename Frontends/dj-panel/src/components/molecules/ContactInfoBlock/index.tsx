@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { ContactInfo } from '../../../models/strapi/strapiMap';
+import type { ContactInfo } from '../../../models/api/strapi/apiMap';
 
 export const ContactInfoBlock = (props: ContactInfo) => (
   <div className="contact-info-block">

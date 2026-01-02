@@ -208,12 +208,12 @@ export class Api<
      *
      * @tags WeatherForecast
      * @name GetWeatherForecast
-     * @request GET:/gear/api/v1/WeatherForecast
+     * @request GET:/gear/v1/WeatherForecast
      * @secure
      */
     getWeatherForecast: (params: RequestParams = {}) =>
       this.request<WeatherForecast[], any>({
-        path: `/gear/api/v1/WeatherForecast`,
+        path: `/gear/v1/WeatherForecast`,
         method: "GET",
         secure: true,
         format: "json",
@@ -224,13 +224,13 @@ export class Api<
      * No description
      *
      * @tags WeatherForecast
-     * @name ApiV1WeatherForecastHelloList
-     * @request GET:/gear/api/v1/WeatherForecast/Hello
+     * @name V1WeatherForecastHelloList
+     * @request GET:/gear/v1/WeatherForecast/Hello
      * @secure
      */
-    apiV1WeatherForecastHelloList: (params: RequestParams = {}) =>
+    v1WeatherForecastHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/gear/api/v1/WeatherForecast/Hello`,
+        path: `/gear/v1/WeatherForecast/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -240,3 +240,15 @@ export class Api<
 
 // Aliased exports for unified API client
 export { Api as GearApi, ContentType as GearContentType, HttpClient as GearHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
+}

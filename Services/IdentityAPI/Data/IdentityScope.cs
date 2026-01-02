@@ -19,6 +19,7 @@ namespace IdentityAPI.Data
             services.AddScoped<IUsersService, UsersService>();
             services.AddScoped<IRolesService, RolesService>();
             services.AddScoped<IPermissionsService, PermissionsService>();
+            services.AddScoped<ISecurityStampService, SecurityStampService>();
         }
     }
 }

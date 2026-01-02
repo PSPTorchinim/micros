@@ -180,6 +180,7 @@ services:
       - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
       - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
       - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
+      - ASPNETCORE_STRAPI_ADDRESS=${CMS_HOST}
       - ASPNETCORE_DATABASE_CATALOG=${APIGATEWAY_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
@@ -202,9 +203,12 @@ services:
         condition: service_healthy
       party_be:
         condition: service_healthy
+      strapi:
+        condition: service_healthy
     networks:
       - apigw_backends_net
       - apigw_fe_net
+      - strapi_fe_net
       - public
     deploy:
       resources:
@@ -224,7 +228,6 @@ services:
         API_GATEWAY: ${API_GATEWAY}
         SECURE_KEY: ${SECURE_KEY}
         JWT_TOKEN: ${JWT_KEY}
-        CMS_HOST: ${CMS_HOST}
     restart: unless-stopped
     pull_policy: always
     ports:

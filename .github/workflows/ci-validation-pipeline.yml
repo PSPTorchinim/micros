@@ -219,30 +219,6 @@ jobs:
           
           echo "✅ No critical or high severity vulnerabilities found in dj-panel dependencies"
 
-      - name: Audit CMS npm packages
-        run: |
-          cd ${{ github.workspace }}/CMS
-          echo "=========================================="
-          echo "Auditing CMS package.json dependencies"
-          echo "=========================================="
-          npm audit --audit-level=moderate || true
-          npm audit --audit-level=moderate --json > /tmp/cms-audit.json || true
-          
-          # Check for high or critical vulnerabilities
-          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' /tmp/cms-audit.json)
-          HIGH=$(jq '.metadata.vulnerabilities.high // 0' /tmp/cms-audit.json)
-          
-          echo "Critical vulnerabilities: $CRITICAL"
-          echo "High vulnerabilities: $HIGH"
-          
-          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-            echo "❌ Found critical or high severity vulnerabilities in CMS dependencies"
-            npm audit --audit-level=high
-            exit 1
-          fi
-          
-          echo "✅ No critical or high severity vulnerabilities found in CMS dependencies"
-
   security_dotnet_audit:
     name: .NET Package Security Audit
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { StepsContainerBlock } from './index';
-import type { StepsContainer, Cta } from '../../../models/strapi/strapiMap';
+import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
 
 describe('StepsContainerBlock', () => {
   const mockCta: Cta = {

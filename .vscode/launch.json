@@ -38,7 +38,6 @@
       "skipFiles": ["<node_internals>/**"],
       "preLaunchTask": "build-dj-panel",
       "env": {
-        "REACT_APP_CMS_HOST": "http://localhost:1337/api",
         "REACT_APP_API_GATEWAY": "http://localhost:5000",
         "REACT_APP_API_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "REACT_APP_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890"
@@ -342,6 +341,7 @@
         "ASPNETCORE_BRAND_BE_ADDRESS": "http://localhost:5005",
         "ASPNETCORE_PARTY_BE_ADDRESS": "http://localhost:5006",
         "ASPNETCORE_MAILING_BE_ADDRESS": "http://localhost:5007",
+        "ASPNETCORE_STRAPI_ADDRESS": "http://localhost:1337",
         "ASPNETCORE_SECURE_KEY": "LocalDevelopmentSecureKey123456789",
         "ASPNETCORE_JWT_KEY": "LocalDevelopmentJWTKey123456789012345678901234567890",
         "ASPNETCORE_DATABASE_CATALOG": "DJHostGateway",

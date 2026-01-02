@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import type { ArticleBlock as ArticleBlockType } from '../../../models/strapi/strapiMap';
+import type { ArticleBlock as ArticleBlockType } from '../../../models/api/strapi/apiMap';
 
 export const ArticleBlock = (props: ArticleBlockType) => {
   const articles = Array.isArray(props.articles) ? props.articles : [];

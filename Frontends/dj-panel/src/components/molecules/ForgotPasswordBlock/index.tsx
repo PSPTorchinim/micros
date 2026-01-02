@@ -4,7 +4,7 @@ import { UsersService } from '../../../services/users-service';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
-import type { ForgotPasswordBlock as ForgotPasswordBlockType } from '../../../models/strapi/strapiMap';
+import type { ForgotPasswordBlock as ForgotPasswordBlockType } from '../../../models/api/strapi/apiMap';
 
 export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockType> = ({
   title = 'Forgot Password',

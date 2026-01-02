@@ -20,7 +20,8 @@ COPY Services/${MICROSERVICE_NAME}/*.csproj ./Services/${MICROSERVICE_NAME}/
 COPY Services/Shared/*.csproj ./Services/Shared/
 
 # Restore dependencies
-RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj
+# Note: --no-cache forces fresh package downloads, resolving Swashbuckle version conflicts
+RUN dotnet restore Services/${MICROSERVICE_NAME}/*.csproj --no-cache
 
 # Copy remaining source code
 COPY Services/${MICROSERVICE_NAME}/ ./Services/${MICROSERVICE_NAME}/

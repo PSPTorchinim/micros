@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { CTABlock } from './index';
-import type { Cta } from '../../../models/strapi/strapiMap';
+import type { Cta } from '../../../models/api/strapi/apiMap';
 
 describe('CTABlock', () => {
   it('renders CTA with label and url', () => {

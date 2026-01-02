@@ -1,10 +1,10 @@
-import { Api } from '../models/strapi/strapiMap';
-import type { Page } from '../models/strapi/strapiMap';
+import { microservicesClient } from '../models/api';
+import type { Page } from '../models/api/strapi/apiMap';
 
 type StrapiFilters = Record<string, unknown>;
 
-// --- populate config dla Template.Content (dynamic zone) ---
-// Zapewnia, że w każdym ref-komponencie pojawi się pole relacyjne z documentId.
+// --- Populate config for Template.Content (dynamic zone) ---
+// Ensures that each ref-component contains the relational field with documentId.
 const TEMPLATE_CONTENT_POPULATE = {
   Content: {
     on: {
@@ -37,7 +37,7 @@ const TEMPLATE_CONTENT_POPULATE = {
       },
     },
   },
-  // przy okazji możesz mieć page z podstawowymi polami
+  // Include page with basic fields
   page: {
     fields: [
       'documentId',
@@ -51,24 +51,15 @@ const TEMPLATE_CONTENT_POPULATE = {
   },
 } as const;
 
-class StrapiAPI {
-  private api: Api<unknown>;
-  private baseURL: string;
-
-  constructor() {
-    this.baseURL =
-      process.env.REACT_APP_CMS_HOST || `http://localhost:1337/api`;
-    this.api = new Api({ baseURL: this.baseURL });
-  }
-
+export class StrapiService {
   // --------------------------------------
   // PAGES
   // --------------------------------------
 
-  // Root pages (bez parenta)
-  async getRootPages(): Promise<Page[] | undefined> {
+  // Root pages (without parent)
+  public static async getRootPages(): Promise<Page[] | undefined> {
     try {
-      const response = await this.api.page.getPages({
+      const response = await microservicesClient.strapi.page.getPages({
         filters: {
           Parents: { id: { $null: true } },
         } as StrapiFilters,
@@ -80,14 +71,14 @@ class StrapiAPI {
     }
   }
 
-  async getPagesByParentId(parentId: number): Promise<Page[]> {
+  public static async getPagesByParentId(parentId: number): Promise<Page[]> {
     try {
-      const response = await this.api.page.getPages({
+      const response = await microservicesClient.strapi.page.getPages({
         filters: {
           Parents: { id: { $eq: parentId } },
         } as StrapiFilters,
       });
-      // zależnie od generatora może być response.data.data
+      // Depending on the generator, it might be response.data.data
       return (
         (response as any).data?.data ?? (response.data as unknown as Page[])
       );
@@ -97,9 +88,11 @@ class StrapiAPI {
     }
   }
 
-  async fetchPageById(pageDocumentId: string): Promise<Page | null> {
+  public static async fetchPageById(
+    pageDocumentId: string,
+  ): Promise<Page | null> {
     try {
-      const response = await this.api.page.getPages({
+      const response = await microservicesClient.strapi.page.getPages({
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
         populate: '*',
       });
@@ -114,10 +107,10 @@ class StrapiAPI {
   // TEMPLATES
   // --------------------------------------
 
-  // DEPRECATED alias – zostawiamy dla zgodności, ale dorzucamy właściwy populate.on
-  async getTemplateById(templateDocumentId: string) {
+  // DEPRECATED alias – kept for compatibility, but includes proper populate.on
+  public static async getTemplateById(templateDocumentId: string) {
     try {
-      const response = await this.api.template.getTemplates({
+      const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
         populate: TEMPLATE_CONTENT_POPULATE as any,
       });
@@ -131,10 +124,10 @@ class StrapiAPI {
     }
   }
 
-  // Rekomendowana nazwa – to samo, z populate.on
-  async getTemplateByDocumentId(documentId: string) {
+  // Recommended name – same as above, with populate.on
+  public static async getTemplateByDocumentId(documentId: string) {
     try {
-      const response = await this.api.template.getTemplates({
+      const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: documentId } } as StrapiFilters,
         populate: TEMPLATE_CONTENT_POPULATE as any,
       });
@@ -146,12 +139,13 @@ class StrapiAPI {
   }
 
   // --------------------------------------
-  // BLOKI – BY NUMERIC ID (/:id)
+  // BLOCKS – BY NUMERIC ID (/:id)
   // --------------------------------------
 
-  async getFeatureTabBlockById(id: number) {
+  public static async getFeatureTabBlockById(id: number) {
     try {
-      const response = await this.api.featureTab.getFeatureTabsId(id);
+      const response =
+        await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching feature tab block by ID ${id}:`, error);
@@ -159,9 +153,10 @@ class StrapiAPI {
     }
   }
 
-  async getContactInfoBlockById(id: number) {
+  public static async getContactInfoBlockById(id: number) {
     try {
-      const response = await this.api.contactInfo.getContactInfosId(id);
+      const response =
+        await microservicesClient.strapi.contactInfo.getContactInfosId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching contact info block by ID ${id}:`, error);
@@ -169,9 +164,10 @@ class StrapiAPI {
     }
   }
 
-  async getHeroBlockById(id: number) {
+  public static async getHeroBlockById(id: number) {
     try {
-      const response = await this.api.heroBlock.getHeroBlocksId(id);
+      const response =
+        await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching hero block by ID ${id}:`, error);
@@ -179,9 +175,12 @@ class StrapiAPI {
     }
   }
 
-  async getFeatureSectionById(id: number) {
+  public static async getFeatureSectionById(id: number) {
     try {
-      const response = await this.api.featureSection.getFeatureSectionsId(id);
+      const response =
+        await microservicesClient.strapi.featureSection.getFeatureSectionsId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching feature section by ID ${id}:`, error);
@@ -189,9 +188,12 @@ class StrapiAPI {
     }
   }
 
-  async getContactSectionById(id: number) {
+  public static async getContactSectionById(id: number) {
     try {
-      const response = await this.api.contactSection.getContactSectionsId(id);
+      const response =
+        await microservicesClient.strapi.contactSection.getContactSectionsId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching contact section by ID ${id}:`, error);
@@ -199,9 +201,10 @@ class StrapiAPI {
     }
   }
 
-  async getImageSliderBlockById(id: number) {
+  public static async getImageSliderBlockById(id: number) {
     try {
-      const response = await this.api.imageSlider.getImageSlidersId(id);
+      const response =
+        await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching image slider block by ID ${id}:`, error);
@@ -209,9 +212,10 @@ class StrapiAPI {
     }
   }
 
-  async getArticleBlockById(id: number) {
+  public static async getArticleBlockById(id: number) {
     try {
-      const response = await this.api.articleBlock.getArticleBlocksId(id);
+      const response =
+        await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching article block by ID ${id}:`, error);
@@ -219,9 +223,12 @@ class StrapiAPI {
     }
   }
 
-  async getStepsContainerBlockById(id: number) {
+  public static async getStepsContainerBlockById(id: number) {
     try {
-      const response = await this.api.stepsContainer.getStepsContainersId(id);
+      const response =
+        await microservicesClient.strapi.stepsContainer.getStepsContainersId(
+          id,
+        );
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching steps container block by ID ${id}:`, error);
@@ -229,9 +236,9 @@ class StrapiAPI {
     }
   }
 
-  async getCTABlockById(id: number) {
+  public static async getCTABlockById(id: number) {
     try {
-      const response = await this.api.cta.getCtasId(id);
+      const response = await microservicesClient.strapi.cta.getCtasId(id);
       return response?.data?.data || null;
     } catch (error) {
       console.error(`Error fetching CTA block by ID ${id}:`, error);
@@ -240,15 +247,16 @@ class StrapiAPI {
   }
 
   // --------------------------------------
-  // BLOKI – BY documentId (string)
+  // BLOCKS – BY documentId (string)
   // --------------------------------------
 
-  async getArticleBlockByDocumentId(id: string) {
+  public static async getArticleBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.articleBlock.getArticleBlocks({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.articleBlock.getArticleBlocks({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching article-block by documentId ${id}:`, e);
@@ -256,9 +264,9 @@ class StrapiAPI {
     }
   }
 
-  async getHeroBlockByDocumentId(id: string) {
+  public static async getHeroBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.heroBlock.getHeroBlocks({
+      const res = await microservicesClient.strapi.heroBlock.getHeroBlocks({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -269,9 +277,9 @@ class StrapiAPI {
     }
   }
 
-  async getImageSliderBlockByDocumentId(id: string) {
+  public static async getImageSliderBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.imageSlider.getImageSliders({
+      const res = await microservicesClient.strapi.imageSlider.getImageSliders({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -282,12 +290,13 @@ class StrapiAPI {
     }
   }
 
-  async getStepsContainerBlockByDocumentId(id: string) {
+  public static async getStepsContainerBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.stepsContainer.getStepsContainers({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.stepsContainer.getStepsContainers({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching steps-container by documentId ${id}:`, e);
@@ -295,9 +304,9 @@ class StrapiAPI {
     }
   }
 
-  async getCTABlockByDocumentId(id: string) {
+  public static async getCTABlockByDocumentId(id: string) {
     try {
-      const res = await this.api.cta.getCtas({
+      const res = await microservicesClient.strapi.cta.getCtas({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -308,12 +317,13 @@ class StrapiAPI {
     }
   }
 
-  async getFeatureSectionByDocumentId(id: string) {
+  public static async getFeatureSectionByDocumentId(id: string) {
     try {
-      const res = await this.api.featureSection.getFeatureSections({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.featureSection.getFeatureSections({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching feature-section by documentId ${id}:`, e);
@@ -321,12 +331,13 @@ class StrapiAPI {
     }
   }
 
-  async getContactSectionByDocumentId(id: string) {
+  public static async getContactSectionByDocumentId(id: string) {
     try {
-      const res = await this.api.contactSection.getContactSections({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.contactSection.getContactSections({
+          filters: { documentId: { $eq: id } } as StrapiFilters,
+          populate: '*',
+        });
       return res?.data?.data?.[0] || null;
     } catch (e) {
       console.error(`Error fetching contact-section by documentId ${id}:`, e);
@@ -334,9 +345,9 @@ class StrapiAPI {
     }
   }
 
-  async getFeatureTabBlockByDocumentId(id: string) {
+  public static async getFeatureTabBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.featureTab.getFeatureTabs({
+      const res = await microservicesClient.strapi.featureTab.getFeatureTabs({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -347,9 +358,9 @@ class StrapiAPI {
     }
   }
 
-  async getContactInfoBlockByDocumentId(id: string) {
+  public static async getContactInfoBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.contactInfo.getContactInfos({
+      const res = await microservicesClient.strapi.contactInfo.getContactInfos({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -360,9 +371,9 @@ class StrapiAPI {
     }
   }
 
-  async getLoginBlockByDocumentId(id: string) {
+  public static async getLoginBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.loginBlock.getLoginBlock({
+      const res = await microservicesClient.strapi.loginBlock.getLoginBlock({
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
@@ -373,12 +384,15 @@ class StrapiAPI {
     }
   }
 
-  async getForgotPasswordBlockByDocumentId(id: string) {
+  public static async getForgotPasswordBlockByDocumentId(id: string) {
     try {
-      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlock({
-        filters: { documentId: { $eq: id } } as StrapiFilters,
-        populate: '*',
-      });
+      const res =
+        await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock(
+          {
+            filters: { documentId: { $eq: id } } as StrapiFilters,
+            populate: '*',
+          },
+        );
       return res?.data?.data || null;
     } catch (e) {
       console.error(
@@ -390,9 +404,9 @@ class StrapiAPI {
   }
 
   // Singleton methods for Login and ForgotPassword blocks
-  async getLoginBlockSingleton() {
+  public static async getLoginBlockSingleton() {
     try {
-      const res = await this.api.loginBlock.getLoginBlock();
+      const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching login-block singleton:', e);
@@ -400,9 +414,10 @@ class StrapiAPI {
     }
   }
 
-  async getForgotPasswordBlockSingleton() {
+  public static async getForgotPasswordBlockSingleton() {
     try {
-      const res = await this.api.forgotPasswordBlock.getForgotPasswordBlock();
+      const res =
+        await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching forgot-password-block singleton:', e);
@@ -410,9 +425,9 @@ class StrapiAPI {
     }
   }
 
-  async getFooterSingleton() {
+  public static async getFooterSingleton() {
     try {
-      const res = await this.api.footer.getFooter({
+      const res = await microservicesClient.strapi.footer.getFooter({
         populate: {
           columns: {
             populate: {
@@ -433,9 +448,9 @@ class StrapiAPI {
   // ARTICLES
   // --------------------------------------
 
-  async getArticleBySlug(slug: string) {
+  public static async getArticleBySlug(slug: string) {
     try {
-      const res = await this.api.article.getArticles({
+      const res = await microservicesClient.strapi.article.getArticles({
         filters: { Slug: { $eq: slug } } as StrapiFilters,
         populate: '*',
       });
@@ -446,9 +461,9 @@ class StrapiAPI {
     }
   }
 
-  async getArticleByTitle(title: string) {
+  public static async getArticleByTitle(title: string) {
     try {
-      const res = await this.api.article.getArticles({
+      const res = await microservicesClient.strapi.article.getArticles({
         filters: { Title: { $eq: title } } as StrapiFilters,
         populate: '*',
       });
@@ -459,5 +474,3 @@ class StrapiAPI {
     }
   }
 }
-
-export const strapiAPI = new StrapiAPI();

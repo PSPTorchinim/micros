@@ -1,6 +1,6 @@
 // components/RenderTemplate.tsx
 import React from 'react';
-import { strapiAPI } from '../services/strapi-api';
+import { StrapiService } from '../services/strapi-service';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
@@ -48,9 +48,9 @@ export const RenderTemplate: React.FC<Props> = ({
 
         // U Ciebie istnieje getTemplateById (po documentId) — ale dodaliśmy też getTemplateByDocumentId
         // Jeśli masz tylko getTemplateById, możesz go tu użyć zamiast:
-        const t = (await strapiAPI.getTemplateByDocumentId)
-          ? await strapiAPI.getTemplateByDocumentId(template)
-          : await strapiAPI.getTemplateById(template);
+        const t = (await StrapiService.getTemplateByDocumentId)
+          ? await StrapiService.getTemplateByDocumentId(template)
+          : await StrapiService.getTemplateById(template);
 
         if (!mounted) return;
         setTpl(t ?? null);
@@ -82,7 +82,7 @@ export const RenderTemplate: React.FC<Props> = ({
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
-          const loginBlock = await strapiAPI.getLoginBlockSingleton();
+          const loginBlock = await StrapiService.getLoginBlockSingleton();
           if (mounted) {
             if (loginBlock) {
               setBlocks([
@@ -105,7 +105,7 @@ export const RenderTemplate: React.FC<Props> = ({
       if (templateType === 'ForgotPassword') {
         try {
           const forgotPasswordBlock =
-            await strapiAPI.getForgotPasswordBlockSingleton();
+            await StrapiService.getForgotPasswordBlockSingleton();
           if (mounted) {
             if (forgotPasswordBlock) {
               setBlocks([
@@ -145,7 +145,7 @@ export const RenderTemplate: React.FC<Props> = ({
         pageTitle
       ) {
         try {
-          const article = await strapiAPI.getArticleByTitle(pageTitle);
+          const article = await StrapiService.getArticleByTitle(pageTitle);
           if (mounted) {
             if (article) {
               setBlocks([{ __kind: 'article', ...article } as ContentBlock]);

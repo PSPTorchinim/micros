@@ -131,16 +131,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("ChangePasswordV1 called for user at {Time}", DateTime.UtcNow);
+                _logger.LogInformation("🔐 [API] ChangePasswordV1 endpoint called | Timestamp: {Time}", DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ChangePassword(request);
-                    _logger.LogInformation("ChangePasswordV1 succeeded for user at {Time}", DateTime.UtcNow);
+                    _logger.LogInformation("✓ [API] ChangePasswordV1 completed successfully | Timestamp: {Time}", DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ChangePasswordV1 failed for user at {Time}", DateTime.UtcNow);
+                    _logger.LogError(ex, "❌ [API] ChangePasswordV1 failed | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
@@ -153,16 +154,19 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             { 
-                _logger.LogInformation("ForgotPasswordV1 called for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                _logger.LogInformation("🔐 [API] ForgotPasswordV1 endpoint called | Email: {Email} | Timestamp: {Time}", 
+                    request?.Email, DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ForgotPassword(request);
-                    _logger.LogInformation("ForgotPasswordV1 succeeded for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogInformation("✓ [API] ForgotPasswordV1 completed successfully | Email: {Email} | Timestamp: {Time}", 
+                        request?.Email, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ForgotPasswordV1 failed for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogError(ex, "❌ [API] ForgotPasswordV1 failed | Email: {Email} | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        request?.Email, DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
@@ -184,6 +188,31 @@ namespace IdentityAPI.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "ActivateAccountV1 failed for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("ValidateSecurityStamp")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<ValidateSecurityStampResponseDTO>))]
+        public async Task<IActionResult> ValidateSecurityStampV1(ValidateSecurityStampRequestDTO request)
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("🔐 [API] ValidateSecurityStampV1 endpoint called | UserId: {UserId} | Timestamp: {Time}", 
+                    request?.UserId, DateTime.UtcNow);
+                try
+                {
+                    var result = await _usersService.ValidateSecurityStamp(request);
+                    _logger.LogInformation("✓ [API] ValidateSecurityStampV1 completed | UserId: {UserId} | IsValid: {IsValid} | Timestamp: {Time}", 
+                        request?.UserId, result?.IsValid, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ [API] ValidateSecurityStampV1 failed | UserId: {UserId} | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        request?.UserId, DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });

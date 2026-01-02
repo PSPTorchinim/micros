@@ -25,7 +25,6 @@ namespace Shared.Repositories
             {
                 await using var context = await _factory.CreateDbContextAsync();
                 var result = await context.AddAsync(entity);
-                result.State = EntityState.Added;
                 return await context.SaveChangesAsync() > 0;
             }, _logger);
         }

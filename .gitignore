@@ -2,12 +2,14 @@
 *.csproj.user
 obj/
 bin/
-Migrations/
 test
 *.log
 node_modules/
 package-lock.json
 actionlint
+
+# Build artifacts that should never be committed
+**/obj/**/package.g.props
 
 # Generated Grafana dashboards (use templates instead)
 Docker/init/grafana/dashboards/*.json

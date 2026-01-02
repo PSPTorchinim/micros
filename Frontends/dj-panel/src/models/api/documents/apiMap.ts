@@ -252,13 +252,13 @@ export class Api<
      * No description
      *
      * @tags Documents
-     * @name ApiV1DocumentsList
-     * @request GET:/documents/api/v1/Documents
+     * @name V1DocumentsList
+     * @request GET:/documents/v1/Documents
      * @secure
      */
-    apiV1DocumentsList: (params: RequestParams = {}) =>
+    v1DocumentsList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Documents`,
+        path: `/documents/v1/Documents`,
         method: "GET",
         secure: true,
         ...params,
@@ -268,13 +268,13 @@ export class Api<
      * No description
      *
      * @tags Documents
-     * @name ApiV1DocumentsHelloList
-     * @request GET:/documents/api/v1/Documents/Hello
+     * @name V1DocumentsHelloList
+     * @request GET:/documents/v1/Documents/Hello
      * @secure
      */
-    apiV1DocumentsHelloList: (params: RequestParams = {}) =>
+    v1DocumentsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Documents/Hello`,
+        path: `/documents/v1/Documents/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -285,13 +285,13 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesList
-     * @request GET:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesList
+     * @request GET:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesList: (params: RequestParams = {}) =>
+    v1DocumentTemplatesList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
+        path: `/documents/v1/DocumentTemplates`,
         method: "GET",
         secure: true,
         ...params,
@@ -301,16 +301,16 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesCreate
-     * @request POST:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesCreate
+     * @request POST:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesCreate: (
+    v1DocumentTemplatesCreate: (
       data: DocumentTemplate,
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
+        path: `/documents/v1/DocumentTemplates`,
         method: "POST",
         body: data,
         secure: true,
@@ -322,11 +322,11 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesUpdate
-     * @request PUT:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesUpdate
+     * @request PUT:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesUpdate: (
+    v1DocumentTemplatesUpdate: (
       data: DocumentTemplate,
       query?: {
         Id?: string;
@@ -334,7 +334,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
+        path: `/documents/v1/DocumentTemplates`,
         method: "PUT",
         query: query,
         body: data,
@@ -347,13 +347,13 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesDetail
-     * @request GET:/documents/api/v1/DocumentTemplates/{id}
+     * @name V1DocumentTemplatesDetail
+     * @request GET:/documents/v1/DocumentTemplates/{id}
      * @secure
      */
-    apiV1DocumentTemplatesDetail: (id: string, params: RequestParams = {}) =>
+    v1DocumentTemplatesDetail: (id: string, params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates/${id}`,
+        path: `/documents/v1/DocumentTemplates/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -363,13 +363,13 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesHelloList
-     * @request GET:/documents/api/v1/DocumentTemplates/Hello
+     * @name V1DocumentTemplatesHelloList
+     * @request GET:/documents/v1/DocumentTemplates/Hello
      * @secure
      */
-    apiV1DocumentTemplatesHelloList: (params: RequestParams = {}) =>
+    v1DocumentTemplatesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates/Hello`,
+        path: `/documents/v1/DocumentTemplates/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -380,13 +380,13 @@ export class Api<
      * No description
      *
      * @tags Invoices
-     * @name ApiV1InvoicesHelloList
-     * @request GET:/documents/api/v1/Invoices/Hello
+     * @name V1InvoicesHelloList
+     * @request GET:/documents/v1/Invoices/Hello
      * @secure
      */
-    apiV1InvoicesHelloList: (params: RequestParams = {}) =>
+    v1InvoicesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Invoices/Hello`,
+        path: `/documents/v1/Invoices/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -396,3 +396,15 @@ export class Api<
 
 // Aliased exports for unified API client
 export { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
+}

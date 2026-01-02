@@ -10,43 +10,6 @@
  * ---------------------------------------------------------------
  */
 
-export interface Error {
-  data?: object | object[] | null;
-  error: {
-    status?: number;
-    name?: string;
-    message?: string;
-    details?: object;
-  };
-}
-
-export interface ArticleRequest {
-  data: {
-    Title: string;
-    Summary?: string;
-    coverUrl?: string;
-    Body?: string;
-    /** @example "string or id" */
-    article_block?: number | string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ArticleListResponse {
-  data?: Article[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
 export interface Article {
   id?: number;
   documentId?: string;
@@ -221,34 +184,6 @@ export interface Article {
   }[];
 }
 
-export interface ArticleResponse {
-  data?: Article;
-  meta?: object;
-}
-
-export interface ArticleBlockRequest {
-  data: {
-    Title?: string;
-    articles?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ArticleBlockListResponse {
-  data?: ArticleBlock[];
-  meta?: {
-    pagination?: {
-      page?: number;
-      /** @min 25 */
-      pageSize?: number;
-      /** @max 1 */
-      pageCount?: number;
-      total?: number;
-    };
-  };
-}
-
 export interface ArticleBlock {
   id?: number;
   documentId?: string;
@@ -420,24 +355,8 @@ export interface ArticleBlock {
   }[];
 }
 
-export interface ArticleBlockResponse {
-  data?: ArticleBlock;
-  meta?: object;
-}
-
-export interface ConfigurationRequest {
-  data: {
-    Title?: string;
-    pages?: (number | string)[];
-    /** @example "string or id" */
-    footer?: number | string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ConfigurationListResponse {
-  data?: Configuration[];
+export interface ArticleBlockListResponse {
+  data?: ArticleBlock[];
   meta?: {
     pagination?: {
       page?: number;
@@ -448,6 +367,70 @@ export interface ConfigurationListResponse {
       total?: number;
     };
   };
+}
+
+export interface ArticleBlockRefArticleBlockRefComponent {
+  id?: number;
+  __component?: ArticleBlockRefArticleBlockRefComponentComponentEnum;
+  block?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ArticleBlockRequest {
+  data: {
+    Title?: string;
+    articles?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ArticleBlockResponse {
+  data?: ArticleBlock;
+  meta?: object;
+}
+
+export interface ArticleListResponse {
+  data?: Article[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ArticleRefArticleRefComponent {
+  id?: number;
+  __component?: ArticleRefArticleRefComponentComponentEnum;
+  article?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ArticleRequest {
+  data: {
+    Title: string;
+    Summary?: string;
+    coverUrl?: string;
+    Body?: string;
+    /** @example "string or id" */
+    article_block?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ArticleResponse {
+  data?: Article;
+  meta?: object;
 }
 
 export interface Configuration {
@@ -734,142 +717,8 @@ export interface Configuration {
   }[];
 }
 
-export interface ConfigurationResponse {
-  data?: Configuration;
-  meta?: object;
-}
-
-export interface FooterLinkComponent {
-  id?: number;
-  label?: string;
-  url?: string;
-  newTab?: boolean;
-}
-
-export interface FooterLinkColumnComponent {
-  id?: number;
-  title?: string;
-  links?: FooterLinkComponent[];
-}
-
-export interface FooterSocialLinkComponent {
-  id?: number;
-  platform?: string;
-  url?: string;
-  icon?: string;
-  detail?: string;
-}
-
-export interface ImageSliderRefImageSliderRefComponent {
-  id?: number;
-  __component?: ImageSliderRefImageSliderRefComponentComponentEnum;
-  slider?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface ArticleBlockRefArticleBlockRefComponent {
-  id?: number;
-  __component?: ArticleBlockRefArticleBlockRefComponentComponentEnum;
-  block?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface StepsStepComponent {
-  id?: number;
-  title?: string;
-  description?: string;
-  icon?: string;
-}
-
-export interface StepsContainerRefStepsContainerRefComponent {
-  id?: number;
-  __component?: StepsContainerRefStepsContainerRefComponentComponentEnum;
-  container?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface CtaRefCtaRefComponent {
-  id?: number;
-  __component?: CtaRefCtaRefComponentComponentEnum;
-  cta?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface ContactInfoRefContactInfoRefComponent {
-  id?: number;
-  __component?: ContactInfoRefContactInfoRefComponentComponentEnum;
-  contact_info?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface ContactSectionRefContactSectionRefComponent {
-  id?: number;
-  __component?: ContactSectionRefContactSectionRefComponentComponentEnum;
-  contact_section?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface FeatureSectionRefFeatureSectionRefComponent {
-  id?: number;
-  __component?: FeatureSectionRefFeatureSectionRefComponentComponentEnum;
-  feature_section?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface FeatureTabRefFeatureTabRefComponent {
-  id?: number;
-  __component?: FeatureTabRefFeatureTabRefComponentComponentEnum;
-  feature_tab?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface HeroBlockRefHeroBlockRefComponent {
-  id?: number;
-  __component?: HeroBlockRefHeroBlockRefComponentComponentEnum;
-  hero_block?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface ArticleRefArticleRefComponent {
-  id?: number;
-  __component?: ArticleRefArticleRefComponentComponentEnum;
-  article?: {
-    id?: number;
-    documentId?: string;
-  };
-}
-
-export interface ContactInfoRequest {
-  data: {
-    title?: string;
-    content?: string;
-    detail?: string;
-    iconName?: string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ContactInfoListResponse {
-  data?: ContactInfo[];
+export interface ConfigurationListResponse {
+  data?: Configuration[];
   meta?: {
     pagination?: {
       page?: number;
@@ -880,6 +729,22 @@ export interface ContactInfoListResponse {
       total?: number;
     };
   };
+}
+
+export interface ConfigurationRequest {
+  data: {
+    Title?: string;
+    pages?: (number | string)[];
+    /** @example "string or id" */
+    footer?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ConfigurationResponse {
+  data?: Configuration;
+  meta?: object;
 }
 
 export interface ContactInfo {
@@ -1024,24 +889,8 @@ export interface ContactInfo {
   }[];
 }
 
-export interface ContactInfoResponse {
-  data?: ContactInfo;
-  meta?: object;
-}
-
-export interface ContactSectionRequest {
-  data: {
-    introText?: string;
-    heading?: string;
-    description?: string;
-    contactInfo?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ContactSectionListResponse {
-  data?: ContactSection[];
+export interface ContactInfoListResponse {
+  data?: ContactInfo[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1052,6 +901,31 @@ export interface ContactSectionListResponse {
       total?: number;
     };
   };
+}
+
+export interface ContactInfoRefContactInfoRefComponent {
+  id?: number;
+  __component?: ContactInfoRefContactInfoRefComponentComponentEnum;
+  contact_info?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ContactInfoRequest {
+  data: {
+    title?: string;
+    content?: string;
+    detail?: string;
+    iconName?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ContactInfoResponse {
+  data?: ContactInfo;
+  meta?: object;
 }
 
 export interface ContactSection {
@@ -1225,23 +1099,8 @@ export interface ContactSection {
   }[];
 }
 
-export interface ContactSectionResponse {
-  data?: ContactSection;
-  meta?: object;
-}
-
-export interface CtaRequest {
-  data: {
-    Label: string;
-    url: string;
-    OpenInNewTab?: boolean;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface CtaListResponse {
-  data?: Cta[];
+export interface ContactSectionListResponse {
+  data?: ContactSection[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1252,6 +1111,31 @@ export interface CtaListResponse {
       total?: number;
     };
   };
+}
+
+export interface ContactSectionRefContactSectionRefComponent {
+  id?: number;
+  __component?: ContactSectionRefContactSectionRefComponentComponentEnum;
+  contact_section?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ContactSectionRequest {
+  data: {
+    introText?: string;
+    heading?: string;
+    description?: string;
+    contactInfo?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ContactSectionResponse {
+  data?: ContactSection;
+  meta?: object;
 }
 
 export interface Cta {
@@ -1394,23 +1278,8 @@ export interface Cta {
   }[];
 }
 
-export interface CtaResponse {
-  data?: Cta;
-  meta?: object;
-}
-
-export interface FeatureSectionRequest {
-  data: {
-    Title?: string;
-    reversed?: boolean;
-    tabs?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface FeatureSectionListResponse {
-  data?: FeatureSection[];
+export interface CtaListResponse {
+  data?: Cta[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1420,6 +1289,40 @@ export interface FeatureSectionListResponse {
       pageCount?: number;
       total?: number;
     };
+  };
+}
+
+export interface CtaRefCtaRefComponent {
+  id?: number;
+  __component?: CtaRefCtaRefComponentComponentEnum;
+  cta?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface CtaRequest {
+  data: {
+    Label: string;
+    url: string;
+    OpenInNewTab?: boolean;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface CtaResponse {
+  data?: Cta;
+  meta?: object;
+}
+
+export interface Error {
+  data?: object | object[] | null;
+  error: {
+    status?: number;
+    name?: string;
+    message?: string;
+    details?: object;
   };
 }
 
@@ -1592,24 +1495,8 @@ export interface FeatureSection {
   }[];
 }
 
-export interface FeatureSectionResponse {
-  data?: FeatureSection;
-  meta?: object;
-}
-
-export interface FeatureTabRequest {
-  data: {
-    imgAlt?: string;
-    imgSrc?: string;
-    title?: string;
-    description?: string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface FeatureTabListResponse {
-  data?: FeatureTab[];
+export interface FeatureSectionListResponse {
+  data?: FeatureSection[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1620,6 +1507,30 @@ export interface FeatureTabListResponse {
       total?: number;
     };
   };
+}
+
+export interface FeatureSectionRefFeatureSectionRefComponent {
+  id?: number;
+  __component?: FeatureSectionRefFeatureSectionRefComponentComponentEnum;
+  feature_section?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface FeatureSectionRequest {
+  data: {
+    Title?: string;
+    reversed?: boolean;
+    tabs?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FeatureSectionResponse {
+  data?: FeatureSection;
+  meta?: object;
 }
 
 export interface FeatureTab {
@@ -1764,25 +1675,8 @@ export interface FeatureTab {
   }[];
 }
 
-export interface FeatureTabResponse {
-  data?: FeatureTab;
-  meta?: object;
-}
-
-export interface FooterRequest {
-  data: {
-    copyright?: string;
-    columns?: FooterLinkColumnComponent[];
-    socialLinks?: FooterSocialLinkComponent[];
-    /** @example "string or id" */
-    configuration?: number | string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface FooterListResponse {
-  data?: Footer[];
+export interface FeatureTabListResponse {
+  data?: FeatureTab[];
   meta?: {
     pagination?: {
       page?: number;
@@ -1793,6 +1687,31 @@ export interface FooterListResponse {
       total?: number;
     };
   };
+}
+
+export interface FeatureTabRefFeatureTabRefComponent {
+  id?: number;
+  __component?: FeatureTabRefFeatureTabRefComponentComponentEnum;
+  feature_tab?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface FeatureTabRequest {
+  data: {
+    imgAlt?: string;
+    imgSrc?: string;
+    title?: string;
+    description?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FeatureTabResponse {
+  data?: FeatureTab;
+  meta?: object;
 }
 
 export interface Footer {
@@ -1989,30 +1908,21 @@ export interface Footer {
   }[];
 }
 
-export interface FooterResponse {
-  data?: Footer;
-  meta?: object;
+export interface FooterLinkColumnComponent {
+  id?: number;
+  title?: string;
+  links?: FooterLinkComponent[];
 }
 
-export interface ForgotPasswordBlockRequest {
-  data: {
-    title?: string;
-    description?: string;
-    emailLabel?: string;
-    submitButtonText?: string;
-    backToLoginText?: string;
-    loginLinkText?: string;
-    emailPlaceholder?: string;
-    successRedirectPath?: string;
-    loginUrl?: string;
-    customStyles?: any;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
+export interface FooterLinkComponent {
+  id?: number;
+  label?: string;
+  url?: string;
+  newTab?: boolean;
 }
 
-export interface ForgotPasswordBlockListResponse {
-  data?: ForgotPasswordBlock[];
+export interface FooterListResponse {
+  data?: Footer[];
   meta?: {
     pagination?: {
       page?: number;
@@ -2023,6 +1933,31 @@ export interface ForgotPasswordBlockListResponse {
       total?: number;
     };
   };
+}
+
+export interface FooterRequest {
+  data: {
+    copyright?: string;
+    columns?: FooterLinkColumnComponent[];
+    socialLinks?: FooterSocialLinkComponent[];
+    /** @example "string or id" */
+    configuration?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface FooterResponse {
+  data?: Footer;
+  meta?: object;
+}
+
+export interface FooterSocialLinkComponent {
+  id?: number;
+  platform?: string;
+  url?: string;
+  icon?: string;
+  detail?: string;
 }
 
 export interface ForgotPasswordBlock {
@@ -2179,23 +2114,8 @@ export interface ForgotPasswordBlock {
   }[];
 }
 
-export interface ForgotPasswordBlockResponse {
-  data?: ForgotPasswordBlock;
-  meta?: object;
-}
-
-export interface HeroBlockRequest {
-  data: {
-    heading?: string;
-    content?: string;
-    actions?: (number | string)[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface HeroBlockListResponse {
-  data?: HeroBlock[];
+export interface ForgotPasswordBlockListResponse {
+  data?: ForgotPasswordBlock[];
   meta?: {
     pagination?: {
       page?: number;
@@ -2206,6 +2126,28 @@ export interface HeroBlockListResponse {
       total?: number;
     };
   };
+}
+
+export interface ForgotPasswordBlockRequest {
+  data: {
+    title?: string;
+    description?: string;
+    emailLabel?: string;
+    submitButtonText?: string;
+    backToLoginText?: string;
+    loginLinkText?: string;
+    emailPlaceholder?: string;
+    successRedirectPath?: string;
+    loginUrl?: string;
+    customStyles?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ForgotPasswordBlockResponse {
+  data?: ForgotPasswordBlock;
+  meta?: object;
 }
 
 export interface HeroBlock {
@@ -2376,63 +2318,8 @@ export interface HeroBlock {
   }[];
 }
 
-export interface HeroBlockResponse {
-  data?: HeroBlock;
-  meta?: object;
-}
-
-export interface ImageSliderRequest {
-  data: {
-    Title?: string;
-    reversed?: boolean;
-    AutoPlay?: boolean;
-    IntervalMs?: number;
-    Slides?: DiscriminatorNull &
-      (
-        | DiscriminatorNullComponentMapping<
-            "image-slider-ref.image-slider-ref",
-            ImageSliderRefImageSliderRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "article-block-ref.article-block-ref",
-            ArticleBlockRefArticleBlockRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "steps-container-ref.steps-container-ref",
-            StepsContainerRefStepsContainerRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "cta-ref.cta-ref",
-            CtaRefCtaRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "contact-info-ref.contact-info-ref",
-            ContactInfoRefContactInfoRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "contact-section-ref.contact-section-ref",
-            ContactSectionRefContactSectionRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "feature-section-ref.feature-section-ref",
-            FeatureSectionRefFeatureSectionRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "feature-tab-ref.feature-tab-ref",
-            FeatureTabRefFeatureTabRefComponent
-          >
-        | DiscriminatorNullComponentMapping<
-            "hero-block-ref.hero-block-ref",
-            HeroBlockRefHeroBlockRefComponent
-          >
-      );
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface ImageSliderListResponse {
-  data?: ImageSlider[];
+export interface HeroBlockListResponse {
+  data?: HeroBlock[];
   meta?: {
     pagination?: {
       page?: number;
@@ -2445,6 +2332,30 @@ export interface ImageSliderListResponse {
   };
 }
 
+export interface HeroBlockRefHeroBlockRefComponent {
+  id?: number;
+  __component?: HeroBlockRefHeroBlockRefComponentComponentEnum;
+  hero_block?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface HeroBlockRequest {
+  data: {
+    heading?: string;
+    content?: string;
+    actions?: (number | string)[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface HeroBlockResponse {
+  data?: HeroBlock;
+  meta?: object;
+}
+
 export interface ImageSlider {
   id?: number;
   documentId?: string;
@@ -2452,38 +2363,41 @@ export interface ImageSlider {
   reversed?: boolean;
   AutoPlay?: boolean;
   IntervalMs?: number;
-  Slides?: InternalNull &
+  Slides?: DiscriminatorNull &
     (
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
+          "cta-ref.cta-ref",
+          CtaRefCtaRefComponent
+        >
+      | DiscriminatorNullComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNullComponentMapping<
+      | DiscriminatorNullComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -2509,31 +2423,8 @@ export interface ImageSlider {
   }[];
 }
 
-export interface ImageSliderResponse {
-  data?: ImageSlider;
-  meta?: object;
-}
-
-export interface LoginBlockRequest {
-  data: {
-    title?: string;
-    emailLabel?: string;
-    passwordLabel?: string;
-    submitButtonText?: string;
-    forgotPasswordText?: string;
-    resetPasswordLinkText?: string;
-    emailPlaceholder?: string;
-    passwordPlaceholder?: string;
-    customStyles?: any;
-    redirectPath?: string;
-    forgotPasswordUrl?: string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface LoginBlockListResponse {
-  data?: LoginBlock[];
+export interface ImageSliderListResponse {
+  data?: ImageSlider[];
   meta?: {
     pagination?: {
       page?: number;
@@ -2544,6 +2435,67 @@ export interface LoginBlockListResponse {
       total?: number;
     };
   };
+}
+
+export interface ImageSliderRefImageSliderRefComponent {
+  id?: number;
+  __component?: ImageSliderRefImageSliderRefComponentComponentEnum;
+  slider?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface ImageSliderRequest {
+  data: {
+    Title?: string;
+    reversed?: boolean;
+    AutoPlay?: boolean;
+    IntervalMs?: number;
+    Slides?: InternalNull &
+      (
+        | InternalNullComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | InternalNullComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | InternalNullComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | InternalNullComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+        | InternalNullComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | InternalNullComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | InternalNullComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | InternalNullComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | InternalNullComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ImageSliderResponse {
+  data?: ImageSlider;
+  meta?: object;
 }
 
 export interface LoginBlock {
@@ -2702,32 +2654,8 @@ export interface LoginBlock {
   }[];
 }
 
-export interface LoginBlockResponse {
-  data?: LoginBlock;
-  meta?: object;
-}
-
-export interface PageRequest {
-  data: {
-    Title?: string;
-    Slug?: string;
-    subpages?: (number | string)[];
-    Parents?: (number | string)[];
-    /** @example "string or id" */
-    configuration?: number | string;
-    Menu?: PageRequestMenuEnum;
-    AuthState?: PageRequestAuthStateEnum;
-    NavigationOrder?: number;
-    NavigationAction?: PageRequestNavigationActionEnum;
-    /** @example "string or id" */
-    template?: number | string;
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface PageListResponse {
-  data?: Page[];
+export interface LoginBlockListResponse {
+  data?: LoginBlock[];
   meta?: {
     pagination?: {
       page?: number;
@@ -2738,6 +2666,29 @@ export interface PageListResponse {
       total?: number;
     };
   };
+}
+
+export interface LoginBlockRequest {
+  data: {
+    title?: string;
+    emailLabel?: string;
+    passwordLabel?: string;
+    submitButtonText?: string;
+    forgotPasswordText?: string;
+    resetPasswordLinkText?: string;
+    emailPlaceholder?: string;
+    passwordPlaceholder?: string;
+    customStyles?: any;
+    redirectPath?: string;
+    forgotPasswordUrl?: string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface LoginBlockResponse {
+  data?: LoginBlock;
+  meta?: object;
 }
 
 export interface Page {
@@ -3040,25 +2991,8 @@ export interface Page {
   }[];
 }
 
-export interface PageResponse {
-  data?: Page;
-  meta?: object;
-}
-
-export interface StepsContainerRequest {
-  data: {
-    heading: string;
-    content?: string;
-    /** @example "string or id" */
-    action?: number | string;
-    steps?: StepsStepComponent[];
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface StepsContainerListResponse {
-  data?: StepsContainer[];
+export interface PageListResponse {
+  data?: Page[];
   meta?: {
     pagination?: {
       page?: number;
@@ -3069,6 +3003,30 @@ export interface StepsContainerListResponse {
       total?: number;
     };
   };
+}
+
+export interface PageRequest {
+  data: {
+    Title?: string;
+    Slug?: string;
+    subpages?: (number | string)[];
+    Parents?: (number | string)[];
+    /** @example "string or id" */
+    configuration?: number | string;
+    Menu?: PageRequestMenuEnum;
+    AuthState?: PageRequestAuthStateEnum;
+    NavigationOrder?: number;
+    NavigationAction?: PageRequestNavigationActionEnum;
+    /** @example "string or id" */
+    template?: number | string;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface PageResponse {
+  data?: Page;
+  meta?: object;
 }
 
 export interface StepsContainer {
@@ -3241,64 +3199,8 @@ export interface StepsContainer {
   }[];
 }
 
-export interface StepsContainerResponse {
-  data?: StepsContainer;
-  meta?: object;
-}
-
-export interface TemplateRequest {
-  data: {
-    Name?: string;
-    TemplateType?: TemplateRequestTemplateTypeEnum;
-    /** @example "string or id" */
-    page?: number | string;
-    Content?: BaseNull1 &
-      (
-        | BaseNull1ComponentMapping<
-            "image-slider-ref.image-slider-ref",
-            ImageSliderRefImageSliderRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "article-ref.article-ref",
-            ArticleRefArticleRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "article-block-ref.article-block-ref",
-            ArticleBlockRefArticleBlockRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "steps-container-ref.steps-container-ref",
-            StepsContainerRefStepsContainerRefComponent
-          >
-        | BaseNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-        | BaseNull1ComponentMapping<
-            "contact-info-ref.contact-info-ref",
-            ContactInfoRefContactInfoRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "contact-section-ref.contact-section-ref",
-            ContactSectionRefContactSectionRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "feature-section-ref.feature-section-ref",
-            FeatureSectionRefFeatureSectionRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "feature-tab-ref.feature-tab-ref",
-            FeatureTabRefFeatureTabRefComponent
-          >
-        | BaseNull1ComponentMapping<
-            "hero-block-ref.hero-block-ref",
-            HeroBlockRefHeroBlockRefComponent
-          >
-      );
-    locale?: string;
-    localizations?: (number | string)[];
-  };
-}
-
-export interface TemplateListResponse {
-  data?: Template[];
+export interface StepsContainerListResponse {
+  data?: StepsContainer[];
   meta?: {
     pagination?: {
       page?: number;
@@ -3309,6 +3211,39 @@ export interface TemplateListResponse {
       total?: number;
     };
   };
+}
+
+export interface StepsContainerRefStepsContainerRefComponent {
+  id?: number;
+  __component?: StepsContainerRefStepsContainerRefComponentComponentEnum;
+  container?: {
+    id?: number;
+    documentId?: string;
+  };
+}
+
+export interface StepsContainerRequest {
+  data: {
+    heading: string;
+    content?: string;
+    /** @example "string or id" */
+    action?: number | string;
+    steps?: StepsStepComponent[];
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface StepsContainerResponse {
+  data?: StepsContainer;
+  meta?: object;
+}
+
+export interface StepsStepComponent {
+  id?: number;
+  title?: string;
+  description?: string;
+  icon?: string;
 }
 
 export interface Template {
@@ -3491,42 +3426,45 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: BaseNull2 &
+      Content?: AbstractNull1 &
         (
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "article-ref.article-ref",
               ArticleRefArticleRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | BaseNull2ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
+              "cta-ref.cta-ref",
+              CtaRefCtaRefComponent
+            >
+          | AbstractNull1ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | BaseNull2ComponentMapping<
+          | AbstractNull1ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -3571,42 +3509,42 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: AbstractNull1 &
+  Content?: BaseNull1 &
     (
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "article-ref.article-ref",
           ArticleRefArticleRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | AbstractNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | BaseNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | AbstractNull1ComponentMapping<
+      | BaseNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -3630,6 +3568,74 @@ export interface Template {
     id?: number;
     documentId?: string;
   }[];
+}
+
+export interface TemplateListResponse {
+  data?: Template[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface TemplateRequest {
+  data: {
+    Name?: string;
+    TemplateType?: TemplateRequestTemplateTypeEnum;
+    /** @example "string or id" */
+    page?: number | string;
+    Content?: PolymorphNull1 &
+      (
+        | PolymorphNull1ComponentMapping<
+            "image-slider-ref.image-slider-ref",
+            ImageSliderRefImageSliderRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "article-ref.article-ref",
+            ArticleRefArticleRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "article-block-ref.article-block-ref",
+            ArticleBlockRefArticleBlockRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "steps-container-ref.steps-container-ref",
+            StepsContainerRefStepsContainerRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "cta-ref.cta-ref",
+            CtaRefCtaRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "contact-info-ref.contact-info-ref",
+            ContactInfoRefContactInfoRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "contact-section-ref.contact-section-ref",
+            ContactSectionRefContactSectionRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "feature-section-ref.feature-section-ref",
+            FeatureSectionRefFeatureSectionRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "feature-tab-ref.feature-tab-ref",
+            FeatureTabRefFeatureTabRefComponent
+          >
+        | PolymorphNull1ComponentMapping<
+            "hero-block-ref.hero-block-ref",
+            HeroBlockRefHeroBlockRefComponent
+          >
+      );
+    locale?: string;
+    localizations?: (number | string)[];
+  };
 }
 
 export interface TemplateResponse {
@@ -3661,6 +3667,23 @@ export interface UploadFile {
   /** @format date-time */
   updatedAt?: string;
 }
+
+export type UsersPermissionsPermissionsTree = Record<
+  string,
+  {
+    /** every controller of the api */
+    controllers?: Record<
+      string,
+      Record<
+        string,
+        {
+          enabled?: boolean;
+          policy?: string;
+        }
+      >
+    >;
+  }
+>;
 
 export interface UsersPermissionsRole {
   id?: number;
@@ -3704,22 +3727,13 @@ export interface UsersPermissionsUserRegistration {
   user?: UsersPermissionsUser;
 }
 
-export type UsersPermissionsPermissionsTree = Record<
-  string,
-  {
-    /** every controller of the api */
-    controllers?: Record<
-      string,
-      Record<
-        string,
-        {
-          enabled?: boolean;
-          policy?: string;
-        }
-      >
-    >;
-  }
->;
+export enum ArticleBlockRefArticleBlockRefComponentComponentEnum {
+  ArticleBlockRefArticleBlockRef = "article-block-ref.article-block-ref",
+}
+
+export enum ArticleRefArticleRefComponentComponentEnum {
+  ArticleRefArticleRef = "article-ref.article-ref",
+}
 
 export enum ConfigurationMenuEnum {
   Main = "Main",
@@ -3761,22 +3775,6 @@ type BaseNullComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-export enum ImageSliderRefImageSliderRefComponentComponentEnum {
-  ImageSliderRefImageSliderRef = "image-slider-ref.image-slider-ref",
-}
-
-export enum ArticleBlockRefArticleBlockRefComponentComponentEnum {
-  ArticleBlockRefArticleBlockRef = "article-block-ref.article-block-ref",
-}
-
-export enum StepsContainerRefStepsContainerRefComponentComponentEnum {
-  StepsContainerRefStepsContainerRef = "steps-container-ref.steps-container-ref",
-}
-
-export enum CtaRefCtaRefComponentComponentEnum {
-  CtaRefCtaRef = "cta-ref.cta-ref",
-}
-
 export enum ContactInfoRefContactInfoRefComponentComponentEnum {
   ContactInfoRefContactInfoRef = "contact-info-ref.contact-info-ref",
 }
@@ -3785,20 +3783,16 @@ export enum ContactSectionRefContactSectionRefComponentComponentEnum {
   ContactSectionRefContactSectionRef = "contact-section-ref.contact-section-ref",
 }
 
+export enum CtaRefCtaRefComponentComponentEnum {
+  CtaRefCtaRef = "cta-ref.cta-ref",
+}
+
 export enum FeatureSectionRefFeatureSectionRefComponentComponentEnum {
   FeatureSectionRefFeatureSectionRef = "feature-section-ref.feature-section-ref",
 }
 
 export enum FeatureTabRefFeatureTabRefComponentComponentEnum {
   FeatureTabRefFeatureTabRef = "feature-tab-ref.feature-tab-ref",
-}
-
-export enum HeroBlockRefHeroBlockRefComponentComponentEnum {
-  HeroBlockRefHeroBlockRef = "hero-block-ref.hero-block-ref",
-}
-
-export enum ArticleRefArticleRefComponentComponentEnum {
-  ArticleRefArticleRef = "article-ref.article-ref",
 }
 
 export enum FooterMenuEnum {
@@ -3841,6 +3835,10 @@ type AbstractNullComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
+export enum HeroBlockRefHeroBlockRefComponentComponentEnum {
+  HeroBlockRefHeroBlockRef = "hero-block-ref.hero-block-ref",
+}
+
 type DiscriminatorNull = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -3857,6 +3855,10 @@ type DiscriminatorNullComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
+export enum ImageSliderRefImageSliderRefComponentComponentEnum {
+  ImageSliderRefImageSliderRef = "image-slider-ref.image-slider-ref",
+}
+
 type InternalNull = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -3872,23 +3874,6 @@ type InternalNull = (
 type InternalNullComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
-
-export enum PageRequestMenuEnum {
-  Main = "Main",
-  Login = "Login",
-  NotVisible = "NotVisible",
-}
-
-export enum PageRequestAuthStateEnum {
-  All = "All",
-  OnlyAuthenticated = "OnlyAuthenticated",
-  OnlyUnauthenticated = "OnlyUnauthenticated",
-}
-
-export enum PageRequestNavigationActionEnum {
-  Link = "Link",
-  Action = "Action",
-}
 
 export enum PageMenuEnum {
   Main = "Main",
@@ -3947,28 +3932,26 @@ export enum PageNavigationActionEnum1 {
   Action = "Action",
 }
 
-export enum TemplateRequestTemplateTypeEnum {
-  Standard = "Standard",
+export enum PageRequestMenuEnum {
+  Main = "Main",
   Login = "Login",
-  ForgotPassword = "ForgotPassword",
+  NotVisible = "NotVisible",
 }
 
-type BaseNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleRefArticleRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
+export enum PageRequestAuthStateEnum {
+  All = "All",
+  OnlyAuthenticated = "OnlyAuthenticated",
+  OnlyUnauthenticated = "OnlyUnauthenticated",
+}
 
-type BaseNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
+export enum PageRequestNavigationActionEnum {
+  Link = "Link",
+  Action = "Action",
+}
+
+export enum StepsContainerRefStepsContainerRefComponentComponentEnum {
+  StepsContainerRefStepsContainerRef = "steps-container-ref.steps-container-ref",
+}
 
 export enum TemplateTemplateTypeEnum {
   Standard = "Standard",
@@ -3999,23 +3982,6 @@ export enum TemplateTemplateTypeEnum1 {
   ForgotPassword = "ForgotPassword",
 }
 
-type BaseNull2 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleRefArticleRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type BaseNull2ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
 type AbstractNull1 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
@@ -4030,6 +3996,46 @@ type AbstractNull1 = (
 )[];
 
 type AbstractNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type BaseNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleRefArticleRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type BaseNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+export enum TemplateRequestTemplateTypeEnum {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+}
+
+type PolymorphNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleRefArticleRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type PolymorphNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -4117,7 +4123,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || "http://localhost:1337/api",
+      baseURL: axiosConfig.baseURL || "",
     });
     this.secure = secure;
     this.format = format;
@@ -4229,15 +4235,8 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title DJ Beat Blaster CMS API
- * @version 1.0.0
- * @license Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0.html)
- * @termsOfService YOUR_TERMS_OF_SERVICE_URL
- * @baseUrl http://localhost:1337/api
- * @externalDocs https://docs.strapi.io/developer-docs/latest/getting-started/introduction.html
- * @contact DJ Beat Blaster Team <support@djbeatblaster.com> (mywebsite.io)
- *
- * API documentation for DJ Beat Blaster CMS with JSON schemas
+ * @title Strapi
+ * @version Strapi
  */
 export class Api<
   SecurityDataType extends unknown,
@@ -4248,7 +4247,7 @@ export class Api<
      *
      * @tags Article
      * @name GetArticles
-     * @request GET:/articles
+     * @request GET:/strapi/articles
      * @secure
      */
     getArticles: (
@@ -4270,14 +4269,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ArticleListResponse, Error>({
-        path: `/articles`,
+        path: `/strapi/articles`,
         method: "GET",
         query: query,
         secure: true,
@@ -4290,12 +4289,12 @@ export class Api<
      *
      * @tags Article
      * @name PostArticles
-     * @request POST:/articles
+     * @request POST:/strapi/articles
      * @secure
      */
     postArticles: (data: ArticleRequest, params: RequestParams = {}) =>
       this.request<ArticleResponse, Error>({
-        path: `/articles`,
+        path: `/strapi/articles`,
         method: "POST",
         body: data,
         secure: true,
@@ -4309,12 +4308,12 @@ export class Api<
      *
      * @tags Article
      * @name GetArticlesId
-     * @request GET:/articles/{id}
+     * @request GET:/strapi/articles/{id}
      * @secure
      */
     getArticlesId: (id: number, params: RequestParams = {}) =>
       this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
+        path: `/strapi/articles/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4326,7 +4325,7 @@ export class Api<
      *
      * @tags Article
      * @name PutArticlesId
-     * @request PUT:/articles/{id}
+     * @request PUT:/strapi/articles/{id}
      * @secure
      */
     putArticlesId: (
@@ -4335,7 +4334,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ArticleResponse, Error>({
-        path: `/articles/${id}`,
+        path: `/strapi/articles/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4349,12 +4348,12 @@ export class Api<
      *
      * @tags Article
      * @name DeleteArticlesId
-     * @request DELETE:/articles/{id}
+     * @request DELETE:/strapi/articles/{id}
      * @secure
      */
     deleteArticlesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/articles/${id}`,
+        path: `/strapi/articles/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4367,7 +4366,7 @@ export class Api<
      *
      * @tags Article-block
      * @name GetArticleBlocks
-     * @request GET:/article-blocks
+     * @request GET:/strapi/article-blocks
      * @secure
      */
     getArticleBlocks: (
@@ -4389,14 +4388,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ArticleBlockListResponse, Error>({
-        path: `/article-blocks`,
+        path: `/strapi/article-blocks`,
         method: "GET",
         query: query,
         secure: true,
@@ -4409,7 +4408,7 @@ export class Api<
      *
      * @tags Article-block
      * @name PostArticleBlocks
-     * @request POST:/article-blocks
+     * @request POST:/strapi/article-blocks
      * @secure
      */
     postArticleBlocks: (
@@ -4417,7 +4416,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ArticleBlockResponse, Error>({
-        path: `/article-blocks`,
+        path: `/strapi/article-blocks`,
         method: "POST",
         body: data,
         secure: true,
@@ -4431,12 +4430,12 @@ export class Api<
      *
      * @tags Article-block
      * @name GetArticleBlocksId
-     * @request GET:/article-blocks/{id}
+     * @request GET:/strapi/article-blocks/{id}
      * @secure
      */
     getArticleBlocksId: (id: number, params: RequestParams = {}) =>
       this.request<ArticleBlockResponse, Error>({
-        path: `/article-blocks/${id}`,
+        path: `/strapi/article-blocks/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4448,7 +4447,7 @@ export class Api<
      *
      * @tags Article-block
      * @name PutArticleBlocksId
-     * @request PUT:/article-blocks/{id}
+     * @request PUT:/strapi/article-blocks/{id}
      * @secure
      */
     putArticleBlocksId: (
@@ -4457,7 +4456,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ArticleBlockResponse, Error>({
-        path: `/article-blocks/${id}`,
+        path: `/strapi/article-blocks/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4471,12 +4470,12 @@ export class Api<
      *
      * @tags Article-block
      * @name DeleteArticleBlocksId
-     * @request DELETE:/article-blocks/{id}
+     * @request DELETE:/strapi/article-blocks/{id}
      * @secure
      */
     deleteArticleBlocksId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/article-blocks/${id}`,
+        path: `/strapi/article-blocks/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4489,7 +4488,7 @@ export class Api<
      *
      * @tags Configuration
      * @name GetConfigurations
-     * @request GET:/configurations
+     * @request GET:/strapi/configurations
      * @secure
      */
     getConfigurations: (
@@ -4511,14 +4510,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ConfigurationListResponse, Error>({
-        path: `/configurations`,
+        path: `/strapi/configurations`,
         method: "GET",
         query: query,
         secure: true,
@@ -4531,7 +4530,7 @@ export class Api<
      *
      * @tags Configuration
      * @name PostConfigurations
-     * @request POST:/configurations
+     * @request POST:/strapi/configurations
      * @secure
      */
     postConfigurations: (
@@ -4539,7 +4538,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ConfigurationResponse, Error>({
-        path: `/configurations`,
+        path: `/strapi/configurations`,
         method: "POST",
         body: data,
         secure: true,
@@ -4553,12 +4552,12 @@ export class Api<
      *
      * @tags Configuration
      * @name GetConfigurationsId
-     * @request GET:/configurations/{id}
+     * @request GET:/strapi/configurations/{id}
      * @secure
      */
     getConfigurationsId: (id: number, params: RequestParams = {}) =>
       this.request<ConfigurationResponse, Error>({
-        path: `/configurations/${id}`,
+        path: `/strapi/configurations/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4570,7 +4569,7 @@ export class Api<
      *
      * @tags Configuration
      * @name PutConfigurationsId
-     * @request PUT:/configurations/{id}
+     * @request PUT:/strapi/configurations/{id}
      * @secure
      */
     putConfigurationsId: (
@@ -4579,7 +4578,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ConfigurationResponse, Error>({
-        path: `/configurations/${id}`,
+        path: `/strapi/configurations/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4593,12 +4592,12 @@ export class Api<
      *
      * @tags Configuration
      * @name DeleteConfigurationsId
-     * @request DELETE:/configurations/{id}
+     * @request DELETE:/strapi/configurations/{id}
      * @secure
      */
     deleteConfigurationsId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/configurations/${id}`,
+        path: `/strapi/configurations/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4611,7 +4610,7 @@ export class Api<
      *
      * @tags Contact-info
      * @name GetContactInfos
-     * @request GET:/contact-infos
+     * @request GET:/strapi/contact-infos
      * @secure
      */
     getContactInfos: (
@@ -4633,14 +4632,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ContactInfoListResponse, Error>({
-        path: `/contact-infos`,
+        path: `/strapi/contact-infos`,
         method: "GET",
         query: query,
         secure: true,
@@ -4653,12 +4652,12 @@ export class Api<
      *
      * @tags Contact-info
      * @name PostContactInfos
-     * @request POST:/contact-infos
+     * @request POST:/strapi/contact-infos
      * @secure
      */
     postContactInfos: (data: ContactInfoRequest, params: RequestParams = {}) =>
       this.request<ContactInfoResponse, Error>({
-        path: `/contact-infos`,
+        path: `/strapi/contact-infos`,
         method: "POST",
         body: data,
         secure: true,
@@ -4672,12 +4671,12 @@ export class Api<
      *
      * @tags Contact-info
      * @name GetContactInfosId
-     * @request GET:/contact-infos/{id}
+     * @request GET:/strapi/contact-infos/{id}
      * @secure
      */
     getContactInfosId: (id: number, params: RequestParams = {}) =>
       this.request<ContactInfoResponse, Error>({
-        path: `/contact-infos/${id}`,
+        path: `/strapi/contact-infos/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4689,7 +4688,7 @@ export class Api<
      *
      * @tags Contact-info
      * @name PutContactInfosId
-     * @request PUT:/contact-infos/{id}
+     * @request PUT:/strapi/contact-infos/{id}
      * @secure
      */
     putContactInfosId: (
@@ -4698,7 +4697,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContactInfoResponse, Error>({
-        path: `/contact-infos/${id}`,
+        path: `/strapi/contact-infos/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4712,12 +4711,12 @@ export class Api<
      *
      * @tags Contact-info
      * @name DeleteContactInfosId
-     * @request DELETE:/contact-infos/{id}
+     * @request DELETE:/strapi/contact-infos/{id}
      * @secure
      */
     deleteContactInfosId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/contact-infos/${id}`,
+        path: `/strapi/contact-infos/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4730,7 +4729,7 @@ export class Api<
      *
      * @tags Contact-section
      * @name GetContactSections
-     * @request GET:/contact-sections
+     * @request GET:/strapi/contact-sections
      * @secure
      */
     getContactSections: (
@@ -4752,14 +4751,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ContactSectionListResponse, Error>({
-        path: `/contact-sections`,
+        path: `/strapi/contact-sections`,
         method: "GET",
         query: query,
         secure: true,
@@ -4772,7 +4771,7 @@ export class Api<
      *
      * @tags Contact-section
      * @name PostContactSections
-     * @request POST:/contact-sections
+     * @request POST:/strapi/contact-sections
      * @secure
      */
     postContactSections: (
@@ -4780,7 +4779,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContactSectionResponse, Error>({
-        path: `/contact-sections`,
+        path: `/strapi/contact-sections`,
         method: "POST",
         body: data,
         secure: true,
@@ -4794,12 +4793,12 @@ export class Api<
      *
      * @tags Contact-section
      * @name GetContactSectionsId
-     * @request GET:/contact-sections/{id}
+     * @request GET:/strapi/contact-sections/{id}
      * @secure
      */
     getContactSectionsId: (id: number, params: RequestParams = {}) =>
       this.request<ContactSectionResponse, Error>({
-        path: `/contact-sections/${id}`,
+        path: `/strapi/contact-sections/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4811,7 +4810,7 @@ export class Api<
      *
      * @tags Contact-section
      * @name PutContactSectionsId
-     * @request PUT:/contact-sections/{id}
+     * @request PUT:/strapi/contact-sections/{id}
      * @secure
      */
     putContactSectionsId: (
@@ -4820,7 +4819,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContactSectionResponse, Error>({
-        path: `/contact-sections/${id}`,
+        path: `/strapi/contact-sections/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4834,12 +4833,12 @@ export class Api<
      *
      * @tags Contact-section
      * @name DeleteContactSectionsId
-     * @request DELETE:/contact-sections/{id}
+     * @request DELETE:/strapi/contact-sections/{id}
      * @secure
      */
     deleteContactSectionsId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/contact-sections/${id}`,
+        path: `/strapi/contact-sections/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4852,7 +4851,7 @@ export class Api<
      *
      * @tags Cta
      * @name GetCtas
-     * @request GET:/ctas
+     * @request GET:/strapi/ctas
      * @secure
      */
     getCtas: (
@@ -4874,14 +4873,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<CtaListResponse, Error>({
-        path: `/ctas`,
+        path: `/strapi/ctas`,
         method: "GET",
         query: query,
         secure: true,
@@ -4894,12 +4893,12 @@ export class Api<
      *
      * @tags Cta
      * @name PostCtas
-     * @request POST:/ctas
+     * @request POST:/strapi/ctas
      * @secure
      */
     postCtas: (data: CtaRequest, params: RequestParams = {}) =>
       this.request<CtaResponse, Error>({
-        path: `/ctas`,
+        path: `/strapi/ctas`,
         method: "POST",
         body: data,
         secure: true,
@@ -4913,12 +4912,12 @@ export class Api<
      *
      * @tags Cta
      * @name GetCtasId
-     * @request GET:/ctas/{id}
+     * @request GET:/strapi/ctas/{id}
      * @secure
      */
     getCtasId: (id: number, params: RequestParams = {}) =>
       this.request<CtaResponse, Error>({
-        path: `/ctas/${id}`,
+        path: `/strapi/ctas/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4930,12 +4929,12 @@ export class Api<
      *
      * @tags Cta
      * @name PutCtasId
-     * @request PUT:/ctas/{id}
+     * @request PUT:/strapi/ctas/{id}
      * @secure
      */
     putCtasId: (id: number, data: CtaRequest, params: RequestParams = {}) =>
       this.request<CtaResponse, Error>({
-        path: `/ctas/${id}`,
+        path: `/strapi/ctas/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4949,12 +4948,12 @@ export class Api<
      *
      * @tags Cta
      * @name DeleteCtasId
-     * @request DELETE:/ctas/{id}
+     * @request DELETE:/strapi/ctas/{id}
      * @secure
      */
     deleteCtasId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/ctas/${id}`,
+        path: `/strapi/ctas/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4967,7 +4966,7 @@ export class Api<
      *
      * @tags Feature-section
      * @name GetFeatureSections
-     * @request GET:/feature-sections
+     * @request GET:/strapi/feature-sections
      * @secure
      */
     getFeatureSections: (
@@ -4989,14 +4988,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<FeatureSectionListResponse, Error>({
-        path: `/feature-sections`,
+        path: `/strapi/feature-sections`,
         method: "GET",
         query: query,
         secure: true,
@@ -5009,7 +5008,7 @@ export class Api<
      *
      * @tags Feature-section
      * @name PostFeatureSections
-     * @request POST:/feature-sections
+     * @request POST:/strapi/feature-sections
      * @secure
      */
     postFeatureSections: (
@@ -5017,7 +5016,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FeatureSectionResponse, Error>({
-        path: `/feature-sections`,
+        path: `/strapi/feature-sections`,
         method: "POST",
         body: data,
         secure: true,
@@ -5031,12 +5030,12 @@ export class Api<
      *
      * @tags Feature-section
      * @name GetFeatureSectionsId
-     * @request GET:/feature-sections/{id}
+     * @request GET:/strapi/feature-sections/{id}
      * @secure
      */
     getFeatureSectionsId: (id: number, params: RequestParams = {}) =>
       this.request<FeatureSectionResponse, Error>({
-        path: `/feature-sections/${id}`,
+        path: `/strapi/feature-sections/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5048,7 +5047,7 @@ export class Api<
      *
      * @tags Feature-section
      * @name PutFeatureSectionsId
-     * @request PUT:/feature-sections/{id}
+     * @request PUT:/strapi/feature-sections/{id}
      * @secure
      */
     putFeatureSectionsId: (
@@ -5057,7 +5056,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FeatureSectionResponse, Error>({
-        path: `/feature-sections/${id}`,
+        path: `/strapi/feature-sections/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5071,12 +5070,12 @@ export class Api<
      *
      * @tags Feature-section
      * @name DeleteFeatureSectionsId
-     * @request DELETE:/feature-sections/{id}
+     * @request DELETE:/strapi/feature-sections/{id}
      * @secure
      */
     deleteFeatureSectionsId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/feature-sections/${id}`,
+        path: `/strapi/feature-sections/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5089,7 +5088,7 @@ export class Api<
      *
      * @tags Feature-tab
      * @name GetFeatureTabs
-     * @request GET:/feature-tabs
+     * @request GET:/strapi/feature-tabs
      * @secure
      */
     getFeatureTabs: (
@@ -5111,14 +5110,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<FeatureTabListResponse, Error>({
-        path: `/feature-tabs`,
+        path: `/strapi/feature-tabs`,
         method: "GET",
         query: query,
         secure: true,
@@ -5131,12 +5130,12 @@ export class Api<
      *
      * @tags Feature-tab
      * @name PostFeatureTabs
-     * @request POST:/feature-tabs
+     * @request POST:/strapi/feature-tabs
      * @secure
      */
     postFeatureTabs: (data: FeatureTabRequest, params: RequestParams = {}) =>
       this.request<FeatureTabResponse, Error>({
-        path: `/feature-tabs`,
+        path: `/strapi/feature-tabs`,
         method: "POST",
         body: data,
         secure: true,
@@ -5150,12 +5149,12 @@ export class Api<
      *
      * @tags Feature-tab
      * @name GetFeatureTabsId
-     * @request GET:/feature-tabs/{id}
+     * @request GET:/strapi/feature-tabs/{id}
      * @secure
      */
     getFeatureTabsId: (id: number, params: RequestParams = {}) =>
       this.request<FeatureTabResponse, Error>({
-        path: `/feature-tabs/${id}`,
+        path: `/strapi/feature-tabs/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5167,7 +5166,7 @@ export class Api<
      *
      * @tags Feature-tab
      * @name PutFeatureTabsId
-     * @request PUT:/feature-tabs/{id}
+     * @request PUT:/strapi/feature-tabs/{id}
      * @secure
      */
     putFeatureTabsId: (
@@ -5176,7 +5175,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FeatureTabResponse, Error>({
-        path: `/feature-tabs/${id}`,
+        path: `/strapi/feature-tabs/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5190,12 +5189,12 @@ export class Api<
      *
      * @tags Feature-tab
      * @name DeleteFeatureTabsId
-     * @request DELETE:/feature-tabs/{id}
+     * @request DELETE:/strapi/feature-tabs/{id}
      * @secure
      */
     deleteFeatureTabsId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/feature-tabs/${id}`,
+        path: `/strapi/feature-tabs/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5208,7 +5207,7 @@ export class Api<
      *
      * @tags Footer
      * @name GetFooter
-     * @request GET:/footer
+     * @request GET:/strapi/footer
      * @secure
      */
     getFooter: (
@@ -5230,14 +5229,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<FooterResponse, Error>({
-        path: `/footer`,
+        path: `/strapi/footer`,
         method: "GET",
         query: query,
         secure: true,
@@ -5250,12 +5249,12 @@ export class Api<
      *
      * @tags Footer
      * @name PutFooter
-     * @request PUT:/footer
+     * @request PUT:/strapi/footer
      * @secure
      */
     putFooter: (data: FooterRequest, params: RequestParams = {}) =>
       this.request<FooterResponse, Error>({
-        path: `/footer`,
+        path: `/strapi/footer`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5269,12 +5268,12 @@ export class Api<
      *
      * @tags Footer
      * @name DeleteFooter
-     * @request DELETE:/footer
+     * @request DELETE:/strapi/footer
      * @secure
      */
     deleteFooter: (params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/footer`,
+        path: `/strapi/footer`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5287,7 +5286,7 @@ export class Api<
      *
      * @tags Forgot-password-block
      * @name GetForgotPasswordBlock
-     * @request GET:/forgot-password-block
+     * @request GET:/strapi/forgot-password-block
      * @secure
      */
     getForgotPasswordBlock: (
@@ -5309,14 +5308,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ForgotPasswordBlockResponse, Error>({
-        path: `/forgot-password-block`,
+        path: `/strapi/forgot-password-block`,
         method: "GET",
         query: query,
         secure: true,
@@ -5329,7 +5328,7 @@ export class Api<
      *
      * @tags Forgot-password-block
      * @name PutForgotPasswordBlock
-     * @request PUT:/forgot-password-block
+     * @request PUT:/strapi/forgot-password-block
      * @secure
      */
     putForgotPasswordBlock: (
@@ -5337,7 +5336,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ForgotPasswordBlockResponse, Error>({
-        path: `/forgot-password-block`,
+        path: `/strapi/forgot-password-block`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5351,12 +5350,12 @@ export class Api<
      *
      * @tags Forgot-password-block
      * @name DeleteForgotPasswordBlock
-     * @request DELETE:/forgot-password-block
+     * @request DELETE:/strapi/forgot-password-block
      * @secure
      */
     deleteForgotPasswordBlock: (params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/forgot-password-block`,
+        path: `/strapi/forgot-password-block`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5369,7 +5368,7 @@ export class Api<
      *
      * @tags Hero-block
      * @name GetHeroBlocks
-     * @request GET:/hero-blocks
+     * @request GET:/strapi/hero-blocks
      * @secure
      */
     getHeroBlocks: (
@@ -5391,14 +5390,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<HeroBlockListResponse, Error>({
-        path: `/hero-blocks`,
+        path: `/strapi/hero-blocks`,
         method: "GET",
         query: query,
         secure: true,
@@ -5411,12 +5410,12 @@ export class Api<
      *
      * @tags Hero-block
      * @name PostHeroBlocks
-     * @request POST:/hero-blocks
+     * @request POST:/strapi/hero-blocks
      * @secure
      */
     postHeroBlocks: (data: HeroBlockRequest, params: RequestParams = {}) =>
       this.request<HeroBlockResponse, Error>({
-        path: `/hero-blocks`,
+        path: `/strapi/hero-blocks`,
         method: "POST",
         body: data,
         secure: true,
@@ -5430,12 +5429,12 @@ export class Api<
      *
      * @tags Hero-block
      * @name GetHeroBlocksId
-     * @request GET:/hero-blocks/{id}
+     * @request GET:/strapi/hero-blocks/{id}
      * @secure
      */
     getHeroBlocksId: (id: number, params: RequestParams = {}) =>
       this.request<HeroBlockResponse, Error>({
-        path: `/hero-blocks/${id}`,
+        path: `/strapi/hero-blocks/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5447,7 +5446,7 @@ export class Api<
      *
      * @tags Hero-block
      * @name PutHeroBlocksId
-     * @request PUT:/hero-blocks/{id}
+     * @request PUT:/strapi/hero-blocks/{id}
      * @secure
      */
     putHeroBlocksId: (
@@ -5456,7 +5455,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<HeroBlockResponse, Error>({
-        path: `/hero-blocks/${id}`,
+        path: `/strapi/hero-blocks/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5470,12 +5469,12 @@ export class Api<
      *
      * @tags Hero-block
      * @name DeleteHeroBlocksId
-     * @request DELETE:/hero-blocks/{id}
+     * @request DELETE:/strapi/hero-blocks/{id}
      * @secure
      */
     deleteHeroBlocksId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/hero-blocks/${id}`,
+        path: `/strapi/hero-blocks/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5488,7 +5487,7 @@ export class Api<
      *
      * @tags Image-slider
      * @name GetImageSliders
-     * @request GET:/image-sliders
+     * @request GET:/strapi/image-sliders
      * @secure
      */
     getImageSliders: (
@@ -5510,14 +5509,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<ImageSliderListResponse, Error>({
-        path: `/image-sliders`,
+        path: `/strapi/image-sliders`,
         method: "GET",
         query: query,
         secure: true,
@@ -5530,12 +5529,12 @@ export class Api<
      *
      * @tags Image-slider
      * @name PostImageSliders
-     * @request POST:/image-sliders
+     * @request POST:/strapi/image-sliders
      * @secure
      */
     postImageSliders: (data: ImageSliderRequest, params: RequestParams = {}) =>
       this.request<ImageSliderResponse, Error>({
-        path: `/image-sliders`,
+        path: `/strapi/image-sliders`,
         method: "POST",
         body: data,
         secure: true,
@@ -5549,12 +5548,12 @@ export class Api<
      *
      * @tags Image-slider
      * @name GetImageSlidersId
-     * @request GET:/image-sliders/{id}
+     * @request GET:/strapi/image-sliders/{id}
      * @secure
      */
     getImageSlidersId: (id: number, params: RequestParams = {}) =>
       this.request<ImageSliderResponse, Error>({
-        path: `/image-sliders/${id}`,
+        path: `/strapi/image-sliders/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5566,7 +5565,7 @@ export class Api<
      *
      * @tags Image-slider
      * @name PutImageSlidersId
-     * @request PUT:/image-sliders/{id}
+     * @request PUT:/strapi/image-sliders/{id}
      * @secure
      */
     putImageSlidersId: (
@@ -5575,7 +5574,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ImageSliderResponse, Error>({
-        path: `/image-sliders/${id}`,
+        path: `/strapi/image-sliders/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5589,12 +5588,12 @@ export class Api<
      *
      * @tags Image-slider
      * @name DeleteImageSlidersId
-     * @request DELETE:/image-sliders/{id}
+     * @request DELETE:/strapi/image-sliders/{id}
      * @secure
      */
     deleteImageSlidersId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/image-sliders/${id}`,
+        path: `/strapi/image-sliders/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5607,7 +5606,7 @@ export class Api<
      *
      * @tags Login-block
      * @name GetLoginBlock
-     * @request GET:/login-block
+     * @request GET:/strapi/login-block
      * @secure
      */
     getLoginBlock: (
@@ -5629,14 +5628,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<LoginBlockResponse, Error>({
-        path: `/login-block`,
+        path: `/strapi/login-block`,
         method: "GET",
         query: query,
         secure: true,
@@ -5649,12 +5648,12 @@ export class Api<
      *
      * @tags Login-block
      * @name PutLoginBlock
-     * @request PUT:/login-block
+     * @request PUT:/strapi/login-block
      * @secure
      */
     putLoginBlock: (data: LoginBlockRequest, params: RequestParams = {}) =>
       this.request<LoginBlockResponse, Error>({
-        path: `/login-block`,
+        path: `/strapi/login-block`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5668,12 +5667,12 @@ export class Api<
      *
      * @tags Login-block
      * @name DeleteLoginBlock
-     * @request DELETE:/login-block
+     * @request DELETE:/strapi/login-block
      * @secure
      */
     deleteLoginBlock: (params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/login-block`,
+        path: `/strapi/login-block`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5686,7 +5685,7 @@ export class Api<
      *
      * @tags Page
      * @name GetPages
-     * @request GET:/pages
+     * @request GET:/strapi/pages
      * @secure
      */
     getPages: (
@@ -5708,14 +5707,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<PageListResponse, Error>({
-        path: `/pages`,
+        path: `/strapi/pages`,
         method: "GET",
         query: query,
         secure: true,
@@ -5728,12 +5727,12 @@ export class Api<
      *
      * @tags Page
      * @name PostPages
-     * @request POST:/pages
+     * @request POST:/strapi/pages
      * @secure
      */
     postPages: (data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
-        path: `/pages`,
+        path: `/strapi/pages`,
         method: "POST",
         body: data,
         secure: true,
@@ -5747,12 +5746,12 @@ export class Api<
      *
      * @tags Page
      * @name GetPagesId
-     * @request GET:/pages/{id}
+     * @request GET:/strapi/pages/{id}
      * @secure
      */
     getPagesId: (id: number, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
-        path: `/pages/${id}`,
+        path: `/strapi/pages/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5764,12 +5763,12 @@ export class Api<
      *
      * @tags Page
      * @name PutPagesId
-     * @request PUT:/pages/{id}
+     * @request PUT:/strapi/pages/{id}
      * @secure
      */
     putPagesId: (id: number, data: PageRequest, params: RequestParams = {}) =>
       this.request<PageResponse, Error>({
-        path: `/pages/${id}`,
+        path: `/strapi/pages/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5783,12 +5782,12 @@ export class Api<
      *
      * @tags Page
      * @name DeletePagesId
-     * @request DELETE:/pages/{id}
+     * @request DELETE:/strapi/pages/{id}
      * @secure
      */
     deletePagesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/pages/${id}`,
+        path: `/strapi/pages/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5801,7 +5800,7 @@ export class Api<
      *
      * @tags Steps-container
      * @name GetStepsContainers
-     * @request GET:/steps-containers
+     * @request GET:/strapi/steps-containers
      * @secure
      */
     getStepsContainers: (
@@ -5823,14 +5822,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<StepsContainerListResponse, Error>({
-        path: `/steps-containers`,
+        path: `/strapi/steps-containers`,
         method: "GET",
         query: query,
         secure: true,
@@ -5843,7 +5842,7 @@ export class Api<
      *
      * @tags Steps-container
      * @name PostStepsContainers
-     * @request POST:/steps-containers
+     * @request POST:/strapi/steps-containers
      * @secure
      */
     postStepsContainers: (
@@ -5851,7 +5850,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<StepsContainerResponse, Error>({
-        path: `/steps-containers`,
+        path: `/strapi/steps-containers`,
         method: "POST",
         body: data,
         secure: true,
@@ -5865,12 +5864,12 @@ export class Api<
      *
      * @tags Steps-container
      * @name GetStepsContainersId
-     * @request GET:/steps-containers/{id}
+     * @request GET:/strapi/steps-containers/{id}
      * @secure
      */
     getStepsContainersId: (id: number, params: RequestParams = {}) =>
       this.request<StepsContainerResponse, Error>({
-        path: `/steps-containers/${id}`,
+        path: `/strapi/steps-containers/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5882,7 +5881,7 @@ export class Api<
      *
      * @tags Steps-container
      * @name PutStepsContainersId
-     * @request PUT:/steps-containers/{id}
+     * @request PUT:/strapi/steps-containers/{id}
      * @secure
      */
     putStepsContainersId: (
@@ -5891,7 +5890,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<StepsContainerResponse, Error>({
-        path: `/steps-containers/${id}`,
+        path: `/strapi/steps-containers/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5905,12 +5904,12 @@ export class Api<
      *
      * @tags Steps-container
      * @name DeleteStepsContainersId
-     * @request DELETE:/steps-containers/{id}
+     * @request DELETE:/strapi/steps-containers/{id}
      * @secure
      */
     deleteStepsContainersId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/steps-containers/${id}`,
+        path: `/strapi/steps-containers/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5923,7 +5922,7 @@ export class Api<
      *
      * @tags Template
      * @name GetTemplates
-     * @request GET:/templates
+     * @request GET:/strapi/templates
      * @secure
      */
     getTemplates: (
@@ -5945,14 +5944,14 @@ export class Api<
         /** Relations to return */
         populate?: string;
         /** Filters to apply */
-        filters?: Record<string, any>;
+        filters?: object;
         /** Locale to apply */
         locale?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<TemplateListResponse, Error>({
-        path: `/templates`,
+        path: `/strapi/templates`,
         method: "GET",
         query: query,
         secure: true,
@@ -5965,12 +5964,12 @@ export class Api<
      *
      * @tags Template
      * @name PostTemplates
-     * @request POST:/templates
+     * @request POST:/strapi/templates
      * @secure
      */
     postTemplates: (data: TemplateRequest, params: RequestParams = {}) =>
       this.request<TemplateResponse, Error>({
-        path: `/templates`,
+        path: `/strapi/templates`,
         method: "POST",
         body: data,
         secure: true,
@@ -5984,12 +5983,12 @@ export class Api<
      *
      * @tags Template
      * @name GetTemplatesId
-     * @request GET:/templates/{id}
+     * @request GET:/strapi/templates/{id}
      * @secure
      */
     getTemplatesId: (id: number, params: RequestParams = {}) =>
       this.request<TemplateResponse, Error>({
-        path: `/templates/${id}`,
+        path: `/strapi/templates/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6001,7 +6000,7 @@ export class Api<
      *
      * @tags Template
      * @name PutTemplatesId
-     * @request PUT:/templates/{id}
+     * @request PUT:/strapi/templates/{id}
      * @secure
      */
     putTemplatesId: (
@@ -6010,7 +6009,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TemplateResponse, Error>({
-        path: `/templates/${id}`,
+        path: `/strapi/templates/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -6024,12 +6023,12 @@ export class Api<
      *
      * @tags Template
      * @name DeleteTemplatesId
-     * @request DELETE:/templates/{id}
+     * @request DELETE:/strapi/templates/{id}
      * @secure
      */
     deleteTemplatesId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/templates/${id}`,
+        path: `/strapi/templates/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -6042,7 +6041,7 @@ export class Api<
      *
      * @tags Upload - File
      * @name UploadCreate
-     * @request POST:/upload
+     * @request POST:/strapi/upload
      * @secure
      */
     uploadCreate: (
@@ -6060,7 +6059,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UploadFile[], any>({
-        path: `/upload`,
+        path: `/strapi/upload`,
         method: "POST",
         body: data,
         secure: true,
@@ -6074,7 +6073,7 @@ export class Api<
      *
      * @tags Upload - File
      * @name UploadIdCreate
-     * @request POST:/upload?id={id}
+     * @request POST:/strapi/upload?id={id}
      * @secure
      */
     uploadIdCreate: (
@@ -6095,7 +6094,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UploadFile[], any>({
-        path: `/upload?id=${id}`,
+        path: `/strapi/upload?id=${id}`,
         method: "POST",
         query: query,
         body: data,
@@ -6109,13 +6108,13 @@ export class Api<
      * No description
      *
      * @tags Upload - File
-     * @name FilesList
-     * @request GET:/upload/files
+     * @name UploadFilesList
+     * @request GET:/strapi/upload/files
      * @secure
      */
-    filesList: (params: RequestParams = {}) =>
+    uploadFilesList: (params: RequestParams = {}) =>
       this.request<UploadFile[], any>({
-        path: `/upload/files`,
+        path: `/strapi/upload/files`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6126,13 +6125,13 @@ export class Api<
      * No description
      *
      * @tags Upload - File
-     * @name FilesDetail
-     * @request GET:/upload/files/{id}
+     * @name UploadFilesDetail
+     * @request GET:/strapi/upload/files/{id}
      * @secure
      */
-    filesDetail: (id: string, params: RequestParams = {}) =>
+    uploadFilesDetail: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
-        path: `/upload/files/${id}`,
+        path: `/strapi/upload/files/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6143,13 +6142,13 @@ export class Api<
      * No description
      *
      * @tags Upload - File
-     * @name FilesDelete
-     * @request DELETE:/upload/files/{id}
+     * @name UploadFilesDelete
+     * @request DELETE:/strapi/upload/files/{id}
      * @secure
      */
-    filesDelete: (id: string, params: RequestParams = {}) =>
+    uploadFilesDelete: (id: string, params: RequestParams = {}) =>
       this.request<UploadFile, any>({
-        path: `/upload/files/${id}`,
+        path: `/strapi/upload/files/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -6163,12 +6162,12 @@ export class Api<
      * @tags Users-Permissions - Auth
      * @name ConnectDetail
      * @summary Login with a provider
-     * @request GET:/connect/{provider}
+     * @request GET:/strapi/connect/{provider}
      * @secure
      */
     connectDetail: (provider: string, params: RequestParams = {}) =>
       this.request<any, void | Error>({
-        path: `/connect/${provider}`,
+        path: `/strapi/connect/${provider}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6178,12 +6177,12 @@ export class Api<
      * @description Returns a jwt token and user info
      *
      * @tags Users-Permissions - Auth
-     * @name LocalCreate
+     * @name AuthLocalCreate
      * @summary Local login
-     * @request POST:/auth/local
+     * @request POST:/strapi/auth/local
      * @secure
      */
-    localCreate: (
+    authLocalCreate: (
       data: {
         identifier?: string;
         password?: string;
@@ -6191,7 +6190,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
-        path: `/auth/local`,
+        path: `/strapi/auth/local`,
         method: "POST",
         body: data,
         secure: true,
@@ -6204,12 +6203,12 @@ export class Api<
      * @description Returns a jwt token and user info
      *
      * @tags Users-Permissions - Auth
-     * @name LocalRegisterCreate
+     * @name AuthLocalRegisterCreate
      * @summary Register a user
-     * @request POST:/auth/local/register
+     * @request POST:/strapi/auth/local/register
      * @secure
      */
-    localRegisterCreate: (
+    authLocalRegisterCreate: (
       data: {
         username?: string;
         email?: string;
@@ -6218,7 +6217,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
-        path: `/auth/local/register`,
+        path: `/strapi/auth/local/register`,
         method: "POST",
         body: data,
         secure: true,
@@ -6231,14 +6230,14 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name CallbackList
+     * @name AuthCallbackList
      * @summary Default Callback from provider auth
-     * @request GET:/auth/{provider}/callback
+     * @request GET:/strapi/auth/{provider}/callback
      * @secure
      */
-    callbackList: (provider: string, params: RequestParams = {}) =>
+    authCallbackList: (provider: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUserRegistration, Error>({
-        path: `/auth/${provider}/callback`,
+        path: `/strapi/auth/${provider}/callback`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6249,12 +6248,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name ForgotPasswordCreate
+     * @name AuthForgotPasswordCreate
      * @summary Send rest password email
-     * @request POST:/auth/forgot-password
+     * @request POST:/strapi/auth/forgot-password
      * @secure
      */
-    forgotPasswordCreate: (
+    authForgotPasswordCreate: (
       data: {
         email?: string;
       },
@@ -6266,7 +6265,7 @@ export class Api<
         },
         Error
       >({
-        path: `/auth/forgot-password`,
+        path: `/strapi/auth/forgot-password`,
         method: "POST",
         body: data,
         secure: true,
@@ -6279,12 +6278,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name ResetPasswordCreate
+     * @name AuthResetPasswordCreate
      * @summary Rest user password
-     * @request POST:/auth/reset-password
+     * @request POST:/strapi/auth/reset-password
      * @secure
      */
-    resetPasswordCreate: (
+    authResetPasswordCreate: (
       data: {
         password?: string;
         passwordConfirmation?: string;
@@ -6293,7 +6292,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
-        path: `/auth/reset-password`,
+        path: `/strapi/auth/reset-password`,
         method: "POST",
         body: data,
         secure: true,
@@ -6306,12 +6305,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name ChangePasswordCreate
+     * @name AuthChangePasswordCreate
      * @summary Update user's own password
-     * @request POST:/auth/change-password
+     * @request POST:/strapi/auth/change-password
      * @secure
      */
-    changePasswordCreate: (
+    authChangePasswordCreate: (
       data: {
         password: string;
         currentPassword: string;
@@ -6320,7 +6319,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<UsersPermissionsUserRegistration, Error>({
-        path: `/auth/change-password`,
+        path: `/strapi/auth/change-password`,
         method: "POST",
         body: data,
         secure: true,
@@ -6333,12 +6332,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name EmailConfirmationList
+     * @name AuthEmailConfirmationList
      * @summary Confirm user email
-     * @request GET:/auth/email-confirmation
+     * @request GET:/strapi/auth/email-confirmation
      * @secure
      */
-    emailConfirmationList: (
+    authEmailConfirmationList: (
       query?: {
         /** confirmation token received by email */
         confirmation?: string;
@@ -6346,7 +6345,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, void | Error>({
-        path: `/auth/email-confirmation`,
+        path: `/strapi/auth/email-confirmation`,
         method: "GET",
         query: query,
         secure: true,
@@ -6357,12 +6356,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Auth
-     * @name SendEmailConfirmationCreate
+     * @name AuthSendEmailConfirmationCreate
      * @summary Send confirmation email
-     * @request POST:/auth/send-email-confirmation
+     * @request POST:/strapi/auth/send-email-confirmation
      * @secure
      */
-    sendEmailConfirmationCreate: (
+    authSendEmailConfirmationCreate: (
       data: {
         email?: string;
       },
@@ -6375,7 +6374,7 @@ export class Api<
         },
         Error
       >({
-        path: `/auth/send-email-confirmation`,
+        path: `/strapi/auth/send-email-confirmation`,
         method: "POST",
         body: data,
         secure: true,
@@ -6389,19 +6388,19 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name PermissionsList
+     * @name UsersPermissionsPermissionsList
      * @summary Get default generated permissions
-     * @request GET:/users-permissions/permissions
+     * @request GET:/strapi/users-permissions/permissions
      * @secure
      */
-    permissionsList: (params: RequestParams = {}) =>
+    usersPermissionsPermissionsList: (params: RequestParams = {}) =>
       this.request<
         {
           permissions?: UsersPermissionsPermissionsTree;
         },
         Error
       >({
-        path: `/users-permissions/permissions`,
+        path: `/strapi/users-permissions/permissions`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6412,12 +6411,12 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name RolesList
+     * @name UsersPermissionsRolesList
      * @summary List roles
-     * @request GET:/users-permissions/roles
+     * @request GET:/strapi/users-permissions/roles
      * @secure
      */
-    rolesList: (params: RequestParams = {}) =>
+    usersPermissionsRolesList: (params: RequestParams = {}) =>
       this.request<
         {
           roles?: (UsersPermissionsRole & {
@@ -6426,7 +6425,7 @@ export class Api<
         },
         Error
       >({
-        path: `/users-permissions/roles`,
+        path: `/strapi/users-permissions/roles`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6437,27 +6436,19 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name RolesCreate
+     * @name UsersPermissionsRolesCreate
      * @summary Create a role
-     * @request POST:/users-permissions/roles
+     * @request POST:/strapi/users-permissions/roles
      * @secure
      */
-    rolesCreate: (
-      data: {
-        name?: string;
-        description?: string;
-        type?: string;
-        permissions?: UsersPermissionsPermissionsTree;
-      },
-      params: RequestParams = {},
-    ) =>
+    usersPermissionsRolesCreate: (data: any, params: RequestParams = {}) =>
       this.request<
         {
           ok?: OkEnum1;
         },
         Error
       >({
-        path: `/users-permissions/roles`,
+        path: `/strapi/users-permissions/roles`,
         method: "POST",
         body: data,
         secure: true,
@@ -6469,19 +6460,19 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name RolesDetail
+     * @name UsersPermissionsRolesDetail
      * @summary Get a role
-     * @request GET:/users-permissions/roles/{id}
+     * @request GET:/strapi/users-permissions/roles/{id}
      * @secure
      */
-    rolesDetail: (id: string, params: RequestParams = {}) =>
+    usersPermissionsRolesDetail: (id: string, params: RequestParams = {}) =>
       this.request<
         {
           role?: UsersPermissionsRole;
         },
         Error
       >({
-        path: `/users-permissions/roles/${id}`,
+        path: `/strapi/users-permissions/roles/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6492,19 +6483,14 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name RolesUpdate
+     * @name UsersPermissionsRolesUpdate
      * @summary Update a role
-     * @request PUT:/users-permissions/roles/{role}
+     * @request PUT:/strapi/users-permissions/roles/{role}
      * @secure
      */
-    rolesUpdate: (
+    usersPermissionsRolesUpdate: (
       role: string,
-      data: {
-        name?: string;
-        description?: string;
-        type?: string;
-        permissions?: UsersPermissionsPermissionsTree;
-      },
+      data: any,
       params: RequestParams = {},
     ) =>
       this.request<
@@ -6513,7 +6499,7 @@ export class Api<
         },
         Error
       >({
-        path: `/users-permissions/roles/${role}`,
+        path: `/strapi/users-permissions/roles/${role}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -6525,19 +6511,19 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name RolesDelete
+     * @name UsersPermissionsRolesDelete
      * @summary Delete a role
-     * @request DELETE:/users-permissions/roles/{role}
+     * @request DELETE:/strapi/users-permissions/roles/{role}
      * @secure
      */
-    rolesDelete: (role: string, params: RequestParams = {}) =>
+    usersPermissionsRolesDelete: (role: string, params: RequestParams = {}) =>
       this.request<
         {
           ok?: OkEnum3;
         },
         Error
       >({
-        path: `/users-permissions/roles/${role}`,
+        path: `/strapi/users-permissions/roles/${role}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -6550,12 +6536,12 @@ export class Api<
      * @tags Users-Permissions - Users & Roles
      * @name UsersList
      * @summary Get list of users
-     * @request GET:/users
+     * @request GET:/strapi/users
      * @secure
      */
     usersList: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser[], Error>({
-        path: `/users`,
+        path: `/strapi/users`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6568,7 +6554,7 @@ export class Api<
      * @tags Users-Permissions - Users & Roles
      * @name UsersCreate
      * @summary Create a user
-     * @request POST:/users
+     * @request POST:/strapi/users
      * @secure
      */
     usersCreate: (
@@ -6585,7 +6571,7 @@ export class Api<
         },
         Error
       >({
-        path: `/users`,
+        path: `/strapi/users`,
         method: "POST",
         body: data,
         secure: true,
@@ -6600,12 +6586,12 @@ export class Api<
      * @tags Users-Permissions - Users & Roles
      * @name UsersDetail
      * @summary Get a user
-     * @request GET:/users/{id}
+     * @request GET:/strapi/users/{id}
      * @secure
      */
     usersDetail: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
-        path: `/users/${id}`,
+        path: `/strapi/users/${id}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6618,7 +6604,7 @@ export class Api<
      * @tags Users-Permissions - Users & Roles
      * @name UsersUpdate
      * @summary Update a user
-     * @request PUT:/users/{id}
+     * @request PUT:/strapi/users/{id}
      * @secure
      */
     usersUpdate: (
@@ -6636,7 +6622,7 @@ export class Api<
         },
         Error
       >({
-        path: `/users/${id}`,
+        path: `/strapi/users/${id}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -6651,12 +6637,12 @@ export class Api<
      * @tags Users-Permissions - Users & Roles
      * @name UsersDelete
      * @summary Delete a user
-     * @request DELETE:/users/{id}
+     * @request DELETE:/strapi/users/{id}
      * @secure
      */
     usersDelete: (id: string, params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
-        path: `/users/${id}`,
+        path: `/strapi/users/${id}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -6667,14 +6653,14 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name GetUsersPermissionsUsersRoles
+     * @name UsersMeList
      * @summary Get authenticated user info
-     * @request GET:/users/me
+     * @request GET:/strapi/users/me
      * @secure
      */
-    getUsersPermissionsUsersRoles: (params: RequestParams = {}) =>
+    usersMeList: (params: RequestParams = {}) =>
       this.request<UsersPermissionsUser, Error>({
-        path: `/users/me`,
+        path: `/strapi/users/me`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6685,18 +6671,33 @@ export class Api<
      * No description
      *
      * @tags Users-Permissions - Users & Roles
-     * @name CountList
+     * @name UsersCountList
      * @summary Get user count
-     * @request GET:/users/count
+     * @request GET:/strapi/users/count
      * @secure
      */
-    countList: (params: RequestParams = {}) =>
+    usersCountList: (params: RequestParams = {}) =>
       this.request<number, Error>({
-        path: `/users/count`,
+        path: `/strapi/users/count`,
         method: "GET",
         secure: true,
         format: "json",
         ...params,
       }),
   };
+}
+
+// Aliased exports for unified API client
+export { Api as StrapiApi, ContentType as StrapiContentType, HttpClient as StrapiHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
 }
