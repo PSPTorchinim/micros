@@ -27,14 +27,6 @@ namespace Shared.Services.App
             _serviceProvider = serviceProvider;
         }
 
-        [HttpGet("Hello")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Hello()
-        {
-            _logger.LogInformation("Hello endpoint called.");
-            return await Handle<object>();
-        }
-
         public async Task<IActionResult> Handle<T>(
             Func<Task<T>>? action = null,
             Func<T, IActionResult>? customResponse = null)
