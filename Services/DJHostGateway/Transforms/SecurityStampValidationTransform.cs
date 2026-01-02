@@ -45,8 +45,7 @@ namespace DJHostGateway.Transforms
             }
 
             // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
-            if (request.Path.StartsWithSegments("/identity/api", StringComparison.OrdinalIgnoreCase) &&
-                request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
+            if (request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
             {
                 _logger.LogInformation("✓ [SecurityStamp] SKIPPED - ValidateSecurityStamp endpoint (avoiding circular call) | CorrelationId: {CorrelationId}", 
                     correlationId);
