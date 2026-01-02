@@ -49,8 +49,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const refreshInterceptor =
-      microservicesClient.identity.instance.interceptors.response.use(
+    // Add refresh interceptor to all microservices
+    const services = [
+      microservicesClient.brand,
+      microservicesClient.documents,
+      microservicesClient.gear,
+      microservicesClient.identity,
+      microservicesClient.mailing,
+      microservicesClient.music,
+      microservicesClient.party,
+      microservicesClient.strapi,
+    ];
+
+    const refreshInterceptors = services.map((service) => {
+      return service.instance.interceptors.response.use(
         (response) => response,
         async (error) => {
           const originalRequest = error.config;
@@ -80,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setRefreshToken(newRefreshToken ?? null);
 
               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              return microservicesClient.identity.instance(originalRequest);
+              return service.instance(originalRequest);
             } catch (refreshError) {
               logout();
               return Promise.reject(refreshError);
@@ -90,17 +102,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           return Promise.reject(error);
         },
       );
+    });
 
     return () => {
-      microservicesClient.identity.instance.interceptors.response.eject(
-        refreshInterceptor,
-      );
+      services.forEach((service, index) => {
+        service.instance.interceptors.response.eject(refreshInterceptors[index]);
+      });
     };
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const authInterceptor =
-      microservicesClient.identity.instance.interceptors.request.use(
+    // Add authorization interceptor to all microservices
+    const services = [
+      microservicesClient.brand,
+      microservicesClient.documents,
+      microservicesClient.gear,
+      microservicesClient.identity,
+      microservicesClient.mailing,
+      microservicesClient.music,
+      microservicesClient.party,
+      microservicesClient.strapi,
+    ];
+
+    const authInterceptors = services.map((service) => {
+      return service.instance.interceptors.request.use(
         (config: any) => {
           config.headers.Authorization =
             !config._retry && token
@@ -109,11 +134,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           return config;
         },
       );
+    });
 
     return () => {
-      microservicesClient.identity.instance.interceptors.request.eject(
-        authInterceptor,
-      );
+      services.forEach((service, index) => {
+        service.instance.interceptors.request.eject(authInterceptors[index]);
+      });
     };
   }, [token]);
 
