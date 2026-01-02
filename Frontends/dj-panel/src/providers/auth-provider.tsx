@@ -24,6 +24,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
   const navigate = useNavigate();
 
+  // All microservices that require authentication
+  const services = [
+    microservicesClient.brand,
+    microservicesClient.documents,
+    microservicesClient.gear,
+    microservicesClient.identity,
+    microservicesClient.mailing,
+    microservicesClient.music,
+    microservicesClient.party,
+    microservicesClient.strapi,
+  ];
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -50,17 +62,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useLayoutEffect(() => {
     // Add refresh interceptor to all microservices
-    const services = [
-      microservicesClient.brand,
-      microservicesClient.documents,
-      microservicesClient.gear,
-      microservicesClient.identity,
-      microservicesClient.mailing,
-      microservicesClient.music,
-      microservicesClient.party,
-      microservicesClient.strapi,
-    ];
-
     const refreshInterceptors = services.map((service) => {
       return service.instance.interceptors.response.use(
         (response) => response,
@@ -113,17 +114,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useLayoutEffect(() => {
     // Add authorization interceptor to all microservices
-    const services = [
-      microservicesClient.brand,
-      microservicesClient.documents,
-      microservicesClient.gear,
-      microservicesClient.identity,
-      microservicesClient.mailing,
-      microservicesClient.music,
-      microservicesClient.party,
-      microservicesClient.strapi,
-    ];
-
     const authInterceptors = services.map((service) => {
       return service.instance.interceptors.request.use(
         (config: any) => {
