@@ -24,6 +24,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
   const navigate = useNavigate();
 
+  // Token refresh promise to prevent concurrent refresh attempts
+  const refreshPromiseRef = React.useRef<Promise<string | null> | null>(null);
+
   // All microservices that require authentication
   const services = [
     microservicesClient.brand,
@@ -78,24 +81,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           if (error.response?.status === 401 && refreshToken) {
             originalRequest._retry = true;
+            
             try {
-              const response =
-                await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+              // If a refresh is already in progress, wait for it
+              if (!refreshPromiseRef.current) {
+                refreshPromiseRef.current = (async () => {
+                  try {
+                    const response =
+                      await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
 
-              const {
-                user,
-                accessToken,
-                refreshToken: newRefreshToken,
-              } = response.data as LoginResponseDTO;
+                    const {
+                      user,
+                      accessToken,
+                      refreshToken: newRefreshToken,
+                    } = response.data as LoginResponseDTO;
 
-              setUser(user ?? null);
-              setToken(accessToken ?? null);
-              setRefreshToken(newRefreshToken ?? null);
+                    setUser(user ?? null);
+                    setToken(accessToken ?? null);
+                    setRefreshToken(newRefreshToken ?? null);
 
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              return service.instance(originalRequest);
+                    return accessToken ?? null;
+                  } catch (refreshError) {
+                    logout();
+                    throw refreshError;
+                  } finally {
+                    refreshPromiseRef.current = null;
+                  }
+                })();
+              }
+
+              // Wait for the refresh to complete
+              const newAccessToken = await refreshPromiseRef.current;
+              
+              if (newAccessToken) {
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return service.instance(originalRequest);
+              } else {
+                return Promise.reject(error);
+              }
             } catch (refreshError) {
-              logout();
               return Promise.reject(refreshError);
             }
           }
