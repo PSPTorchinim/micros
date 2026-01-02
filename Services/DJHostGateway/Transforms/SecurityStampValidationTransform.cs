@@ -35,14 +35,35 @@ namespace DJHostGateway.Transforms
             _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
                 correlationId, requestPath, requestMethod);
             
-            // Skip validation if user is not logged in (no JWT included)
+            // Try to get JWT token from Authorization header or jwtToken cookie
             var authHeader = request.Headers.Authorization.FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(authHeader))
+            string? token = null;
+            string tokenSource = "none";
+            
+            if (!string.IsNullOrWhiteSpace(authHeader))
             {
-                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - No auth header | CorrelationId: {CorrelationId} | Path: {Path}", 
+                // Extract token from "Bearer <token>"
+                token = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? authHeader.Substring(7)
+                    : authHeader;
+                tokenSource = "Authorization header";
+            }
+            else if (request.Cookies.TryGetValue("jwtToken", out var cookieToken) && !string.IsNullOrWhiteSpace(cookieToken))
+            {
+                token = cookieToken;
+                tokenSource = "jwtToken cookie";
+            }
+            
+            // Skip validation if user is not logged in (no JWT included)
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - No JWT token found | CorrelationId: {CorrelationId} | Path: {Path}", 
                     correlationId, requestPath);
                 return;
             }
+            
+            _logger.LogDebug("🔑 [SecurityStamp] JWT token found | CorrelationId: {CorrelationId} | Source: {Source}", 
+                correlationId, tokenSource);
 
             // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
             if (request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
@@ -54,12 +75,8 @@ namespace DJHostGateway.Transforms
 
             try
             {
-                // Extract token from "Bearer <token>"
-                var token = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                    ? authHeader.Substring(7)
-                    : authHeader;
-
-                _logger.LogDebug("📝 [SecurityStamp] Parsing JWT token | CorrelationId: {CorrelationId}", correlationId);
+                _logger.LogDebug("📝 [SecurityStamp] Parsing JWT token | CorrelationId: {CorrelationId} | Source: {Source}", 
+                    correlationId, tokenSource);
                 
                 // Parse JWT to extract claims
                 var handler = new JwtSecurityTokenHandler();
