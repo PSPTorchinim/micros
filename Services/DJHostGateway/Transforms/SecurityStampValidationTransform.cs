@@ -136,8 +136,13 @@ namespace DJHostGateway.Transforms
                     securityStamp = securityStampClaim.Value
                 };
 
+                var url = $"{_identityServiceUrl}/v1/Users/ValidateSecurityStamp";
+
+                _logger.LogDebug("📤 [SecurityStamp] Sending validation request | CorrelationId: {CorrelationId} | UserId: {UserId} | URL: {URL} | Payload: {@Payload}", 
+                    correlationId, userId, url, validationRequest);
+
                 var response = await httpClient.PostAsJsonAsync(
-                    $"{_identityServiceUrl}/Users/ValidateSecurityStamp",
+                    url,
                     validationRequest);
 
                 if (!response.IsSuccessStatusCode)
