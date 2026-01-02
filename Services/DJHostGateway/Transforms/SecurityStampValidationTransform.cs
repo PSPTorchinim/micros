@@ -181,7 +181,7 @@ namespace DJHostGateway.Transforms
                     if (context.HttpContext.Request.Headers.ContainsKey("Authorization"))
                     {
                         context.HttpContext.Request.Headers.Remove("Authorization");
-                        _logger.LogDebug("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
+                        _logger.LogInformation("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
                             correlationId);
                     }
                 }
@@ -189,7 +189,7 @@ namespace DJHostGateway.Transforms
                 {
                     // For non-Strapi paths, log that Authorization header is being kept
                     var hasAuthHeader = context.HttpContext.Request.Headers.ContainsKey("Authorization");
-                    _logger.LogDebug("🔑 [SecurityStamp] Authorization header preserved for non-Strapi request | CorrelationId: {CorrelationId} | HasAuthHeader: {HasAuthHeader}", 
+                    _logger.LogInformation("🔑 [SecurityStamp] Authorization header preserved for non-Strapi request | CorrelationId: {CorrelationId} | HasAuthHeader: {HasAuthHeader}", 
                         correlationId, hasAuthHeader);
                 }
             }
