@@ -185,6 +185,13 @@ namespace DJHostGateway.Transforms
                             correlationId);
                     }
                 }
+                else
+                {
+                    // For non-Strapi paths, log that Authorization header is being kept
+                    var hasAuthHeader = context.HttpContext.Request.Headers.ContainsKey("Authorization");
+                    _logger.LogDebug("🔑 [SecurityStamp] Authorization header preserved for non-Strapi request | CorrelationId: {CorrelationId} | HasAuthHeader: {HasAuthHeader}", 
+                        correlationId, hasAuthHeader);
+                }
             }
             catch (TaskCanceledException)
             {
