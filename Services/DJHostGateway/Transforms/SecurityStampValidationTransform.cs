@@ -12,6 +12,7 @@ namespace DJHostGateway.Transforms
         private readonly string _identityServiceUrl;
         private static int _consecutiveFailures = 0;
         private static readonly int MaxConsecutiveFailures = 5;
+        private const string StrapiPathPrefix = "/strapi/";
 
         public SecurityStampValidationTransform(
             IHttpClientFactory httpClientFactory,
@@ -36,13 +37,18 @@ namespace DJHostGateway.Transforms
                 correlationId, requestPath, requestMethod);
             
             // Skip validation for Strapi paths (Strapi has its own authentication)
-            if (request.Path.Value?.StartsWith("/strapi/", StringComparison.OrdinalIgnoreCase) == true)
+            if (request.Path.Value?.StartsWith(StrapiPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
             {
                 _logger.LogInformation("✓ [SecurityStamp] SKIPPED - Strapi endpoint (uses own authentication) | CorrelationId: {CorrelationId} | Path: {Path}", 
                     correlationId, requestPath);
                 
                 // Remove Authorization header from the incoming request for Strapi
-                context.HttpContext.Request.Headers.Remove("Authorization");
+                if (context.HttpContext.Request.Headers.ContainsKey("Authorization"))
+                {
+                    context.HttpContext.Request.Headers.Remove("Authorization");
+                    _logger.LogDebug("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
+                        correlationId);
+                }
                 
                 return;
             }
