@@ -137,7 +137,7 @@ namespace DJHostGateway.Transforms
                 };
 
                 var response = await httpClient.PostAsJsonAsync(
-                    $"{_identityServiceUrl}/api/Users/ValidateSecurityStamp",
+                    $"{_identityServiceUrl}/Users/ValidateSecurityStamp",
                     validationRequest);
 
                 if (!response.IsSuccessStatusCode)
