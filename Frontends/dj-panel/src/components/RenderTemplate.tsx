@@ -128,24 +128,80 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
-      // For Profile, ChangePassword, and Dashboard templates, render static blocks
+      // For Profile, ChangePassword, and Dashboard templates, fetch singletons or render static blocks
       if (templateType === 'Profile') {
-        if (mounted) {
-          setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
+        try {
+          const profileBlock = await strapiAPI.getProfileBlockSingleton();
+          if (mounted) {
+            if (profileBlock) {
+              setBlocks([
+                { __kind: 'profile-block', ...profileBlock } as ContentBlock,
+              ]);
+            } else {
+              // Fallback to static block if singleton not configured
+              setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching profile block singleton:', e);
+          if (mounted) {
+            setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
+            setError(null);
+          }
         }
         return;
       }
 
       if (templateType === 'ChangePassword') {
-        if (mounted) {
-          setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
+        try {
+          const changePasswordBlock =
+            await strapiAPI.getChangePasswordBlockSingleton();
+          if (mounted) {
+            if (changePasswordBlock) {
+              setBlocks([
+                {
+                  __kind: 'change-password-block',
+                  ...changePasswordBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              // Fallback to static block if singleton not configured
+              setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching change password block singleton:', e);
+          if (mounted) {
+            setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
+            setError(null);
+          }
         }
         return;
       }
 
       if (templateType === 'Dashboard') {
-        if (mounted) {
-          setBlocks([{ __kind: 'dashboard-block' } as ContentBlock]);
+        try {
+          const dashboardBlock =
+            await strapiAPI.getDashboardBlockSingleton();
+          if (mounted) {
+            if (dashboardBlock) {
+              setBlocks([
+                {
+                  __kind: 'dashboard-block',
+                  ...dashboardBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              // Fallback to static block if singleton not configured
+              setBlocks([{ __kind: 'dashboard-block' } as ContentBlock]);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching dashboard block singleton:', e);
+          if (mounted) {
+            setBlocks([{ __kind: 'dashboard-block' } as ContentBlock]);
+            setError(null);
+          }
         }
         return;
       }

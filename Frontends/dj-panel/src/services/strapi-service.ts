@@ -425,6 +425,39 @@ export class StrapiService {
     }
   }
 
+  public static async getProfileBlockSingleton() {
+    try {
+      const res =
+        await microservicesClient.strapi.profileBlock.getProfileBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching profile-block singleton:', e);
+      return null;
+    }
+  }
+
+  public static async getChangePasswordBlockSingleton() {
+    try {
+      const res =
+        await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching change-password-block singleton:', e);
+      return null;
+    }
+  }
+
+  public static async getDashboardBlockSingleton() {
+    try {
+      const res =
+        await microservicesClient.strapi.dashboardBlock.getDashboardBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching dashboard-block singleton:', e);
+      return null;
+    }
+  }
+
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({

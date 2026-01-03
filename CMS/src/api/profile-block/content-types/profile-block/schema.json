@@ -1,0 +1,20 @@
+{
+  "kind": "singleType",
+  "collectionName": "profile_blocks",
+  "info": {
+    "singularName": "profile-block",
+    "pluralName": "profile-blocks",
+    "displayName": "Profile Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "My Profile"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

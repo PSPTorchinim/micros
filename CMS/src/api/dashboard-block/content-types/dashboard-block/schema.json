@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "dashboard_blocks",
+  "info": {
+    "singularName": "dashboard-block",
+    "pluralName": "dashboard-blocks",
+    "displayName": "Dashboard Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Dashboard"
+    },
+    "welcomeMessage": {
+      "type": "string",
+      "default": "Welcome to your dashboard"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}
