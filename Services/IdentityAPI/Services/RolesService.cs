@@ -4,6 +4,7 @@ using IdentityAPI.DTO.Role;
 using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using Shared.Data.Exceptions;
+using Shared.Helpers;
 using Shared.Services.App;
 using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
@@ -88,18 +89,18 @@ namespace IdentityAPI.Services
 
         public async Task<bool> AddRole(AddRoleRequest request)
         {
-            _logger.LogInformation("Adding new role: {RoleName}", request.Name);
+            _logger.LogInformation("Adding new role: {RoleName}", StringHelper.SanitizeForLog(request.Name));
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Checking if role with name '{RoleName}' exists.", request.Name);
+                _logger.LogDebug("Checking if role with name '{RoleName}' exists.", StringHelper.SanitizeForLog(request.Name));
                 var foundByName = await _rolesRepository.Exists(role => role.Name == request.Name);
                 if (foundByName)
                 {
-                    _logger.LogWarning("Role with name '{RoleName}' already exists.", request.Name);
+                    _logger.LogWarning("Role with name '{RoleName}' already exists.", StringHelper.SanitizeForLog(request.Name));
                     throw new AppException(ExceptionCodes.AddRoleExists);
                 }
 
-                _logger.LogDebug("Fetching permissions for new role '{RoleName}'.", request.Name);
+                _logger.LogDebug("Fetching permissions for new role '{RoleName}'.", StringHelper.SanitizeForLog(request.Name));
                 var permissions = await _permissionsRepository.Get(p => request.Permissions.Contains(p.Id));
                 var toAdd = new Role
                 {
@@ -108,7 +109,7 @@ namespace IdentityAPI.Services
                     Permissions = permissions
                 };
 
-                _logger.LogDebug("Adding role '{RoleName}' to repository.", request.Name);
+                _logger.LogDebug("Adding role '{RoleName}' to repository.", StringHelper.SanitizeForLog(request.Name));
                 var result = await _rolesRepository.Add(toAdd);
 
                 // Update cache with new data instead of just invalidating
@@ -125,7 +126,7 @@ namespace IdentityAPI.Services
                 }
                 // If cache doesn't exist, it will be lazily loaded on next read
 
-                _logger.LogInformation("Role '{RoleName}' added successfully and cache updated: {Result}", request.Name, result);
+                _logger.LogInformation("Role '{RoleName}' added successfully and cache updated: {Result}", StringHelper.SanitizeForLog(request.Name), result);
 
                 return result;
             }, _logger);
