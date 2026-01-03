@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shared.Data.Models;
+using Shared.Helpers;
 using System.Net;
 
 public class ExceptionMiddleware
@@ -17,7 +18,9 @@ public class ExceptionMiddleware
 
     public async Task InvokeAsync(HttpContext httpContext)
     {
-        _logger.LogInformation("Handling request: {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+        _logger.LogInformation("Handling request: {Method} {Path}", 
+            StringHelper.SanitizeForLog(httpContext.Request.Method), 
+            StringHelper.SanitizeForLog(httpContext.Request.Path));
         try
         {
             await _next(httpContext);
