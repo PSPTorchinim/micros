@@ -1,5 +1,6 @@
 import React from 'react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import './renderBlock.css';
 import {
   HeroBlock,
@@ -79,8 +80,8 @@ export function renderBlock(
         typeof articleData.coverUrl === 'string' ? articleData.coverUrl : '';
       const body = typeof articleData.Body === 'string' ? articleData.Body : '';
 
-      // Convert markdown to HTML if body contains markdown
-      const htmlBody = body ? marked.parse(body) : '';
+      // Convert markdown to HTML and sanitize to prevent XSS attacks
+      const htmlBody = body ? DOMPurify.sanitize(marked.parse(body)) : '';
 
       return (
         <div key={index} className="article-detail">
