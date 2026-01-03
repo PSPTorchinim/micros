@@ -24,6 +24,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
   const navigate = useNavigate();
 
+  // Token refresh promise to prevent concurrent refresh attempts
+  const refreshPromiseRef = React.useRef<Promise<string | null> | null>(null);
+
+  // All microservices that require authentication
+  const services = [
+    microservicesClient.brand,
+    microservicesClient.documents,
+    microservicesClient.gear,
+    microservicesClient.identity,
+    microservicesClient.mailing,
+    microservicesClient.music,
+    microservicesClient.party,
+    microservicesClient.strapi,
+  ];
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -49,8 +64,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const refreshInterceptor =
-      microservicesClient.identity.instance.interceptors.response.use(
+    // Add refresh interceptor to all microservices
+    const refreshInterceptors = services.map((service) => {
+      return service.instance.interceptors.response.use(
         (response) => response,
         async (error) => {
           const originalRequest = error.config;
@@ -65,24 +81,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           if (error.response?.status === 401 && refreshToken) {
             originalRequest._retry = true;
+
             try {
-              const response =
-                await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+              // If a refresh is already in progress, wait for it
+              if (!refreshPromiseRef.current) {
+                refreshPromiseRef.current = (async () => {
+                  try {
+                    const response =
+                      await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
 
-              const {
-                user,
-                accessToken,
-                refreshToken: newRefreshToken,
-              } = response.data as LoginResponseDTO;
+                    const {
+                      user,
+                      accessToken,
+                      refreshToken: newRefreshToken,
+                    } = response.data as LoginResponseDTO;
 
-              setUser(user ?? null);
-              setToken(accessToken ?? null);
-              setRefreshToken(newRefreshToken ?? null);
+                    setUser(user ?? null);
+                    setToken(accessToken ?? null);
+                    setRefreshToken(newRefreshToken ?? null);
 
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              return microservicesClient.identity.instance(originalRequest);
+                    return accessToken ?? null;
+                  } catch (refreshError) {
+                    logout();
+                    throw refreshError;
+                  } finally {
+                    refreshPromiseRef.current = null;
+                  }
+                })();
+              }
+
+              // Wait for the refresh to complete
+              const newAccessToken = await refreshPromiseRef.current;
+
+              if (newAccessToken) {
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return service.instance(originalRequest);
+              } else {
+                return Promise.reject(error);
+              }
             } catch (refreshError) {
-              logout();
               return Promise.reject(refreshError);
             }
           }
@@ -90,30 +127,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           return Promise.reject(error);
         },
       );
+    });
 
     return () => {
-      microservicesClient.identity.instance.interceptors.response.eject(
-        refreshInterceptor,
-      );
+      services.forEach((service, index) => {
+        service.instance.interceptors.response.eject(
+          refreshInterceptors[index],
+        );
+      });
     };
   }, [refreshToken]);
 
   useLayoutEffect(() => {
-    const authInterceptor =
-      microservicesClient.identity.instance.interceptors.request.use(
-        (config: any) => {
-          config.headers.Authorization =
-            !config._retry && token
-              ? `Bearer ${token}`
-              : config.headers.Authorization;
-          return config;
-        },
-      );
+    // Add authorization interceptor to all microservices
+    const authInterceptors = services.map((service) => {
+      return service.instance.interceptors.request.use((config: any) => {
+        config.headers.Authorization =
+          !config._retry && token
+            ? `Bearer ${token}`
+            : config.headers.Authorization;
+        return config;
+      });
+    });
 
     return () => {
-      microservicesClient.identity.instance.interceptors.request.eject(
-        authInterceptor,
-      );
+      services.forEach((service, index) => {
+        service.instance.interceptors.request.eject(authInterceptors[index]);
+      });
     };
   }, [token]);
 

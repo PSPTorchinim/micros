@@ -12,6 +12,7 @@ namespace DJHostGateway.Transforms
         private readonly string _identityServiceUrl;
         private static int _consecutiveFailures = 0;
         private static readonly int MaxConsecutiveFailures = 5;
+        private const string StrapiPathPrefix = "/strapi/";
 
         public SecurityStampValidationTransform(
             IHttpClientFactory httpClientFactory,
@@ -136,8 +137,13 @@ namespace DJHostGateway.Transforms
                     securityStamp = securityStampClaim.Value
                 };
 
+                var url = $"{_identityServiceUrl}/v1/Users/ValidateSecurityStamp";
+
+                _logger.LogDebug("📤 [SecurityStamp] Sending validation request | CorrelationId: {CorrelationId} | UserId: {UserId} | URL: {URL} | Payload: {@Payload}", 
+                    correlationId, userId, url, validationRequest);
+
                 var response = await httpClient.PostAsJsonAsync(
-                    $"{_identityServiceUrl}/api/Users/ValidateSecurityStamp",
+                    url,
                     validationRequest);
 
                 if (!response.IsSuccessStatusCode)
@@ -168,6 +174,24 @@ namespace DJHostGateway.Transforms
                 Interlocked.Exchange(ref _consecutiveFailures, 0);
                 _logger.LogInformation("✓ [SecurityStamp] VALIDATION SUCCESSFUL | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path} | Method: {Method}", 
                     correlationId, userId, requestPath, requestMethod);
+                
+                // Remove Authorization header for Strapi paths (Strapi has its own authentication)
+                if (request.Path.Value?.StartsWith(StrapiPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    if (context.HttpContext.Request.Headers.ContainsKey("Authorization"))
+                    {
+                        context.HttpContext.Request.Headers.Remove("Authorization");
+                        _logger.LogInformation("🔓 [SecurityStamp] Removed Authorization header for Strapi request | CorrelationId: {CorrelationId}", 
+                            correlationId);
+                    }
+                }
+                else
+                {
+                    // For non-Strapi paths, log that Authorization header is being kept
+                    var hasAuthHeader = context.HttpContext.Request.Headers.ContainsKey("Authorization");
+                    _logger.LogInformation("🔑 [SecurityStamp] Authorization header preserved for non-Strapi request | CorrelationId: {CorrelationId} | HasAuthHeader: {HasAuthHeader}", 
+                        correlationId, hasAuthHeader);
+                }
             }
             catch (TaskCanceledException)
             {

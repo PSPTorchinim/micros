@@ -35,6 +35,7 @@ namespace IdentityAPI.Data
             modelBuilder.Entity<Role>().Property(x => x.CreatedDate).HasDefaultValueSql("getdate()");
             modelBuilder.Entity<Permission>().Property(x => x.CreatedDate).HasDefaultValueSql("getdate()");
             modelBuilder.Entity<Block>().Property(x => x.CreatedDate).HasDefaultValueSql("getdate()");
+            modelBuilder.Entity<User>().HasMany(x => x.Roles).WithMany(x => x.Users);
         }
 
         public override int SaveChanges()

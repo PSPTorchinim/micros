@@ -84,7 +84,7 @@ namespace IdentityAPI.Data
                 
                 // Now retrieve the created user and assign roles
                 var createdUser = (await usersRepository.Get(x => x.Email == email)).First();
-                var roles = await rolesRepository.Get(x => x.Name.Equals("SuperOwner") || x.Name.Equals("CompanyOwner"));
+                var roles = await rolesRepository.Get();
                 _logger?.LogInformation("Retrieved {Count} roles for default user", roles.Count);
                 
                 createdUser.Roles = roles;

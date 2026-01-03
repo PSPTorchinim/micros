@@ -41,6 +41,10 @@ app.MapReverseProxy(async proxyPipeline =>
         };
         
         await transform.ApplyAsync(transformContext);
+
+        if (context.Response.HasStarted)
+            return;
+
         await next();
     });
     
