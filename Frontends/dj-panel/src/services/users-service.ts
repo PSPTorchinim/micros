@@ -27,8 +27,8 @@ export class UsersService {
   ): Promise<BooleanResponse> {
     return microservicesClient.identity.users
       .v1UsersChangePasswordUpdate({
-        oldPassword: oldPassword,
-        newPassword: newPassword,
+        oldPassword,
+        newPassword,
       })
       .then((response) => {
         return response.data;

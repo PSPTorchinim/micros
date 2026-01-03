@@ -6,6 +6,10 @@ import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
 
+// Constants
+const MIN_PASSWORD_LENGTH = 6;
+const SUCCESS_REDIRECT_DELAY_MS = 1500;
+
 export interface ChangePasswordBlock {
   title?: string;
   description?: string;
@@ -55,8 +59,10 @@ export const ChangePasswordBlock: React.FC<ChangePasswordBlock> = ({
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long.');
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setError(
+        `New password must be at least ${MIN_PASSWORD_LENGTH} characters long.`,
+      );
       setIsSubmitting(false);
       return;
     }
@@ -81,7 +87,7 @@ export const ChangePasswordBlock: React.FC<ChangePasswordBlock> = ({
         // Redirect after a short delay
         setTimeout(() => {
           navigate(successRedirectPath);
-        }, 1500);
+        }, SUCCESS_REDIRECT_DELAY_MS);
       } else {
         setError(response.message || 'Failed to change password.');
       }
