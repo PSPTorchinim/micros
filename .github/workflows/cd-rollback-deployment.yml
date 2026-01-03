@@ -59,25 +59,25 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "📋 Available Backups for ${{ inputs.environment }}"
             echo "=========================================="
-            
+
             backup_dir="/mnt/Files/Apps/DJPanel/${{ inputs.environment }}/Images/backups"
-            
+
             if [ ! -d "$backup_dir" ]; then
               echo "❌ ERROR: Backup directory not found: $backup_dir"
               exit 1
             fi
-            
+
             # List backups sorted by timestamp (newest first)
             echo "Available backups (newest first):"
             ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null || {
               echo "❌ ERROR: No backups found"
               exit 1
             }
-            
+
             echo ""
             echo "=========================================="
 
@@ -100,28 +100,28 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "🔍 Validating Rollback Target"
             echo "=========================================="
-            
+
             backup_dir="/mnt/Files/Apps/DJPanel/${{ inputs.environment }}/Images/backups"
             timestamp="${{ inputs.backup_timestamp }}"
-            
+
             if [ "$timestamp" = "latest" ]; then
               echo "ℹ️  Selecting most recent backup..."
               backup_file=$(ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null | head -n1)
             else
               backup_file="${backup_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-${timestamp}.yml"
             fi
-            
+
             if [ ! -f "$backup_file" ]; then
               echo "❌ ERROR: Backup file not found: $backup_file"
               echo "Available backups:"
               ls -1t "$backup_dir"/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-backup-*.yml 2>/dev/null || echo "  (none)"
               exit 1
             fi
-            
+
             echo "✅ Found backup file: $backup_file"
             echo ""
             echo "Backup file details:"
@@ -141,10 +141,10 @@ jobs:
           out='${{ steps.prepare.outputs.stdout }}'
           backup_file=$(echo "$out" | awk -F= '/^BACKUP_FILE=/{print $2}' | tail -n1)
           backup_exists=$(echo "$out" | awk -F= '/^BACKUP_EXISTS=/{print $2}' | tail -n1)
-          
+
           test -n "$backup_file" || { echo "ERROR: Could not parse BACKUP_FILE"; exit 1; }
           test -n "$backup_exists" || { echo "ERROR: Could not parse BACKUP_EXISTS"; exit 1; }
-          
+
           echo "backup_file=$backup_file" >> "$GITHUB_OUTPUT"
           echo "backup_exists=$backup_exists" >> "$GITHUB_OUTPUT"
 
@@ -166,18 +166,18 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "📸 Creating Pre-Rollback Snapshot"
             echo "=========================================="
-            
+
             base="/mnt/Files/Apps/DJPanel/${{ inputs.environment }}/Images"
             current_agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             snapshot_dir="${base}/backups"
             timestamp=$(date +%Y%m%d_%H%M%S)
-            
+
             mkdir -p "$snapshot_dir"
-            
+
             if [ -f "$current_agg" ]; then
               snapshot_file="${snapshot_dir}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}-pre-rollback-${timestamp}.yml"
               cp "$current_agg" "$snapshot_file"
@@ -188,7 +188,7 @@ jobs:
               echo "⚠️  No current aggregator file to snapshot"
               echo "SNAPSHOT_CREATED=false"
             fi
-            
+
             echo "=========================================="
 
   perform_rollback:
@@ -214,30 +214,30 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "🔄 Performing Rollback"
             echo "=========================================="
-            
+
             base="/mnt/Files/Apps/DJPanel/${{ inputs.environment }}/Images"
             agg="${base}/dj-panel-${{ needs.determine_environment.outputs.env_slug }}.yml"
             backup_file="${{ needs.validate_and_prepare_rollback.outputs.backup_file }}"
             app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
-            
+
             # Verify backup file exists
             test -f "$backup_file" || { echo "❌ ERROR: Backup file not found: $backup_file"; exit 1; }
-            
+
             echo "ℹ️  Restoring from: $backup_file"
             echo "ℹ️  Target aggregator: $agg"
-            
+
             # Copy backup to aggregator location
             cp "$backup_file" "$agg"
             echo "✅ Restored backup to aggregator"
-            
+
             # Restart the application
             echo ""
             echo "🔄 Restarting application: $app"
-            
+
             # Helper function to get app state
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
@@ -256,10 +256,10 @@ jobs:
                 }' | head -n1
               fi
             }
-            
+
             current_state="$(get_state || echo 'NOT_FOUND')"
             echo "Current app state: $current_state"
-            
+
             if [ "$current_state" = "NOT_FOUND" ] || [ "$current_state" = "STOPPED" ]; then
               echo "📦 App is stopped - starting app"
               if midclt call app.start "$app" 2>/dev/null; then
@@ -278,7 +278,7 @@ jobs:
               else
                 echo "ℹ️  Restart not available, using stop/start"
                 midclt call app.stop "$app" 2>/dev/null || true
-                
+
                 # Wait for STOPPED state (2 minutes timeout: 60 iterations × 2 seconds)
                 echo "⏳ Waiting for app to stop..."
                 stop_wait=0
@@ -294,12 +294,12 @@ jobs:
                   sleep 2
                   stop_wait=$((stop_wait+1))
                 done
-                
+
                 if [ "$stop_state" != "STOPPED" ] && [ "$stop_state" != "NOT_FOUND" ]; then
                   echo "❌ ERROR: App failed to stop after 2 minutes (state=$stop_state)"
                   exit 1
                 fi
-                
+
                 if midclt call app.start "$app" 2>/dev/null; then
                   echo "✅ Started via app.start"
                   # Give TrueNAS time to process the start command
@@ -311,16 +311,124 @@ jobs:
                 fi
               fi
             fi
-            
+
             echo ""
             echo "=========================================="
             echo "✅ Rollback restoration complete"
             echo "=========================================="
 
+  restore_data_volumes:
+    name: Restore Data Volumes from Backup
+    runs-on: ubuntu-latest
+    needs: [determine_environment, validate_and_prepare_rollback, perform_rollback]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Extract backup timestamp from backup file
+        id: extract_timestamp
+        run: |
+          backup_file="${{ needs.validate_and_prepare_rollback.outputs.backup_file }}"
+          # Extract timestamp from backup filename: dj-panel-{env_slug}-backup-{timestamp}.yml
+          timestamp=$(echo "$backup_file" | sed -E 's/.*-backup-([0-9_]+)\.yml$/\1/')
+          echo "Extracted timestamp: $timestamp"
+          echo "timestamp=$timestamp" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare restore script for transfer
+        id: transfer_restore_script
+        run: |
+          # Read the restore script and output it
+          SCRIPT_CONTENT=$(cat .github/scripts/restore-data-volumes.sh)
+          # Use multiline output for GitHub Actions
+          {
+            echo "script_content<<EOF"
+            echo "$SCRIPT_CONTENT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Restore data volumes from backup archives
+        id: restore
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/bash
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🔄 Restoring Data Volumes"
+            echo "=========================================="
+
+            # Create temporary script directory
+            SCRIPT_DIR="/tmp/restore-scripts-$$"
+            mkdir -p "$SCRIPT_DIR"
+
+            # Write restore script content to file via heredoc
+            cat > "$SCRIPT_DIR/restore-data-volumes.sh" << 'RESTORE_SCRIPT_EOF'
+            ${{ steps.transfer_restore_script.outputs.script_content }}
+            RESTORE_SCRIPT_EOF
+
+            # Make executable and run
+            chmod +x "$SCRIPT_DIR/restore-data-volumes.sh"
+
+            echo "Attempting to restore data volumes with timestamp: ${{ steps.extract_timestamp.outputs.timestamp }}"
+
+            if "$SCRIPT_DIR/restore-data-volumes.sh" \
+              "${{ inputs.environment }}" \
+              "${{ needs.determine_environment.outputs.env_slug }}" \
+              "/mnt/Files/Apps/DJPanel/${{ inputs.environment }}" \
+              "${{ steps.extract_timestamp.outputs.timestamp }}"; then
+              echo "✅ Data volumes restored successfully"
+              echo "DATA_RESTORED=true"
+            else
+              echo "⚠️  Data restore failed or no backups found"
+              echo "⚠️  Application will start with existing data"
+              echo "DATA_RESTORED=false"
+            fi
+
+            # Cleanup
+            rm -rf "$SCRIPT_DIR"
+
+      - name: Restart application after data restoration
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+
+            echo "=========================================="
+            echo "🔄 Restarting Application After Data Restore"
+            echo "=========================================="
+
+            app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
+
+            echo "Restarting application to use restored data..."
+
+            # Restart the application
+            if midclt call app.restart "$app" 2>/dev/null; then
+              echo "✅ Application restarted successfully"
+            else
+              echo "ℹ️  Restart not available, using stop/start"
+              midclt call app.stop "$app" 2>/dev/null || true
+              sleep 5
+              midclt call app.start "$app" 2>/dev/null || echo "⚠️  Failed to start app"
+            fi
+
+            echo "=========================================="
+            echo "✅ Data restoration and restart complete"
+            echo "=========================================="
+
   verify_rollback_health:
     name: Verify Rollback Health
     runs-on: ubuntu-latest
-    needs: [determine_environment, perform_rollback]
+    needs: [determine_environment, perform_rollback, restore_data_volumes]
     if: ${{ inputs.skip_health_check == false }}
     outputs:
       health_status: ${{ steps.health_check.outputs.health_status }}
@@ -336,13 +444,13 @@ jobs:
           script: |
             #!/bin/sh
             set -euo pipefail
-            
+
             echo "=========================================="
             echo "🏥 Verifying Rollback Health"
             echo "=========================================="
-            
+
             app="dj-panel-${{ needs.determine_environment.outputs.env_slug }}"
-            
+
             # Helper function to get app state
             has_jq() { command -v jq >/dev/null 2>&1; }
             get_state() {
@@ -361,25 +469,25 @@ jobs:
                 }' | head -n1
               fi
             }
-            
+
             is_good_state() {
               case "$1" in
                 RUNNING|ACTIVE|DEPLOYED|STARTED|HEALTHY) return 0 ;;
                 *) return 1 ;;
               esac
             }
-            
+
             # Wait for healthy state (10 minutes timeout: 120 iterations × 5 seconds)
             echo "⏳ Waiting for app to become healthy (timeout: 10 minutes)..."
             health_check=0
             max_health_checks=120
             app_state="UNKNOWN"
-            
+
             while [ $health_check -lt $max_health_checks ]; do
               app_state="$(get_state || echo 'UNKNOWN')"
               [ -z "$app_state" ] && app_state="UNKNOWN"
               echo "  Health check $((health_check+1))/$max_health_checks: state=$app_state"
-              
+
               if is_good_state "$app_state"; then
                 echo ""
                 echo "✅ App is healthy and running"
@@ -387,11 +495,11 @@ jobs:
                 echo "HEALTH_STATUS=healthy"
                 exit 0
               fi
-              
+
               sleep 5
               health_check=$((health_check+1))
             done
-            
+
             echo ""
             echo "❌ ERROR: App failed to reach healthy state after 10 minutes"
             echo "Final state: $app_state"
@@ -409,6 +517,7 @@ jobs:
         validate_and_prepare_rollback,
         create_pre_rollback_snapshot,
         perform_rollback,
+        restore_data_volumes,
         verify_rollback_health,
       ]
     if: always()
@@ -416,7 +525,7 @@ jobs:
       - name: Display rollback summary
         run: |
           set -euo pipefail
-          
+
           echo "=========================================="
           echo "  📊 Rollback Summary"
           echo "=========================================="
@@ -429,15 +538,21 @@ jobs:
           echo "  - Validate Backup: ${{ needs.validate_and_prepare_rollback.result }}"
           echo "  - Create Snapshot: ${{ needs.create_pre_rollback_snapshot.result }}"
           echo "  - Perform Rollback: ${{ needs.perform_rollback.result }}"
+          echo "  - Restore Data: ${{ needs.restore_data_volumes.result }}"
           echo "  - Health Check: ${{ needs.verify_rollback_health.result }}"
           echo ""
-          
+
           if [ "${{ needs.verify_rollback_health.result }}" = "success" ] || [ "${{ inputs.skip_health_check }}" = "true" ]; then
             echo "=========================================="
             echo "✅ ROLLBACK SUCCESSFUL"
             echo "=========================================="
             echo ""
             echo "The application has been rolled back to the previous version."
+            if [ "${{ needs.restore_data_volumes.result }}" = "success" ]; then
+              echo "✅ Data volumes were restored from backup"
+            else
+              echo "ℹ️  Data volumes restoration: ${{ needs.restore_data_volumes.result }}"
+            fi
             echo "A pre-rollback snapshot was created if you need to revert."
           else
             echo "=========================================="

@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -42,23 +42,100 @@ const microservices = {
     swaggerPath: '/swagger/Party/swagger.json',
     outputFile: './src/models/api/party',
   },
+  strapi: {
+    swaggerPath: '/swagger/Strapi/swagger.json',
+    outputFile: './src/models/api/strapi',
+  },
 };
 
 function generateTypesForService(serviceName, config) {
-  const swaggerUrl = `${process.env.REACT_APP_API_GATEWAY}${config.swaggerPath}`;
+  // Validate and sanitize API gateway URL to prevent command injection
+  const apiGateway = process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000';
+  
+  // Ensure the API gateway URL is a valid URL format
+  try {
+    new URL(apiGateway);
+  } catch (err) {
+    console.error(`❌ Invalid REACT_APP_API_GATEWAY URL format`);
+    return false;
+  }
+  
+  const swaggerUrl = `${apiGateway}${config.swaggerPath}`;
+  
+  // Validate the complete swagger URL to ensure swaggerPath doesn't contain malicious content
+  try {
+    new URL(swaggerUrl);
+  } catch (err) {
+    console.error(`❌ Invalid swagger URL format for service: ${serviceName}`);
+    return false;
+  }
 
   console.log(`🔄 Generating ${serviceName} API types from: ${swaggerUrl}`);
   console.log(`📁 Output file: ${config.outputFile}`);
 
   try {
-    execSync(
-      `npx swagger-typescript-api generate -p "${swaggerUrl}" -o ${config.outputFile} -n apiMap.ts --module-name-first-tag --extract-enums --axios --disableStrictSSL`,
+    // Use execFileSync with array arguments to prevent command injection
+    execFileSync(
+      'npx',
+      [
+        'swagger-typescript-api',
+        'generate',
+        '-p',
+        swaggerUrl,
+        '-o',
+        config.outputFile,
+        '-n',
+        'apiMap.ts',
+        '--module-name-first-tag',
+        '--extract-enums',
+        '--axios',
+        '--disableStrictSSL',
+      ],
       {
         stdio: 'inherit',
         cwd: path.join(__dirname, '..'),
       },
     );
 
+    // Add alias exports for Api, ContentType, HttpClient
+    const capitalizedName =
+      serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+    const apiMapPath = path.join(
+      __dirname,
+      '..',
+      'src',
+      'models',
+      'api',
+      serviceName,
+      'apiMap.ts',
+    );
+    let aliasExport = `\n// Aliased exports for unified API client\n`;
+    aliasExport += `export { Api as ${capitalizedName}Api, ContentType as ${capitalizedName}ContentType, HttpClient as ${capitalizedName}HttpClient };\n`;
+
+    // Inject secure_key interceptor into Api class
+    let secureKeyInterceptor = `\n// Injected secure_key header interceptor\n`;
+    secureKeyInterceptor += `if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {\n`;
+    secureKeyInterceptor += `  const secureKey = process.env.REACT_APP_API_SECURE_KEY;\n`;
+    secureKeyInterceptor += `  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {\n`;
+    secureKeyInterceptor += `    Api.prototype.instance.interceptors.request.use((config) => {\n`;
+    secureKeyInterceptor += `      if (!config.headers) config.headers = {};\n`;
+    secureKeyInterceptor += `      config.headers['secure_key'] = secureKey;\n`;
+    secureKeyInterceptor += `      return config;\n`;
+    secureKeyInterceptor += `    });\n`;
+    secureKeyInterceptor += `  }\n`;
+    secureKeyInterceptor += `}\n`;
+
+    try {
+      fs.appendFileSync(apiMapPath, aliasExport + secureKeyInterceptor);
+      console.log(
+        `✅ Added alias exports and secure_key interceptor to ${apiMapPath}`,
+      );
+    } catch (err) {
+      console.warn(
+        `⚠️  Could not append alias exports/interceptor to ${apiMapPath}:`,
+        err.message,
+      );
+    }
     console.log(`✅ ${serviceName} API types generated successfully!`);
     return true;
   } catch (error) {
@@ -96,16 +173,20 @@ function generateMergedApiClient() {
 `;
 
   // Import all service APIs and their types
+  // Import only aliased main types to avoid conflicts
   const imports = [];
+  const exports = [];
   const serviceNames = [];
 
   for (const serviceName of Object.keys(microservices)) {
     const capitalizedName =
       serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
     imports.push(
-      `import { Api as ${capitalizedName}Api } from './${serviceName}/apiMap';`,
+      `import { Api as ${capitalizedName}Api, ContentType as ${capitalizedName}ContentType, HttpClient as ${capitalizedName}HttpClient } from './${serviceName}/apiMap';`,
     );
-    imports.push(`export * from './${serviceName}/apiMap';`);
+    exports.push(
+      `export { ${capitalizedName}Api, ${capitalizedName}ContentType, ${capitalizedName}HttpClient } from './${serviceName}/apiMap';`,
+    );
     serviceNames.push({
       name: serviceName,
       className: `${capitalizedName}Api`,
@@ -113,8 +194,9 @@ function generateMergedApiClient() {
   }
 
   mergedContent += imports.join('\n') + '\n\n';
+  mergedContent += exports.join('\n') + '\n\n';
 
-  // Add ApiConfig import
+  // Add ApiConfig import before using it
   mergedContent += `import { ApiConfig } from './brand/apiMap';\n\n`;
 
   // Add constants and configuration
@@ -148,7 +230,57 @@ export class UnifiedApi<SecurityDataType extends unknown> {
     mergedContent += `    this.${name} = new ${className}(defaultConfig);\n`;
   }
 
-  mergedContent += `  }
+  // Add secure_key header interceptor setup
+  // This automatically adds the secure_key header from REACT_APP_API_SECURE_KEY
+  // to all API requests for backend authentication
+  mergedContent += `
+    // Setup secure_key header interceptor for all services
+    this.setupSecureKeyInterceptor();
+  }
+
+  /**
+   * Setup request interceptor to add secure_key header to all requests
+   */
+  private setupSecureKeyInterceptor() {
+    const secureKey = process.env.REACT_APP_API_SECURE_KEY;
+    
+    if (!secureKey) {
+      console.warn('REACT_APP_API_SECURE_KEY is not set. API requests may fail authentication.');
+      return;
+    }
+
+    // Add interceptor to all service instances
+    const services = [
+`;
+
+  // Add service names to the array
+  for (const { name } of serviceNames) {
+    mergedContent += `      this.${name},\n`;
+  }
+
+  mergedContent += `    ];
+
+    services.forEach((service) => {
+      if (service.instance) {
+        service.instance.interceptors.request.use(
+          (config) => {
+            // Ensure headers object exists
+            if (!config.headers) {
+              config.headers = {} as any;
+            }
+            // Add secure_key header to all requests if not already set
+            if (!config.headers['secure_key']) {
+              config.headers['secure_key'] = secureKey;
+            }
+            return config;
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+      }
+    });
+  }
 
   /**
    * Set security data for all services
@@ -201,6 +333,33 @@ export const createIdentityApi = (config?: ApiConfig) => new ${serviceNames.find
 export const createMailingApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'mailing')?.className || 'MailingApi'}(config);
 export const createMusicApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'music')?.className || 'MusicApi'}(config);
 export const createPartyApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'party')?.className || 'PartyApi'}(config);
+export const createStrapiApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'strapi')?.className || 'StrapiApi'}(config);
+
+// Legacy global secure_key header interceptor setup
+// Note: This is a legacy approach. The UnifiedApi class handles this internally.
+// This code remains for backward compatibility with any external references to microservicesClient
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? (window as any).REACT_APP_API_SECURE_KEY : undefined);
+if (__secureKey) {
+  const __servicesWithInterceptor = [
+    microservicesClient?.brand?.instance,
+    microservicesClient?.documents?.instance,
+    microservicesClient?.gear?.instance,
+    microservicesClient?.identity?.instance,
+    microservicesClient?.mailing?.instance,
+    microservicesClient?.music?.instance,
+    microservicesClient?.party?.instance,
+    microservicesClient?.strapi?.instance,
+  ];
+  __servicesWithInterceptor.forEach(instance => {
+    if (instance && instance.interceptors && instance.interceptors.request) {
+      instance.interceptors.request.use(config => {
+        if (!config.headers) config.headers = {};
+        config.headers['secure_key'] = __secureKey;
+        return config;
+      });
+    }
+  });
+}
 `;
 
   // Write the merged API file

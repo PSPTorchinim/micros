@@ -24,7 +24,7 @@ namespace Shared.Services.Database
             var port = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PORT_MONGODB");
             var user = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_USER_MONGODB");
             var password = Environment.GetEnvironmentVariable("ASPNETCORE_DATABASE_PASSWORD_MONGODB");
-            
+
             var encodedUser = Uri.EscapeDataString(user ?? "");
             var encodedPassword = Uri.EscapeDataString(password ?? "");
 
@@ -35,13 +35,13 @@ namespace Shared.Services.Database
         public static void ConfigureSqlServer<TContext>(IServiceCollection services) where TContext : DbContext
         {
             var connectionString = GetSQLConnectionString();
-            services.AddDbContext<TContext>((provider, opt) =>
+            services.AddDbContextFactory<TContext>((provider, opt) =>
             {
                 opt.UseSqlServer(connectionString, options =>
                 {
                     options.EnableRetryOnFailure(5);
                 })/*.AddInterceptors(provider.GetRequiredService<SecondLevelCacheInterceptor>())*/;
-            }, ServiceLifetime.Singleton);
+            });
         }
 
         public static void ConfigureMongoDBServer(IServiceCollection services)
@@ -96,19 +96,15 @@ namespace Shared.Services.Database
             {
                 try
                 {
-                    if (await context.Database.EnsureCreatedAsync())
-                    {
-                        logger.LogInformation("Database {DatabaseName} was created successfully", context.Database.GetDbConnection().Database);
-                        return true;
-                    }
-
-                    logger.LogInformation("Database {DatabaseName} already exists", context.Database.GetDbConnection().Database);
-                    return false;
+                    logger.LogInformation("Applying database migrations for {DatabaseName}", context.Database.GetDbConnection().Database);
+                    await context.Database.MigrateAsync();
+                    logger.LogInformation("Database migrations applied successfully for {DatabaseName}", context.Database.GetDbConnection().Database);
+                    return true;
                 }
                 catch (Exception ex)
                 {
-                    var logger = app.Services.GetRequiredService<ILogger<P>>();
-                    logger.LogWarning(ex, "Database setup failed, but continuing application startup");
+                    logger.LogError(ex, "Database migration failed for {DatabaseName}", context.Database.GetDbConnection().Database);
+                    logger.LogWarning("Continuing application startup despite migration failure");
                     return false;
                 }
             });

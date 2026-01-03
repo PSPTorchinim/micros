@@ -110,6 +110,7 @@ export interface GetUserDTO {
 export interface LoginResponseDTO {
   accessToken?: string | null;
   refreshToken?: string | null;
+  securityStamp?: string | null;
   user?: GetUserDTO;
 }
 
@@ -185,11 +186,32 @@ export interface User {
   activationCode?: string | null;
   token?: string | null;
   refreshToken?: string | null;
+  securityStamp?: string | null;
+  /** @format date-time */
+  lastPasswordChangeDate?: string | null;
   roles?: Role[] | null;
   passwords?: Password[] | null;
   blocks?: Block[] | null;
   /** @format date-time */
   createdDate?: string;
+}
+
+export interface ValidateSecurityStampRequestDTO {
+  /** @format uuid */
+  userId?: string;
+  securityStamp?: string | null;
+}
+
+export interface ValidateSecurityStampResponseDTO {
+  isValid?: boolean;
+  reason?: string | null;
+}
+
+export interface ValidateSecurityStampResponseDTOResponse {
+  success?: boolean;
+  data?: ValidateSecurityStampResponseDTO;
+  message?: string | null;
+  errors?: string[] | null;
 }
 
 import type {
@@ -198,13 +220,13 @@ import type {
   AxiosResponse,
   HeadersDefaults,
   ResponseType,
-} from 'axios';
-import axios from 'axios';
+} from "axios";
+import axios from "axios";
 
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
+  extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -221,11 +243,11 @@ export interface FullRequestParams
 
 export type RequestParams = Omit<
   FullRequestParams,
-  'body' | 'method' | 'query' | 'path'
+  "body" | "method" | "query" | "path"
 >;
 
 export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
+  extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
   securityWorker?: (
     securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
@@ -234,17 +256,17 @@ export interface ApiConfig<SecurityDataType = unknown>
 }
 
 export enum ContentType {
-  Json = 'application/json',
-  JsonApi = 'application/vnd.api+json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded',
-  Text = 'text/plain',
+  Json = "application/json",
+  JsonApi = "application/vnd.api+json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private secure?: boolean;
   private format?: ResponseType;
 
@@ -256,7 +278,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || '',
+      baseURL: axiosConfig.baseURL || "",
     });
     this.secure = secure;
     this.format = format;
@@ -290,7 +312,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === 'object' && formItem !== null) {
+    if (typeof formItem === "object" && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -328,7 +350,7 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === 'boolean' ? secure : this.secure) &&
+      ((typeof secure === "boolean" ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
@@ -337,18 +359,14 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body &&
-      body !== null &&
-      typeof body === 'object'
+      body != null && typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body &&
-      body !== null &&
-      typeof body !== 'string'
+      body != null && typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -357,7 +375,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { 'Content-Type': type } : {}),
+        ...(type ? { "Content-Type": type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -379,16 +397,16 @@ export class Api<
      * No description
      *
      * @tags Permissions
-     * @name ApiV1PermissionsList
-     * @request GET:/identity/api/v1/Permissions
+     * @name V1PermissionsList
+     * @request GET:/identity/v1/Permissions
      * @secure
      */
-    apiV1PermissionsList: (params: RequestParams = {}) =>
+    v1PermissionsList: (params: RequestParams = {}) =>
       this.request<GetPermissionsDTOIEnumerableResponse, any>({
-        path: `/identity/api/v1/Permissions`,
-        method: 'GET',
+        path: `/identity/v1/Permissions`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -396,21 +414,18 @@ export class Api<
      * No description
      *
      * @tags Permissions
-     * @name ApiV1PermissionsCreate
-     * @request POST:/identity/api/v1/Permissions
+     * @name V1PermissionsCreate
+     * @request POST:/identity/v1/Permissions
      * @secure
      */
-    apiV1PermissionsCreate: (
-      data: AddPermissionDTO,
-      params: RequestParams = {},
-    ) =>
+    v1PermissionsCreate: (data: AddPermissionDTO, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Permissions`,
-        method: 'POST',
+        path: `/identity/v1/Permissions`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -418,16 +433,16 @@ export class Api<
      * No description
      *
      * @tags Permissions
-     * @name ApiV1PermissionsDetail
-     * @request GET:/identity/api/v1/Permissions/{id}
+     * @name V1PermissionsDetail
+     * @request GET:/identity/v1/Permissions/{id}
      * @secure
      */
-    apiV1PermissionsDetail: (id: string, params: RequestParams = {}) =>
+    v1PermissionsDetail: (id: string, params: RequestParams = {}) =>
       this.request<GetPermissionDTOResponse, any>({
-        path: `/identity/api/v1/Permissions/${id}`,
-        method: 'GET',
+        path: `/identity/v1/Permissions/${id}`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -435,14 +450,14 @@ export class Api<
      * No description
      *
      * @tags Permissions
-     * @name ApiV1PermissionsHelloList
-     * @request GET:/identity/api/v1/Permissions/Hello
+     * @name V1PermissionsHelloList
+     * @request GET:/identity/v1/Permissions/Hello
      * @secure
      */
-    apiV1PermissionsHelloList: (params: RequestParams = {}) =>
+    v1PermissionsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/identity/api/v1/Permissions/Hello`,
-        method: 'GET',
+        path: `/identity/v1/Permissions/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -452,16 +467,16 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesList
-     * @request GET:/identity/api/v1/Roles
+     * @name V1RolesList
+     * @request GET:/identity/v1/Roles
      * @secure
      */
-    apiV1RolesList: (params: RequestParams = {}) =>
+    v1RolesList: (params: RequestParams = {}) =>
       this.request<RoleIEnumerableResponse, any>({
-        path: `/identity/api/v1/Roles`,
-        method: 'GET',
+        path: `/identity/v1/Roles`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -469,18 +484,18 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesCreate
-     * @request POST:/identity/api/v1/Roles
+     * @name V1RolesCreate
+     * @request POST:/identity/v1/Roles
      * @secure
      */
-    apiV1RolesCreate: (data: AddRoleRequest, params: RequestParams = {}) =>
+    v1RolesCreate: (data: AddRoleRequest, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Roles`,
-        method: 'POST',
+        path: `/identity/v1/Roles`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -488,16 +503,16 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesDetail
-     * @request GET:/identity/api/v1/Roles/{id}
+     * @name V1RolesDetail
+     * @request GET:/identity/v1/Roles/{id}
      * @secure
      */
-    apiV1RolesDetail: (id: string, params: RequestParams = {}) =>
+    v1RolesDetail: (id: string, params: RequestParams = {}) =>
       this.request<RoleResponse, any>({
-        path: `/identity/api/v1/Roles/${id}`,
-        method: 'GET',
+        path: `/identity/v1/Roles/${id}`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -505,22 +520,22 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesUpdate
-     * @request PUT:/identity/api/v1/Roles/{id}
+     * @name V1RolesUpdate
+     * @request PUT:/identity/v1/Roles/{id}
      * @secure
      */
-    apiV1RolesUpdate: (
+    v1RolesUpdate: (
       id: string,
       data: AddRoleRequest,
       params: RequestParams = {},
     ) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Roles/${id}`,
-        method: 'PUT',
+        path: `/identity/v1/Roles/${id}`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -528,16 +543,16 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesDelete
-     * @request DELETE:/identity/api/v1/Roles/{id}
+     * @name V1RolesDelete
+     * @request DELETE:/identity/v1/Roles/{id}
      * @secure
      */
-    apiV1RolesDelete: (id: string, params: RequestParams = {}) =>
+    v1RolesDelete: (id: string, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Roles/${id}`,
-        method: 'DELETE',
+        path: `/identity/v1/Roles/${id}`,
+        method: "DELETE",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -545,14 +560,14 @@ export class Api<
      * No description
      *
      * @tags Roles
-     * @name ApiV1RolesHelloList
-     * @request GET:/identity/api/v1/Roles/Hello
+     * @name V1RolesHelloList
+     * @request GET:/identity/v1/Roles/Hello
      * @secure
      */
-    apiV1RolesHelloList: (params: RequestParams = {}) =>
+    v1RolesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/identity/api/v1/Roles/Hello`,
-        method: 'GET',
+        path: `/identity/v1/Roles/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -562,21 +577,21 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersLoginCreate
-     * @request POST:/identity/api/v1/Users/Login
+     * @name V1UsersLoginCreate
+     * @request POST:/identity/v1/Users/Login
      * @secure
      */
-    apiV1UsersLoginCreate: (
+    v1UsersLoginCreate: (
       data: LoginUserRequestDTO,
       params: RequestParams = {},
     ) =>
       this.request<LoginResponseDTOResponse, any>({
-        path: `/identity/api/v1/Users/Login`,
-        method: 'POST',
+        path: `/identity/v1/Users/Login`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -584,21 +599,21 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersRegisterCreate
-     * @request POST:/identity/api/v1/Users/Register
+     * @name V1UsersRegisterCreate
+     * @request POST:/identity/v1/Users/Register
      * @secure
      */
-    apiV1UsersRegisterCreate: (
+    v1UsersRegisterCreate: (
       data: RegisterUserRequestDTO,
       params: RequestParams = {},
     ) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Users/Register`,
-        method: 'POST',
+        path: `/identity/v1/Users/Register`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -606,16 +621,16 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersMeList
-     * @request GET:/identity/api/v1/Users/Me
+     * @name V1UsersMeList
+     * @request GET:/identity/v1/Users/Me
      * @secure
      */
-    apiV1UsersMeList: (params: RequestParams = {}) =>
+    v1UsersMeList: (params: RequestParams = {}) =>
       this.request<LoginResponseDTOResponse, any>({
-        path: `/identity/api/v1/Users/Me`,
-        method: 'GET',
+        path: `/identity/v1/Users/Me`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -623,16 +638,16 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersRefreshTokenList
-     * @request GET:/identity/api/v1/Users/RefreshToken
+     * @name V1UsersRefreshTokenList
+     * @request GET:/identity/v1/Users/RefreshToken
      * @secure
      */
-    apiV1UsersRefreshTokenList: (params: RequestParams = {}) =>
+    v1UsersRefreshTokenList: (params: RequestParams = {}) =>
       this.request<LoginResponseDTOResponse, any>({
-        path: `/identity/api/v1/Users/RefreshToken`,
-        method: 'GET',
+        path: `/identity/v1/Users/RefreshToken`,
+        method: "GET",
         secure: true,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -640,18 +655,18 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersBlockUpdate
-     * @request PUT:/identity/api/v1/Users/Block
+     * @name V1UsersBlockUpdate
+     * @request PUT:/identity/v1/Users/Block
      * @secure
      */
-    apiV1UsersBlockUpdate: (data: BlockUserDTO, params: RequestParams = {}) =>
+    v1UsersBlockUpdate: (data: BlockUserDTO, params: RequestParams = {}) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Users/Block`,
-        method: 'PUT',
+        path: `/identity/v1/Users/Block`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -659,21 +674,21 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersChangePasswordUpdate
-     * @request PUT:/identity/api/v1/Users/ChangePassword
+     * @name V1UsersChangePasswordUpdate
+     * @request PUT:/identity/v1/Users/ChangePassword
      * @secure
      */
-    apiV1UsersChangePasswordUpdate: (
+    v1UsersChangePasswordUpdate: (
       data: ChangePasswordRequestDTO,
       params: RequestParams = {},
     ) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Users/ChangePassword`,
-        method: 'PUT',
+        path: `/identity/v1/Users/ChangePassword`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -681,21 +696,21 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersForgotPasswordUpdate
-     * @request PUT:/identity/api/v1/Users/ForgotPassword
+     * @name V1UsersForgotPasswordUpdate
+     * @request PUT:/identity/v1/Users/ForgotPassword
      * @secure
      */
-    apiV1UsersForgotPasswordUpdate: (
+    v1UsersForgotPasswordUpdate: (
       data: ForgotPasswordRequestDTO,
       params: RequestParams = {},
     ) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Users/ForgotPassword`,
-        method: 'PUT',
+        path: `/identity/v1/Users/ForgotPassword`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -703,21 +718,21 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersActivateAccountUpdate
-     * @request PUT:/identity/api/v1/Users/ActivateAccount
+     * @name V1UsersActivateAccountUpdate
+     * @request PUT:/identity/v1/Users/ActivateAccount
      * @secure
      */
-    apiV1UsersActivateAccountUpdate: (
+    v1UsersActivateAccountUpdate: (
       data: ActivateAccountRequestDTO,
       params: RequestParams = {},
     ) =>
       this.request<BooleanResponse, any>({
-        path: `/identity/api/v1/Users/ActivateAccount`,
-        method: 'PUT',
+        path: `/identity/v1/Users/ActivateAccount`,
+        method: "PUT",
         body: data,
         secure: true,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -725,16 +740,53 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name ApiV1UsersHelloList
-     * @request GET:/identity/api/v1/Users/Hello
+     * @name V1UsersValidateSecurityStampCreate
+     * @request POST:/identity/v1/Users/ValidateSecurityStamp
      * @secure
      */
-    apiV1UsersHelloList: (params: RequestParams = {}) =>
+    v1UsersValidateSecurityStampCreate: (
+      data: ValidateSecurityStampRequestDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<ValidateSecurityStampResponseDTOResponse, any>({
+        path: `/identity/v1/Users/ValidateSecurityStamp`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Users
+     * @name V1UsersHelloList
+     * @request GET:/identity/v1/Users/Hello
+     * @secure
+     */
+    v1UsersHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/identity/api/v1/Users/Hello`,
-        method: 'GET',
+        path: `/identity/v1/Users/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
   };
+}
+
+// Aliased exports for unified API client
+export { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as IdentityHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
 }

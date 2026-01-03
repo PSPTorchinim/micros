@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import type { Page } from '../models/strapi/strapiMap';
-import { strapiAPI } from '../services/strapi-api';
+import './PageComponent.css';
+import type { Page } from '../models/api/strapi/apiMap';
+import { StrapiService } from '../services/strapi-service';
 import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';
 
@@ -17,10 +18,17 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
         setPage(null);
         return;
       }
-      const fetchedPage = await strapiAPI.fetchPageById(pageId);
+      const fetchedPage = await StrapiService.fetchPageById(pageId);
       setPage(fetchedPage || null);
     })();
   }, [pageId]);
+
+  // Update document title when page loads
+  useEffect(() => {
+    if (page?.Title) {
+      document.title = page.Title;
+    }
+  }, [page]);
 
   if (page === null) {
     return <p>Page not found.</p>;
@@ -30,7 +38,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
   }
 
   return (
-    <div>
+    <div className="page-component-wrapper">
       <RenderTemplate
         template={page?.template?.documentId}
         pageTitle={page?.Title}

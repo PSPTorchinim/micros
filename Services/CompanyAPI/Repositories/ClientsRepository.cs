@@ -1,6 +1,6 @@
 using CompanyAPI.Data;
 using CompanyAPI.Entities;
-
+using Microsoft.EntityFrameworkCore;
 using Shared.Repositories;
 namespace CompanyAPI.Repositories
 {
@@ -11,7 +11,7 @@ namespace CompanyAPI.Repositories
 
     public class ClientsRepository : Repository<Client, BrandContext>, IClientsRepository
     {
-        public ClientsRepository(BrandContext context, ILogger<IClientsRepository> logger) : base(context, logger)
+        public ClientsRepository(IDbContextFactory<BrandContext> context, ILogger<IClientsRepository> logger) : base(context, logger)
         {
         }
     }

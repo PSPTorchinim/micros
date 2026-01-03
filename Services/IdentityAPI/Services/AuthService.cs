@@ -106,7 +106,8 @@ namespace IdentityAPI.Services
                 var claims = new List<Claim>
                 {
                     new Claim("Id", user.Id.ToString()),
-                    new Claim("Email", user.Email ?? string.Empty)
+                    new Claim("Email", user.Email ?? string.Empty),
+                    new Claim("SecurityStamp", user.SecurityStamp ?? string.Empty)
                 };
 
                 // Zakładam, że Permission ma właściwość Name (string)
@@ -181,7 +182,8 @@ namespace IdentityAPI.Services
                 var tokenResponse = new LoginResponseDTO
                 {
                     AccessToken = GenerateToken(user, isRefresh: false),
-                    RefreshToken = GenerateToken(user, isRefresh: true)
+                    RefreshToken = GenerateToken(user, isRefresh: true),
+                    SecurityStamp = user.SecurityStamp ?? string.Empty
                 };
                 _logger.LogInformation("Tokens generated for user with Id: {UserId}", user.Id);
                 return tokenResponse;

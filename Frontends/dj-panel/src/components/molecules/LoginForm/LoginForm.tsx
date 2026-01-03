@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './LoginForm.css';
@@ -52,9 +53,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
       </Button>
       <p className="login-form-forgot">
         Forgot your password?{' '}
-        <a href="#/users/forgot-password" className="login-form-link">
+        <Link to="/users/forgot-password" className="login-form-link">
           Reset Password
-        </a>
+        </Link>
       </p>
     </form>
   );

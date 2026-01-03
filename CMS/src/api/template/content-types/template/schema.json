@@ -28,6 +28,7 @@
       "type": "dynamiczone",
       "components": [
         "image-slider-ref.image-slider-ref",
+        "article-ref.article-ref",
         "article-block-ref.article-block-ref",
         "steps-container-ref.steps-container-ref",
         "cta-ref.cta-ref",

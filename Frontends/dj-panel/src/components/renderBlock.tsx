@@ -1,5 +1,7 @@
 import React from 'react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import './renderBlock.css';
 import {
   HeroBlock,
   ImageSliderBlock,
@@ -12,7 +14,7 @@ import {
   ContactInfoBlock,
   LoginBlock,
   ForgotPasswordBlock,
-} from './content-blocks';
+} from './molecules';
 import type {
   ContentBlock,
   ArticleContentBlock,
@@ -36,10 +38,21 @@ export function renderBlock(
       return <ImageSliderBlock key={index} {...block} />;
     case 'article-block':
       return <ArticleBlock key={index} {...block} />;
-    case 'steps-container':
-      return <StepsContainerBlock key={index} {...block} />;
-    case 'cta':
-      return <CTABlock key={index} {...block} />;
+    case 'steps-container': {
+      // Type assertion for blocks with heading
+      const { heading = '', ...rest } = block as ContentBlock & {
+        heading?: string;
+      };
+      return <StepsContainerBlock key={index} heading={heading} {...rest} />;
+    }
+    case 'cta': {
+      // Type assertion for blocks with Label and url
+      const { Label, url, ...rest } = block as ContentBlock & {
+        Label: string;
+        url: string;
+      };
+      return <CTABlock key={index} Label={Label} url={url} {...rest} />;
+    }
     case 'feature-section':
       return <FeatureBlock key={index} {...block} />;
     case 'contact-section':
@@ -67,41 +80,20 @@ export function renderBlock(
         typeof articleData.coverUrl === 'string' ? articleData.coverUrl : '';
       const body = typeof articleData.Body === 'string' ? articleData.Body : '';
 
-      // Convert markdown to HTML if body contains markdown
-      const htmlBody = body ? marked.parse(body) : '';
+      // Convert markdown to HTML and sanitize to prevent XSS attacks
+      const htmlBody = body ? DOMPurify.sanitize(marked.parse(body)) : '';
 
       return (
         <div key={index} className="article-detail">
           {coverUrl && (
-            <img
-              src={coverUrl}
-              alt={title}
-              style={{
-                width: '100%',
-                maxHeight: '400px',
-                objectFit: 'cover',
-                borderRadius: '8px',
-                marginBottom: '24px',
-              }}
-            />
+            <img src={coverUrl} alt={title} className="article-detail__cover" />
           )}
-          <h1>{title}</h1>
-          {summary && (
-            <p
-              style={{
-                fontSize: '1.2em',
-                fontStyle: 'italic',
-                marginBottom: '24px',
-                color: '#666',
-              }}
-            >
-              {summary}
-            </p>
-          )}
+          <h1 className="article-detail__title">{title}</h1>
+          {summary && <p className="article-detail__summary">{summary}</p>}
           {htmlBody && (
             <div
+              className="article-detail__body"
               dangerouslySetInnerHTML={{ __html: htmlBody }}
-              style={{ lineHeight: '1.6' }}
             />
           )}
         </div>
@@ -118,10 +110,22 @@ export function renderBlock(
       return <ImageSliderBlock key={index} {...block} />;
     case 'articles.article-block':
       return <ArticleBlock key={index} {...block} />;
-    case 'steps-containers.steps-container':
-      return <StepsContainerBlock key={index} {...block} />;
-    case 'ctas.cta':
-      return <CTABlock key={index} {...block} />;
+    case 'steps-containers.steps-container': {
+      // Type assertion to ensure heading exists
+      const { heading = '', ...rest } = block as typeof block & {
+        heading?: string;
+      };
+      return <StepsContainerBlock key={index} heading={heading} {...rest} />;
+    }
+    case 'ctas.cta': {
+      // Type assertion to ensure Label and url exist
+      const {
+        Label = '',
+        url = '',
+        ...rest
+      } = block as typeof block & { Label?: string; url?: string };
+      return <CTABlock key={index} Label={Label} url={url} {...rest} />;
+    }
     case 'feature-sections.feature-section':
       return <FeatureBlock key={index} {...block} />;
     case 'contact-sections.contact-section':

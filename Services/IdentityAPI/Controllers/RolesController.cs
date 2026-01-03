@@ -3,6 +3,7 @@ using IdentityAPI.Entities;
 using IdentityAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
+using Shared.Helpers;
 using Shared.Services.App;
 using Shared.Services.Cache;
 
@@ -69,16 +70,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("PostRoleV1 called with data {@Request} at {Time}", request, DateTime.UtcNow);
+                var sanitizedRoleName = StringHelper.SanitizeForLog(request?.Name ?? string.Empty);
+                _logger.LogInformation("PostRoleV1 called for role {RoleName} at {Time}", sanitizedRoleName, DateTime.UtcNow);
                 try
                 {
                     var result = await _rolesService.AddRole(request);
-                    _logger.LogInformation("PostRoleV1 succeeded for role {RoleName} at {Time}", request?.Name, DateTime.UtcNow);
+                    _logger.LogInformation("PostRoleV1 succeeded for role {RoleName} at {Time}", sanitizedRoleName, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "PostRoleV1 failed for role {RoleName} at {Time}", request?.Name, DateTime.UtcNow);
+                    _logger.LogError(ex, "PostRoleV1 failed for role {RoleName} at {Time}", sanitizedRoleName, DateTime.UtcNow);
                     throw;
                 }
             });
@@ -91,16 +93,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("PutRoleV1 called for ID {Id} with data {@Request} at {Time}", id, request, DateTime.UtcNow);
+                var sanitizedRoleName = StringHelper.SanitizeForLog(request?.Name ?? string.Empty);
+                _logger.LogInformation("PutRoleV1 called for ID {Id} with role name {RoleName} at {Time}", id, sanitizedRoleName, DateTime.UtcNow);
                 try
                 {
                     var result = await _rolesService.EditRole(id, request);
-                    _logger.LogInformation("PutRoleV1 succeeded for ID {Id} at {Time}", id, DateTime.UtcNow);
+                    _logger.LogInformation("PutRoleV1 succeeded for ID {Id} with role name {RoleName} at {Time}", id, sanitizedRoleName, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "PutRoleV1 failed for ID {Id} at {Time}", id, DateTime.UtcNow);
+                    _logger.LogError(ex, "PutRoleV1 failed for ID {Id} with role name {RoleName} at {Time}", id, sanitizedRoleName, DateTime.UtcNow);
                     throw;
                 }
             });

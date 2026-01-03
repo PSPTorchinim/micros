@@ -29,14 +29,15 @@
   --dl-radius-radius-buttonradius: 4px;
 
   /* Light Mode Colors */
-  --dl-color-theme-primary1: #ed2a4f;
-  --dl-color-theme-primary2: #698a93;
-  --dl-color-theme-accent1: #ccc7d6;
-  --dl-color-theme-accent2: #aea7bf;
-  --dl-color-theme-secondary1: #e6ebe0;
-  --dl-color-theme-secondary2: #d9ded3;
+  --dl-color-theme-primary1: #2563eb;
+  --dl-color-theme-primary2: #1e40af;
+  --dl-color-theme-accent1: #dbeafe;
+  --dl-color-theme-accent2: #93c5fd;
+  --dl-color-theme-secondary1: #ffffff;
+  --dl-color-theme-secondary2: #f9fafb;
   --dl-color-theme-neutral-dark: #000000;
   --dl-color-theme-neutral-light: #ffffff;
+  --dl-color-theme-button-text: #ffffff;
   --dl-color-theme-background: #ffffff;
   --dl-color-theme-surface: #f5f5f5;
   --dl-color-theme-text-primary: #1a1a1a;
@@ -47,14 +48,15 @@
 
 /* Dark Mode Colors */
 [data-theme='dark'] {
-  --dl-color-theme-primary1: #ff4365;
-  --dl-color-theme-primary2: #7fa9b3;
-  --dl-color-theme-accent1: #433e52;
-  --dl-color-theme-accent2: #5a5269;
-  --dl-color-theme-secondary1: #2a2f28;
-  --dl-color-theme-secondary2: #363b33;
+  --dl-color-theme-primary1: #3b82f6;
+  --dl-color-theme-primary2: #60a5fa;
+  --dl-color-theme-accent1: #1e3a8a;
+  --dl-color-theme-accent2: #1e40af;
+  --dl-color-theme-secondary1: #f9fafb;
+  --dl-color-theme-secondary2: #e5e7eb;
   --dl-color-theme-neutral-dark: #ffffff;
   --dl-color-theme-neutral-light: #1a1a1a;
+  --dl-color-theme-button-text: #ffffff;
   --dl-color-theme-background: #121212;
   --dl-color-theme-surface: #1e1e1e;
   --dl-color-theme-text-primary: #e0e0e0;

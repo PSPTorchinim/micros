@@ -29,20 +29,20 @@ namespace Shared.Repositories
         {
             // Register the base repository implementation
             services.AddScoped<TImplementation>();
-            
+
             // Register the interface with CachedRepository decorator
             services.AddScoped<TInterface>(provider =>
             {
                 var innerRepository = provider.GetRequiredService<TImplementation>();
                 var cacheService = provider.GetRequiredService<ICacheService>();
                 var logger = provider.GetRequiredService<ILogger<CachedRepository<TEntity, TContext>>>();
-                
+
                 return (TInterface)(object)new CachedRepository<TEntity, TContext>(
                     innerRepository,
                     cacheService,
                     logger);
             });
-            
+
             return services;
         }
 
@@ -61,23 +61,23 @@ namespace Shared.Repositories
         {
             // Register the base repository
             services.AddScoped<Repository<TEntity, TContext>>();
-            
+
             // Register IRepository<TEntity> with CachedRepository decorator
             services.AddScoped<IRepository<TEntity>>(provider =>
             {
-                var context = provider.GetRequiredService<TContext>();
+                var factory = provider.GetRequiredService<IDbContextFactory<TContext>>();
                 var repositoryLogger = provider.GetRequiredService<ILogger<IRepository<TEntity>>>();
-                var innerRepository = new Repository<TEntity, TContext>(context, repositoryLogger);
-                
+                var innerRepository = new Repository<TEntity, TContext>(factory, repositoryLogger);
+
                 var cacheService = provider.GetRequiredService<ICacheService>();
                 var cachedLogger = provider.GetRequiredService<ILogger<CachedRepository<TEntity, TContext>>>();
-                
+
                 return new CachedRepository<TEntity, TContext>(
                     innerRepository,
                     cacheService,
                     cachedLogger);
             });
-            
+
             return services;
         }
     }

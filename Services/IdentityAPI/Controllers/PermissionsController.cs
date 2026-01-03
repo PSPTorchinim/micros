@@ -3,6 +3,7 @@ using IdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
+using Shared.Helpers;
 using Shared.Services.App;
 
 namespace IdentityAPI.Controllers
@@ -67,16 +68,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("PostV1 called: Creating permission with data {@Request} at {Time}", request, DateTime.UtcNow);
+                var sanitizedPermissionName = StringHelper.SanitizeForLog(request?.Name ?? string.Empty);
+                _logger.LogInformation("PostV1 called for permission {PermissionName} at {Time}", sanitizedPermissionName, DateTime.UtcNow);
                 try
                 {
                     var result = await _permissionsService.AddPermission(request);
-                    _logger.LogInformation("PostV1 succeeded for permission {PermissionName} at {Time}", request?.Name, DateTime.UtcNow);
+                    _logger.LogInformation("PostV1 succeeded for permission {PermissionName} at {Time}", sanitizedPermissionName, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "PostV1 failed for permission {PermissionName} at {Time}", request?.Name, DateTime.UtcNow);
+                    _logger.LogError(ex, "PostV1 failed for permission {PermissionName} at {Time}", sanitizedPermissionName, DateTime.UtcNow);
                     throw;
                 }
             });

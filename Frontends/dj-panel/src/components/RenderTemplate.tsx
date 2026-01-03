@@ -1,6 +1,6 @@
 // components/RenderTemplate.tsx
 import React from 'react';
-import { strapiAPI } from '../services/strapi-api';
+import { StrapiService } from '../services/strapi-service';
 import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
@@ -48,9 +48,9 @@ export const RenderTemplate: React.FC<Props> = ({
 
         // U Ciebie istnieje getTemplateById (po documentId) — ale dodaliśmy też getTemplateByDocumentId
         // Jeśli masz tylko getTemplateById, możesz go tu użyć zamiast:
-        const t = (await strapiAPI.getTemplateByDocumentId)
-          ? await strapiAPI.getTemplateByDocumentId(template)
-          : await strapiAPI.getTemplateById(template);
+        const t = (await StrapiService.getTemplateByDocumentId)
+          ? await StrapiService.getTemplateByDocumentId(template)
+          : await StrapiService.getTemplateById(template);
 
         if (!mounted) return;
         setTpl(t ?? null);
@@ -82,15 +82,22 @@ export const RenderTemplate: React.FC<Props> = ({
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
-          const loginBlock = await strapiAPI.getLoginBlockSingleton();
-          if (mounted && loginBlock) {
-            setBlocks([
-              { __kind: 'login-block', ...loginBlock } as ContentBlock,
-            ]);
+          const loginBlock = await StrapiService.getLoginBlockSingleton();
+          if (mounted) {
+            if (loginBlock) {
+              setBlocks([
+                { __kind: 'login-block', ...loginBlock } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
-          if (mounted) setBlocks([]);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
         }
         return;
       }
@@ -98,18 +105,25 @@ export const RenderTemplate: React.FC<Props> = ({
       if (templateType === 'ForgotPassword') {
         try {
           const forgotPasswordBlock =
-            await strapiAPI.getForgotPasswordBlockSingleton();
-          if (mounted && forgotPasswordBlock) {
-            setBlocks([
-              {
-                __kind: 'forgot-password-block',
-                ...forgotPasswordBlock,
-              } as ContentBlock,
-            ]);
+            await StrapiService.getForgotPasswordBlockSingleton();
+          if (mounted) {
+            if (forgotPasswordBlock) {
+              setBlocks([
+                {
+                  __kind: 'forgot-password-block',
+                  ...forgotPasswordBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
-          if (mounted) setBlocks([]);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
         }
         return;
       }
@@ -131,13 +145,22 @@ export const RenderTemplate: React.FC<Props> = ({
         pageTitle
       ) {
         try {
-          const article = await strapiAPI.getArticleByTitle(pageTitle);
-          if (mounted && article) {
-            setBlocks([{ __kind: 'article', ...article } as ContentBlock]);
-            return;
+          const article = await StrapiService.getArticleByTitle(pageTitle);
+          if (mounted) {
+            if (article) {
+              setBlocks([{ __kind: 'article', ...article } as ContentBlock]);
+            } else {
+              setBlocks([]);
+            }
           }
+          return;
         } catch (e) {
           console.error('Error fetching article by title:', e);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
+          return;
         }
       }
 
@@ -158,7 +181,7 @@ export const RenderTemplate: React.FC<Props> = ({
   }, [tpl, populateDeep, pageTitle]);
 
   return (
-    <div>
+    <div className="render-template-wrapper">
       {loading && <ContentSkeleton type="block" count={2} />}
       {!loading && error && (
         <div

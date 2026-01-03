@@ -6,6 +6,7 @@ namespace IdentityAPI.DTO.User
     {
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
+        public string SecurityStamp { get; set; }
         public GetUserDTO User { get; set; }
     }
 }

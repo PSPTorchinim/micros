@@ -101,7 +101,8 @@ module.exports = (_env, argv = {}) => {
       //   minify: false,
       // }),
       new webpack.DefinePlugin({
-        'process.env': JSON.stringify(process.env),
+        'process.env.REACT_APP_API_SECURE_KEY': JSON.stringify(process.env.REACT_APP_API_SECURE_KEY),
+        'process.env.REACT_APP_API_GATEWAY': JSON.stringify(process.env.REACT_APP_API_GATEWAY),
         'typeof window': JSON.stringify('object'),
       }),
       new CopyWebpackPlugin({

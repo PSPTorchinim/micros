@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shared.Data.Models;
+using Shared.Helpers;
 using System.Net;
 
 public class ExceptionMiddleware
@@ -17,7 +18,9 @@ public class ExceptionMiddleware
 
     public async Task InvokeAsync(HttpContext httpContext)
     {
-        _logger.LogInformation("Handling request: {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+        _logger.LogInformation("Handling request: {Method} {Path}", 
+            StringHelper.SanitizeForLog(httpContext.Request.Method), 
+            StringHelper.SanitizeForLog(httpContext.Request.Path));
         try
         {
             await _next(httpContext);
@@ -35,9 +38,10 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        _logger.LogError("Returning Internal Server Error response: {Message}", exception.Message);
+        _logger.LogError("Returning Internal Server Error response");
 
-        var response = new Response<string>("Internal Server Error", new List<string> { exception.Message });
+        // Do not expose exception details to client for security reasons
+        var response = new Response<string>("Internal Server Error", new List<string> { "An unexpected error occurred. Please contact support if the issue persists." });
 
         return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
     }

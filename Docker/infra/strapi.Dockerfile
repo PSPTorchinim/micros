@@ -24,23 +24,26 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=1337
 
-# Install build dependencies only once for cache efficiency
+# Install build dependencies in single layer
 # hadolint ignore=DL3018
 RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 
+# Copy package files first for better caching
+COPY CMS/package*.json ./
+
+RUN --mount=type=cache,target=/root/.npm \
+  npm install --prefer-offline --no-audit --include=dev
+
 # Copy app source (after deps for better cache)
 COPY CMS/ ./
-RUN npm install
 
-# Build the app
-RUN npm run build
-RUN npm cache clean --force
-
-# Remove unnecessary files to reduce image size
-RUN rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github
-RUN find /app -type d -name "__tests__" -exec rm -rf {} +
-RUN find /app -type f -name "*.md" -delete
-RUN chmod +x docker-entrypoint.sh
+# Build the app and clean up in single layer
+RUN npm run build && \
+	npm cache clean --force && \
+	rm -rf /app/node_modules/.cache /app/tests /app/test /app/docs /app/.github && \
+	find /app -type d -name "__tests__" -exec rm -rf {} + 2>/dev/null || true && \
+	find /app -type f -name "*.md" -delete && \
+	chmod +x docker-entrypoint.sh
 
 # --- Stage 2: Runtime ---
 FROM node:25-alpine AS runtime
@@ -78,7 +81,7 @@ ENV DATABASE_CLIENT=$CMS_DATABASE_CLIENT \
     HOST=0.0.0.0 \
     PORT=1337
 
-# Install only runtime dependencies
+# Install only runtime dependencies in single layer
 # hadolint ignore=DL3018
 RUN apk add --no-cache libc6-compat vips wget netcat-openbsd
 
@@ -89,9 +92,9 @@ COPY --from=builder /app .
 # hadolint ignore=DL3002
 USER root
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=15s --start-period=180s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider --timeout=10 http://localhost:1337/api/health || exit 1
+# Optimized health check - reduced start period for faster deployment
+HEALTHCHECK --interval=15s --timeout=10s --start-period=60s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider --timeout=8 http://localhost:1337/api/health || exit 1
 
 EXPOSE 1337
 ENTRYPOINT ["./docker-entrypoint.sh"]

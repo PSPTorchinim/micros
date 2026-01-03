@@ -4,6 +4,7 @@ using IdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
+using Shared.Helpers;
 using Shared.Services.App;
 
 namespace IdentityAPI.Controllers
@@ -24,16 +25,16 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("LoginV1 called for user {Email} at {Time}", loginUser?.Email, DateTime.UtcNow);
+                _logger.LogInformation("LoginV1 called at {Time}", DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.Login(loginUser);
-                    _logger.LogInformation("LoginV1 succeeded for user {Email} at {Time}", loginUser?.Email, DateTime.UtcNow);
+                    _logger.LogInformation("LoginV1 succeeded at {Time}", DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "LoginV1 failed for user {Email} at {Time}", loginUser?.Email, DateTime.UtcNow);
+                    _logger.LogError(ex, "LoginV1 failed at {Time}", DateTime.UtcNow);
                     throw;
                 }
             });
@@ -46,16 +47,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("RegisterV1 called for user {Username} at {Time}", register?.Username, DateTime.UtcNow);
+                var sanitizedUsername = StringHelper.SanitizeForLog(register?.Username ?? string.Empty);
+                _logger.LogInformation("RegisterV1 called for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.Register(register);
-                    _logger.LogInformation("RegisterV1 succeeded for user {Username} at {Time}", register?.Username, DateTime.UtcNow);
+                    _logger.LogInformation("RegisterV1 succeeded for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "RegisterV1 failed for user {Username} at {Time}", register?.Username, DateTime.UtcNow);
+                    _logger.LogError(ex, "RegisterV1 failed for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                     throw;
                 }
             });
@@ -110,16 +112,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("BlockUserV1 called for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                var sanitizedUserId = StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty);
+                _logger.LogInformation("BlockUserV1 called for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.BlockUser(request);
-                    _logger.LogInformation("BlockUserV1 succeeded for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    _logger.LogInformation("BlockUserV1 succeeded for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "BlockUserV1 failed for user {UserId} at {Time}", request?.UserId, DateTime.UtcNow);
+                    _logger.LogError(ex, "BlockUserV1 failed for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                     throw;
                 }
             });
@@ -131,16 +134,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("ChangePasswordV1 called for user at {Time}", DateTime.UtcNow);
+                _logger.LogInformation("🔐 [API] ChangePasswordV1 endpoint called | Timestamp: {Time}", DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ChangePassword(request);
-                    _logger.LogInformation("ChangePasswordV1 succeeded for user at {Time}", DateTime.UtcNow);
+                    _logger.LogInformation("✓ [API] ChangePasswordV1 completed successfully | Timestamp: {Time}", DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ChangePasswordV1 failed for user at {Time}", DateTime.UtcNow);
+                    _logger.LogError(ex, "❌ [API] ChangePasswordV1 failed | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
@@ -153,16 +157,19 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             { 
-                _logger.LogInformation("ForgotPasswordV1 called for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                _logger.LogInformation("🔐 [API] ForgotPasswordV1 endpoint called | Email: {Email} | Timestamp: {Time}", 
+                    StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ForgotPassword(request);
-                    _logger.LogInformation("ForgotPasswordV1 succeeded for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogInformation("✓ [API] ForgotPasswordV1 completed successfully | Email: {Email} | Timestamp: {Time}", 
+                        StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ForgotPasswordV1 failed for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogError(ex, "❌ [API] ForgotPasswordV1 failed | Email: {Email} | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
@@ -174,16 +181,41 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             { 
-                _logger.LogInformation("ActivateAccountV1 called for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                _logger.LogInformation("ActivateAccountV1 called for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ActivateAccount(request);
-                    _logger.LogInformation("ActivateAccountV1 succeeded for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogInformation("ActivateAccountV1 succeeded for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ActivateAccountV1 failed for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogError(ex, "ActivateAccountV1 failed for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("ValidateSecurityStamp")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<ValidateSecurityStampResponseDTO>))]
+        public async Task<IActionResult> ValidateSecurityStampV1(ValidateSecurityStampRequestDTO request)
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("🔐 [API] ValidateSecurityStampV1 endpoint called | UserId: {UserId} | Timestamp: {Time}", 
+                    StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), DateTime.UtcNow);
+                try
+                {
+                    var result = await _usersService.ValidateSecurityStamp(request);
+                    _logger.LogInformation("✓ [API] ValidateSecurityStampV1 completed | UserId: {UserId} | IsValid: {IsValid} | Timestamp: {Time}", 
+                        StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), result?.IsValid, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ [API] ValidateSecurityStampV1 failed | UserId: {UserId} | Timestamp: {Time} | Exception: {ExceptionType}", 
+                        StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
