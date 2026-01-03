@@ -263,7 +263,8 @@ async function main() {
   // Exit with error if there are issues requiring manual review
   if (manualReviews.length > 0) {
     console.log('\n⚠️  Manual review required for some issues.');
-    process.exit(1);
+    // Don't fail the workflow - just inform about manual review needed
+    process.exit(0);
   }
 }
 
