@@ -98,12 +98,12 @@ namespace IdentityAPI.Controllers
                 try
                 {
                     var result = await _rolesService.EditRole(id, request);
-                    _logger.LogInformation("PutRoleV1 succeeded for ID {Id} at {Time}", id, DateTime.UtcNow);
+                    _logger.LogInformation("PutRoleV1 succeeded for ID {Id} with role name {RoleName} at {Time}", id, sanitizedRoleName, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "PutRoleV1 failed for ID {Id} at {Time}", id, DateTime.UtcNow);
+                    _logger.LogError(ex, "PutRoleV1 failed for ID {Id} with role name {RoleName} at {Time}", id, sanitizedRoleName, DateTime.UtcNow);
                     throw;
                 }
             });
