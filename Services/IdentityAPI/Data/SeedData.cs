@@ -71,7 +71,7 @@ namespace IdentityAPI.Data
                 {
                     Email = email,
                     Passwords = new List<Password>() {
-                        new Password() { Value = password.computeHash() }
+                        new Password() { Value = password.computeHash(12) } // Use BCrypt work factor 12
                     },
                     Activated = true,
                     ActivationCode = StringHelper.GenerateRandomPassword(5),
