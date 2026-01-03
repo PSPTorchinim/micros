@@ -130,12 +130,12 @@ jobs:
           set -e
           
           if [ -f codeql-report.md ]; then
-            echo "report_generated=true" >> $GITHUB_OUTPUT
+            echo "report_generated=true" >> "$GITHUB_OUTPUT"
             echo "Report generated successfully (exit code: $EXIT_CODE)"
           else
-            echo "report_generated=false" >> $GITHUB_OUTPUT
+            echo "report_generated=false" >> "$GITHUB_OUTPUT"
             echo "No report generated (exit code: $EXIT_CODE)"
-            if [ $EXIT_CODE -ne 0 ]; then
+            if [ "$EXIT_CODE" -ne 0 ]; then
               echo "::warning::CodeQL auto-fix script exited with code $EXIT_CODE"
             fi
           fi
@@ -204,10 +204,10 @@ jobs:
         run: |
           # Check if any files were modified by potential auto-fixes
           if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected that can be committed"
           else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "No automatic changes to commit"
           fi
 
