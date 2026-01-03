@@ -25,7 +25,7 @@ export const ProfileBlock: React.FC<ProfileBlockProps> = ({
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch fresh user data from API
         const response = await usersService.GetMe();
         if (response.success && response.data?.user) {
@@ -62,7 +62,7 @@ export const ProfileBlock: React.FC<ProfileBlockProps> = ({
     <div className="profile-block-container" style={customStyles}>
       <div className="profile-block-card">
         <h1 className="profile-block-title">{title}</h1>
-        
+
         <div className="profile-block-content">
           <div className="profile-block-field">
             <label className="profile-block-label">User ID</label>

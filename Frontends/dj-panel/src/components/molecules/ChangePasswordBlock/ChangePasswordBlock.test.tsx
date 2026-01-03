@@ -43,9 +43,7 @@ describe('ChangePasswordBlock Component', () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^new password$/i)).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/confirm new password/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /change password/i }),
     ).toBeInTheDocument();
