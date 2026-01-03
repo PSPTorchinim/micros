@@ -1,3 +1,4 @@
+import { SHA256 } from 'crypto-js';
 import { microservicesClient } from '../models/api';
 import {
   BooleanResponse,
