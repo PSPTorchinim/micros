@@ -116,3 +116,7 @@ dist
 .pnp.*
 *storybook.log
 storybook-static
+
+# Build artifacts
+obj/
+bin/
