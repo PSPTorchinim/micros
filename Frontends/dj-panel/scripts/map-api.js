@@ -56,11 +56,19 @@ function generateTypesForService(serviceName, config) {
   try {
     new URL(apiGateway);
   } catch (err) {
-    console.error(`❌ Invalid REACT_APP_API_GATEWAY URL: ${apiGateway}`);
+    console.error(`❌ Invalid REACT_APP_API_GATEWAY URL format`);
     return false;
   }
   
   const swaggerUrl = `${apiGateway}${config.swaggerPath}`;
+  
+  // Validate the complete swagger URL to ensure swaggerPath doesn't contain malicious content
+  try {
+    new URL(swaggerUrl);
+  } catch (err) {
+    console.error(`❌ Invalid swagger URL format for service: ${serviceName}`);
+    return false;
+  }
 
   console.log(`🔄 Generating ${serviceName} API types from: ${swaggerUrl}`);
   console.log(`📁 Output file: ${config.outputFile}`);
