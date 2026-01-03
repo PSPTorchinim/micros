@@ -25,17 +25,16 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                var sanitizedEmail = StringHelper.SanitizeForLog(loginUser?.Email ?? string.Empty);
-                _logger.LogInformation("LoginV1 called for user {Email} at {Time}", sanitizedEmail, DateTime.UtcNow);
+                _logger.LogInformation("LoginV1 called at {Time}", DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.Login(loginUser);
-                    _logger.LogInformation("LoginV1 succeeded for user {Email} at {Time}", sanitizedEmail, DateTime.UtcNow);
+                    _logger.LogInformation("LoginV1 succeeded at {Time}", DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "LoginV1 failed for user {Email} at {Time}", sanitizedEmail, DateTime.UtcNow);
+                    _logger.LogError(ex, "LoginV1 failed at {Time}", DateTime.UtcNow);
                     throw;
                 }
             });
