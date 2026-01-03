@@ -29,7 +29,10 @@ namespace IdentityAPI.Entities
 
         public override int GetHashCode()
         {
-            return Value?.GetHashCode() ?? 0;
+            // Return a constant hash code since Equals() uses password verification
+            // rather than value equality. This means Password objects should not be
+            // used as keys in hash-based collections.
+            return 0;
         }
     }
 }
