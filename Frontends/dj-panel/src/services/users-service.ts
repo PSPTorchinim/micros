@@ -50,7 +50,7 @@ export class UsersService {
 
   public static async GetMe(): Promise<LoginResponseDTOResponse> {
     return microservicesClient.identity.users
-      .apiV1UsersMeList()
+      .v1UsersMeList()
       .then((response) => {
         return response.data;
       })
@@ -77,7 +77,7 @@ export class UsersService {
       newPassword: hashedNewPassword.toString(),
     };
     return microservicesClient.identity.users
-      .apiV1UsersChangePasswordUpdate(requestBody)
+      .v1UsersChangePasswordUpdate(requestBody)
       .then((response) => {
         return response.data;
       })
