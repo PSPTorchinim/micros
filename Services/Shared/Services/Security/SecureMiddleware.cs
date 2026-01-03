@@ -33,14 +33,14 @@ namespace Shared.Services.Security
             context.Request.Headers.TryGetValue("secure_key", out StringValues headerValue);
             var hash = headerValue.FirstOrDefault();
 
-            _logger.LogInformation("Received request for path: {Path} with secure_key header: {Hash}", 
-                StringHelper.SanitizeForLog(context.Request.Path), StringHelper.SanitizeForLog(hash));
+            _logger.LogInformation("Received request for path: {Path}", 
+                StringHelper.SanitizeForLog(context.Request.Path));
 
             // Compare directly if client sends hash
             if (string.IsNullOrEmpty(hash) || hash != _secureKeyHash)
             {
-                _logger.LogWarning("Unauthorized request for path: {Path} with hash: {Hash}, secure_key_hash: {SecureKeyHash}", 
-                    StringHelper.SanitizeForLog(context.Request.Path), StringHelper.SanitizeForLog(hash), StringHelper.SanitizeForLog(_secureKeyHash));
+                _logger.LogWarning("Unauthorized request for path: {Path} - Invalid or missing secure_key", 
+                    StringHelper.SanitizeForLog(context.Request.Path));
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("UNAUTHORIZED");
                 return;
