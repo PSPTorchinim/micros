@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           if (error.response?.status === 401 && refreshToken) {
             originalRequest._retry = true;
-            
+
             try {
               // If a refresh is already in progress, wait for it
               if (!refreshPromiseRef.current) {
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
               // Wait for the refresh to complete
               const newAccessToken = await refreshPromiseRef.current;
-              
+
               if (newAccessToken) {
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return service.instance(originalRequest);
@@ -131,7 +131,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       services.forEach((service, index) => {
-        service.instance.interceptors.response.eject(refreshInterceptors[index]);
+        service.instance.interceptors.response.eject(
+          refreshInterceptors[index],
+        );
       });
     };
   }, [refreshToken]);
@@ -139,15 +141,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useLayoutEffect(() => {
     // Add authorization interceptor to all microservices
     const authInterceptors = services.map((service) => {
-      return service.instance.interceptors.request.use(
-        (config: any) => {
-          config.headers.Authorization =
-            !config._retry && token
-              ? `Bearer ${token}`
-              : config.headers.Authorization;
-          return config;
-        },
-      );
+      return service.instance.interceptors.request.use((config: any) => {
+        config.headers.Authorization =
+          !config._retry && token
+            ? `Bearer ${token}`
+            : config.headers.Authorization;
+        return config;
+      });
     });
 
     return () => {
