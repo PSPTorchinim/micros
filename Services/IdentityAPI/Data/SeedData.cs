@@ -62,7 +62,7 @@ namespace IdentityAPI.Data
                 var existingUsers = await usersRepository.Get(x => x.Email == email);
                 if (existingUsers.Any())
                 {
-                    _logger?.LogInformation("User with email {Email} already exists, skipping seed at {Time}", email, DateTime.UtcNow);
+                    _logger?.LogInformation("User with email already exists, skipping seed at {Time}", DateTime.UtcNow);
                     return;
                 }
 

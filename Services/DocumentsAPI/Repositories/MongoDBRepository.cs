@@ -75,7 +75,7 @@ namespace DocumentsAPI.Repositories
                 try
                 {
                     // Try to ping the database to verify connection before counting
-                    var pingResult = await Collection.Database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1));
+                    await Collection.Database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1));
                     _logger.LogDebug("MongoDB ping successful");
                     
                     var count = await Count();
