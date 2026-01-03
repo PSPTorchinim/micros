@@ -928,6 +928,77 @@ async function seedForgotPasswordBlock(strapi: StrapiAny): Promise<any> {
   }
 }
 
+async function seedProfileBlock(strapi: StrapiAny): Promise<any> {
+  // Profile Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::profile-block.profile-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create profile block with default content
+    const created = await strapi.db.query('api::profile-block.profile-block').create({
+      data: {
+        title: 'My Profile',
+        customStyles: {},
+      },
+    });
+    console.info(`[SEED] Created Profile Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Profile Block already exists`);
+    return existingEntries[0];
+  }
+}
+
+async function seedChangePasswordBlock(strapi: StrapiAny): Promise<any> {
+  // Change Password Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::change-password-block.change-password-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create change password block with default content
+    const created = await strapi.db.query('api::change-password-block.change-password-block').create({
+      data: {
+        title: 'Change Password',
+        oldPasswordLabel: 'Current Password',
+        newPasswordLabel: 'New Password',
+        confirmPasswordLabel: 'Confirm New Password',
+        submitButtonText: 'Change Password',
+        oldPasswordPlaceholder: 'Enter your current password',
+        newPasswordPlaceholder: 'Enter your new password',
+        confirmPasswordPlaceholder: 'Confirm your new password',
+        customStyles: {},
+      },
+    });
+    console.info(`[SEED] Created Change Password Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Change Password Block already exists`);
+    return existingEntries[0];
+  }
+}
+
+async function seedDashboardBlock(strapi: StrapiAny): Promise<any> {
+  // Dashboard Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::dashboard-block.dashboard-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create dashboard block with default content
+    const created = await strapi.db.query('api::dashboard-block.dashboard-block').create({
+      data: {
+        title: 'Dashboard',
+        welcomeMessage: 'Welcome to your dashboard',
+        customStyles: {},
+      },
+    });
+    console.info(`[SEED] Created Dashboard Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Dashboard Block already exists`);
+    return existingEntries[0];
+  }
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
@@ -982,6 +1053,15 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }
   
   // Seed Forgot Password Block (singleType for forgot password page)
   await seedForgotPasswordBlock(strapi);
+  
+  // Seed Profile Block (singleType for profile page)
+  await seedProfileBlock(strapi);
+  
+  // Seed Change Password Block (singleType for change password page)
+  await seedChangePasswordBlock(strapi);
+  
+  // Seed Dashboard Block (singleType for dashboard page)
+  await seedDashboardBlock(strapi);
   
   console.info('[SEED] Content type seeding completed.');
 }
