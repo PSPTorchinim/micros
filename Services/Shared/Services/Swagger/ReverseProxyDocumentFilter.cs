@@ -144,13 +144,10 @@ namespace Shared.Services.Swagger
             }
 
             // Prevent access to localhost and loopback addresses to mitigate SSRF
-            if (uri.IsLoopback)
+            // Allow localhost only in development environment
+            if (uri.IsLoopback && !IsDevelopmentEnvironment())
             {
-                // Allow localhost only in development environment
-                if (!IsDevelopmentEnvironment())
-                {
-                    return false;
-                }
+                return false;
             }
 
             // Prevent access to private IP ranges to mitigate SSRF
@@ -162,18 +159,14 @@ namespace Shared.Services.Swagger
                     var bytes = ipAddress.GetAddressBytes();
                     
                     // IPv4 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-                    if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    // Allow private IPs only in development environment
+                    if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                        (bytes[0] == PrivateClassAFirstOctet || 
+                         (bytes[0] == PrivateClassBFirstOctet && bytes[1] >= PrivateClassBSecondOctetMin && bytes[1] <= PrivateClassBSecondOctetMax) ||
+                         (bytes[0] == PrivateClassCFirstOctet && bytes[1] == PrivateClassCSecondOctet)) &&
+                        !IsDevelopmentEnvironment())
                     {
-                        if (bytes[0] == PrivateClassAFirstOctet || 
-                            (bytes[0] == PrivateClassBFirstOctet && bytes[1] >= PrivateClassBSecondOctetMin && bytes[1] <= PrivateClassBSecondOctetMax) ||
-                            (bytes[0] == PrivateClassCFirstOctet && bytes[1] == PrivateClassCSecondOctet))
-                        {
-                            // Allow private IPs only in development environment
-                            if (!IsDevelopmentEnvironment())
-                            {
-                                return false;
-                            }
-                        }
+                        return false;
                     }
                     
                     // Link-local addresses (169.254.0.0/16) - always block
@@ -284,24 +277,18 @@ namespace Shared.Services.Swagger
                 // Merge schemas
                 if (source.Components.Schemas != null)
                 {
-                    foreach (var schema in source.Components.Schemas)
+                    foreach (var schema in source.Components.Schemas.Where(s => !target.Components.Schemas.ContainsKey(s.Key)))
                     {
-                        if (!target.Components.Schemas.ContainsKey(schema.Key))
-                        {
-                            target.Components.Schemas.Add(schema.Key, schema.Value);
-                        }
+                        target.Components.Schemas.Add(schema.Key, schema.Value);
                     }
                 }
 
                 // Merge security schemes
                 if (source.Components.SecuritySchemes != null)
                 {
-                    foreach (var securityScheme in source.Components.SecuritySchemes)
+                    foreach (var securityScheme in source.Components.SecuritySchemes.Where(s => !target.Components.SecuritySchemes.ContainsKey(s.Key)))
                     {
-                        if (!target.Components.SecuritySchemes.ContainsKey(securityScheme.Key))
-                        {
-                            target.Components.SecuritySchemes.Add(securityScheme.Key, securityScheme.Value);
-                        }
+                        target.Components.SecuritySchemes.Add(securityScheme.Key, securityScheme.Value);
                     }
                 }
             }

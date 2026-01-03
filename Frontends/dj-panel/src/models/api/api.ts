@@ -27,22 +27,7 @@ export { MusicApi } from './music/apiMap';
 export { PartyApi } from './party/apiMap';
 export { StrapiApi } from './strapi/apiMap';
 
-
-// Injected secure_key header interceptor for all services
-const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
-const __servicesWithInterceptor = [microservicesClient?.brand?.instance, microservicesClient?.documents?.instance, microservicesClient?.gear?.instance, microservicesClient?.identity?.instance, microservicesClient?.mailing?.instance, microservicesClient?.music?.instance, microservicesClient?.party?.instance, microservicesClient?.strapi?.instance];
-__servicesWithInterceptor.forEach(instance => {
-  if (instance && instance.interceptors && instance.interceptors.request && __secureKey) {
-    instance.interceptors.request.use(config => {
-      if (!config.headers) config.headers = {};
-      config.headers['secure_key'] = __secureKey;
-      return config;
-    });
-  }
-});
 import { ApiConfig } from './brand/apiMap';
-
-const NUMBER_OF_RETRIES = 3;
 
 /**
  * Unified API client that combines all microservice APIs
@@ -192,3 +177,29 @@ export const createMailingApi = (config?: ApiConfig) => new MailingApi(config);
 export const createMusicApi = (config?: ApiConfig) => new MusicApi(config);
 export const createPartyApi = (config?: ApiConfig) => new PartyApi(config);
 export const createStrapiApi = (config?: ApiConfig) => new StrapiApi(config);
+
+// Legacy global secure_key header interceptor setup
+// Note: This is a legacy approach. The UnifiedApi class handles this internally.
+// This code remains for backward compatibility with any external references to microservicesClient
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? (window as any).REACT_APP_API_SECURE_KEY : undefined);
+if (__secureKey) {
+  const __servicesWithInterceptor = [
+    microservicesClient?.brand?.instance,
+    microservicesClient?.documents?.instance,
+    microservicesClient?.gear?.instance,
+    microservicesClient?.identity?.instance,
+    microservicesClient?.mailing?.instance,
+    microservicesClient?.music?.instance,
+    microservicesClient?.party?.instance,
+    microservicesClient?.strapi?.instance,
+  ];
+  __servicesWithInterceptor.forEach(instance => {
+    if (instance && instance.interceptors && instance.interceptors.request) {
+      instance.interceptors.request.use(config => {
+        if (!config.headers) config.headers = {};
+        config.headers['secure_key'] = __secureKey;
+        return config;
+      });
+    }
+  });
+}

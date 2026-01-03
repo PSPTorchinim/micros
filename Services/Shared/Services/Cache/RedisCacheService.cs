@@ -48,17 +48,11 @@ namespace Shared.Services.Cache
         public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) where T : class
         {
             var serialized = JsonSerializer.Serialize(value, _jsonOptions);
-            var options = new DistributedCacheEntryOptions();
-
-            if (expiration.HasValue)
+            var options = new DistributedCacheEntryOptions
             {
-                options.AbsoluteExpirationRelativeToNow = expiration.Value;
-            }
-            else
-            {
-                // Default expiration of 5 minutes
-                options.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            }
+                // Default expiration of 5 minutes if not specified
+                AbsoluteExpirationRelativeToNow = expiration ?? TimeSpan.FromMinutes(5)
+            };
 
             await _distributedCache.SetStringAsync(key, serialized, options);
         }

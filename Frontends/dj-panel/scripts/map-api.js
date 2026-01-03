@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -74,8 +74,23 @@ function generateTypesForService(serviceName, config) {
   console.log(`📁 Output file: ${config.outputFile}`);
 
   try {
-    execSync(
-      `npx swagger-typescript-api generate -p "${swaggerUrl}" -o ${config.outputFile} -n apiMap.ts --module-name-first-tag --extract-enums --axios --disableStrictSSL`,
+    // Use execFileSync with array arguments to prevent command injection
+    execFileSync(
+      'npx',
+      [
+        'swagger-typescript-api',
+        'generate',
+        '-p',
+        swaggerUrl,
+        '-o',
+        config.outputFile,
+        '-n',
+        'apiMap.ts',
+        '--module-name-first-tag',
+        '--extract-enums',
+        '--axios',
+        '--disableStrictSSL',
+      ],
       {
         stdio: 'inherit',
         cwd: path.join(__dirname, '..'),
@@ -181,25 +196,7 @@ function generateMergedApiClient() {
   mergedContent += imports.join('\n') + '\n\n';
   mergedContent += exports.join('\n') + '\n\n';
 
-  // Inject secure_key header interceptor for all service instances
-  mergedContent += `\n// Injected secure_key header interceptor for all services\n`;
-  mergedContent += `const __secureKey = process.env.REACT_APP_API_SECURE_KEY;\n`;
-  mergedContent += `const __servicesWithInterceptor = [`;
-  mergedContent +=
-    serviceNames
-      .map(({ name }) => `microservicesClient?.${name}?.instance`)
-      .join(', ') + `];\n`;
-  mergedContent += `__servicesWithInterceptor.forEach(instance => {\n`;
-  mergedContent += `  if (instance && instance.interceptors && instance.interceptors.request && __secureKey) {\n`;
-  mergedContent += `    instance.interceptors.request.use(config => {\n`;
-  mergedContent += `      if (!config.headers) config.headers = {};\n`;
-  mergedContent += `      config.headers['secure_key'] = __secureKey;\n`;
-  mergedContent += `      return config;\n`;
-  mergedContent += `    });\n`;
-  mergedContent += `  }\n`;
-  mergedContent += `});\n`;
-
-  // Add ApiConfig import
+  // Add ApiConfig import before using it
   mergedContent += `import { ApiConfig } from './brand/apiMap';\n\n`;
 
   // Add constants and configuration
@@ -337,6 +334,32 @@ export const createMailingApi = (config?: ApiConfig) => new ${serviceNames.find(
 export const createMusicApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'music')?.className || 'MusicApi'}(config);
 export const createPartyApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'party')?.className || 'PartyApi'}(config);
 export const createStrapiApi = (config?: ApiConfig) => new ${serviceNames.find((s) => s.name === 'strapi')?.className || 'StrapiApi'}(config);
+
+// Legacy global secure_key header interceptor setup
+// Note: This is a legacy approach. The UnifiedApi class handles this internally.
+// This code remains for backward compatibility with any external references to microservicesClient
+const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? (window as any).REACT_APP_API_SECURE_KEY : undefined);
+if (__secureKey) {
+  const __servicesWithInterceptor = [
+    microservicesClient?.brand?.instance,
+    microservicesClient?.documents?.instance,
+    microservicesClient?.gear?.instance,
+    microservicesClient?.identity?.instance,
+    microservicesClient?.mailing?.instance,
+    microservicesClient?.music?.instance,
+    microservicesClient?.party?.instance,
+    microservicesClient?.strapi?.instance,
+  ];
+  __servicesWithInterceptor.forEach(instance => {
+    if (instance && instance.interceptors && instance.interceptors.request) {
+      instance.interceptors.request.use(config => {
+        if (!config.headers) config.headers = {};
+        config.headers['secure_key'] = __secureKey;
+        return config;
+      });
+    }
+  });
+}
 `;
 
   // Write the merged API file
