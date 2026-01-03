@@ -230,15 +230,7 @@ namespace IdentityAPI.Services
 
                 // Check if the new password was recently used
                 // For BCrypt hashes, we need to verify each password individually
-                Password? usedPassword = null;
-                foreach (var oldPass in user.Passwords)
-                {
-                    if (oldPass.Equals(request.NewPassword))
-                    {
-                        usedPassword = oldPass;
-                        break;
-                    }
-                }
+                var usedPassword = user.Passwords.FirstOrDefault(oldPass => oldPass.Equals(request.NewPassword));
                 
                 if (usedPassword != null)
                 {
