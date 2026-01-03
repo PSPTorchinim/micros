@@ -24,12 +24,13 @@ namespace IdentityAPI.Entities
             // Password-to-string: verify plaintext password against stored hash (for authentication)
             if (obj is string str)
                 return Equals(str);
-            
-            // Password-to-Password: compare entity identity by Id
-            if (obj is Password other)
-                return Id == other.Id;
-            
-            return false;
+
+            // Password-to-Password: compare entity identity by Id, requiring exact same runtime type
+            if (obj is null || obj.GetType() != GetType())
+                return false;
+
+            var other = (Password)obj;
+            return Id == other.Id;
         }
 
         public override int GetHashCode()
