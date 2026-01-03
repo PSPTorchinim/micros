@@ -24,8 +24,26 @@ jest.mock('./components/DynamicRoutes', () => ({
 }));
 
 // Mock the microservices client
+const createMockService = () => ({
+  instance: {
+    interceptors: {
+      request: {
+        use: jest.fn(() => 1),
+        eject: jest.fn(),
+      },
+      response: {
+        use: jest.fn(() => 1),
+        eject: jest.fn(),
+      },
+    },
+  },
+});
+
 jest.mock('./models/api', () => ({
   microservicesClient: {
+    brand: createMockService(),
+    documents: createMockService(),
+    gear: createMockService(),
     identity: {
       instance: {
         interceptors: {
@@ -43,6 +61,10 @@ jest.mock('./models/api', () => ({
         apiV1UsersRefreshTokenList: jest.fn(),
       },
     },
+    mailing: createMockService(),
+    music: createMockService(),
+    party: createMockService(),
+    strapi: createMockService(),
   },
 }));
 
