@@ -49,7 +49,18 @@ const microservices = {
 };
 
 function generateTypesForService(serviceName, config) {
-  const swaggerUrl = `${process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000'}${config.swaggerPath}`;
+  // Validate and sanitize API gateway URL to prevent command injection
+  const apiGateway = process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000';
+  
+  // Ensure the API gateway URL is a valid URL format
+  try {
+    new URL(apiGateway);
+  } catch (err) {
+    console.error(`❌ Invalid REACT_APP_API_GATEWAY URL: ${apiGateway}`);
+    return false;
+  }
+  
+  const swaggerUrl = `${apiGateway}${config.swaggerPath}`;
 
   console.log(`🔄 Generating ${serviceName} API types from: ${swaggerUrl}`);
   console.log(`📁 Output file: ${config.outputFile}`);
@@ -81,7 +92,7 @@ function generateTypesForService(serviceName, config) {
     // Inject secure_key interceptor into Api class
     let secureKeyInterceptor = `\n// Injected secure_key header interceptor\n`;
     secureKeyInterceptor += `if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {\n`;
-    secureKeyInterceptor += `  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);\n`;
+    secureKeyInterceptor += `  const secureKey = process.env.REACT_APP_API_SECURE_KEY;\n`;
     secureKeyInterceptor += `  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {\n`;
     secureKeyInterceptor += `    Api.prototype.instance.interceptors.request.use((config) => {\n`;
     secureKeyInterceptor += `      if (!config.headers) config.headers = {};\n`;
@@ -164,7 +175,7 @@ function generateMergedApiClient() {
 
   // Inject secure_key header interceptor for all service instances
   mergedContent += `\n// Injected secure_key header interceptor for all services\n`;
-  mergedContent += `const __secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);\n`;
+  mergedContent += `const __secureKey = process.env.REACT_APP_API_SECURE_KEY;\n`;
   mergedContent += `const __servicesWithInterceptor = [`;
   mergedContent +=
     serviceNames
