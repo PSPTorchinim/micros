@@ -147,7 +147,7 @@ namespace IdentityAPI.Services
                     _logger.LogError("RefreshToken failed: corrupted token (missing user id claim)");
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
-                _logger.LogDebug("Refreshing token for user id: {UserId}", userId);
+                _logger.LogDebug("Refreshing token for user id: {UserId}", StringHelper.SanitizeForLog(userId));
                 var newToken = await _authService.RefreshTokenAsync(token, userId);
                 if (newToken == null)
                 {
@@ -158,45 +158,45 @@ namespace IdentityAPI.Services
                 var matchingUser = (await _usersRepository.Get(x => x.Id.Equals(Guid.Parse(userId)))).FirstOrDefault();
                 if (matchingUser == null)
                 {
-                    _logger.LogWarning("RefreshToken failed: user not found for id {UserId}", userId);
+                    _logger.LogWarning("RefreshToken failed: user not found for id {UserId}", StringHelper.SanitizeForLog(userId));
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
-                _logger.LogDebug("Generating new access token for user id: {UserId}", userId);
+                _logger.LogDebug("Generating new access token for user id: {UserId}", StringHelper.SanitizeForLog(userId));
                 var result = _authService.GenerateAccessToken(matchingUser);
                 if (result == null)
                 {
-                    _logger.LogError("RefreshToken failed: token generation failed for user id {UserId}", userId);
+                    _logger.LogError("RefreshToken failed: token generation failed for user id {UserId}", StringHelper.SanitizeForLog(userId));
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
 
                 result.User = _mapper.Map<GetUserDTO>(matchingUser);
-                _logger.LogInformation("RefreshToken successful for user id: {UserId}", userId);
+                _logger.LogInformation("RefreshToken successful for user id: {UserId}", StringHelper.SanitizeForLog(userId));
                 return result;
             }, _logger);
         }
 
         public async Task<bool> BlockUser(BlockUserDTO request)
         {
-            _logger.LogInformation("BlockUser attempt for user id: {UserId}", request.UserId);
+            _logger.LogInformation("BlockUser attempt for user id: {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Fetching user for block by id: {UserId}", request.UserId);
+                _logger.LogDebug("Fetching user for block by id: {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
                 var user = (await _usersRepository.Get(u => u.Id.Equals(request.UserId))).FirstOrDefault();
                 if (user == null)
                 {
-                    _logger.LogWarning("BlockUser failed: user not found for id {UserId}", request.UserId);
+                    _logger.LogWarning("BlockUser failed: user not found for id {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
-                _logger.LogDebug("Appending block to user: {UserId}", request.UserId);
+                _logger.LogDebug("Appending block to user: {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
                 user.Blocks.Add(_mapper.Map<Block>(request));
 
                 var result = await _usersRepository.Update(user);
                 if (result)
-                    _logger.LogInformation("User blocked successfully: {UserId}", request.UserId);
+                    _logger.LogInformation("User blocked successfully: {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
                 else
-                    _logger.LogError("BlockUser failed to update user: {UserId}", request.UserId);
+                    _logger.LogError("BlockUser failed to update user: {UserId}", StringHelper.SanitizeForLog(request.UserId.ToString()));
                 return result;
             }, _logger);
         }
@@ -213,18 +213,18 @@ namespace IdentityAPI.Services
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
 
-                _logger.LogInformation("👤 [ChangePassword] User authenticated | UserId: {UserId}", id);
+                _logger.LogInformation("👤 [ChangePassword] User authenticated | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                 var user = (await _usersRepository.Get(u => u.Id.Equals(Guid.Parse(id)))).FirstOrDefault();
                 if (user == null)
                 {
-                    _logger.LogWarning("❌ [ChangePassword] FAILED - User not found | UserId: {UserId}", id);
+                    _logger.LogWarning("❌ [ChangePassword] FAILED - User not found | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
                 var password = user.Passwords.OrderByDescending(x => x.CreatedDate).First();
                 if (!password.Equals(request.OldPassword))
                 {
-                    _logger.LogWarning("❌ [ChangePassword] FAILED - Incorrect old password | UserId: {UserId}", id);
+                    _logger.LogWarning("❌ [ChangePassword] FAILED - Incorrect old password | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                     throw new AppException(ExceptionCodes.LoginWrongPassword);
                 }
 
@@ -237,18 +237,18 @@ namespace IdentityAPI.Services
                     if (usedPassword.CreatedDate >= DateTime.Now.AddMonths(-6))
                     {
                         _logger.LogWarning("❌ [ChangePassword] FAILED - Password used recently (within 6 months) | UserId: {UserId} | LastUsed: {LastUsed}", 
-                            id, usedPassword.CreatedDate.ToString("yyyy-MM-dd"));
+                            StringHelper.SanitizeForLog(id), usedPassword.CreatedDate.ToString("yyyy-MM-dd"));
                         throw new AppException(ExceptionCodes.PasswordAlreadyUsed);
                     }
                     else
                     {
-                        _logger.LogDebug("📝 [ChangePassword] Updating creation date for reused password | UserId: {UserId}", id);
+                        _logger.LogDebug("📝 [ChangePassword] Updating creation date for reused password | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                         usedPassword.CreatedDate = DateTime.Now;
                     }
                 }
                 else
                 {
-                    _logger.LogDebug("➕ [ChangePassword] Adding new password to history | UserId: {UserId}", id);
+                    _logger.LogDebug("➕ [ChangePassword] Adding new password to history | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                     var hashedNewPassword = request.NewPassword.computeHash();
                     var newPassword = new Password() { CreatedDate = DateTime.Now, Value = hashedNewPassword };
                     user.Passwords.Add(newPassword);
@@ -260,18 +260,18 @@ namespace IdentityAPI.Services
                 user.LastPasswordChangeDate = DateTime.UtcNow;
                 
                 _logger.LogInformation("🔑 [ChangePassword] Security stamp regenerated | UserId: {UserId} | OldStamp: {OldStamp} | NewStamp: {NewStamp} | PasswordChangeDate: {ChangeDate}", 
-                    id, oldStamp, user.SecurityStamp, user.LastPasswordChangeDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                    StringHelper.SanitizeForLog(id), StringHelper.SanitizeForLog(oldStamp), StringHelper.SanitizeForLog(user.SecurityStamp), user.LastPasswordChangeDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
                 
                 var result = await _usersRepository.Update(user);
                 if (result)
                 {
-                    _logger.LogInformation("✓ [ChangePassword] SUCCESS - Password updated in database | UserId: {UserId}", id);
+                    _logger.LogInformation("✓ [ChangePassword] SUCCESS - Password updated in database | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                     // Invalidate cache to force logout on other devices
                     await _securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
-                    _logger.LogInformation("🚪 [ChangePassword] User will be logged out from all other devices | UserId: {UserId}", id);
+                    _logger.LogInformation("🚪 [ChangePassword] User will be logged out from all other devices | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                 }
                 else
-                    _logger.LogError("❌ [ChangePassword] FAILED - Database update failed | UserId: {UserId}", id);
+                    _logger.LogError("❌ [ChangePassword] FAILED - Database update failed | UserId: {UserId}", StringHelper.SanitizeForLog(id));
                 return result;
             }, _logger);
         }
@@ -342,17 +342,17 @@ namespace IdentityAPI.Services
 
                 if (!user.ActivationCode.ToLower().Equals(request.ActivationCode.ToLower()))
                 {
-                    _logger.LogWarning("ActivateAccount failed: wrong activation code for email {Email}", request.Email);
+                    _logger.LogWarning("ActivateAccount failed: wrong activation code for email {Email}", StringHelper.SanitizeForLog(request.Email));
                     throw new AppException(ExceptionCodes.WrongActivationCode);
                 }
 
-                _logger.LogDebug("Activating user account for email: {Email}", request.Email);
+                _logger.LogDebug("Activating user account for email: {Email}", StringHelper.SanitizeForLog(request.Email));
                 user.Activated = true;
                 var result = await _usersRepository.Update(user);
                 if (result)
-                    _logger.LogInformation("Account activated for user: {Email}", request.Email);
+                    _logger.LogInformation("Account activated for user: {Email}", StringHelper.SanitizeForLog(request.Email));
                 else
-                    _logger.LogError("ActivateAccount failed to update user: {Email}", request.Email);
+                    _logger.LogError("ActivateAccount failed to update user: {Email}", StringHelper.SanitizeForLog(request.Email));
                 return result;
             }, _logger);
         }
@@ -370,19 +370,19 @@ namespace IdentityAPI.Services
                     _logger.LogError("GetLoggedUserData failed: corrupted token (missing user id claim)");
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
-                _logger.LogDebug("Fetching user with roles and permissions for id: {UserId}", userId);
+                _logger.LogDebug("Fetching user with roles and permissions for id: {UserId}", StringHelper.SanitizeForLog(userId));
                 var spec = new UserWithRolesAndPermissions(u => u.Id.ToString() == userId);
                 var user = (await _usersRepository.Get(spec)).FirstOrDefault();
                 if (user == null)
                 {
-                    _logger.LogWarning("GetLoggedUserData failed: user not found for id {UserId}", userId);
+                    _logger.LogWarning("GetLoggedUserData failed: user not found for id {UserId}", StringHelper.SanitizeForLog(userId));
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
                 var tokenResponse = new LoginResponseDTO();
                 tokenResponse.AccessToken = token;
                 tokenResponse.RefreshToken = user.RefreshToken;
                 tokenResponse.User = _mapper.Map<GetUserDTO>(user);
-                _logger.LogInformation("GetLoggedUserData successful for user id: {UserId}", userId);
+                _logger.LogInformation("GetLoggedUserData successful for user id: {UserId}", StringHelper.SanitizeForLog(userId));
                 return tokenResponse;
             }, _logger);
         }
