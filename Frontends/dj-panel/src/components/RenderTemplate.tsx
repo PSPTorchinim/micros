@@ -128,6 +128,32 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      if (templateType === 'ChangePassword') {
+        try {
+          const changePasswordBlock =
+            await StrapiService.getChangePasswordBlockSingleton();
+          if (mounted) {
+            if (changePasswordBlock) {
+              setBlocks([
+                {
+                  __kind: 'change-password-block',
+                  ...changePasswordBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching change password block singleton:', e);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.attributes?.Content,

@@ -425,6 +425,17 @@ export class StrapiService {
     }
   }
 
+  public static async getChangePasswordBlockSingleton() {
+    try {
+      const res =
+        await (microservicesClient.strapi as any).changePasswordBlock.getChangePasswordBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching change-password-block singleton:', e);
+      return null;
+    }
+  }
+
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
