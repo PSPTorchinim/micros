@@ -89,10 +89,16 @@ export const ChangePasswordBlock: React.FC<ChangePasswordBlock> = ({
           navigate(successRedirectPath);
         }, SUCCESS_REDIRECT_DELAY_MS);
       } else {
-        setError(response.message || 'Failed to change password.');
+        setError(
+          response.message ||
+            response.errors?.[0] ||
+            'Failed to change password.',
+        );
       }
     } catch (err: unknown) {
-      setError('Failed to change password. Please try again later.');
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to change password.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

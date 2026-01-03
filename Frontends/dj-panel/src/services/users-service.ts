@@ -34,12 +34,14 @@ export class UsersService {
         return response.data;
       })
       .catch((error) => {
-        return {
-          success: false,
-          data: false,
-          message: error.message,
-          errors: [error.message],
-        };
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: false,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
       });
   }
 
