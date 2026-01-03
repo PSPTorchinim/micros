@@ -109,6 +109,10 @@ namespace Shared.Services.Swagger
                             {
                                 _logger.LogWarning(ex, "Invalid URL format for {Address}/{Path}", destination.Address, path);
                             }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Unexpected error fetching swagger from {Address}/{Path}", destination.Address, path);
+                            }
                         }
                     }
                 }
