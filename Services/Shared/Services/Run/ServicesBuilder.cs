@@ -344,8 +344,6 @@ namespace Shared.Services.Run
                 }
                 else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
                 {
-                    var keyType = property.PropertyType.GetGenericArguments()[0];
-                    var valueType = property.PropertyType.GetGenericArguments()[1];
                     var dictionary = (System.Collections.IDictionary)value;
 
                     foreach (var key in dictionary.Keys)
@@ -366,7 +364,6 @@ namespace Shared.Services.Run
                 }
                 else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
                 {
-                    var listType = property.PropertyType.GetGenericArguments()[0];
                     var list = (System.Collections.IList)value;
                     for (int i = 0; i < list.Count; i++)
                     {
