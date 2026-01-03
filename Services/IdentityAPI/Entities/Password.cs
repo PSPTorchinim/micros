@@ -18,5 +18,18 @@ namespace IdentityAPI.Entities
                 
             return PasswordManager.VerifyPassword(other, Value);
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is string str)
+                return Equals(str);
+            
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value?.GetHashCode() ?? 0;
+        }
     }
 }
