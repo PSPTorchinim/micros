@@ -21,18 +21,20 @@ namespace IdentityAPI.Entities
 
         public override bool Equals(object? obj)
         {
+            // Password-to-string: verify plaintext password against stored hash (for authentication)
             if (obj is string str)
                 return Equals(str);
             
+            // Password-to-Password: compare entity identity by Id
             if (obj is Password other)
-                return Id == other.Id; // Use Id for Password-to-Password comparison
+                return Id == other.Id;
             
             return false;
         }
 
         public override int GetHashCode()
         {
-            // Return Id's hash code for consistent hashing with Password-to-Password equality
+            // Use Id's hash code for consistent hashing with Password-to-Password equality
             // Note: Password-to-string equality uses verification, not value comparison
             return Id.GetHashCode();
         }
