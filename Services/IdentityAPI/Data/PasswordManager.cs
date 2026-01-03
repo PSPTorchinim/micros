@@ -54,7 +54,7 @@ namespace IdentityAPI.Data
                 {
                     return BCrypt.Net.BCrypt.Verify(password, hash);
                 }
-                catch (Exception)
+                catch (BCrypt.Net.SaltParseException)
                 {
                     // Invalid BCrypt hash format
                     return false;
