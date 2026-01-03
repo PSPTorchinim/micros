@@ -1,4 +1,3 @@
-import { SHA256 } from 'crypto-js';
 import { microservicesClient } from '../models/api';
 import {
   BooleanResponse,
@@ -26,10 +25,11 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<LoginResponseDTOResponse> {
-    const hashedPassword = SHA256(password);
+    // Send plaintext password - it will be securely transmitted via HTTPS
+    // and hashed on the backend using BCrypt for proper security
     const requestBody = {
       email: email,
-      password: hashedPassword.toString(),
+      password: password,
     };
     return microservicesClient.identity.users
       .v1UsersLoginCreate(requestBody)

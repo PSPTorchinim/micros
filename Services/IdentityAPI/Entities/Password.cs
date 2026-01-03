@@ -1,4 +1,5 @@
-﻿using Shared.Entities;
+﻿using IdentityAPI.Data;
+using Shared.Entities;
 
 namespace IdentityAPI.Entities
 {
@@ -12,7 +13,10 @@ namespace IdentityAPI.Entities
 
         public bool Equals(string other)
         {
-            return Value?.ToLower().Equals(other.ToLower()) ?? false;
+            if (string.IsNullOrEmpty(Value) || string.IsNullOrEmpty(other))
+                return false;
+                
+            return PasswordManager.VerifyPassword(other, Value);
         }
     }
 }

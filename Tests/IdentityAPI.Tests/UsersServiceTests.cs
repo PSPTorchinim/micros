@@ -5,6 +5,7 @@ using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using IdentityAPI.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Data.Exceptions;
@@ -21,14 +22,20 @@ namespace IdentityAPI.Tests
         private readonly Mock<ILogger<IUsersService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
+        private readonly Mock<IConfiguration> _configurationMock = new();
         private readonly RabbitMQProducerService _rabbitMQProducerServiceMock = null!;
         private readonly Mock<IServiceProvider> _serviceProviderMock = new();
 
         private UsersService CreateService()
         {
+            // Setup configuration mock with password settings
+            _configurationMock.Setup(c => c["PasswordConfiguration:BCryptWorkFactor"]).Returns("12");
+            _configurationMock.Setup(c => c["PasswordConfiguration:MaxPasswordHistoryToCheck"]).Returns("10");
+            
             _serviceProviderMock.Setup(x => x.GetService(typeof(IUsersRepository))).Returns(_usersRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(IAuthService))).Returns(_authServiceMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(ISecurityStampService))).Returns(_securityStampServiceMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(IConfiguration))).Returns(_configurationMock.Object);
             return new UsersService(
                 _loggerMock.Object,
                 _mapperMock.Object,
@@ -145,7 +152,9 @@ namespace IdentityAPI.Tests
         public async Task Login_ReturnsUser_WhenCredentialsAreCorrect()
         {
             var service = CreateService();
-            var password = new Password { Value = "pass", CreatedDate = DateTime.Now };
+            // Hash the password using BCrypt (same as what would be stored in the database)
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword("pass", workFactor: 12);
+            var password = new Password { Value = hashedPassword, CreatedDate = DateTime.Now };
             var user = new User { Email = "user@example.com", Passwords = new List<Password> { password }, Blocks = new List<Block>() };
             _usersRepositoryMock.Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>())).ReturnsAsync(new List<User> { user });
             _authServiceMock.Setup(a => a.GenerateAccessToken(user)).Returns(new LoginResponseDTO { AccessToken = "token", RefreshToken = "refresh" });
@@ -187,7 +196,9 @@ namespace IdentityAPI.Tests
         {
             var service = CreateService();
             var userId = Guid.NewGuid().ToString();
-            var user = new User { Id = Guid.Parse(userId), Passwords = new List<Password> { new Password { Value = "old", CreatedDate = DateTime.Now } }, Blocks = new List<Block>() };
+            // Hash the old password using BCrypt
+            var hashedOldPassword = BCrypt.Net.BCrypt.HashPassword("old", workFactor: 12);
+            var user = new User { Id = Guid.Parse(userId), Passwords = new List<Password> { new Password { Value = hashedOldPassword, CreatedDate = DateTime.Now } }, Blocks = new List<Block>() };
 
             // Mock ClaimsPrincipal with Id claim
             var claims = new List<Claim> { new Claim("Id", userId) };
@@ -311,11 +322,13 @@ namespace IdentityAPI.Tests
         {
             var service = CreateService();
             var userId = Guid.NewGuid();
+            // Hash the old password using BCrypt
+            var hashedOldPassword = BCrypt.Net.BCrypt.HashPassword("oldpass", workFactor: 12);
             var user = new User
             {
                 Id = userId,
                 Email = "test@example.com",
-                Passwords = new List<Password> { new Password { Value = "oldpass", CreatedDate = DateTime.Now } },
+                Passwords = new List<Password> { new Password { Value = hashedOldPassword, CreatedDate = DateTime.Now } },
                 Blocks = new List<Block>(),
                 ActivationCode = "code",
                 Roles = new List<Role>(),
