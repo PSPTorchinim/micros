@@ -38,9 +38,10 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        _logger.LogError("Returning Internal Server Error response: {Message}", exception.Message);
+        _logger.LogError("Returning Internal Server Error response");
 
-        var response = new Response<string>("Internal Server Error", new List<string> { exception.Message });
+        // Do not expose exception details to client for security reasons
+        var response = new Response<string>("Internal Server Error", new List<string> { "An unexpected error occurred. Please contact support if the issue persists." });
 
         return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
     }
