@@ -222,13 +222,24 @@ namespace IdentityAPI.Services
                 }
 
                 var password = user.Passwords.OrderByDescending(x => x.CreatedDate).First();
-                if (!password.Value.ToLower().Equals(request.OldPassword.ToLower()))
+                if (!password.Equals(request.OldPassword))
                 {
                     _logger.LogWarning("❌ [ChangePassword] FAILED - Incorrect old password | UserId: {UserId}", id);
                     throw new AppException(ExceptionCodes.LoginWrongPassword);
                 }
 
-                var usedPassword = user.Passwords.FirstOrDefault(x => x.Value.ToLower().Equals(request.NewPassword.ToLower()));
+                // Check if the new password was recently used
+                // For BCrypt hashes, we need to verify each password individually
+                Password? usedPassword = null;
+                foreach (var oldPass in user.Passwords)
+                {
+                    if (oldPass.Equals(request.NewPassword))
+                    {
+                        usedPassword = oldPass;
+                        break;
+                    }
+                }
+                
                 if (usedPassword != null)
                 {
                     if (usedPassword.CreatedDate >= DateTime.Now.AddMonths(-6))
@@ -246,7 +257,8 @@ namespace IdentityAPI.Services
                 else
                 {
                     _logger.LogDebug("➕ [ChangePassword] Adding new password to history | UserId: {UserId}", id);
-                    var newPassword = new Password() { CreatedDate = DateTime.Now, Value = request.NewPassword };
+                    var hashedNewPassword = request.NewPassword.computeHash();
+                    var newPassword = new Password() { CreatedDate = DateTime.Now, Value = hashedNewPassword };
                     user.Passwords.Add(newPassword);
                 }
                 
