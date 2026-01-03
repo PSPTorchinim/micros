@@ -3,6 +3,7 @@ using IdentityAPI.Data.DTO.Permission;
 using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
 using Shared.Data.Exceptions;
+using Shared.Helpers;
 using Shared.Services.App;
 using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
@@ -59,13 +60,13 @@ namespace IdentityAPI.Services
 
         public async Task<bool> AddPermission(AddPermissionDTO request)
         {
-            _logger.LogInformation("Adding permission with name: {Name}", request.Name);
+            _logger.LogInformation("Adding permission with name: {Name}", StringHelper.SanitizeForLog(request.Name));
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Checking if permission with name {Name} exists.", request.Name);
+                _logger.LogDebug("Checking if permission with name {Name} exists.", StringHelper.SanitizeForLog(request.Name));
                 if (await _permissionsRepository.Exists(x => x.Name.Equals(request.Name)))
                 {
-                    _logger.LogWarning("Permission with name {Name} already exists.", request.Name);
+                    _logger.LogWarning("Permission with name {Name} already exists.", StringHelper.SanitizeForLog(request.Name));
                     return false;
                 }
                 var req = _mapper.Map<Permission>(request);
@@ -75,7 +76,7 @@ namespace IdentityAPI.Services
                 // Invalidate cache so it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
 
-                _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", request.Name, result);
+                _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", StringHelper.SanitizeForLog(request.Name), result);
                 return result;
             }, _logger);
         }
