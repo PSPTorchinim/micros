@@ -223,7 +223,7 @@ jobs:
           Please review these changes before merging.
           
           Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-          git push origin ${{ steps.pr_info.outputs.pr_head_ref }}
+          git push origin "${{ steps.pr_info.outputs.pr_head_ref }}"
 
       - name: Report Success
         if: steps.pr_info.outputs.should_run == 'true' && steps.fetch_alerts.outputs.has_alerts == 'false'
