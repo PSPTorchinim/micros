@@ -157,18 +157,25 @@ namespace Shared.Services.Swagger
                 {
                     // Check if it's a private IP address
                     var bytes = ipAddress.GetAddressBytes();
-                    
+
                     // IPv4 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+                    var isPrivateIPv4 =
+                        ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                        (
+                            bytes[0] == PrivateClassAFirstOctet ||
+                            (bytes[0] == PrivateClassBFirstOctet &&
+                             bytes[1] >= PrivateClassBSecondOctetMin &&
+                             bytes[1] <= PrivateClassBSecondOctetMax) ||
+                            (bytes[0] == PrivateClassCFirstOctet &&
+                             bytes[1] == PrivateClassCSecondOctet)
+                        );
+
                     // Allow private IPs only in development environment
-                    if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
-                        (bytes[0] == PrivateClassAFirstOctet || 
-                         (bytes[0] == PrivateClassBFirstOctet && bytes[1] >= PrivateClassBSecondOctetMin && bytes[1] <= PrivateClassBSecondOctetMax) ||
-                         (bytes[0] == PrivateClassCFirstOctet && bytes[1] == PrivateClassCSecondOctet)) &&
-                        !IsDevelopmentEnvironment())
+                    if (isPrivateIPv4 && !IsDevelopmentEnvironment())
                     {
                         return false;
                     }
-                    
+
                     // Link-local addresses (169.254.0.0/16) - always block
                     if (bytes[0] == LinkLocalFirstOctet && bytes[1] == LinkLocalSecondOctet)
                     {
