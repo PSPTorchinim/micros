@@ -24,15 +24,17 @@ namespace IdentityAPI.Entities
             if (obj is string str)
                 return Equals(str);
             
+            if (obj is Password other)
+                return Id == other.Id; // Use Id for Password-to-Password comparison
+            
             return false;
         }
 
         public override int GetHashCode()
         {
-            // Return a constant hash code since Equals() uses password verification
-            // rather than value equality. This means Password objects should not be
-            // used as keys in hash-based collections.
-            return 0;
+            // Return Id's hash code for consistent hashing with Password-to-Password equality
+            // Note: Password-to-string equality uses verification, not value comparison
+            return Id.GetHashCode();
         }
     }
 }
