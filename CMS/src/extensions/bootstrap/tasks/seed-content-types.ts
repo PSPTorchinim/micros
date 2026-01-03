@@ -946,7 +946,7 @@ async function seedChangePasswordBlock(strapi: StrapiAny): Promise<any> {
         oldPasswordPlaceholder: 'Enter your current password',
         newPasswordPlaceholder: 'Enter your new password',
         confirmPasswordPlaceholder: 'Confirm your new password',
-        successRedirectPath: '/',
+        successRedirectPath: '/dashboard',
       },
     });
     console.info(`[SEED] Created Change Password Block`);
