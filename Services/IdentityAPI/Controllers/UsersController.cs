@@ -4,6 +4,7 @@ using IdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
+using Shared.Helpers;
 using Shared.Services.App;
 
 namespace IdentityAPI.Controllers
@@ -155,18 +156,18 @@ namespace IdentityAPI.Controllers
             return await Handle(async () =>
             { 
                 _logger.LogInformation("🔐 [API] ForgotPasswordV1 endpoint called | Email: {Email} | Timestamp: {Time}", 
-                    request?.Email, DateTime.UtcNow);
+                    StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ForgotPassword(request);
                     _logger.LogInformation("✓ [API] ForgotPasswordV1 completed successfully | Email: {Email} | Timestamp: {Time}", 
-                        request?.Email, DateTime.UtcNow);
+                        StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ [API] ForgotPasswordV1 failed | Email: {Email} | Timestamp: {Time} | Exception: {ExceptionType}", 
-                        request?.Email, DateTime.UtcNow, ex.GetType().Name);
+                        StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });
@@ -178,16 +179,16 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             { 
-                _logger.LogInformation("ActivateAccountV1 called for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                _logger.LogInformation("ActivateAccountV1 called for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ActivateAccount(request);
-                    _logger.LogInformation("ActivateAccountV1 succeeded for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogInformation("ActivateAccountV1 succeeded for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "ActivateAccountV1 failed for user {Email} at {Time}", request?.Email, DateTime.UtcNow);
+                    _logger.LogError(ex, "ActivateAccountV1 failed for user {Email} at {Time}", StringHelper.SanitizeForLog(request?.Email), DateTime.UtcNow);
                     throw;
                 }
             });
@@ -201,18 +202,18 @@ namespace IdentityAPI.Controllers
             return await Handle(async () =>
             {
                 _logger.LogInformation("🔐 [API] ValidateSecurityStampV1 endpoint called | UserId: {UserId} | Timestamp: {Time}", 
-                    request?.UserId, DateTime.UtcNow);
+                    StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.ValidateSecurityStamp(request);
                     _logger.LogInformation("✓ [API] ValidateSecurityStampV1 completed | UserId: {UserId} | IsValid: {IsValid} | Timestamp: {Time}", 
-                        request?.UserId, result?.IsValid, DateTime.UtcNow);
+                        StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), result?.IsValid, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ [API] ValidateSecurityStampV1 failed | UserId: {UserId} | Timestamp: {Time} | Exception: {ExceptionType}", 
-                        request?.UserId, DateTime.UtcNow, ex.GetType().Name);
+                        StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty), DateTime.UtcNow, ex.GetType().Name);
                     throw;
                 }
             });

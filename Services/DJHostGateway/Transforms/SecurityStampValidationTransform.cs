@@ -1,3 +1,4 @@
+using Shared.Helpers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -34,7 +35,7 @@ namespace DJHostGateway.Transforms
             var correlationId = context.HttpContext.TraceIdentifier;
             
             _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
-                correlationId, requestPath, requestMethod);
+                StringHelper.SanitizeForLog(correlationId), StringHelper.SanitizeForLog(requestPath), StringHelper.SanitizeForLog(requestMethod));
             
             // Try to get JWT token from Authorization header or jwtToken cookie
             var authHeader = request.Headers.Authorization.FirstOrDefault();
@@ -173,7 +174,8 @@ namespace DJHostGateway.Transforms
                 // Success - reset failure counter
                 Interlocked.Exchange(ref _consecutiveFailures, 0);
                 _logger.LogInformation("✓ [SecurityStamp] VALIDATION SUCCESSFUL | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path} | Method: {Method}", 
-                    correlationId, userId, requestPath, requestMethod);
+                    StringHelper.SanitizeForLog(correlationId), StringHelper.SanitizeForLog(userId), 
+                    StringHelper.SanitizeForLog(requestPath), StringHelper.SanitizeForLog(requestMethod));
                 
                 // Remove Authorization header for Strapi paths (Strapi has its own authentication)
                 if (request.Path.Value?.StartsWith(StrapiPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
