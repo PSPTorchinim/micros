@@ -41,17 +41,17 @@ namespace IdentityAPI.Services
 
         public async Task<LoginResponseDTO?> Login(LoginUserRequestDTO loginUser)
         {
-            _logger.LogInformation("Login attempt for user: {Email}", loginUser.Email);
+            _logger.LogInformation("Login attempt for user: {Email}", StringHelper.SanitizeForLog(loginUser.Email));
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Fetching user by email: {Email}", loginUser.Email);
+                _logger.LogDebug("Fetching user by email: {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                 var spec = new UserWithRolesAndPermissions(u => u.Email == loginUser.Email);
                 var usersByEmail = await _usersRepository.Get(spec);
                 usersByEmail = usersByEmail.ToList();
-                _logger.LogDebug("Found {Count} users for email: {Email}", usersByEmail.Count(), loginUser.Email);
+                _logger.LogDebug("Found {Count} users for email: {Email}", usersByEmail.Count(), StringHelper.SanitizeForLog(loginUser.Email));
                 if (usersByEmail.Count() != 1)
                 {
-                    _logger.LogWarning("Login failed: user not found or multiple users for email {Email}", loginUser.Email);
+                    _logger.LogWarning("Login failed: user not found or multiple users for email {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                     throw new AppException(ExceptionCodes.LoginUsernameNotFound);
                 }
 
@@ -59,34 +59,34 @@ namespace IdentityAPI.Services
                     usersByEmail.Where(u => u.Passwords.GetLatest().Equals(loginUser.Password)).FirstOrDefault();
                 if (matchingUser == null)
                 {
-                    _logger.LogWarning("Login failed: wrong password for user {Email}", loginUser.Email);
+                    _logger.LogWarning("Login failed: wrong password for user {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                     throw new AppException(ExceptionCodes.LoginWrongPassword);
                 }
 
                 if (matchingUser.Blocks.Any(x => !x.Deactivated && (x.To > DateTime.Now || x.Pernament)))
                 {
-                    _logger.LogWarning("Login failed: user {Email} is blocked", loginUser.Email);
+                    _logger.LogWarning("Login failed: user {Email} is blocked", StringHelper.SanitizeForLog(loginUser.Email));
                     throw new AppException(ExceptionCodes.LoginUserBlocked);
                 }
 
-                _logger.LogDebug("Generating access token for user: {Email}", loginUser.Email);
+                _logger.LogDebug("Generating access token for user: {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                 var result = _authService.GenerateAccessToken(matchingUser);
 
                 if (result == null)
                 {
-                    _logger.LogError("Login failed: token generation failed for user {Email}", loginUser.Email);
+                    _logger.LogError("Login failed: token generation failed for user {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
 
                 matchingUser.RefreshToken = result.RefreshToken;
                 matchingUser.Token = result.AccessToken;
 
-                _logger.LogDebug("Updating user with new tokens: {Email}", loginUser.Email);
+                _logger.LogDebug("Updating user with new tokens: {Email}", StringHelper.SanitizeForLog(loginUser.Email));
                 await _usersRepository.Update(matchingUser);
 
                 result.User = _mapper.Map<GetUserDTO>(matchingUser);
 
-                _logger.LogInformation("Login successful for user: {Email}", loginUser.Email);
+                _logger.LogInformation("Login successful for user: {Email}", StringHelper.SanitizeForLog(loginUser.Email));
 
                 // var mailMessage = new RabbitMQResponse<LoginResponseDTO>(result);
                 // await _rabbitMQProducerService.SendMessage(mailMessage, "SendMail");
@@ -97,18 +97,18 @@ namespace IdentityAPI.Services
 
         public async Task<bool> Register(RegisterUserRequestDTO registerUser)
         {
-            _logger.LogInformation("Register attempt for user: {Email}", registerUser.Email);
+            _logger.LogInformation("Register attempt for user: {Email}", StringHelper.SanitizeForLog(registerUser.Email));
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Checking if email already exists: {Email}", registerUser.Email);
+                _logger.LogDebug("Checking if email already exists: {Email}", StringHelper.SanitizeForLog(registerUser.Email));
                 var matchingEmail = await _usersRepository.Count(u => u.Email.Equals(registerUser.Email));
                 if (matchingEmail > 0)
                 {
-                    _logger.LogWarning("Register failed: email already exists {Email}", registerUser.Email);
+                    _logger.LogWarning("Register failed: email already exists {Email}", StringHelper.SanitizeForLog(registerUser.Email));
                     throw new AppException(ExceptionCodes.RegisterEmailFound);
                 }
 
-                _logger.LogDebug("Creating new user entity for: {Email}", registerUser.Email);
+                _logger.LogDebug("Creating new user entity for: {Email}", StringHelper.SanitizeForLog(registerUser.Email));
                 var newUser = new User()
                 {
                     Passwords = new List<Password>() {
@@ -125,7 +125,7 @@ namespace IdentityAPI.Services
 
                 await _usersRepository.Add(newUser);
 
-                _logger.LogInformation("User registered successfully: {Email}", registerUser.Email);
+                _logger.LogInformation("User registered successfully: {Email}", StringHelper.SanitizeForLog(registerUser.Email));
 
                 ///send mail with activation code
                 ///send RabbitMQ message that user is registered so the CompanyAPI can add this user to database
