@@ -10,8 +10,9 @@ import path from 'path';
  */
 export async function uploadMedia(strapi: any, filePath: string) {
   const fileName = path.basename(filePath);
-  const fileStat = fs.statSync(filePath);
+  // Read the file once to avoid TOCTOU race condition
   const fileBuffer = fs.readFileSync(filePath);
+  const fileSize = fileBuffer.length;
 
   // Simulate a file upload (Strapi v4)
   const uploadedFiles = await strapi
@@ -23,7 +24,7 @@ export async function uploadMedia(strapi: any, filePath: string) {
         path: filePath,
         name: fileName,
         type: 'image/jpeg', // or detect from extension
-        size: fileStat.size,
+        size: fileSize,
         buffer: fileBuffer,
       },
     });

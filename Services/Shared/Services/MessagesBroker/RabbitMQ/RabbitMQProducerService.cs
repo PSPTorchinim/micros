@@ -23,7 +23,8 @@ namespace Shared.Services.MessagesBroker.RabbitMQ
                 var user = Environment.GetEnvironmentVariable("ASPNETCORE_RABBITMQ_USER");
                 var password = Environment.GetEnvironmentVariable("ASPNETCORE_RABBITMQ_PASSWORD");
                 var connStr = $"amqp://{user}:{password}@{host}:{port}";
-                _logger.LogInformation("Using RabbitMQ connection string: {ConnectionString}", connStr);
+                // Log sanitized connection string without credentials
+                _logger.LogInformation("Using RabbitMQ connection to {Host}:{Port} as user {User}", host, port, user);
                 return connStr;
             }
         }
