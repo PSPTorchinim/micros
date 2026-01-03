@@ -47,16 +47,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("RegisterV1 called for user {Username} at {Time}", StringHelper.SanitizeForLog(register?.Username), DateTime.UtcNow);
+                var sanitizedUsername = StringHelper.SanitizeForLog(register?.Username ?? string.Empty);
+                _logger.LogInformation("RegisterV1 called for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.Register(register);
-                    _logger.LogInformation("RegisterV1 succeeded for user {Username} at {Time}", StringHelper.SanitizeForLog(register?.Username), DateTime.UtcNow);
+                    _logger.LogInformation("RegisterV1 succeeded for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "RegisterV1 failed for user {Username} at {Time}", StringHelper.SanitizeForLog(register?.Username), DateTime.UtcNow);
+                    _logger.LogError(ex, "RegisterV1 failed for user {Username} at {Time}", sanitizedUsername, DateTime.UtcNow);
                     throw;
                 }
             });
@@ -111,16 +112,17 @@ namespace IdentityAPI.Controllers
         {
             return await Handle(async () =>
             {
-                _logger.LogInformation("BlockUserV1 called for user {UserId} at {Time}", StringHelper.SanitizeForLog(request?.UserId.ToString()), DateTime.UtcNow);
+                var sanitizedUserId = StringHelper.SanitizeForLog(request?.UserId.ToString() ?? string.Empty);
+                _logger.LogInformation("BlockUserV1 called for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                 try
                 {
                     var result = await _usersService.BlockUser(request);
-                    _logger.LogInformation("BlockUserV1 succeeded for user {UserId} at {Time}", StringHelper.SanitizeForLog(request?.UserId.ToString()), DateTime.UtcNow);
+                    _logger.LogInformation("BlockUserV1 succeeded for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "BlockUserV1 failed for user {UserId} at {Time}", StringHelper.SanitizeForLog(request?.UserId.ToString()), DateTime.UtcNow);
+                    _logger.LogError(ex, "BlockUserV1 failed for user {UserId} at {Time}", sanitizedUserId, DateTime.UtcNow);
                     throw;
                 }
             });
