@@ -4,7 +4,6 @@
 
 import swaggerController from '../controllers/swagger';
 import fs from 'fs';
-import path from 'path';
 
 // Mock fs module
 jest.mock('fs');

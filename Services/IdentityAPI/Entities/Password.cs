@@ -3,7 +3,7 @@ using Shared.Entities;
 
 namespace IdentityAPI.Entities
 {
-    public class Password : IIdentifier, ICreationDate
+    public class Password : IIdentifier, ICreationDate, IEquatable<string>
     {
         public Guid Id { get; set; }
         public virtual User? User { get; set; }
@@ -11,7 +11,7 @@ namespace IdentityAPI.Entities
         public string? Value { get; set; }
         public DateTime CreatedDate { get; set; }
 
-        public bool Equals(string other)
+        public bool Equals(string? other)
         {
             if (string.IsNullOrEmpty(Value) || string.IsNullOrEmpty(other))
                 return false;

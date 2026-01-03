@@ -51,7 +51,7 @@ namespace DocumentsAPI.Tests
         [Fact]
         public async Task Get_ReturnsNull()
         {
-            _repoMock.Setup(r => r.Get()).ReturnsAsync((List<Document>)null!);
+            _repoMock.Setup(r => r.Get()).ReturnsAsync((List<Document>?)null);
             var result = await _service.Get();
             Assert.Null(result);
         }

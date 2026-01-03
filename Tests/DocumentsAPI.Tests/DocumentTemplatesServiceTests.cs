@@ -67,7 +67,8 @@ namespace DocumentsAPI.Tests
             var result = await _service.Get();
             Assert.NotNull(result);
             Assert.Single(result);
-            Assert.Equal("Test", ((List<DocumentTemplate>)result)[0].Name);
+            var resultList = result.ToList();
+            Assert.Equal("Test", resultList[0].Name);
         }
 
         [Fact]
