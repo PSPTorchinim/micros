@@ -24,7 +24,7 @@ namespace Shared.Repositories
             return await ExceptionHandler.Handle(async () =>
             {
                 await using var context = await _factory.CreateDbContextAsync();
-                var result = await context.AddAsync(entity);
+                await context.AddAsync(entity);
                 return await context.SaveChangesAsync() > 0;
             }, _logger);
         }
