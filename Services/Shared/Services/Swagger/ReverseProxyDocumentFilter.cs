@@ -53,14 +53,13 @@ namespace Shared.Services.Swagger
                 _logger.LogInformation("Applying ReverseProxyDocumentFilter for document: {DocumentName}", documentName);
 
                 // If this is not a cluster-specific document, skip
-                if (documentName == "v1" || !_config.Clusters.ContainsKey(documentName))
+                if (documentName == "v1" || !_config.Clusters.TryGetValue(documentName, out var cluster))
                 {
                     _logger.LogDebug("Document {DocumentName} is not a cluster document, skipping", documentName);
                     return;
                 }
 
-                // Get the cluster configuration
-                var cluster = _config.Clusters[documentName];
+                // cluster is now retrieved via TryGetValue
                 
                 // Process each destination in the cluster
                 foreach (var destination in cluster.Destinations.Values)
@@ -98,9 +97,17 @@ namespace Shared.Services.Swagger
                                     _logger.LogInformation("Successfully merged swagger from {SwaggerUrl}", swaggerUrl);
                                 }
                             }
-                            catch (Exception ex)
+                            catch (HttpRequestException ex)
                             {
-                                _logger.LogWarning(ex, "Failed to fetch swagger from {Address}/{Path}", destination.Address, path);
+                                _logger.LogWarning(ex, "HTTP error fetching swagger from {Address}/{Path}", destination.Address, path);
+                            }
+                            catch (TaskCanceledException ex)
+                            {
+                                _logger.LogWarning(ex, "Timeout fetching swagger from {Address}/{Path}", destination.Address, path);
+                            }
+                            catch (UriFormatException ex)
+                            {
+                                _logger.LogWarning(ex, "Invalid URL format for {Address}/{Path}", destination.Address, path);
                             }
                         }
                     }
@@ -303,12 +310,9 @@ namespace Shared.Services.Swagger
                     target.Tags = new HashSet<OpenApiTag>();
                 }
                 
-                foreach (var tag in source.Tags)
+                foreach (var tag in source.Tags.Where(tag => !target.Tags.Any(t => t.Name == tag.Name)))
                 {
-                    if (!target.Tags.Any(t => t.Name == tag.Name))
-                    {
-                        target.Tags.Add(tag);
-                    }
+                    target.Tags.Add(tag);
                 }
             }
         }
