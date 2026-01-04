@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import React from 'react';
+import { AuthContext } from '../../../context/auth-context';
 import { ProfileBlock } from './index';
 
 const meta = {
@@ -7,6 +9,32 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
+  decorators: [
+    (Story) => {
+      // Mock user data for ProfileBlock stories
+      const mockUser = {
+        id: '1',
+        username: 'johndoe',
+        email: 'john.doe@example.com',
+      };
+
+      const mockAuthValue = {
+        user: mockUser,
+        token: 'mock-token',
+        refreshToken: 'mock-refresh-token',
+        logout: () => {},
+        setUser: () => {},
+        setToken: () => {},
+        setRefreshToken: () => {},
+      };
+
+      return (
+        <AuthContext.Provider value={mockAuthValue}>
+          <Story />
+        </AuthContext.Provider>
+      );
+    },
+  ],
   tags: ['autodocs'],
   argTypes: {
     title: {
@@ -73,4 +101,28 @@ export const FullyCustomized: Story = {
     changePasswordButtonText: 'Change My Password',
     changePasswordUrl: '/settings/password',
   },
+};
+
+export const LoggedOut: Story = {
+  args: {},
+  decorators: [
+    (Story) => {
+      // Override the default decorator to show logged out state
+      const mockAuthValue = {
+        user: null,
+        token: null,
+        refreshToken: null,
+        logout: () => {},
+        setUser: () => {},
+        setToken: () => {},
+        setRefreshToken: () => {},
+      };
+
+      return (
+        <AuthContext.Provider value={mockAuthValue}>
+          <Story />
+        </AuthContext.Provider>
+      );
+    },
+  ],
 };
