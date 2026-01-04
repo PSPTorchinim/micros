@@ -3,7 +3,7 @@ import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
-import { getDocId } from '../utils/mapStrapiContentToFrontend';
+import { getDocId, FIELD_BY_REF } from '../utils/mapStrapiContentToFrontend';
 
 /**
  * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
@@ -18,17 +18,6 @@ import { getDocId } from '../utils/mapStrapiContentToFrontend';
  *  - feature-tab-ref.feature-tab-ref -> "feature_tab"
  *  - contact-info-ref.contact-info-ref -> "contact_info"
  */
-const FIELD_BY_REF: Record<string, string> = {
-  'article-block-ref.article-block-ref': 'block',
-  'hero-block-ref.hero-block-ref': 'hero_block',
-  'image-slider-ref.image-slider-ref': 'slider',
-  'steps-container-ref.steps-container-ref': 'container',
-  'cta-ref.cta-ref': 'cta',
-  'feature-section-ref.feature-section-ref': 'feature_section',
-  'contact-section-ref.contact-section-ref': 'contact_section',
-  'feature-tab-ref.feature-tab-ref': 'feature_tab',
-  'contact-info-ref.contact-info-ref': 'contact_info',
-};
 
 interface Props {
   block: RefComponent;
