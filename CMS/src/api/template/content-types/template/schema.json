@@ -16,7 +16,7 @@
     },
     "TemplateType": {
       "type": "enumeration",
-      "enum": ["Standard", "Login", "ForgotPassword"]
+      "enum": ["Standard", "Login", "ForgotPassword", "ChangePassword"]
     },
     "page": {
       "type": "relation",

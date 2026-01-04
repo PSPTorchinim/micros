@@ -45,6 +45,10 @@ const TEMPLATE_SEEDS = [
     TemplateType: 'ForgotPassword',
   },
   {
+    Name: 'Change Password Template',
+    TemplateType: 'ChangePassword',
+  },
+  {
     Name: 'Article Template',
     TemplateType: 'Standard',
   },
@@ -117,6 +121,15 @@ const PAGE_SEEDS = [
     NavigationOrder: 99,
     NavigationAction: 'Link',
     templateName: 'Forgot Password Template',
+  },
+  {
+    Title: 'Change Password',
+    Slug: '/change-password',
+    Menu: 'NotVisible',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 98,
+    NavigationAction: 'Link',
+    templateName: 'Change Password Template',
   },
   {
     Title: 'Articles',
@@ -263,7 +276,7 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
       } else if (templateData.Name === 'Article Template') {
         content = await buildArticleTemplateContent(strapi);
       }
-      // Login and Forgot Password templates use built-in blocks, no Content needed
+      // Login, Forgot Password, and Change Password templates use built-in blocks, no Content needed
       // Create and publish using Document Service
       await strapi.documents('api::template.template').create({
         data: {
