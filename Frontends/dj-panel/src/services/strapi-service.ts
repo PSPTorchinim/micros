@@ -425,6 +425,20 @@ export class StrapiService {
     }
   }
 
+  public static async getChangePasswordBlockSingleton() {
+    try {
+      // Note: Using 'as any' temporarily until API types are regenerated
+      // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
+      const res = await (
+        microservicesClient.strapi as any
+      ).changePasswordBlock.getChangePasswordBlock();
+      return res?.data || null;
+    } catch (e) {
+      console.error('Error fetching change-password-block singleton:', e);
+      return null;
+    }
+  }
+
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({

@@ -1,0 +1,56 @@
+{
+  "kind": "singleType",
+  "collectionName": "change_password_blocks",
+  "info": {
+    "singularName": "change-password-block",
+    "pluralName": "change-password-blocks",
+    "displayName": "Change Password Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Change Password"
+    },
+    "description": {
+      "type": "string",
+      "default": "Update your password to keep your account secure."
+    },
+    "oldPasswordLabel": {
+      "type": "string",
+      "default": "Current Password"
+    },
+    "newPasswordLabel": {
+      "type": "string",
+      "default": "New Password"
+    },
+    "confirmPasswordLabel": {
+      "type": "string",
+      "default": "Confirm New Password"
+    },
+    "submitButtonText": {
+      "type": "string",
+      "default": "Change Password"
+    },
+    "oldPasswordPlaceholder": {
+      "type": "string",
+      "default": "Enter your current password"
+    },
+    "newPasswordPlaceholder": {
+      "type": "string",
+      "default": "Enter your new password"
+    },
+    "confirmPasswordPlaceholder": {
+      "type": "string",
+      "default": "Confirm your new password"
+    },
+    "successRedirectPath": {
+      "type": "string",
+      "default": "/dashboard"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

@@ -928,6 +928,35 @@ async function seedForgotPasswordBlock(strapi: StrapiAny): Promise<any> {
   }
 }
 
+async function seedChangePasswordBlock(strapi: StrapiAny): Promise<any> {
+  // Change Password Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db.query('api::change-password-block.change-password-block').findMany({});
+  
+  if (existingEntries.length === 0) {
+    // Create change password block with DJ-themed content
+    const created = await strapi.db.query('api::change-password-block.change-password-block').create({
+      data: {
+        title: 'Change Your Password',
+        description: 'Update your password to keep your account secure.',
+        oldPasswordLabel: 'Current Password',
+        newPasswordLabel: 'New Password',
+        confirmPasswordLabel: 'Confirm New Password',
+        submitButtonText: 'Change Password',
+        oldPasswordPlaceholder: 'Enter your current password',
+        newPasswordPlaceholder: 'Enter your new password',
+        confirmPasswordPlaceholder: 'Confirm your new password',
+        successRedirectPath: '/dashboard',
+      },
+    });
+    console.info(`[SEED] Created Change Password Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Change Password Block already exists`);
+    return existingEntries[0];
+  }
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
@@ -982,6 +1011,9 @@ export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }
   
   // Seed Forgot Password Block (singleType for forgot password page)
   await seedForgotPasswordBlock(strapi);
+  
+  // Seed Change Password Block (singleType for change password page)
+  await seedChangePasswordBlock(strapi);
   
   console.info('[SEED] Content type seeding completed.');
 }

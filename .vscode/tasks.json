@@ -132,12 +132,49 @@
       "problemMatcher": []
     },
     {
+      "label": "generate-strapi-types",
+      "type": "npm",
+      "script": "ts:generate-types",
+      "path": "CMS",
+      "group": "build",
+      "dependsOn": "install-strapi",
+      "problemMatcher": [],
+      "options": {
+        "env": {
+          "NODE_ENV": "development",
+          "DATABASE_CLIENT": "postgres",
+          "DATABASE_HOST": "localhost",
+          "DATABASE_PORT": "5432",
+          "DATABASE_NAME": "djbeatblaster_cms",
+          "DATABASE_USERNAME": "postgres",
+          "DATABASE_PASSWORD": "postgres",
+          "HOST": "0.0.0.0",
+          "PORT": "1337",
+          "APP_KEYS": "LocalDevelopmentAppKey1,LocalDevelopmentAppKey2,LocalDevelopmentAppKey3,LocalDevelopmentAppKey4",
+          "JWT_SECRET": "LocalDevelopmentJWTSecret123456789012345678901234567890",
+          "ADMIN_JWT_SECRET": "LocalDevelopmentAdminJWTSecret123456789012345678901234567890",
+          "API_TOKEN_SALT": "LocalDevelopmentAPITokenSalt123456789012345678901234567890",
+          "TRANSFER_TOKEN_SALT": "LocalDevelopmentTransferTokenSalt123456789012345678901234567890",
+          "ENCRYPTION_KEY": "LocalDevelopmentEncryptionKey123456789012345678901234567890"
+        }
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    {
       "label": "build-strapi",
       "type": "npm",
       "script": "build",
       "path": "CMS",
       "group": "build",
-      "dependsOn": "install-strapi",
+      "dependsOn": ["install-strapi", "generate-strapi-types"],
+      "dependsOrder": "sequence",
       "problemMatcher": []
     },
     {

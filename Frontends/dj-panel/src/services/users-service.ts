@@ -21,6 +21,30 @@ export class UsersService {
       });
   }
 
+  public static async changePassword(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<BooleanResponse> {
+    return microservicesClient.identity.users
+      .v1UsersChangePasswordUpdate({
+        oldPassword,
+        newPassword,
+      })
+      .then((response) => {
+        return response.data;
+      })
+      .catch((error) => {
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: false,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
+      });
+  }
+
   public static async Login(
     email: string,
     password: string,

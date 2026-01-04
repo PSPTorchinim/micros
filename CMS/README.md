@@ -2,6 +2,30 @@
 
 Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 
+## 📋 Local Development Setup
+
+### Prerequisites
+- Node.js >= 20.0.0
+- npm >= 6.0.0
+- Database (PostgreSQL recommended)
+
+### Initial Setup
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Configure environment**
+   - Copy `.env.example` to `.env` (if available)
+   - Configure database connection and other required environment variables
+
+3. **Generate TypeScript types** (Important!)
+   ```bash
+   npm run ts:generate-types
+   ```
+   This command generates TypeScript types for all content types, ensuring type safety across the application.
+
 ### `develop`
 
 Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
@@ -31,6 +55,19 @@ npm run build
 # or
 yarn build
 ```
+
+### `ts:generate-types`
+
+Generate TypeScript types for all content types. Run this after:
+- Adding or modifying content types
+- Pulling changes that include new content types
+- Initial project setup
+
+```
+npm run ts:generate-types
+```
+
+**Note**: This requires the Strapi server to have proper configuration (database connection, JWT secrets, etc.). If types generation fails, ensure your environment variables are properly set.
 
 ## ⚙️ Deployment
 
