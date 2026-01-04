@@ -126,7 +126,7 @@ describe('ProfileBlock', () => {
     const profileContainer = container.querySelector(
       '.profile-block-container',
     );
-    expect(profileContainer).toHaveStyle('background-color: red');
+    expect(profileContainer).toHaveStyle({ backgroundColor: 'red' });
   });
 
   it('navigates to change password page when button is clicked', () => {
