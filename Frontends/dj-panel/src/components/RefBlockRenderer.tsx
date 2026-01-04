@@ -107,7 +107,7 @@ export function transformStrapiBlocks(
 /**
  * Unified renderer for ref components that handles both populated and non-populated data.
  * First checks if data is already populated (from deep populate), then falls back to async fetching.
- * 
+ *
  * Supported ref components:
  *  - article-block-ref.article-block-ref -> field: "block"
  *  - hero-block-ref.hero-block-ref -> "hero_block"
@@ -131,22 +131,25 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const relField = FIELD_BY_REF[refUID];
 
   const relObj = relField ? block[relField] : undefined;
-  
+
   // Check if data is already populated - must have actual data fields beyond just id
   const isPopulated = React.useMemo(() => {
     if (!relObj || typeof relObj !== 'object') return false;
-    
+
     const keys = Object.keys(relObj as Record<string, unknown>);
     if (keys.length <= 1) return false;
-    
+
     return (
       'documentId' in relObj ||
       'Title' in relObj ||
       '__component' in relObj ||
-      keys.some(key => key !== 'id' && (relObj as Record<string, unknown>)[key] !== null)
+      keys.some(
+        (key) =>
+          key !== 'id' && (relObj as Record<string, unknown>)[key] !== null,
+      )
     );
   }, [relObj]);
-  
+
   const [resolved, setResolved] = React.useState<ContentBlock | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
