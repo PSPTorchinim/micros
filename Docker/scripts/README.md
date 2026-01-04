@@ -65,20 +65,24 @@ Rebuilds the Strapi CMS Docker image. Use this after adding or modifying Strapi 
 
 **Solution:** Clean the Strapi volume and rebuild
 ```bash
-# Stop Strapi
+cd Docker
+
+# Find your Strapi volume name
+docker volume ls | grep strapi
+
+# Use the rebuild script with --clean flag (recommended)
+./scripts/rebuild-strapi.sh --clean
+
+# OR manually:
 docker-compose -f dj-panel-composer.yml stop strapi
-
-# Remove Strapi volume (⚠️ deletes data)
-docker volume rm djpanel_strapi_app
-
-# Rebuild
+docker volume rm <project-name>_strapi_app  # Replace with actual name
 docker-compose -f dj-panel-composer.yml build strapi
-
-# Start
 docker-compose -f dj-panel-composer.yml up -d strapi
 ```
 
 **Why:** Removes the Strapi volume and starts with a fresh database. Only use if you're okay with losing development data.
+
+**Note:** The rebuild script automatically detects the correct volume name.
 
 ## Manual Rebuild
 

@@ -25,11 +25,18 @@ if [ ! -f "dj-panel-composer.yml" ]; then
     exit 1
 fi
 
-# Get the Docker Compose project name
-PROJECT_NAME=$(docker-compose -f dj-panel-composer.yml config --format json 2>/dev/null | grep -o '"name": *"[^"]*"' | head -1 | sed 's/"name": "\(.*\)"/\1/' || echo "djpanel")
+# Get the Docker Compose project name dynamically
+# Extract project name from docker-compose config
+PROJECT_NAME=$(docker-compose -f dj-panel-composer.yml config 2>/dev/null | grep -m1 "^name:" | sed 's/name: *//' || echo "djpanel")
+
+# Fallback if name extraction fails
+if [ -z "$PROJECT_NAME" ]; then
+    PROJECT_NAME="djpanel"
+fi
+
 echo "🏷️  Project name: $PROJECT_NAME"
 
-# Determine container and volume names
+# Determine container and volume names based on project
 CONTAINER_NAME="${PROJECT_NAME}-strapi-1"
 VOLUME_NAME="${PROJECT_NAME}_strapi_app"
 
@@ -133,6 +140,14 @@ if [ "$START" = true ]; then
     TIMEOUT=120
     ELAPSED=0
     while [ $ELAPSED -lt $TIMEOUT ]; do
+        # Check if container exists and is running
+        if ! docker ps --filter "name=$CONTAINER_NAME" --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+            echo ""
+            echo "❌ Container $CONTAINER_NAME is not running"
+            echo "   Check logs: docker-compose -f dj-panel-composer.yml logs strapi"
+            exit 1
+        fi
+        
         # Check if container is healthy (healthcheck from Dockerfile)
         HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "none")
         
@@ -151,6 +166,24 @@ if [ "$START" = true ]; then
             echo "   - Stop: docker-compose -f dj-panel-composer.yml stop strapi"
             echo "   - Restart: docker-compose -f dj-panel-composer.yml restart strapi"
             exit 0
+        fi
+        
+        # If no healthcheck defined, check if container has been running for a reasonable time
+        if [ "$HEALTH_STATUS" = "none" ] && [ $ELAPSED -gt 30 ]; then
+            CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "unknown")
+            if [ "$CONTAINER_STATUS" = "running" ]; then
+                echo ""
+                echo "✅ Strapi is running (no healthcheck defined, assuming ready)"
+                echo ""
+                echo "🌐 Access points:"
+                echo "   - CMS Admin: http://localhost:1337/admin"
+                echo "   - API: http://localhost:1337/api"
+                echo "   - Health: http://localhost:1337/api/health"
+                echo "   - Swagger: http://localhost:1337/swagger"
+                echo ""
+                echo "⚠️  Note: Container has no healthcheck. Verify manually if needed."
+                exit 0
+            fi
         fi
         
         if [ $((ELAPSED % 10)) -eq 0 ]; then
