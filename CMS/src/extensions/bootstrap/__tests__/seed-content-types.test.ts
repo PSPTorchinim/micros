@@ -9,7 +9,9 @@ const mockStrapi = {
   db: {
     query: jest.fn(() => ({
       findOne: jest.fn().mockResolvedValue(null),
-      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 1, ...data })),
+      create: jest
+        .fn()
+        .mockImplementation(({ data }) => Promise.resolve({ id: 1, ...data })),
     })),
   },
 };
@@ -25,9 +27,17 @@ describe('Seed Content Types', () => {
       const CTA_SEEDS = [
         { Label: 'Book DJ Torchinim', url: '/booking', OpenInNewTab: false },
         { Label: 'View Upcoming Events', url: '/events', OpenInNewTab: false },
-        { Label: 'Listen on SoundCloud', url: 'https://soundcloud.com/dj-torchinim', OpenInNewTab: true },
+        {
+          Label: 'Listen on SoundCloud',
+          url: 'https://soundcloud.com/dj-torchinim',
+          OpenInNewTab: true,
+        },
         { Label: 'Download Press Kit', url: '/press-kit', OpenInNewTab: false },
-        { Label: 'Contact for Collaborations', url: '/contact', OpenInNewTab: false },
+        {
+          Label: 'Contact for Collaborations',
+          url: '/contact',
+          OpenInNewTab: false,
+        },
       ];
 
       expect(CTA_SEEDS).toHaveLength(5);
@@ -44,11 +54,13 @@ describe('Seed Content Types', () => {
       const HERO_BLOCK_SEEDS = [
         {
           heading: 'DJ Torchinim - Electronic Music Producer',
-          content: 'Bringing high-energy beats and unforgettable experiences to dance floors worldwide.',
+          content:
+            'Bringing high-energy beats and unforgettable experiences to dance floors worldwide.',
         },
         {
           heading: 'Live at Ibiza Summer Festival 2024',
-          content: 'Witness an electrifying performance featuring exclusive unreleased tracks.',
+          content:
+            'Witness an electrifying performance featuring exclusive unreleased tracks.',
         },
         {
           heading: 'New Album: Midnight Sessions',
@@ -56,11 +68,13 @@ describe('Seed Content Types', () => {
         },
         {
           heading: 'Private Events & Club Residencies',
-          content: 'Looking for the perfect soundtrack for your venue or event?',
+          content:
+            'Looking for the perfect soundtrack for your venue or event?',
         },
         {
           heading: 'Music Production Masterclass',
-          content: 'Learn the secrets behind professional electronic music production.',
+          content:
+            'Learn the secrets behind professional electronic music production.',
         },
       ];
 
@@ -75,11 +89,39 @@ describe('Seed Content Types', () => {
 
     it('should have valid Feature Tab seed data with DJ-oriented content', () => {
       const FEATURE_TAB_SEEDS = [
-        { title: 'Club Performances', description: 'High-energy DJ sets at premier nightclubs', imgSrc: '/images/feature-club.jpg', imgAlt: 'DJ performing at a nightclub' },
-        { title: 'Music Production', description: 'Original tracks and remixes released on top electronic music labels', imgSrc: '/images/feature-production.jpg', imgAlt: 'Music production studio setup' },
-        { title: 'Festival Headlining', description: 'Main stage performances at major electronic music festivals', imgSrc: '/images/feature-festival.jpg', imgAlt: 'DJ performing at a music festival' },
-        { title: 'Private Events', description: 'Exclusive performances for corporate events, weddings, and private parties', imgSrc: '/images/feature-private.jpg', imgAlt: 'Private event DJ setup' },
-        { title: 'Radio Shows', description: 'Weekly radio show featuring the latest releases', imgSrc: '/images/feature-radio.jpg', imgAlt: 'DJ hosting a radio show' },
+        {
+          title: 'Club Performances',
+          description: 'High-energy DJ sets at premier nightclubs',
+          imgSrc: '/images/feature-club.jpg',
+          imgAlt: 'DJ performing at a nightclub',
+        },
+        {
+          title: 'Music Production',
+          description:
+            'Original tracks and remixes released on top electronic music labels',
+          imgSrc: '/images/feature-production.jpg',
+          imgAlt: 'Music production studio setup',
+        },
+        {
+          title: 'Festival Headlining',
+          description:
+            'Main stage performances at major electronic music festivals',
+          imgSrc: '/images/feature-festival.jpg',
+          imgAlt: 'DJ performing at a music festival',
+        },
+        {
+          title: 'Private Events',
+          description:
+            'Exclusive performances for corporate events, weddings, and private parties',
+          imgSrc: '/images/feature-private.jpg',
+          imgAlt: 'Private event DJ setup',
+        },
+        {
+          title: 'Radio Shows',
+          description: 'Weekly radio show featuring the latest releases',
+          imgSrc: '/images/feature-radio.jpg',
+          imgAlt: 'DJ hosting a radio show',
+        },
       ];
 
       expect(FEATURE_TAB_SEEDS).toHaveLength(5);
@@ -89,12 +131,21 @@ describe('Seed Content Types', () => {
         expect(tab.imgSrc).toBeDefined();
         expect(tab.imgAlt).toBeDefined();
         // Validate DJ-related content
-        const djKeywords = ['dj', 'music', 'performance', 'event', 'club', 'festival', 'production', 'radio'];
+        const djKeywords = [
+          'dj',
+          'music',
+          'performance',
+          'event',
+          'club',
+          'festival',
+          'production',
+          'radio',
+        ];
         const hasKeyword = djKeywords.some(
           (keyword) =>
             tab.title.toLowerCase().includes(keyword) ||
             tab.description.toLowerCase().includes(keyword) ||
-            tab.imgAlt.toLowerCase().includes(keyword)
+            tab.imgAlt.toLowerCase().includes(keyword),
         );
         expect(hasKeyword).toBe(true);
       });
@@ -102,11 +153,36 @@ describe('Seed Content Types', () => {
 
     it('should have valid Contact Info seed data', () => {
       const CONTACT_INFO_SEEDS = [
-        { title: 'Booking Inquiries', content: 'booking@djtorchinim.com', detail: 'For event bookings', iconName: 'calendar' },
-        { title: 'Management', content: 'management@djtorchinim.com', detail: 'For press, interviews', iconName: 'briefcase' },
-        { title: 'Phone', content: '+1 (555) 123-4567', detail: 'Available Monday to Friday', iconName: 'phone' },
-        { title: 'Studio Location', content: 'Los Angeles, California', detail: 'Available for studio sessions', iconName: 'map-pin' },
-        { title: 'Social Media', content: '@djtorchinim', detail: 'Follow for latest updates', iconName: 'share-2' },
+        {
+          title: 'Booking Inquiries',
+          content: 'booking@djtorchinim.com',
+          detail: 'For event bookings',
+          iconName: 'calendar',
+        },
+        {
+          title: 'Management',
+          content: 'management@djtorchinim.com',
+          detail: 'For press, interviews',
+          iconName: 'briefcase',
+        },
+        {
+          title: 'Phone',
+          content: '+1 (555) 123-4567',
+          detail: 'Available Monday to Friday',
+          iconName: 'phone',
+        },
+        {
+          title: 'Studio Location',
+          content: 'Los Angeles, California',
+          detail: 'Available for studio sessions',
+          iconName: 'map-pin',
+        },
+        {
+          title: 'Social Media',
+          content: '@djtorchinim',
+          detail: 'Follow for latest updates',
+          iconName: 'share-2',
+        },
       ];
 
       expect(CONTACT_INFO_SEEDS).toHaveLength(5);
@@ -121,10 +197,19 @@ describe('Seed Content Types', () => {
       const STEPS_CONTAINER_SEEDS = [
         {
           heading: 'How to Book DJ Torchinim',
-          content: 'Follow these simple steps to secure a memorable performance',
+          content:
+            'Follow these simple steps to secure a memorable performance',
           steps: [
-            { title: 'Submit Your Inquiry', description: 'Fill out our booking form', icon: 'clipboard' },
-            { title: 'Receive a Quote', description: 'Our team will review your request', icon: 'file-text' },
+            {
+              title: 'Submit Your Inquiry',
+              description: 'Fill out our booking form',
+              icon: 'clipboard',
+            },
+            {
+              title: 'Receive a Quote',
+              description: 'Our team will review your request',
+              icon: 'file-text',
+            },
           ],
         },
       ];
@@ -159,6 +244,22 @@ describe('Seed Content Types', () => {
       Object.entries(counts).forEach(([contentType, expectedCount]) => {
         expect(expectedCount).toBe(5);
       });
+    });
+
+    it('should have valid Profile Block seed data', () => {
+      const PROFILE_BLOCK_SEED = {
+        title: 'DJ Profile',
+        description: 'View and manage your DJ profile information.',
+        emailLabel: 'Email',
+        usernameLabel: 'DJ Name',
+      };
+
+      expect(PROFILE_BLOCK_SEED.title).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.description).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.emailLabel).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.usernameLabel).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.title.length).toBeGreaterThan(0);
+      expect(PROFILE_BLOCK_SEED.description.length).toBeGreaterThan(0);
     });
   });
 });

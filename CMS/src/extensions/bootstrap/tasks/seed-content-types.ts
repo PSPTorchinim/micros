@@ -73,35 +73,40 @@ const FEATURE_TAB_SEEDS = [
     title: 'Club Performances',
     description:
       'High-energy DJ sets at premier nightclubs across Europe and North America. From intimate underground venues to massive festival stages.',
-    imgSrc: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
+    imgSrc:
+      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ performing at a nightclub',
   },
   {
     title: 'Music Production',
     description:
       'Original tracks and remixes released on top electronic music labels. Crafting sounds that push the boundaries of dance music.',
-    imgSrc: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+    imgSrc:
+      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'Music production studio setup',
   },
   {
     title: 'Festival Headlining',
     description:
       'Main stage performances at major electronic music festivals. Delivering unforgettable moments to thousands of passionate fans.',
-    imgSrc: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+    imgSrc:
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ performing at a music festival',
   },
   {
     title: 'Private Events',
     description:
       'Exclusive performances for corporate events, weddings, and private parties. Custom-tailored sets for your special occasion.',
-    imgSrc: 'https://images.unsplash.com/photo-1526178613658-3f1622045544?auto=format&fit=crop&w=800&q=80',
+    imgSrc:
+      'https://images.unsplash.com/photo-1526178613658-3f1622045544?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'Private event DJ setup',
   },
   {
     title: 'Radio Shows',
     description:
       'Weekly radio show featuring the latest releases, exclusive premieres, and guest mixes from industry-leading artists.',
-    imgSrc: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80',
+    imgSrc:
+      'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80',
     imgAlt: 'DJ hosting a radio show',
   },
 ];
@@ -338,8 +343,7 @@ const STEPS_CONTAINER_SEEDS = [
       },
       {
         title: 'Beatmatching & Mixing',
-        description:
-          'Master the fundamentals of seamless track transitions.',
+        description: 'Master the fundamentals of seamless track transitions.',
         icon: 'repeat',
       },
       {
@@ -434,9 +438,21 @@ const FOOTER_SEED = {
       title: 'Music',
       links: [
         { label: 'Releases', url: '/releases', newTab: false },
-        { label: 'SoundCloud', url: 'https://soundcloud.com/dj-torchinim', newTab: true },
-        { label: 'Spotify', url: 'https://open.spotify.com/artist/djtorchinim', newTab: true },
-        { label: 'Beatport', url: 'https://beatport.com/artist/dj-torchinim', newTab: true },
+        {
+          label: 'SoundCloud',
+          url: 'https://soundcloud.com/dj-torchinim',
+          newTab: true,
+        },
+        {
+          label: 'Spotify',
+          url: 'https://open.spotify.com/artist/djtorchinim',
+          newTab: true,
+        },
+        {
+          label: 'Beatport',
+          url: 'https://beatport.com/artist/dj-torchinim',
+          newTab: true,
+        },
       ],
     },
     {
@@ -457,11 +473,36 @@ const FOOTER_SEED = {
     },
   ],
   socialLinks: [
-    { platform: 'Instagram', url: 'https://instagram.com/djtorchinim', icon: 'instagram', detail: '@djtorchinim' },
-    { platform: 'Twitter', url: 'https://twitter.com/djtorchinim', icon: 'twitter', detail: '@djtorchinim' },
-    { platform: 'Facebook', url: 'https://facebook.com/djtorchinim', icon: 'facebook', detail: 'DJ Beat Blaster' },
-    { platform: 'YouTube', url: 'https://youtube.com/@djtorchinim', icon: 'youtube', detail: 'DJ Beat Blaster' },
-    { platform: 'SoundCloud', url: 'https://soundcloud.com/dj-torchinim', icon: 'headphones', detail: 'DJ Beat Blaster' },
+    {
+      platform: 'Instagram',
+      url: 'https://instagram.com/djtorchinim',
+      icon: 'instagram',
+      detail: '@djtorchinim',
+    },
+    {
+      platform: 'Twitter',
+      url: 'https://twitter.com/djtorchinim',
+      icon: 'twitter',
+      detail: '@djtorchinim',
+    },
+    {
+      platform: 'Facebook',
+      url: 'https://facebook.com/djtorchinim',
+      icon: 'facebook',
+      detail: 'DJ Beat Blaster',
+    },
+    {
+      platform: 'YouTube',
+      url: 'https://youtube.com/@djtorchinim',
+      icon: 'youtube',
+      detail: 'DJ Beat Blaster',
+    },
+    {
+      platform: 'SoundCloud',
+      url: 'https://soundcloud.com/dj-torchinim',
+      icon: 'headphones',
+      detail: 'DJ Beat Blaster',
+    },
   ],
 };
 
@@ -493,22 +534,30 @@ async function seedCTAs(strapi: StrapiAny): Promise<any[]> {
 }
 
 // Helper function to add CTA relations to Hero Blocks after creation using Document Service
-async function linkHeroBlocksToCTAs(strapi: StrapiAny, heroBlocks: any[], ctas: any[]): Promise<void> {
+async function linkHeroBlocksToCTAs(
+  strapi: StrapiAny,
+  heroBlocks: any[],
+  ctas: any[],
+): Promise<void> {
   console.info('[SEED] Linking Hero Blocks to CTAs...');
   for (let i = 0; i < heroBlocks.length && i < ctas.length; i++) {
     const heroBlock = heroBlocks[i];
     const cta = ctas[i];
-    
+
     // Get the documentId - for db.query created entities, we need to find them again
-    const heroBlockWithDocId = await strapi.documents('api::hero-block.hero-block').findFirst({
-      filters: { heading: heroBlock.heading },
-    });
-    
+    const heroBlockWithDocId = await strapi
+      .documents('api::hero-block.hero-block')
+      .findFirst({
+        filters: { heading: heroBlock.heading },
+      });
+
     if (!heroBlockWithDocId) {
-      console.warn(`[SEED] Could not find Hero Block with heading: ${heroBlock.heading}`);
+      console.warn(
+        `[SEED] Could not find Hero Block with heading: ${heroBlock.heading}`,
+      );
       continue;
     }
-    
+
     // Update hero block to add CTA relation using Document Service
     try {
       await strapi.documents('api::hero-block.hero-block').update({
@@ -517,34 +566,46 @@ async function linkHeroBlocksToCTAs(strapi: StrapiAny, heroBlocks: any[], ctas: 
           actions: [cta.documentId],
         },
       });
-      console.info(`[SEED] Linked Hero Block "${heroBlock.heading}" to CTA "${cta.Label}"`);
+      console.info(
+        `[SEED] Linked Hero Block "${heroBlock.heading}" to CTA "${cta.Label}"`,
+      );
     } catch (error) {
-      console.warn(`[SEED] Could not link Hero Block to CTA: ${(error as Error).message}`);
+      console.warn(
+        `[SEED] Could not link Hero Block to CTA: ${(error as Error).message}`,
+      );
     }
   }
 }
 
 // Helper function to add FeatureTab relations to FeatureSections after creation using Document Service
-async function linkFeatureSectionsToTabs(strapi: StrapiAny, sections: any[], tabs: any[]): Promise<void> {
+async function linkFeatureSectionsToTabs(
+  strapi: StrapiAny,
+  sections: any[],
+  tabs: any[],
+): Promise<void> {
   console.info('[SEED] Linking Feature Sections to Feature Tabs...');
   for (let i = 0; i < sections.length && i < tabs.length; i++) {
     const section = sections[i];
     const tab = tabs[i];
-    
+
     // Get the documentId - for db.query created entities, we need to find them again
-    const sectionWithDocId = await strapi.documents('api::feature-section.feature-section').findFirst({
-      filters: { Title: section.Title },
-    });
-    
-    const tabWithDocId = await strapi.documents('api::feature-tab.feature-tab').findFirst({
-      filters: { title: tab.title },
-    });
-    
+    const sectionWithDocId = await strapi
+      .documents('api::feature-section.feature-section')
+      .findFirst({
+        filters: { Title: section.Title },
+      });
+
+    const tabWithDocId = await strapi
+      .documents('api::feature-tab.feature-tab')
+      .findFirst({
+        filters: { title: tab.title },
+      });
+
     if (!sectionWithDocId || !tabWithDocId) {
       console.warn(`[SEED] Could not find Feature Section or Tab for linking`);
       continue;
     }
-    
+
     try {
       await strapi.documents('api::feature-section.feature-section').update({
         documentId: sectionWithDocId.documentId,
@@ -552,34 +613,46 @@ async function linkFeatureSectionsToTabs(strapi: StrapiAny, sections: any[], tab
           tabs: [tabWithDocId.documentId],
         },
       });
-      console.info(`[SEED] Linked Feature Section "${section.Title}" to Tab "${tab.title}"`);
+      console.info(
+        `[SEED] Linked Feature Section "${section.Title}" to Tab "${tab.title}"`,
+      );
     } catch (error) {
-      console.warn(`[SEED] Could not link Feature Section to Tab: ${(error as Error).message}`);
+      console.warn(
+        `[SEED] Could not link Feature Section to Tab: ${(error as Error).message}`,
+      );
     }
   }
 }
 
 // Helper function to add ContactInfo relations to ContactSections after creation using Document Service
-async function linkContactSectionsToInfos(strapi: StrapiAny, sections: any[], infos: any[]): Promise<void> {
+async function linkContactSectionsToInfos(
+  strapi: StrapiAny,
+  sections: any[],
+  infos: any[],
+): Promise<void> {
   console.info('[SEED] Linking Contact Sections to Contact Infos...');
   for (let i = 0; i < sections.length && i < infos.length; i++) {
     const section = sections[i];
     const info = infos[i];
-    
+
     // Get the documentId - for db.query created entities, we need to find them again
-    const sectionWithDocId = await strapi.documents('api::contact-section.contact-section').findFirst({
-      filters: { heading: section.heading },
-    });
-    
-    const infoWithDocId = await strapi.documents('api::contact-info.contact-info').findFirst({
-      filters: { title: info.title },
-    });
-    
+    const sectionWithDocId = await strapi
+      .documents('api::contact-section.contact-section')
+      .findFirst({
+        filters: { heading: section.heading },
+      });
+
+    const infoWithDocId = await strapi
+      .documents('api::contact-info.contact-info')
+      .findFirst({
+        filters: { title: info.title },
+      });
+
     if (!sectionWithDocId || !infoWithDocId) {
       console.warn(`[SEED] Could not find Contact Section or Info for linking`);
       continue;
     }
-    
+
     try {
       await strapi.documents('api::contact-section.contact-section').update({
         documentId: sectionWithDocId.documentId,
@@ -587,9 +660,13 @@ async function linkContactSectionsToInfos(strapi: StrapiAny, sections: any[], in
           contactInfo: [infoWithDocId.documentId],
         },
       });
-      console.info(`[SEED] Linked Contact Section "${section.heading}" to Info "${info.title}"`);
+      console.info(
+        `[SEED] Linked Contact Section "${section.heading}" to Info "${info.title}"`,
+      );
     } catch (error) {
-      console.warn(`[SEED] Could not link Contact Section to Info: ${(error as Error).message}`);
+      console.warn(
+        `[SEED] Could not link Contact Section to Info: ${(error as Error).message}`,
+      );
     }
   }
 }
@@ -598,19 +675,23 @@ async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < HERO_BLOCK_SEEDS.length; i++) {
     const hero = HERO_BLOCK_SEEDS[i];
-    const existing = await strapi.db.query('api::hero-block.hero-block').findOne({
-      where: { heading: hero.heading },
-    });
+    const existing = await strapi.db
+      .query('api::hero-block.hero-block')
+      .findOne({
+        where: { heading: hero.heading },
+      });
     if (!existing) {
       // Create hero block without CTA relation first
       const heroData: any = {
         ...hero,
         publishedAt: new Date(),
       };
-      
-      const created = await strapi.db.query('api::hero-block.hero-block').create({
-        data: heroData,
-      });
+
+      const created = await strapi.db
+        .query('api::hero-block.hero-block')
+        .create({
+          data: heroData,
+        });
       console.info(`[SEED] Created Hero Block: ${hero.heading}`);
       results.push(created);
     } else {
@@ -624,13 +705,17 @@ async function seedHeroBlocks(strapi: StrapiAny): Promise<any[]> {
 async function seedFeatureTabs(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const tab of FEATURE_TAB_SEEDS) {
-    const existing = await strapi.db.query('api::feature-tab.feature-tab').findOne({
-      where: { title: tab.title },
-    });
-    if (!existing) {
-      const created = await strapi.db.query('api::feature-tab.feature-tab').create({
-        data: { ...tab, publishedAt: new Date() },
+    const existing = await strapi.db
+      .query('api::feature-tab.feature-tab')
+      .findOne({
+        where: { title: tab.title },
       });
+    if (!existing) {
+      const created = await strapi.db
+        .query('api::feature-tab.feature-tab')
+        .create({
+          data: { ...tab, publishedAt: new Date() },
+        });
       console.info(`[SEED] Created Feature Tab: ${tab.title}`);
       results.push(created);
     } else {
@@ -645,19 +730,23 @@ async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < FEATURE_SECTION_SEEDS.length; i++) {
     const section = FEATURE_SECTION_SEEDS[i];
-    const existing = await strapi.db.query('api::feature-section.feature-section').findOne({
-      where: { Title: section.Title },
-    });
+    const existing = await strapi.db
+      .query('api::feature-section.feature-section')
+      .findOne({
+        where: { Title: section.Title },
+      });
     if (!existing) {
       // Create feature section without tab relation first
       const sectionData: any = {
         ...section,
         publishedAt: new Date(),
       };
-      
-      const created = await strapi.db.query('api::feature-section.feature-section').create({
-        data: sectionData,
-      });
+
+      const created = await strapi.db
+        .query('api::feature-section.feature-section')
+        .create({
+          data: sectionData,
+        });
       console.info(`[SEED] Created Feature Section: ${section.Title}`);
       results.push(created);
     } else {
@@ -671,16 +760,20 @@ async function seedFeatureSections(strapi: StrapiAny): Promise<any[]> {
 async function seedContactInfos(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const info of CONTACT_INFO_SEEDS) {
-    const existing = await strapi.db.query('api::contact-info.contact-info').findOne({
-      where: { title: info.title },
-    });
-    if (!existing) {
-      const created = await strapi.db.query('api::contact-info.contact-info').create({
-        data: {
-          ...info,
-          publishedAt: new Date(),
-        },
+    const existing = await strapi.db
+      .query('api::contact-info.contact-info')
+      .findOne({
+        where: { title: info.title },
       });
+    if (!existing) {
+      const created = await strapi.db
+        .query('api::contact-info.contact-info')
+        .create({
+          data: {
+            ...info,
+            publishedAt: new Date(),
+          },
+        });
       console.info(`[SEED] Created Contact Info: ${info.title}`);
       results.push(created);
     } else {
@@ -695,19 +788,23 @@ async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < CONTACT_SECTION_SEEDS.length; i++) {
     const section = CONTACT_SECTION_SEEDS[i];
-    const existing = await strapi.db.query('api::contact-section.contact-section').findOne({
-      where: { heading: section.heading },
-    });
+    const existing = await strapi.db
+      .query('api::contact-section.contact-section')
+      .findOne({
+        where: { heading: section.heading },
+      });
     if (!existing) {
       // Create contact section without contactInfo relation first
       const sectionData: any = {
         ...section,
         publishedAt: new Date(),
       };
-      
-      const created = await strapi.db.query('api::contact-section.contact-section').create({
-        data: sectionData,
-      });
+
+      const created = await strapi.db
+        .query('api::contact-section.contact-section')
+        .create({
+          data: sectionData,
+        });
       console.info(`[SEED] Created Contact Section: ${section.heading}`);
       results.push(created);
     } else {
@@ -718,14 +815,19 @@ async function seedContactSections(strapi: StrapiAny): Promise<any[]> {
   return results;
 }
 
-async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[]> {
+async function seedStepsContainers(
+  strapi: StrapiAny,
+  ctas: any[],
+): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < STEPS_CONTAINER_SEEDS.length; i++) {
     const container = STEPS_CONTAINER_SEEDS[i];
     // Use Document Service for draftAndPublish: true content types
-    const existing = await strapi.documents('api::steps-container.steps-container').findFirst({
-      filters: { heading: container.heading },
-    });
+    const existing = await strapi
+      .documents('api::steps-container.steps-container')
+      .findFirst({
+        filters: { heading: container.heading },
+      });
     if (!existing) {
       // Build steps component data
       const stepsData = container.steps.map((step) => ({
@@ -733,49 +835,62 @@ async function seedStepsContainers(strapi: StrapiAny, ctas: any[]): Promise<any[
         description: step.description,
         icon: step.icon,
       }));
-      
+
       // Build the create payload with steps and action
       const createData: any = {
         heading: container.heading,
         content: container.content,
         steps: stepsData,
       };
-      
+
       // Add CTA action relation if available
       if (ctas.length > 0 && ctas[i % ctas.length]) {
         createData.action = ctas[i % ctas.length].documentId;
       }
-      
+
       // Create using Document Service with steps component data
-      const created = await strapi.documents('api::steps-container.steps-container').create({
-        data: createData,
-        status: 'published',
-      });
-      console.info(`[SEED] Created Steps Container: ${container.heading} (with ${stepsData.length} steps${createData.action ? ' and CTA action' : ''})`);
+      const created = await strapi
+        .documents('api::steps-container.steps-container')
+        .create({
+          data: createData,
+          status: 'published',
+        });
+      console.info(
+        `[SEED] Created Steps Container: ${container.heading} (with ${stepsData.length} steps${createData.action ? ' and CTA action' : ''})`,
+      );
       results.push(created);
     } else {
-      console.info(`[SEED] Steps Container already exists: ${container.heading}`);
+      console.info(
+        `[SEED] Steps Container already exists: ${container.heading}`,
+      );
       results.push(existing);
     }
   }
   return results;
 }
 
-async function seedImageSliders(strapi: StrapiAny, heroBlocks: any[]): Promise<any[]> {
+async function seedImageSliders(
+  strapi: StrapiAny,
+  heroBlocks: any[],
+): Promise<any[]> {
   const results: any[] = [];
   for (let i = 0; i < IMAGE_SLIDER_SEEDS.length; i++) {
     const slider = IMAGE_SLIDER_SEEDS[i];
     // Use Document Service for draftAndPublish: true content types
-    const existing = await strapi.documents('api::image-slider.image-slider').findFirst({
-      filters: { Title: slider.Title },
-    });
+    const existing = await strapi
+      .documents('api::image-slider.image-slider')
+      .findFirst({
+        filters: { Title: slider.Title },
+      });
     if (!existing) {
       // Build slides array with hero-block-ref components
       const slides: any[] = [];
-      
+
       // Each slider gets a reference to a hero block as a slide
       // Get the hero block with documentId
-      const heroBlocksWithDocId = await strapi.documents('api::hero-block.hero-block').findMany({});
+      const heroBlocksWithDocId = await strapi
+        .documents('api::hero-block.hero-block')
+        .findMany({});
       if (heroBlocksWithDocId.length > 0) {
         const heroBlock = heroBlocksWithDocId[i % heroBlocksWithDocId.length];
         slides.push({
@@ -783,16 +898,20 @@ async function seedImageSliders(strapi: StrapiAny, heroBlocks: any[]): Promise<a
           hero_block: heroBlock.documentId,
         });
       }
-      
+
       // Create and publish using Document Service
-      const created = await strapi.documents('api::image-slider.image-slider').create({
-        data: { 
-          ...slider,
-          Slides: slides,
-        },
-        status: 'published',
-      });
-      console.info(`[SEED] Created Image Slider: ${slider.Title} (with ${slides.length} slide(s))`);
+      const created = await strapi
+        .documents('api::image-slider.image-slider')
+        .create({
+          data: {
+            ...slider,
+            Slides: slides,
+          },
+          status: 'published',
+        });
+      console.info(
+        `[SEED] Created Image Slider: ${slider.Title} (with ${slides.length} slide(s))`,
+      );
       results.push(created);
     } else {
       console.info(`[SEED] Image Slider already exists: ${slider.Title}`);
@@ -806,15 +925,19 @@ async function seedArticleBlocks(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const block of ARTICLE_BLOCK_SEEDS) {
     // Use Document Service for draftAndPublish: true content types
-    const existing = await strapi.documents('api::article-block.article-block').findFirst({
-      filters: { Title: block.Title },
-    });
+    const existing = await strapi
+      .documents('api::article-block.article-block')
+      .findFirst({
+        filters: { Title: block.Title },
+      });
     if (!existing) {
       // Create and publish using Document Service
-      const created = await strapi.documents('api::article-block.article-block').create({
-        data: { ...block },
-        status: 'published',
-      });
+      const created = await strapi
+        .documents('api::article-block.article-block')
+        .create({
+          data: { ...block },
+          status: 'published',
+        });
       console.info(`[SEED] Created Article Block: ${block.Title}`);
       results.push(created);
     } else {
@@ -829,15 +952,19 @@ async function seedConfigurations(strapi: StrapiAny): Promise<any[]> {
   const results: any[] = [];
   for (const config of CONFIGURATION_SEEDS) {
     // Use Document Service for draftAndPublish: true content types
-    const existing = await strapi.documents('api::configuration.configuration').findFirst({
-      filters: { Title: config.Title },
-    });
+    const existing = await strapi
+      .documents('api::configuration.configuration')
+      .findFirst({
+        filters: { Title: config.Title },
+      });
     if (!existing) {
       // Create and publish using Document Service
-      const created = await strapi.documents('api::configuration.configuration').create({
-        data: { ...config },
-        status: 'published',
-      });
+      const created = await strapi
+        .documents('api::configuration.configuration')
+        .create({
+          data: { ...config },
+          status: 'published',
+        });
       console.info(`[SEED] Created Configuration: ${config.Title}`);
       results.push(created);
     } else {
@@ -852,7 +979,7 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
   // Footer is a singleType with draftAndPublish: true
   // Use Document Service for proper handling
   const existing = await strapi.documents('api::footer.footer').findFirst({});
-  
+
   if (!existing) {
     // Create footer with full data including columns and social links
     const created = await strapi.documents('api::footer.footer').create({
@@ -863,7 +990,9 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
       },
       status: 'published',
     });
-    console.info(`[SEED] Created Footer with ${FOOTER_SEED.columns.length} columns and ${FOOTER_SEED.socialLinks.length} social links`);
+    console.info(
+      `[SEED] Created Footer with ${FOOTER_SEED.columns.length} columns and ${FOOTER_SEED.socialLinks.length} social links`,
+    );
     return created;
   } else {
     console.info(`[SEED] Footer already exists`);
@@ -874,24 +1003,28 @@ async function seedFooter(strapi: StrapiAny): Promise<any> {
 async function seedLoginBlock(strapi: StrapiAny): Promise<any> {
   // Login Block is a singleType with draftAndPublish: false
   // Use db.query for singleTypes without draftAndPublish
-  const existingEntries = await strapi.db.query('api::login-block.login-block').findMany({});
-  
+  const existingEntries = await strapi.db
+    .query('api::login-block.login-block')
+    .findMany({});
+
   if (existingEntries.length === 0) {
     // Create login block with DJ-themed content
-    const created = await strapi.db.query('api::login-block.login-block').create({
-      data: {
-        title: 'Welcome Back, DJ',
-        emailLabel: 'Email Address',
-        passwordLabel: 'Password',
-        submitButtonText: 'Sign In',
-        forgotPasswordText: 'Forgot your password?',
-        resetPasswordLinkText: 'Reset it here',
-        emailPlaceholder: 'your@email.com',
-        passwordPlaceholder: 'Enter your password',
-        redirectPath: '/',
-        forgotPasswordUrl: '/forgot-password',
-      },
-    });
+    const created = await strapi.db
+      .query('api::login-block.login-block')
+      .create({
+        data: {
+          title: 'Welcome Back, DJ',
+          emailLabel: 'Email Address',
+          passwordLabel: 'Password',
+          submitButtonText: 'Sign In',
+          forgotPasswordText: 'Forgot your password?',
+          resetPasswordLinkText: 'Reset it here',
+          emailPlaceholder: 'your@email.com',
+          passwordPlaceholder: 'Enter your password',
+          redirectPath: '/',
+          forgotPasswordUrl: '/forgot-password',
+        },
+      });
     console.info(`[SEED] Created Login Block`);
     return created;
   } else {
@@ -903,23 +1036,28 @@ async function seedLoginBlock(strapi: StrapiAny): Promise<any> {
 async function seedForgotPasswordBlock(strapi: StrapiAny): Promise<any> {
   // Forgot Password Block is a singleType with draftAndPublish: false
   // Use db.query for singleTypes without draftAndPublish
-  const existingEntries = await strapi.db.query('api::forgot-password-block.forgot-password-block').findMany({});
-  
+  const existingEntries = await strapi.db
+    .query('api::forgot-password-block.forgot-password-block')
+    .findMany({});
+
   if (existingEntries.length === 0) {
     // Create forgot password block with DJ-themed content
-    const created = await strapi.db.query('api::forgot-password-block.forgot-password-block').create({
-      data: {
-        title: 'Reset Your Password',
-        description: 'Enter your email address and we\'ll send you a link to reset your password.',
-        emailLabel: 'Email Address',
-        submitButtonText: 'Send Reset Link',
-        backToLoginText: 'Remember your password?',
-        loginLinkText: 'Back to Login',
-        emailPlaceholder: 'your@email.com',
-        successRedirectPath: '/login',
-        loginUrl: '/login',
-      },
-    });
+    const created = await strapi.db
+      .query('api::forgot-password-block.forgot-password-block')
+      .create({
+        data: {
+          title: 'Reset Your Password',
+          description:
+            "Enter your email address and we'll send you a link to reset your password.",
+          emailLabel: 'Email Address',
+          submitButtonText: 'Send Reset Link',
+          backToLoginText: 'Remember your password?',
+          loginLinkText: 'Back to Login',
+          emailPlaceholder: 'your@email.com',
+          successRedirectPath: '/login',
+          loginUrl: '/login',
+        },
+      });
     console.info(`[SEED] Created Forgot Password Block`);
     return created;
   } else {
@@ -931,24 +1069,28 @@ async function seedForgotPasswordBlock(strapi: StrapiAny): Promise<any> {
 async function seedChangePasswordBlock(strapi: StrapiAny): Promise<any> {
   // Change Password Block is a singleType with draftAndPublish: false
   // Use db.query for singleTypes without draftAndPublish
-  const existingEntries = await strapi.db.query('api::change-password-block.change-password-block').findMany({});
-  
+  const existingEntries = await strapi.db
+    .query('api::change-password-block.change-password-block')
+    .findMany({});
+
   if (existingEntries.length === 0) {
     // Create change password block with DJ-themed content
-    const created = await strapi.db.query('api::change-password-block.change-password-block').create({
-      data: {
-        title: 'Change Your Password',
-        description: 'Update your password to keep your account secure.',
-        oldPasswordLabel: 'Current Password',
-        newPasswordLabel: 'New Password',
-        confirmPasswordLabel: 'Confirm New Password',
-        submitButtonText: 'Change Password',
-        oldPasswordPlaceholder: 'Enter your current password',
-        newPasswordPlaceholder: 'Enter your new password',
-        confirmPasswordPlaceholder: 'Confirm your new password',
-        successRedirectPath: '/dashboard',
-      },
-    });
+    const created = await strapi.db
+      .query('api::change-password-block.change-password-block')
+      .create({
+        data: {
+          title: 'Change Your Password',
+          description: 'Update your password to keep your account secure.',
+          oldPasswordLabel: 'Current Password',
+          newPasswordLabel: 'New Password',
+          confirmPasswordLabel: 'Confirm New Password',
+          submitButtonText: 'Change Password',
+          oldPasswordPlaceholder: 'Enter your current password',
+          newPasswordPlaceholder: 'Enter your new password',
+          confirmPasswordPlaceholder: 'Confirm your new password',
+          successRedirectPath: '/dashboard',
+        },
+      });
     console.info(`[SEED] Created Change Password Block`);
     return created;
   } else {
@@ -957,63 +1099,97 @@ async function seedChangePasswordBlock(strapi: StrapiAny): Promise<any> {
   }
 }
 
+async function seedProfileBlock(strapi: StrapiAny): Promise<any> {
+  // Profile Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db
+    .query('api::profile-block.profile-block')
+    .findMany({});
+
+  if (existingEntries.length === 0) {
+    // Create profile block with DJ-themed content
+    const created = await strapi.db
+      .query('api::profile-block.profile-block')
+      .create({
+        data: {
+          title: 'DJ Profile',
+          description: 'View and manage your DJ profile information.',
+          emailLabel: 'Email',
+          usernameLabel: 'DJ Name',
+        },
+      });
+    console.info(`[SEED] Created Profile Block`);
+    return created;
+  } else {
+    console.info(`[SEED] Profile Block already exists`);
+    return existingEntries[0];
+  }
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
 
-export default async function seedContentTypes({ strapi }: { strapi: StrapiAny }) {
+export default async function seedContentTypes({
+  strapi,
+}: {
+  strapi: StrapiAny;
+}) {
   console.info('[SEED] Starting content type seeding...');
-  
+
   // Seed CTAs first (needed for Hero Block and Steps Container relations)
   const ctas = await seedCTAs(strapi);
-  
+
   // Seed Hero Blocks (without CTA relations first)
   const heroBlocks = await seedHeroBlocks(strapi);
-  
+
   // Link Hero Blocks to CTAs after creation
   await linkHeroBlocksToCTAs(strapi, heroBlocks, ctas);
-  
+
   // Seed Feature Tabs (needed for Feature Section relations)
   const featureTabs = await seedFeatureTabs(strapi);
-  
+
   // Seed Feature Sections (without tab relations first)
   const featureSections = await seedFeatureSections(strapi);
-  
+
   // Link Feature Sections to Feature Tabs after creation
   await linkFeatureSectionsToTabs(strapi, featureSections, featureTabs);
-  
+
   // Seed Contact Infos (needed for Contact Section relations)
   const contactInfos = await seedContactInfos(strapi);
-  
+
   // Seed Contact Sections (without contactInfo relations first)
   const contactSections = await seedContactSections(strapi);
-  
+
   // Link Contact Sections to Contact Infos after creation
   await linkContactSectionsToInfos(strapi, contactSections, contactInfos);
-  
+
   // Seed Steps Containers with steps and CTA action
   await seedStepsContainers(strapi, ctas);
-  
+
   // Seed Image Sliders (with slides containing references to Hero Blocks)
   await seedImageSliders(strapi, heroBlocks);
-  
+
   // Seed Article Blocks
   await seedArticleBlocks(strapi);
-  
+
   // Seed Configurations
   await seedConfigurations(strapi);
-  
+
   // Seed Footer
   await seedFooter(strapi);
-  
+
   // Seed Login Block (singleType for login page)
   await seedLoginBlock(strapi);
-  
+
   // Seed Forgot Password Block (singleType for forgot password page)
   await seedForgotPasswordBlock(strapi);
-  
+
   // Seed Change Password Block (singleType for change password page)
   await seedChangePasswordBlock(strapi);
-  
+
+  // Seed Profile Block (singleType for profile page)
+  await seedProfileBlock(strapi);
+
   console.info('[SEED] Content type seeding completed.');
 }

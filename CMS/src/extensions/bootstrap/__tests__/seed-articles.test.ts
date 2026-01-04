@@ -9,21 +9,24 @@ describe('Seed Articles', () => {
     const ARTICLE_SEEDS = [
       {
         Title: 'The Art of Reading a Dance Floor: Tips from 15 Years of DJing',
-        Summary: 'Learn the essential skills every DJ needs to keep the crowd moving.',
+        Summary:
+          'Learn the essential skills every DJ needs to keep the crowd moving.',
         coverUrl: '/images/articles/reading-dancefloor.jpg',
         Body: 'After 15 years behind the decks...',
       },
       {
         Title: 'Essential DJ Equipment Guide 2024: From Bedroom to Main Stage',
-        Summary: 'A comprehensive breakdown of the gear you need at every stage.',
+        Summary:
+          'A comprehensive breakdown of the gear you need at every stage.',
         coverUrl: '/images/articles/dj-equipment-guide.jpg',
         Body: 'The equipment you need depends on where you are...',
       },
       {
-        Title: 'Building Your DJ Brand: Social Media Strategies That Actually Work',
+        Title:
+          'Building Your DJ Brand: Social Media Strategies That Actually Work',
         Summary: 'Discover proven strategies for growing your DJ brand online.',
         coverUrl: '/images/articles/dj-social-media.jpg',
-        Body: 'In today\'s saturated DJ market...',
+        Body: "In today's saturated DJ market...",
       },
       {
         Title: 'From Vinyl to Digital: The Evolution of DJ Technology',
@@ -61,11 +64,24 @@ describe('Seed Articles', () => {
     });
 
     it('should have DJ-oriented content in titles', () => {
-      const djKeywords = ['dj', 'music', 'dance', 'vinyl', 'digital', 'equipment', 'brand', 'floor', 'business', 'technology'];
-      
+      const djKeywords = [
+        'dj',
+        'music',
+        'dance',
+        'vinyl',
+        'digital',
+        'equipment',
+        'brand',
+        'floor',
+        'business',
+        'technology',
+      ];
+
       ARTICLE_SEEDS.forEach((article) => {
         const titleLower = article.Title.toLowerCase();
-        const hasKeyword = djKeywords.some((keyword) => titleLower.includes(keyword));
+        const hasKeyword = djKeywords.some((keyword) =>
+          titleLower.includes(keyword),
+        );
         expect(hasKeyword).toBe(true);
       });
     });
@@ -73,7 +89,9 @@ describe('Seed Articles', () => {
     it('should have realistic cover image URLs', () => {
       ARTICLE_SEEDS.forEach((article) => {
         expect(article.coverUrl).toBeDefined();
-        expect(article.coverUrl).toMatch(/^\/images\/articles\/[\w-]+\.(jpg|png|webp)$/);
+        expect(article.coverUrl).toMatch(
+          /^\/images\/articles\/[\w-]+\.(jpg|png|webp)$/,
+        );
       });
     });
 
@@ -97,7 +115,11 @@ describe('Seed Articles', () => {
 
       ARTICLE_SEEDS.forEach((article) => {
         const combined = `${article.Title} ${article.Summary}`.toLowerCase();
-        if (combined.includes('floor') || combined.includes('crowd') || combined.includes('reading')) {
+        if (
+          combined.includes('floor') ||
+          combined.includes('crowd') ||
+          combined.includes('reading')
+        ) {
           topicKeywords.performance = true;
         }
         if (combined.includes('equipment') || combined.includes('gear')) {
@@ -106,10 +128,18 @@ describe('Seed Articles', () => {
         if (combined.includes('brand') || combined.includes('social')) {
           topicKeywords.branding = true;
         }
-        if (combined.includes('vinyl') || combined.includes('evolution') || combined.includes('history')) {
+        if (
+          combined.includes('vinyl') ||
+          combined.includes('evolution') ||
+          combined.includes('history')
+        ) {
           topicKeywords.history = true;
         }
-        if (combined.includes('business') || combined.includes('contract') || combined.includes('paid')) {
+        if (
+          combined.includes('business') ||
+          combined.includes('contract') ||
+          combined.includes('paid')
+        ) {
           topicKeywords.business = true;
         }
       });
