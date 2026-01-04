@@ -1,7 +1,7 @@
 import { transformStrapiBlocks } from './transformStrapiBlocks';
 
 describe('transformStrapiBlocks', () => {
-  it('transforms a ref component with populated data', () => {
+  it('returns ref components as-is for RefBlockRenderer to handle', () => {
     const refComponent = {
       __component: 'image-slider-ref.image-slider-ref',
       id: 1,
@@ -15,16 +15,11 @@ describe('transformStrapiBlocks', () => {
 
     const result = transformStrapiBlocks(refComponent);
 
-    expect(result).toEqual({
-      __kind: 'image-slider',
-      id: 123,
-      documentId: 'slider-doc-123',
-      Title: 'My Slider',
-      Images: [],
-    });
+    // Ref components are now returned as-is
+    expect(result).toEqual(refComponent);
   });
 
-  it('transforms an array of ref components', () => {
+  it('returns an array of ref components as-is', () => {
     const blocks = [
       {
         __component: 'hero-block-ref.hero-block-ref',
@@ -49,18 +44,9 @@ describe('transformStrapiBlocks', () => {
     const result = transformStrapiBlocks(blocks) as any[];
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      __kind: 'hero-block',
-      id: 456,
-      documentId: 'hero-doc-456',
-      Title: 'Hero Title',
-    });
-    expect(result[1]).toEqual({
-      __kind: 'cta',
-      id: 789,
-      documentId: 'cta-doc-789',
-      ButtonText: 'Click Me',
-    });
+    // Ref components are returned as-is
+    expect(result[0]).toEqual(blocks[0]);
+    expect(result[1]).toEqual(blocks[1]);
   });
 
   it('returns unpopulated ref component as-is', () => {
@@ -72,11 +58,11 @@ describe('transformStrapiBlocks', () => {
 
     const result = transformStrapiBlocks(refComponent);
 
-    // Should return as-is when data is not populated
+    // Should return as-is
     expect(result).toEqual(refComponent);
   });
 
-  it('handles unknown ref component types', () => {
+  it('returns unknown ref component types as-is', () => {
     const refComponent = {
       __component: 'unknown-ref.unknown-ref',
       id: 1,
@@ -85,7 +71,7 @@ describe('transformStrapiBlocks', () => {
 
     const result = transformStrapiBlocks(refComponent);
 
-    // Should return as-is for unknown types
+    // Should return as-is
     expect(result).toEqual(refComponent);
   });
 
@@ -102,7 +88,7 @@ describe('transformStrapiBlocks', () => {
     expect(result).toEqual(block);
   });
 
-  it('recursively transforms nested ref components', () => {
+  it('recursively processes nested ref components', () => {
     const block = {
       __component: 'some-component',
       nested: {
@@ -117,11 +103,8 @@ describe('transformStrapiBlocks', () => {
 
     const result = transformStrapiBlocks(block) as any;
 
-    expect(result.nested).toEqual({
-      __kind: 'hero-block',
-      id: 999,
-      Title: 'Nested Hero',
-    });
+    // Nested ref component is returned as-is
+    expect(result.nested).toEqual(block.nested);
   });
 
   it('handles arrays within blocks', () => {
@@ -150,16 +133,9 @@ describe('transformStrapiBlocks', () => {
     const result = transformStrapiBlocks(block) as any;
 
     expect(result.items).toHaveLength(2);
-    expect(result.items[0]).toEqual({
-      __kind: 'cta',
-      id: 111,
-      ButtonText: 'Button 1',
-    });
-    expect(result.items[1]).toEqual({
-      __kind: 'cta',
-      id: 222,
-      ButtonText: 'Button 2',
-    });
+    // Ref components in arrays are returned as-is
+    expect(result.items[0]).toEqual(block.items[0]);
+    expect(result.items[1]).toEqual(block.items[1]);
   });
 
   it('handles empty arrays', () => {

@@ -6,8 +6,10 @@ import type { RefComponent, ContentBlock } from '../types/content-blocks';
 import { getDocId, FIELD_BY_REF } from '../utils/transformStrapiBlocks';
 
 /**
- * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
- * Zakłada, że w payloadzie ref-komponentu jest pole relacyjne z documentId:
+ * Unified renderer for ref components that handles both populated and non-populated data.
+ * First checks if data is already populated (from deep populate), then falls back to async fetching.
+ * 
+ * Supported ref components:
  *  - article-block-ref.article-block-ref -> field: "block"
  *  - hero-block-ref.hero-block-ref -> "hero_block"
  *  - image-slider-ref.image-slider-ref -> "slider"
@@ -26,35 +28,56 @@ interface Props {
 
 export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const refUID = block.__component as string;
-  const base = refUID?.split('-ref')[0]; // 'image-slider', 'article-block', ...
+  const base = refUID?.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
   const relField = FIELD_BY_REF[refUID];
 
   const relObj = relField ? block[relField] : undefined;
-  const docId = getDocId(relObj);
-  const numericId =
-    typeof (relObj as Record<string, unknown>)?.id === 'number'
-      ? ((relObj as Record<string, unknown>).id as number)
-      : undefined;
-
+  
+  // Check if data is already populated
+  const isPopulated = relObj && typeof relObj === 'object';
+  
   const [resolved, setResolved] = React.useState<ContentBlock | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let cancel = false;
 
-    const fetchRef = async () => {
-      setError(null);
-      setResolved(null);
-
+    const resolveRef = async () => {
       try {
         if (!base) {
           setError('Unknown ref base');
           return;
         }
 
+        if (!relField) {
+          setError(`Unknown ref type: ${refUID}`);
+          return;
+        }
+
+        // Fast path: data is already populated
+        if (isPopulated) {
+          if (!cancel) {
+            setResolved({
+              __kind: base,
+              ...(relObj as Record<string, unknown>),
+            } as ContentBlock);
+          }
+          return;
+        }
+
+        // Slow path: need to fetch data async
+        setError(null);
+        setResolved(null);
+
+        const docId = getDocId(relObj);
+        const numericId =
+          typeof (relObj as Record<string, unknown>)?.id === 'number'
+            ? ((relObj as Record<string, unknown>).id as number)
+            : undefined;
+
         let data: unknown = null;
 
-        // 1) Preferuj documentId (stabilny identyfikator)
+        // Try fetching by documentId first (stable identifier)
         if (docId) {
           switch (base) {
             case 'article-block':
@@ -91,7 +114,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
           }
         }
 
-        // 2) Fallback: po numerycznym id (gdyby documentId nie przyszedł)
+        // Fallback: try numeric id
         if (!data && numericId) {
           switch (base) {
             case 'article-block':
@@ -142,7 +165,6 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
           return;
         }
 
-        // Doklej znacznik typu, żeby renderBlock nie musiał zgadywać
         setResolved({
           __kind: base,
           ...(data as Record<string, unknown>),
@@ -154,11 +176,11 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
       }
     };
 
-    fetchRef();
+    resolveRef();
     return () => {
       cancel = true;
     };
-  }, [refUID, base, relField, docId, numericId]);
+  }, [refUID, base, relField, relObj, isPopulated]);
 
   if (error) {
     return (

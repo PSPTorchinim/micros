@@ -45,11 +45,13 @@ export const FIELD_BY_REF: Record<string, string> = {
 };
 
 /**
- * Transforms Strapi ref components into content blocks by extracting the populated data.
- * This is a synchronous transformation that works with already-populated data from the API.
+ * Recursively processes content blocks to prepare them for rendering.
+ * - Ref components are returned as-is (will be handled by RefBlockRenderer)
+ * - Regular blocks with nested components/arrays are processed recursively
+ * - Other blocks are returned unchanged
  *
  * @param block - A content block, ref component, or array of them
- * @returns Transformed content block(s) with __kind property
+ * @returns Processed content block(s)
  */
 export function transformStrapiBlocks(
   block: ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
@@ -63,45 +65,21 @@ export function transformStrapiBlocks(
     return block as ContentBlock;
   }
 
-  // Check if this is a ref component
+  // Check if this is a ref component - return as-is, RefBlockRenderer will handle it
   if (
     '__component' in block &&
     block.__component &&
     block.__component.endsWith('-ref')
   ) {
-    const refComponent = block as RefComponent;
-    const refUID = refComponent.__component;
-    // Extract base component name more robustly (e.g., "image-slider-ref.image-slider-ref" -> "image-slider")
-    const base = refUID.replace(/-ref(?:\..+)?$/, '');
-    const relField = FIELD_BY_REF[refUID];
-
-    if (!relField) {
-      // Unknown ref type, return as-is
-      return block as ContentBlock;
-    }
-
-    // Extract the populated data from the relational field
-    const populatedData = refComponent[relField];
-
-    if (!populatedData || typeof populatedData !== 'object') {
-      // No populated data, return as-is (will be handled by RefBlockRenderer)
-      return block as ContentBlock;
-    }
-
-    // Transform the populated data into a content block with __kind
-    return {
-      __kind: base,
-      ...(populatedData as Record<string, unknown>),
-    } as ContentBlock;
+    return block as ContentBlock;
   }
 
-  // For regular blocks, recursively transform nested fields
-  // Track if we found any nested refs to avoid unnecessary object creation
+  // For regular blocks, recursively process nested fields
   const resolved: Record<string, unknown> = {
     ...(block as Record<string, unknown>),
   };
 
-  let hasNestedRefs = false;
+  let hasNestedComponents = false;
   for (const key of Object.keys(block)) {
     const value = (block as Record<string, unknown>)[key];
     if (
@@ -110,7 +88,7 @@ export function transformStrapiBlocks(
         typeof value === 'object' &&
         '__component' in (value as Record<string, unknown>))
     ) {
-      hasNestedRefs = true;
+      hasNestedComponents = true;
       resolved[key] = transformStrapiBlocks(
         value as ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
       );
@@ -118,7 +96,7 @@ export function transformStrapiBlocks(
   }
 
   // Return original block if no transformations were made to avoid unnecessary object allocation
-  return hasNestedRefs
+  return hasNestedComponents
     ? (resolved as unknown as ContentBlock)
     : (block as ContentBlock);
 }
