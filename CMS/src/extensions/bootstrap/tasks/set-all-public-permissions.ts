@@ -9,8 +9,43 @@ const PUBLIC_ROLE_TYPE = 'public';
 import fs from 'fs';
 import path from 'path';
 
-// Helper to get all api content-types
-function getApiContentTypes() {
+// Helper to check if a content-type is a singleType
+function isSingleType(apiName: string, ctName: string): boolean {
+  const rootDir = process.cwd();
+  let apiDir = path.join(rootDir, 'src', 'api');
+  if (!fs.existsSync(apiDir)) {
+    apiDir = path.join(rootDir, 'api');
+  }
+  
+  const schemaJsonPath = path.join(apiDir, apiName, 'content-types', ctName, 'schema.json');
+  const schemaTsPath = path.join(apiDir, apiName, 'content-types', ctName, 'schema.ts');
+  
+  // Try JSON first
+  if (fs.existsSync(schemaJsonPath)) {
+    try {
+      const schema = JSON.parse(fs.readFileSync(schemaJsonPath, 'utf-8'));
+      return schema.kind === 'singleType';
+    } catch (e) {
+      console.warn(`[PERM-LOG] Failed to parse schema.json for ${apiName}/${ctName}:`, e);
+    }
+  }
+  
+  // Fallback to checking TS (though we can't easily parse it, so we'll just check if 'singleType' appears in the file)
+  if (fs.existsSync(schemaTsPath)) {
+    try {
+      const content = fs.readFileSync(schemaTsPath, 'utf-8');
+      return content.includes('"singleType"') || content.includes("'singleType'");
+    } catch (e) {
+      console.warn(`[PERM-LOG] Failed to read schema.ts for ${apiName}/${ctName}:`, e);
+    }
+  }
+  
+  // Default to collectionType if we can't determine
+  return false;
+}
+
+// Helper to get all api content-types with their type info
+function getApiContentTypes(): Array<{ uid: string; isSingle: boolean }> {
   // Always resolve from project root, not __dirname (which may be dist)
   // Try src/api first, fallback to api (for monorepo or custom setups)
   const rootDir = process.cwd();
@@ -47,7 +82,12 @@ function getApiContentTypes() {
         return false;
       }
     });
-    return cts.map((ct) => `api::${apiName}.${ct}`);
+    return cts.map((ct) => {
+      const uid = `api::${apiName}.${ct}`;
+      const isSingle = isSingleType(apiName, ct);
+      console.log(`[PERM-LOG] Content-type ${uid} is ${isSingle ? 'singleType' : 'collectionType'}`);
+      return { uid, isSingle };
+    });
   });
   console.log(`[PERM-LOG] All detected API content-types:`, allTypes);
   return allTypes;
@@ -68,10 +108,17 @@ const PLUGIN_ACTIONS = [
 function getAllPublicActions() {
   const apiTypes = getApiContentTypes();
   console.log(`[PERM-LOG] getAllPublicActions: API types:`, apiTypes);
-  const apiFindActions = apiTypes.flatMap((uid) => [
-    `${uid}.find`,
-    `${uid}.findOne`,
-  ]);
+  const apiFindActions = apiTypes.flatMap(({ uid, isSingle }) => {
+    // For singleTypes, only 'find' action exists (no 'findOne')
+    // For collectionTypes, both 'find' and 'findOne' exist
+    if (isSingle) {
+      console.log(`[PERM-LOG] Adding only 'find' action for singleType: ${uid}`);
+      return [`${uid}.find`];
+    } else {
+      console.log(`[PERM-LOG] Adding 'find' and 'findOne' actions for collectionType: ${uid}`);
+      return [`${uid}.find`, `${uid}.findOne`];
+    }
+  });
   console.log(
     `[PERM-LOG] getAllPublicActions: API find actions:`,
     apiFindActions,
