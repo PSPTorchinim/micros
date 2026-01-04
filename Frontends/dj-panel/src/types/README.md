@@ -38,18 +38,20 @@ Create a new component in `src/components/molecules/` for your new block type.
 // src/components/molecules/TestimonialBlock/index.tsx
 import React from 'react';
 
+// Define explicit prop interface for type safety and documentation
+// The index signature allows for additional Strapi fields to pass through
 interface TestimonialBlockProps {
   author?: string;
   quote?: string;
   rating?: number;
-  [key: string]: unknown;
+  [key: string]: unknown;  // Allows flexibility for additional Strapi fields
 }
 
 export const TestimonialBlock: React.FC<TestimonialBlockProps> = ({
   author = 'Anonymous',
   quote = '',
   rating = 5,
-  ...props
+  ...props  // Additional fields available but not explicitly used
 }) => {
   return (
     <div className="testimonial-block">
@@ -91,6 +93,8 @@ If your content type uses Strapi reference components (ending in `-ref`), add th
 // src/components/RefBlockRenderer.tsx
 export const FIELD_BY_REF: Record<string, string> = {
   // ... existing mappings ...
+  // The value should match the actual field name in the Strapi response
+  // (e.g., 'testimonial', 'testimonial_block', etc.)
   'testimonial-ref.testimonial-ref': 'testimonial',
 };
 ```
@@ -99,6 +103,8 @@ And add the fetching logic in the `RefBlockRenderer` component:
 
 ```tsx
 // In the resolveRef async function
+// Note: You must also implement the corresponding service method in StrapiService
+// e.g., getTestimonialByDocumentId(docId: string)
 switch (base) {
   // ... existing cases ...
   case 'testimonial':

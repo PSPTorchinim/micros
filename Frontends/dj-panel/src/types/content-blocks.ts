@@ -19,7 +19,17 @@ import type { Template } from '../models/api/strapi/apiMap';
  * 
  * The __kind property identifies the block type (e.g., 'hero-block', 'article-block')
  * The __component property is the Strapi component identifier (e.g., 'hero.hero-block')
- * All other properties are passed through from Strapi without strict typing
+ * 
+ * The index signature allows any additional properties from Strapi to pass through.
+ * For type safety, components should define their own specific prop interfaces.
+ * 
+ * @example
+ * // In component files, define specific prop interfaces:
+ * interface HeroBlockProps {
+ *   title?: string;
+ *   subtitle?: string;
+ *   [key: string]: unknown;  // Maintain flexibility
+ * }
  */
 export interface ContentBlock {
   __kind: string;
