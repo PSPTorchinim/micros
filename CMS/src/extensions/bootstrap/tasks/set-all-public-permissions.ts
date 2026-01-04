@@ -40,6 +40,7 @@ function getApiContentTypes(): Array<{ uid: string; isSingleType: boolean }> {
       const schemaTsPath = path.join(ctPath, 'schema.ts');
       
       let isSingleType = false;
+      
       if (fs.existsSync(schemaJsonPath)) {
         try {
           const schema = JSON.parse(fs.readFileSync(schemaJsonPath, 'utf-8'));
@@ -47,14 +48,26 @@ function getApiContentTypes(): Array<{ uid: string; isSingleType: boolean }> {
           console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (${schema.kind || 'collectionType'})`);
           return [{ uid: `api::${apiName}.${ct}`, isSingleType }];
         } catch (e) {
-          console.log(`[PERM-LOG] Error reading schema for ${apiName}.${ct}:`, e);
+          console.error(`[PERM-LOG] Error reading schema.json for ${apiName}.${ct}:`, e);
           return [];
         }
       } else if (fs.existsSync(schemaTsPath)) {
-        // For .ts schemas, we can't easily determine the kind without evaluating
-        // Assume collectionType for now (most common)
-        console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (schema.ts - assuming collectionType)`);
-        return [{ uid: `api::${apiName}.${ct}`, isSingleType: false }];
+        try {
+          // For .ts schemas, try to extract the kind by parsing the file content
+          const schemaContent = fs.readFileSync(schemaTsPath, 'utf-8');
+          // Look for kind: "singleType" or kind: 'singleType' in the file
+          const kindMatch = schemaContent.match(/kind:\s*["'](\w+)["']/);
+          if (kindMatch && kindMatch[1] === 'singleType') {
+            isSingleType = true;
+            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (singleType from schema.ts)`);
+          } else {
+            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (collectionType from schema.ts)`);
+          }
+          return [{ uid: `api::${apiName}.${ct}`, isSingleType }];
+        } catch (e) {
+          console.error(`[PERM-LOG] Error reading schema.ts for ${apiName}.${ct}:`, e);
+          return [];
+        }
       } else {
         console.log(
           `[PERM-LOG] Skipping ${ctPath}, no schema.json or schema.ts`,
