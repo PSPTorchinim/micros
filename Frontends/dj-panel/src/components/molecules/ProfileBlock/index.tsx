@@ -24,7 +24,7 @@ export const ProfileBlock: React.FC<ProfileBlock> = ({
       <div className="profile-block-content">
         <h1 className="profile-block-title">{title}</h1>
         <p className="profile-block-description">{description}</p>
-        
+
         {user ? (
           <div className="profile-block-info">
             <div className="profile-block-field">
@@ -37,7 +37,9 @@ export const ProfileBlock: React.FC<ProfileBlock> = ({
             </div>
           </div>
         ) : (
-          <p className="profile-block-error">No user information available. Please log in.</p>
+          <p className="profile-block-error">
+            No user information available. Please log in.
+          </p>
         )}
       </div>
     </div>

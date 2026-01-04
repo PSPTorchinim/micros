@@ -16,7 +16,13 @@
     },
     "TemplateType": {
       "type": "enumeration",
-      "enum": ["Standard", "Login", "ForgotPassword", "ChangePassword", "Profile"]
+      "enum": [
+        "Standard",
+        "Login",
+        "ForgotPassword",
+        "ChangePassword",
+        "Profile"
+      ]
     },
     "page": {
       "type": "relation",

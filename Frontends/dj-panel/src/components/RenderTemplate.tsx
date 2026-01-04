@@ -156,8 +156,7 @@ export const RenderTemplate: React.FC<Props> = ({
 
       if (templateType === 'Profile') {
         try {
-          const profileBlock =
-            await StrapiService.getProfileBlockSingleton();
+          const profileBlock = await StrapiService.getProfileBlockSingleton();
           if (mounted) {
             if (profileBlock) {
               setBlocks([
