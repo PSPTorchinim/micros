@@ -431,9 +431,7 @@ export class StrapiService {
     try {
       // Note: Using 'as any' temporarily until API types are regenerated
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
-      const res = await (
-        microservicesClient.strapi as any
-      ).changePasswordBlock.getChangePasswordBlock();
+      const res = await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching change-password-block singleton:', e);
@@ -445,9 +443,7 @@ export class StrapiService {
     try {
       // Note: Using 'as any' temporarily until API types are regenerated
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
-      const res = await (
-        microservicesClient.strapi as any
-      ).profileBlock.getProfileBlock();
+      const res = await microservicesClient.strapi.profileBlock.getProfileBlock();
       return res?.data || null;
     } catch (e) {
       console.error('Error fetching profile-block singleton:', e);
