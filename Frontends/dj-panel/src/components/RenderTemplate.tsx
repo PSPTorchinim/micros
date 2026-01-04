@@ -15,12 +15,9 @@ import type {
 
 /**
  * Template entity with proper typing
+ * Accepts both Template from Strapi and extended versions with Content blocks
  */
-interface TemplateEntity {
-  id?: number;
-  documentId?: string;
-  Name?: string;
-  TemplateType?: TemplateTemplateTypeEnum | undefined;
+type TemplateEntity = Template & {
   Content?: (ContentBlock | RefComponent)[];
   attributes?: {
     TemplateType?: TemplateTemplateTypeEnum | undefined;
@@ -28,9 +25,7 @@ interface TemplateEntity {
     Name?: string;
     [key: string]: unknown;
   };
-  page?: Template['page'];
-  [key: string]: unknown;
-}
+};
 
 type Props = {
   /** documentId templatek (Strapi v5) */
