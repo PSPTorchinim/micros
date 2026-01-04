@@ -1,9 +1,16 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ProfileBlock } from './index';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
+
+// Mock react-router-dom
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
 
 // Mock user data
 const mockUser: GetUserDTO = {
@@ -32,6 +39,10 @@ const renderWithAuth = (user: GetUserDTO | null = null) => {
 };
 
 describe('ProfileBlock', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+  });
+
   it('renders with default props when user is authenticated', () => {
     renderWithAuth(mockUser);
 
@@ -43,6 +54,7 @@ describe('ProfileBlock', () => {
     expect(screen.getByText('testuser')).toBeInTheDocument();
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Change Password')).toBeInTheDocument();
   });
 
   it('renders custom labels when provided', () => {
@@ -79,6 +91,7 @@ describe('ProfileBlock', () => {
     expect(
       screen.getByText('No user information available. Please log in.'),
     ).toBeInTheDocument();
+    expect(screen.queryByText('Change Password')).not.toBeInTheDocument();
   });
 
   it('displays N/A for missing user fields', () => {
@@ -114,5 +127,37 @@ describe('ProfileBlock', () => {
       '.profile-block-container',
     );
     expect(profileContainer).toHaveStyle('background-color: red');
+  });
+
+  it('navigates to change password page when button is clicked', () => {
+    renderWithAuth(mockUser);
+
+    const changePasswordButton = screen.getByText('Change Password');
+    fireEvent.click(changePasswordButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/change-password');
+  });
+
+  it('uses custom change password URL when provided', () => {
+    const mockAuthContext = {
+      user: mockUser,
+      token: 'mock-token',
+      refreshToken: 'mock-refresh-token',
+      setUser: jest.fn(),
+      setToken: jest.fn(),
+      setRefreshToken: jest.fn(),
+      logout: jest.fn(),
+    };
+
+    render(
+      <AuthContext.Provider value={mockAuthContext}>
+        <ProfileBlock changePasswordUrl="/custom-change-password" />
+      </AuthContext.Provider>,
+    );
+
+    const changePasswordButton = screen.getByText('Change Password');
+    fireEvent.click(changePasswordButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/custom-change-password');
   });
 });

@@ -1116,6 +1116,8 @@ async function seedProfileBlock(strapi: StrapiAny): Promise<any> {
           description: 'View and manage your DJ profile information.',
           emailLabel: 'Email',
           usernameLabel: 'DJ Name',
+          changePasswordButtonText: 'Change Password',
+          changePasswordUrl: '/change-password',
         },
       });
     console.info(`[SEED] Created Profile Block`);

@@ -252,14 +252,22 @@ describe('Seed Content Types', () => {
         description: 'View and manage your DJ profile information.',
         emailLabel: 'Email',
         usernameLabel: 'DJ Name',
+        changePasswordButtonText: 'Change Password',
+        changePasswordUrl: '/change-password',
       };
 
       expect(PROFILE_BLOCK_SEED.title).toBeDefined();
       expect(PROFILE_BLOCK_SEED.description).toBeDefined();
       expect(PROFILE_BLOCK_SEED.emailLabel).toBeDefined();
       expect(PROFILE_BLOCK_SEED.usernameLabel).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.changePasswordButtonText).toBeDefined();
+      expect(PROFILE_BLOCK_SEED.changePasswordUrl).toBeDefined();
       expect(PROFILE_BLOCK_SEED.title.length).toBeGreaterThan(0);
       expect(PROFILE_BLOCK_SEED.description.length).toBeGreaterThan(0);
+      expect(
+        PROFILE_BLOCK_SEED.changePasswordButtonText.length,
+      ).toBeGreaterThan(0);
+      expect(PROFILE_BLOCK_SEED.changePasswordUrl).toBe('/change-password');
     });
   });
 });

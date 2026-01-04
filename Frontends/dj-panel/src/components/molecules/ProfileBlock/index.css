@@ -40,6 +40,15 @@
   margin-top: var(--dl-space-space-unit);
 }
 
+.profile-block-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-unit);
+  margin-top: var(--dl-space-space-oneandhalfunits);
+  padding-top: var(--dl-space-space-oneandhalfunits);
+  border-top: 1px solid var(--dl-color-theme-neutral-light);
+}
+
 .profile-block-field {
   display: flex;
   flex-direction: column;

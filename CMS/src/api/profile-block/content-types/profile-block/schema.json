@@ -24,6 +24,14 @@
       "type": "string",
       "default": "Username"
     },
+    "changePasswordButtonText": {
+      "type": "string",
+      "default": "Change Password"
+    },
+    "changePasswordUrl": {
+      "type": "string",
+      "default": "/change-password"
+    },
     "customStyles": {
       "type": "json",
       "default": {}
