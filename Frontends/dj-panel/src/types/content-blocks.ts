@@ -1,28 +1,31 @@
 /**
  * Generic type definitions for content blocks from Strapi
- * 
+ *
  * This file provides a flexible type system that works with any Strapi content type
  * without requiring manual updates when new block types are added.
- * 
+ *
  * To add a new content type from Strapi:
  * 1. Create the corresponding molecule component (e.g., NewBlockType.tsx)
  * 2. Add a case in renderBlock.tsx to handle the new __kind value
  * 3. Optionally add mapping in RefBlockRenderer.tsx if using reference components
- * 
+ *
  * No changes needed to this file!
  */
 
-import type { Template } from '../models/api/strapi/apiMap';
+import type {
+  Template,
+  TemplateTemplateTypeEnum,
+} from '../models/api/strapi/apiMap';
 
 /**
  * Generic content block that can represent any Strapi content type
- * 
+ *
  * The __kind property identifies the block type (e.g., 'hero-block', 'article-block')
  * The __component property is the Strapi component identifier (e.g., 'hero.hero-block')
- * 
+ *
  * The index signature allows any additional properties from Strapi to pass through.
  * For type safety, components should define their own specific prop interfaces.
- * 
+ *
  * @example
  * // In component files, define specific prop interfaces:
  * interface HeroBlockProps {
@@ -54,22 +57,12 @@ export interface TemplateEntity extends Partial<Template> {
   id?: number;
   documentId?: string;
   attributes?: {
-    TemplateType?:
-      | 'Standard'
-      | 'Login'
-      | 'ForgotPassword'
-      | 'ChangePassword'
-      | 'Profile';
+    TemplateType?: TemplateTemplateTypeEnum | undefined;
     Content?: (ContentBlock | RefComponent)[];
     Name?: string;
     [key: string]: unknown;
   };
-  TemplateType?:
-    | 'Standard'
-    | 'Login'
-    | 'ForgotPassword'
-    | 'ChangePassword'
-    | 'Profile';
+  TemplateType?: TemplateTemplateTypeEnum | undefined;
   Content?: (ContentBlock | RefComponent)[];
   Name?: string;
 }
