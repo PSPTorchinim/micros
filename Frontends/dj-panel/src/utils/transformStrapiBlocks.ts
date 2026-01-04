@@ -1,18 +1,6 @@
 // src/utils/transformStrapiBlocks.ts
 import type { ContentBlock, RefComponent } from '../types/content-blocks';
-
-// Mapping of ref component names to their relational field names
-const FIELD_BY_REF: Record<string, string> = {
-  'article-block-ref.article-block-ref': 'block',
-  'hero-block-ref.hero-block-ref': 'hero_block',
-  'image-slider-ref.image-slider-ref': 'slider',
-  'steps-container-ref.steps-container-ref': 'container',
-  'cta-ref.cta-ref': 'cta',
-  'feature-section-ref.feature-section-ref': 'feature_section',
-  'contact-section-ref.contact-section-ref': 'contact_section',
-  'feature-tab-ref.feature-tab-ref': 'feature_tab',
-  'contact-info-ref.contact-info-ref': 'contact_info',
-};
+import { getRefFieldMapping, getBlockConfigByRefComponent } from '../types/block-registry';
 
 /**
  * Transforms Strapi ref components into content blocks by extracting the populated data.
@@ -41,17 +29,17 @@ export function transformStrapiBlocks(
   ) {
     const refComponent = block as RefComponent;
     const refUID = refComponent.__component;
-    // Extract base component name more robustly (e.g., "image-slider-ref.image-slider-ref" -> "image-slider")
-    const base = refUID.replace(/-ref(?:\..+)?$/, '');
-    const relField = FIELD_BY_REF[refUID];
-
-    if (!relField) {
+    
+    // Get block configuration from registry
+    const blockConfig = getBlockConfigByRefComponent(refUID);
+    
+    if (!blockConfig) {
       // Unknown ref type, return as-is
       return block as ContentBlock;
     }
 
     // Extract the populated data from the relational field
-    const populatedData = refComponent[relField];
+    const populatedData = refComponent[blockConfig.refField];
 
     if (!populatedData || typeof populatedData !== 'object') {
       // No populated data, return as-is (will be handled by RefBlockRenderer)
@@ -60,7 +48,7 @@ export function transformStrapiBlocks(
 
     // Transform the populated data into a content block with __kind
     return {
-      __kind: base,
+      __kind: blockConfig.kind,
       ...(populatedData as Record<string, unknown>),
     } as ContentBlock;
   }

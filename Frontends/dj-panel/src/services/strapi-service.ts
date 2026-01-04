@@ -1,57 +1,13 @@
 import { microservicesClient } from '../models/api';
 import type { Page } from '../models/api/strapi/apiMap';
+import { getTemplateContentPopulateConfig } from '../types/block-registry';
 
 type StrapiFilters = Record<string, unknown>;
 
 // --- Populate config for Template.Content (dynamic zone) ---
-// Deeply populates all referenced blocks so they don't need to be fetched separately.
-// Note: This uses deep populate which eliminates N+1 queries but may fetch more data
-// than strictly needed. This is a conscious trade-off for simpler, more reliable code.
-const TEMPLATE_CONTENT_POPULATE = {
-  Content: {
-    on: {
-      'article-block-ref.article-block-ref': {
-        populate: { block: { populate: '*' } },
-      },
-      'hero-block-ref.hero-block-ref': {
-        populate: { hero_block: { populate: '*' } },
-      },
-      'image-slider-ref.image-slider-ref': {
-        populate: { slider: { populate: '*' } },
-      },
-      'steps-container-ref.steps-container-ref': {
-        populate: { container: { populate: '*' } },
-      },
-      'cta-ref.cta-ref': {
-        populate: { cta: { populate: '*' } },
-      },
-      'feature-section-ref.feature-section-ref': {
-        populate: { feature_section: { populate: '*' } },
-      },
-      'contact-section-ref.contact-section-ref': {
-        populate: { contact_section: { populate: '*' } },
-      },
-      'feature-tab-ref.feature-tab-ref': {
-        populate: { feature_tab: { populate: '*' } },
-      },
-      'contact-info-ref.contact-info-ref': {
-        populate: { contact_info: { populate: '*' } },
-      },
-    },
-  },
-  // Include page with basic fields
-  page: {
-    fields: [
-      'documentId',
-      'Title',
-      'Slug',
-      'Menu',
-      'AuthState',
-      'NavigationOrder',
-      'NavigationAction',
-    ],
-  },
-} as const;
+// Generated dynamically from the block registry to eliminate hardcoded mappings.
+// When new block types are added to the registry, they automatically get included here.
+const TEMPLATE_CONTENT_POPULATE = getTemplateContentPopulateConfig();
 
 export class StrapiService {
   // --------------------------------------

@@ -3,31 +3,12 @@ import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
+import { getBlockConfigByRefComponent } from '../types/block-registry';
 
 /**
- * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
- * Zakłada, że w payloadzie ref-komponentu jest pole relacyjne z documentId:
- *  - article-block-ref.article-block-ref -> field: "block"
- *  - hero-block-ref.hero-block-ref -> "hero_block"
- *  - image-slider-ref.image-slider-ref -> "slider"
- *  - steps-container-ref.steps-container-ref -> "container"
- *  - cta-ref.cta-ref -> "cta"
- *  - feature-section-ref.feature-section-ref -> "feature_section"
- *  - contact-section-ref.contact-section-ref -> "contact_section"
- *  - feature-tab-ref.feature-tab-ref -> "feature_tab"
- *  - contact-info-ref.contact-info-ref -> "contact_info"
+ * Renderer for reference components (e.g. "image-slider-ref.image-slider-ref").
+ * Uses the block registry to dynamically determine how to fetch and render blocks.
  */
-const FIELD_BY_REF: Record<string, string> = {
-  'article-block-ref.article-block-ref': 'block',
-  'hero-block-ref.hero-block-ref': 'hero_block',
-  'image-slider-ref.image-slider-ref': 'slider',
-  'steps-container-ref.steps-container-ref': 'container',
-  'cta-ref.cta-ref': 'cta',
-  'feature-section-ref.feature-section-ref': 'feature_section',
-  'contact-section-ref.contact-section-ref': 'contact_section',
-  'feature-tab-ref.feature-tab-ref': 'feature_tab',
-  'contact-info-ref.contact-info-ref': 'contact_info',
-};
 
 // uniwersalny ekstraktor documentId z różnych kształtów populate
 function getDocId(input: unknown): string | undefined {
@@ -64,8 +45,29 @@ interface Props {
 
 export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const refUID = block.__component as string;
-  const base = refUID?.split('-ref')[0]; // 'image-slider', 'article-block', ...
-  const relField = FIELD_BY_REF[refUID];
+  
+  // Get block configuration from registry
+  const blockConfig = getBlockConfigByRefComponent(refUID);
+  
+  if (!blockConfig) {
+    return (
+      <pre
+        key={index}
+        style={{
+          background: '#fdecea',
+          color: '#611a15',
+          padding: 12,
+          borderRadius: 8,
+          border: '1px solid #f5c6cb',
+        }}
+      >
+        Unknown ref component type: {refUID}
+      </pre>
+    );
+  }
+
+  const relField = blockConfig.refField;
+  const base = blockConfig.kind;
 
   const relObj = relField ? block[relField] : undefined;
   const docId = getDocId(relObj);

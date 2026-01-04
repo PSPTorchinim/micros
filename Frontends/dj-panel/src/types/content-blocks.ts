@@ -1,6 +1,15 @@
 /**
  * Type definitions for content blocks
- * These types align with Strapi content types and extend the generated types
+ * 
+ * IMPORTANT: This file uses a simplified approach where content blocks extend
+ * the base Strapi types with a discriminator (__kind). When adding new block types:
+ * 
+ * 1. Add the block configuration to block-registry.ts
+ * 2. Create the molecule/component for visualization
+ * 3. Register the component in block-component-registry.tsx
+ * 
+ * That's it! No changes needed to this file or renderBlock.tsx anymore.
+ * The system will automatically handle the new type through the registries.
  */
 
 import type {
