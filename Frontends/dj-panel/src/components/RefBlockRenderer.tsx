@@ -3,7 +3,7 @@ import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
-import { getDocId, FIELD_BY_REF } from '../utils/mapStrapiContentToFrontend';
+import { getDocId, FIELD_BY_REF } from '../utils/transformStrapiBlocks';
 
 /**
  * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").

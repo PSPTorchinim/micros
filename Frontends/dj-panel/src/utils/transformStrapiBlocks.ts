@@ -1,8 +1,38 @@
 // src/utils/transformStrapiBlocks.ts
 import type { ContentBlock, RefComponent } from '../types/content-blocks';
 
+/**
+ * Extracts documentId from various Strapi populate shapes
+ * @param input - The input object, string, or undefined
+ * @returns The documentId as a string, or undefined if not found
+ */
+export function getDocId(input: unknown): string | undefined {
+  if (typeof input === 'string') return input;
+  if (!input || typeof input !== 'object') return undefined;
+
+  const obj = input as Record<string, unknown>;
+
+  // Most common case: object with documentId field
+  if (typeof obj.documentId === 'string') return obj.documentId;
+
+  // Some clients flatten id as string
+  if (obj.id && typeof obj.id === 'string') return obj.id;
+
+  // Strapi v4/v5 variants with data/attributes
+  const data = obj.data as Record<string, unknown> | undefined;
+  if (
+    data?.attributes &&
+    typeof (data.attributes as Record<string, unknown>).documentId === 'string'
+  ) {
+    return (data.attributes as Record<string, unknown>).documentId as string;
+  }
+  if (data?.id && typeof data.id === 'string') return data.id;
+
+  return undefined;
+}
+
 // Mapping of ref component names to their relational field names
-const FIELD_BY_REF: Record<string, string> = {
+export const FIELD_BY_REF: Record<string, string> = {
   'article-block-ref.article-block-ref': 'block',
   'hero-block-ref.hero-block-ref': 'hero_block',
   'image-slider-ref.image-slider-ref': 'slider',
