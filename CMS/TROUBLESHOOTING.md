@@ -13,24 +13,32 @@ When new content types or APIs are added to Strapi, the Docker image must be reb
 #### Option 1: Rebuild Specific Service (Recommended)
 ```bash
 cd Docker
-docker-compose down
-docker-compose build strapi
-docker-compose up
+docker-compose -f dj-panel-composer.yml down strapi
+docker-compose -f dj-panel-composer.yml build strapi
+docker-compose -f dj-panel-composer.yml up -d strapi
 ```
 
 #### Option 2: Rebuild All Services
 ```bash
 cd Docker
-docker-compose up --build
+docker-compose -f dj-panel-composer.yml up --build
 ```
 
 #### Option 3: Force Complete Rebuild
 If the above doesn't work, try a clean rebuild:
 ```bash
 cd Docker
-docker-compose down -v  # Removes volumes too
-docker-compose build --no-cache strapi
-docker-compose up
+# Stop Strapi
+docker-compose -f dj-panel-composer.yml stop strapi
+
+# Remove Strapi volume (⚠️ deletes Strapi data only)
+docker volume rm djpanel_strapi_app
+
+# Rebuild without cache
+docker-compose -f dj-panel-composer.yml build --no-cache strapi
+
+# Start Strapi
+docker-compose -f dj-panel-composer.yml up -d strapi
 ```
 
 ### For Development
@@ -46,8 +54,8 @@ If you're actively developing Strapi content types:
 2. **Production Mode**: Always rebuild after pulling changes
    ```bash
    cd Docker
-   docker-compose build strapi
-   docker-compose up
+   docker-compose -f dj-panel-composer.yml build strapi
+   docker-compose -f dj-panel-composer.yml up -d strapi
    ```
 
 ### Verification
@@ -77,13 +85,13 @@ To avoid this issue in the future:
 If you see database connection errors:
 ```bash
 # Ensure database is healthy
-docker-compose ps
+docker-compose -f dj-panel-composer.yml ps
 
 # Check database logs
-docker-compose logs strapi_db
+docker-compose -f dj-panel-composer.yml logs strapi_db
 
 # Restart database
-docker-compose restart strapi_db
+docker-compose -f dj-panel-composer.yml restart strapi_db
 ```
 
 ### Permission Errors

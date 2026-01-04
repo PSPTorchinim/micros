@@ -74,12 +74,15 @@ docker-compose -f dj-panel-composer.yml stop strapi
 
 # Clean volumes if requested
 if [ "$CLEAN" = true ]; then
-    echo "🧹 Removing volumes (this will delete all data)..."
+    echo "🧹 Removing Strapi volume (this will delete all Strapi data)..."
     read -p "   Are you sure? This will delete all Strapi data! (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        docker-compose -f dj-panel-composer.yml down -v strapi
-        echo "   ✅ Volumes removed"
+        # Stop strapi first
+        docker-compose -f dj-panel-composer.yml stop strapi
+        # Remove only the strapi volume
+        docker volume rm djpanel_strapi_app 2>/dev/null || echo "   Volume already removed or doesn't exist"
+        echo "   ✅ Strapi volume removed"
     else
         echo "   ⏭️  Skipping volume removal"
         CLEAN=false
@@ -114,11 +117,14 @@ if [ "$START" = true ]; then
     echo "⏳ Waiting for Strapi to be ready..."
     echo "   This may take 30-60 seconds on first start..."
     
-    # Wait for health check
+    # Wait for health check (healthcheck is defined in Dockerfile)
     TIMEOUT=120
     ELAPSED=0
     while [ $ELAPSED -lt $TIMEOUT ]; do
-        if docker-compose -f dj-panel-composer.yml ps strapi | grep -q "healthy"; then
+        # Check if container is healthy (healthcheck from Dockerfile)
+        HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' djpanel-strapi-1 2>/dev/null || echo "none")
+        
+        if [ "$HEALTH_STATUS" = "healthy" ]; then
             echo ""
             echo "✅ Strapi is ready!"
             echo ""
@@ -136,7 +142,7 @@ if [ "$START" = true ]; then
         fi
         
         if [ $((ELAPSED % 10)) -eq 0 ]; then
-            echo "   Still waiting... ($ELAPSED seconds)"
+            echo "   Still waiting... ($ELAPSED seconds) [Status: $HEALTH_STATUS]"
         fi
         
         sleep 2

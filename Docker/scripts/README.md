@@ -63,9 +63,22 @@ Rebuilds the Strapi CMS Docker image. Use this after adding or modifying Strapi 
 
 ### Problem: Database migration errors or schema issues
 
-**Solution:** Run `./rebuild-strapi.sh --clean` (⚠️ deletes data)
+**Solution:** Clean the Strapi volume and rebuild
+```bash
+# Stop Strapi
+docker-compose -f dj-panel-composer.yml stop strapi
 
-**Why:** Removes volumes and starts with a fresh database. Only use if you're okay with losing development data.
+# Remove Strapi volume (⚠️ deletes data)
+docker volume rm djpanel_strapi_app
+
+# Rebuild
+docker-compose -f dj-panel-composer.yml build strapi
+
+# Start
+docker-compose -f dj-panel-composer.yml up -d strapi
+```
+
+**Why:** Removes the Strapi volume and starts with a fresh database. Only use if you're okay with losing development data.
 
 ## Manual Rebuild
 
