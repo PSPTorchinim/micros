@@ -119,9 +119,7 @@ export const RenderTemplate: React.FC<Props> = ({
           console.error('Error fetching forgot password block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
-            setBlocks([
-              { __kind: 'forgot-password-block' } as ContentBlock,
-            ]);
+            setBlocks([{ __kind: 'forgot-password-block' } as ContentBlock]);
             setError(null);
           }
         }
@@ -146,9 +144,7 @@ export const RenderTemplate: React.FC<Props> = ({
           console.error('Error fetching change password block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
-            setBlocks([
-              { __kind: 'change-password-block' } as ContentBlock,
-            ]);
+            setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
             setError(null);
           }
         }
