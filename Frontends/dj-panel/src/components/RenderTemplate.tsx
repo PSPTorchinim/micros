@@ -16,18 +16,20 @@ import type {
 /**
  * Template entity with proper typing
  */
-interface TemplateEntity extends Partial<Template> {
+interface TemplateEntity {
   id?: number;
   documentId?: string;
+  Name?: string;
+  TemplateType?: TemplateTemplateTypeEnum | undefined;
+  Content?: (ContentBlock | RefComponent)[];
   attributes?: {
     TemplateType?: TemplateTemplateTypeEnum | undefined;
     Content?: (ContentBlock | RefComponent)[];
     Name?: string;
     [key: string]: unknown;
   };
-  TemplateType?: TemplateTemplateTypeEnum | undefined;
-  Content?: (ContentBlock | RefComponent)[];
-  Name?: string;
+  page?: Template['page'];
+  [key: string]: unknown;
 }
 
 type Props = {
