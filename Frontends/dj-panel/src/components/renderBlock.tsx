@@ -17,10 +17,7 @@ import {
   ChangePasswordBlock,
   ProfileBlock,
 } from './molecules';
-import type {
-  ContentBlock,
-  ArticleContentBlock,
-} from '../types/content-blocks';
+import type { ContentBlock } from '../types/content-blocks';
 
 /**
  * Główny renderer jednego „zwykłego" bloku (już zdereferencjonowanego).
@@ -74,10 +71,8 @@ export function renderBlock(
     case 'article': {
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format
-      const articleBlock = block as ArticleContentBlock;
       const articleData =
-        (articleBlock as { attributes?: Record<string, unknown> }).attributes ||
-        articleBlock;
+        (block as { attributes?: Record<string, unknown> }).attributes || block;
       const title =
         typeof articleData.Title === 'string' ? articleData.Title : '';
       const summary =
