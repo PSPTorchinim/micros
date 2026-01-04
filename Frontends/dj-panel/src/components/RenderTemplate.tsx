@@ -84,18 +84,17 @@ export const RenderTemplate: React.FC<Props> = ({
         try {
           const loginBlock = await StrapiService.getLoginBlockSingleton();
           if (mounted) {
-            if (loginBlock) {
-              setBlocks([
-                { __kind: 'login-block', ...loginBlock } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              { __kind: 'login-block', ...(loginBlock || {}) } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'login-block' } as ContentBlock]);
             setError(null);
           }
         }
@@ -107,21 +106,22 @@ export const RenderTemplate: React.FC<Props> = ({
           const forgotPasswordBlock =
             await StrapiService.getForgotPasswordBlockSingleton();
           if (mounted) {
-            if (forgotPasswordBlock) {
-              setBlocks([
-                {
-                  __kind: 'forgot-password-block',
-                  ...forgotPasswordBlock,
-                } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'forgot-password-block',
+                ...(forgotPasswordBlock || {}),
+              } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([
+              { __kind: 'forgot-password-block' } as ContentBlock,
+            ]);
             setError(null);
           }
         }
@@ -133,21 +133,22 @@ export const RenderTemplate: React.FC<Props> = ({
           const changePasswordBlock =
             await StrapiService.getChangePasswordBlockSingleton();
           if (mounted) {
-            if (changePasswordBlock) {
-              setBlocks([
-                {
-                  __kind: 'change-password-block',
-                  ...changePasswordBlock,
-                } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'change-password-block',
+                ...(changePasswordBlock || {}),
+              } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching change password block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([
+              { __kind: 'change-password-block' } as ContentBlock,
+            ]);
             setError(null);
           }
         }
@@ -158,21 +159,20 @@ export const RenderTemplate: React.FC<Props> = ({
         try {
           const profileBlock = await StrapiService.getProfileBlockSingleton();
           if (mounted) {
-            if (profileBlock) {
-              setBlocks([
-                {
-                  __kind: 'profile-block',
-                  ...profileBlock,
-                } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'profile-block',
+                ...(profileBlock || {}),
+              } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching profile block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
             setError(null);
           }
         }
