@@ -167,12 +167,22 @@ export interface TemplateEntity extends Partial<Template> {
   id?: number;
   documentId?: string;
   attributes?: {
-    TemplateType?: 'Standard' | 'Login' | 'ForgotPassword';
+    TemplateType?:
+      | 'Standard'
+      | 'Login'
+      | 'ForgotPassword'
+      | 'ChangePassword'
+      | 'Profile';
     Content?: (ContentBlock | RefComponent)[];
     Name?: string;
     [key: string]: unknown;
   };
-  TemplateType?: 'Standard' | 'Login' | 'ForgotPassword';
+  TemplateType?:
+    | 'Standard'
+    | 'Login'
+    | 'ForgotPassword'
+    | 'ChangePassword'
+    | 'Profile';
   Content?: (ContentBlock | RefComponent)[];
   Name?: string;
 }

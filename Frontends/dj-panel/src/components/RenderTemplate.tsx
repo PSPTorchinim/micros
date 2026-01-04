@@ -1,8 +1,7 @@
 // components/RenderTemplate.tsx
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { transformStrapiBlocks } from '../utils/transformStrapiBlocks';
-import { RefBlockRenderer } from './RefBlockRenderer';
+import { transformStrapiBlocks, RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type {
