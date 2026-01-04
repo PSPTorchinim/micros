@@ -8,24 +8,7 @@ import {
 } from './RefBlockRenderer';
 import renderBlock, { type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
-import type {
-  Template,
-  TemplateTemplateTypeEnum,
-} from '../models/api/strapi/apiMap';
-
-/**
- * Template entity with proper typing
- * Accepts both Template from Strapi and extended versions with Content blocks
- */
-type TemplateEntity = Template & {
-  Content?: (ContentBlock | RefComponent)[];
-  attributes?: {
-    TemplateType?: TemplateTemplateTypeEnum | undefined;
-    Content?: (ContentBlock | RefComponent)[];
-    Name?: string;
-    [key: string]: unknown;
-  };
-};
+import type { Template } from '../models/api/strapi/apiMap';
 
 type Props = {
   /** documentId templatek (Strapi v5) */
@@ -41,7 +24,7 @@ export const RenderTemplate: React.FC<Props> = ({
   populateDeep = 5,
   pageTitle,
 }) => {
-  const [tpl, setTpl] = React.useState<TemplateEntity | null>(null);
+  const [tpl, setTpl] = React.useState<Template | null>(null);
   const [blocks, setBlocks] = React.useState<ContentBlock[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -93,7 +76,7 @@ export const RenderTemplate: React.FC<Props> = ({
 
     const run = async () => {
       // Get template type
-      const templateType = tpl?.attributes?.TemplateType || tpl?.TemplateType;
+      const templateType = tpl?.TemplateType;
 
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
@@ -193,9 +176,9 @@ export const RenderTemplate: React.FC<Props> = ({
 
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
-        tpl?.attributes?.Content,
+        tpl?.Content,
       )
-        ? tpl!.attributes!.Content
+        ? tpl!.Content
         : Array.isArray(tpl?.Content)
           ? tpl.Content
           : [];
