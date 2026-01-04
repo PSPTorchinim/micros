@@ -3800,45 +3800,45 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: DiscriminatorNull1 &
+      Content?: InternalNull1 &
         (
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "article-ref.article-ref",
               ArticleRefArticleRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | DiscriminatorNull1ComponentMapping<
+          | InternalNull1ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -3883,42 +3883,42 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: InternalNull1 &
+  Content?: PolymorphNull1 &
     (
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "article-ref.article-ref",
           ArticleRefArticleRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | PolymorphNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNull1ComponentMapping<
+      | PolymorphNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -4366,23 +4366,6 @@ export enum TemplateTemplateTypeEnum1 {
   Profile = "Profile",
 }
 
-type DiscriminatorNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleRefArticleRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type DiscriminatorNull1ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
 type InternalNull1 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
@@ -4397,6 +4380,23 @@ type InternalNull1 = (
 )[];
 
 type InternalNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
+
+type PolymorphNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleRefArticleRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type PolymorphNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
