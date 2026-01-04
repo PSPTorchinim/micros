@@ -93,7 +93,7 @@ export function renderBlock(
       const body = typeof articleData.Body === 'string' ? articleData.Body : '';
 
       // Convert markdown to HTML and sanitize to prevent XSS attacks
-      const htmlBody = body ? DOMPurify.sanitize(marked.parse(body)) : '';
+      const htmlBody = body ? DOMPurify.sanitize(marked.parse(body, { async: false }) as string) : '';
 
       return (
         <div key={index} className="article-detail">
