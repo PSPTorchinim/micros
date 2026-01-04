@@ -50,34 +50,37 @@ export const Footer = (props: FooterProps) => {
   };
 
   // Filter columns that have links
-  const columns = footerData.columns?.filter(
-    (column) => column.links && column.links.length > 0,
-  ) || [];
+  const columns =
+    footerData.columns?.filter(
+      (column) => column.links && column.links.length > 0,
+    ) || [];
 
   return (
     <footer className="footer thq-section-padding" style={props.customStyles}>
       <div className="footer-max-width thq-section-max-width">
         <div className="footer-content">
           <div className="footer-links">
-            {columns.map((column: FooterLinkColumnComponent, columnIndex: number) => (
-              <div key={columnIndex} className="footer-column">
-                <strong className="thq-body-large footer-column-title">
-                  {column.title || ''}
-                </strong>
-                <div className="footer-footer-links">
-                  {column.links?.map((link, linkIndex) => (
-                    <Link
-                      key={linkIndex}
-                      to={link.url || '#'}
-                      rel="noreferrer noopener"
-                      className="thq-body-small"
-                    >
-                      {link.label || ''}
-                    </Link>
-                  ))}
+            {columns.map(
+              (column: FooterLinkColumnComponent, columnIndex: number) => (
+                <div key={columnIndex} className="footer-column">
+                  <strong className="thq-body-large footer-column-title">
+                    {column.title || ''}
+                  </strong>
+                  <div className="footer-footer-links">
+                    {column.links?.map((link, linkIndex) => (
+                      <Link
+                        key={linkIndex}
+                        to={link.url || '#'}
+                        rel="noreferrer noopener"
+                        className="thq-body-small"
+                      >
+                        {link.label || ''}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
             {footerData.socialLinks?.length > 0 && (
               <div className="footer-column">
                 <strong className="thq-body-large footer-social-link-title">
