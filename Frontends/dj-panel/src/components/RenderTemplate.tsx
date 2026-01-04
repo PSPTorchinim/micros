@@ -1,7 +1,7 @@
 // components/RenderTemplate.tsx
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
+import { transformStrapiBlocks } from '../utils/transformStrapiBlocks';
 import { RefBlockRenderer } from './RefBlockRenderer';
 import renderBlock from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
@@ -71,7 +71,7 @@ export const RenderTemplate: React.FC<Props> = ({
     };
   }, [template]);
 
-  // 2) Wyciągnij bloki Content i zrób dereferencję ref-komponentów
+  // 2) Extract Content blocks and transform ref-components
   React.useEffect(() => {
     let mounted = true;
 
@@ -220,8 +220,8 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
-      // Rekurencyjna dereferencja:
-      const resolved = await mapStrapiContentToFrontend(contentBlocks);
+      // Synchronous transformation of populated ref-components
+      const resolved = transformStrapiBlocks(contentBlocks);
       if (mounted) setBlocks(resolved as ContentBlock[]);
     };
 
