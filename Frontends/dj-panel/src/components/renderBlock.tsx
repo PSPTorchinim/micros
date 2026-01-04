@@ -15,6 +15,7 @@ import {
   LoginBlock,
   ForgotPasswordBlock,
   ChangePasswordBlock,
+  ProfileBlock,
 } from './molecules';
 import type {
   ContentBlock,
@@ -68,6 +69,8 @@ export function renderBlock(
       return <ForgotPasswordBlock key={index} {...block} />;
     case 'change-password-block':
       return <ChangePasswordBlock key={index} {...block} />;
+    case 'profile-block':
+      return <ProfileBlock key={index} {...block} />;
     case 'article': {
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format

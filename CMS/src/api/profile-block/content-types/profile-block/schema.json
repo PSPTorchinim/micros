@@ -1,0 +1,32 @@
+{
+  "kind": "singleType",
+  "collectionName": "profile_blocks",
+  "info": {
+    "singularName": "profile-block",
+    "pluralName": "profile-blocks",
+    "displayName": "Profile Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Profile"
+    },
+    "description": {
+      "type": "string",
+      "default": "View and manage your profile information."
+    },
+    "emailLabel": {
+      "type": "string",
+      "default": "Email"
+    },
+    "usernameLabel": {
+      "type": "string",
+      "default": "Username"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

@@ -154,6 +154,32 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      if (templateType === 'Profile') {
+        try {
+          const profileBlock =
+            await StrapiService.getProfileBlockSingleton();
+          if (mounted) {
+            if (profileBlock) {
+              setBlocks([
+                {
+                  __kind: 'profile-block',
+                  ...profileBlock,
+                } as ContentBlock,
+              ]);
+            } else {
+              setBlocks([]);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching profile block singleton:', e);
+          if (mounted) {
+            setBlocks([]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.attributes?.Content,
