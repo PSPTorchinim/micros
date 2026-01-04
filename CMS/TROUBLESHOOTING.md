@@ -28,11 +28,16 @@ docker-compose -f dj-panel-composer.yml up --build
 If the above doesn't work, try a clean rebuild:
 ```bash
 cd Docker
+
+# First, find your volume name (usually <project>_strapi_app)
+docker volume ls | grep strapi
+
 # Stop Strapi
 docker-compose -f dj-panel-composer.yml stop strapi
 
 # Remove Strapi volume (⚠️ deletes Strapi data only)
-docker volume rm djpanel_strapi_app
+# Replace <project-name> with your actual project name (usually 'djpanel')
+docker volume rm <project-name>_strapi_app
 
 # Rebuild without cache
 docker-compose -f dj-panel-composer.yml build --no-cache strapi
@@ -40,6 +45,8 @@ docker-compose -f dj-panel-composer.yml build --no-cache strapi
 # Start Strapi
 docker-compose -f dj-panel-composer.yml up -d strapi
 ```
+
+**Tip**: The rebuild script handles volume names automatically: `./scripts/rebuild-strapi.sh --clean`
 
 ### For Development
 If you're actively developing Strapi content types:
