@@ -3,8 +3,10 @@ import {
   Page,
   PageAuthStateEnum1,
   PageMenuEnum1,
-} from '../models/strapi/strapiMap';
-import { strapiAPI } from '../services/strapi-api';
+  PageNavigationActionEnum1,
+  Footer,
+} from '../models/api/strapi/apiMap';
+import { StrapiService } from '../services/strapi-service';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
@@ -92,6 +94,7 @@ function buildRoutesAndNav(
       NavigationOrder: page.NavigationOrder ?? 0,
       Menu: page.Menu ?? PageMenuEnum1.Main,
       AuthState: page.AuthState ?? PageAuthStateEnum1.All,
+      NavigationAction: page.NavigationAction,
     });
   });
 
@@ -102,12 +105,15 @@ function buildRoutesAndNav(
 }
 
 export function useDynamicRoutes() {
-  const [routes, setRoutes] = useState<React.ReactElement[]>([]);
+  const [routes, setRoutes] = useState<React.ReactElement[]>([
+    <Route key="loading" path="*" element={<ContentSkeleton type="page" />} />,
+  ]);
   const [navigation, setNavigation] = useState<NavigationItem[]>([]);
+  const [footer, setFooter] = useState<Footer | null>(null);
 
   async function fetchAllChildren(page: Page): Promise<Page> {
     if (!page.id) return page;
-    const children = await strapiAPI.getPagesByParentId(page.id);
+    const children = await StrapiService.getPagesByParentId(page.id);
     if (!children || children.length === 0) return page;
 
     if (Array.isArray(children)) {
@@ -121,7 +127,7 @@ export function useDynamicRoutes() {
 
   useEffect(() => {
     (async () => {
-      const rootPages = (await strapiAPI.getRootPages()) || [];
+      const rootPages = (await StrapiService.getRootPages()) || [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
@@ -148,10 +154,42 @@ export function useDynamicRoutes() {
           ...routes,
         ];
       }
+
+      // Add logout button if it doesn't exist in CMS navigation
+      const hasLogout = nav.some(
+        (item) =>
+          item.NavigationAction === PageNavigationActionEnum1.Action &&
+          item.text?.toLowerCase().replace(/\s+/g, '') === 'logout',
+      );
+
+      if (!hasLogout) {
+        // Use a negative ID to avoid conflicts with CMS-generated IDs
+        const logoutId = -1;
+        // Place at the end by using max NavigationOrder + 1
+        const maxOrder =
+          nav.length > 0
+            ? Math.max(...nav.map((item) => item.NavigationOrder ?? 0))
+            : 0;
+
+        nav.push({
+          id: logoutId,
+          text: 'Logout',
+          url: '#', // Not used for action items
+          NavigationOrder: maxOrder + 1,
+          Menu: PageMenuEnum1.Login,
+          AuthState: PageAuthStateEnum1.OnlyAuthenticated,
+          NavigationAction: PageNavigationActionEnum1.Action,
+        });
+      }
+
+      // Fetch footer data from CMS
+      const footerData = await StrapiService.getFooterSingleton();
+      setFooter(footerData);
+
       setRoutes(routes);
       setNavigation(nav);
     })();
   }, []);
 
-  return [routes, navigation] as const;
+  return [routes, navigation, footer] as const;
 }

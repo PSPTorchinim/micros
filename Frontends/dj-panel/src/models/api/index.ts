@@ -33,3 +33,4 @@ export * as Identity from './identity/apiMap';
 export * as Mailing from './mailing/apiMap';
 export * as Music from './music/apiMap';
 export * as Party from './party/apiMap';
+export * as Strapi from './strapi/apiMap';

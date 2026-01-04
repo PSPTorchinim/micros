@@ -9,12 +9,12 @@
 
         public Response() { }
 
-        public Response(T data, string message = null)
+        public Response(T data, string? message = null)
         {
             Success = true;
             Data = data;
-            Message = message;
-            Errors = null;
+            Message = message!;
+            Errors = null!;
         }
 
         public Response(string message, List<string> errors)

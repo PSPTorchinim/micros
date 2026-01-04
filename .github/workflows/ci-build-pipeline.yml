@@ -6,11 +6,17 @@ name: Build Artifacts
 # 3. Builds React frontends with environment-specific configurations
 # 4. Builds infrastructure images (databases, message brokers, monitoring tools)
 # All images are pushed to GitHub Container Registry (GHCR)
+#
+# Triggers:
+# - Push to releases/** branches (when PRs are merged to releases)
+# - Monthly schedule on 1st day at midnight UTC (for Production environment)
+# - Manual workflow_dispatch
 
 on:
+  push:
+    branches:
+      - "releases/**"
   schedule:
-    # Daily at midnight (00:00 UTC) for Development environment
-    - cron: "0 0 * * *"
     # Monthly on the 1st at midnight (00:00 UTC) for Production environment
     - cron: "0 0 1 * *"
   workflow_dispatch:
@@ -18,7 +24,7 @@ on:
 # Prevent duplicate builds when multiple triggers occur simultaneously
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 # Minimal permissions - jobs that need more will specify them
 permissions:
@@ -202,22 +208,14 @@ jobs:
       matrix:
         image:
           - { name: "mongodb", dockerfile: "Docker/infra/mongodb.Dockerfile" }
-          - { name: "postgres", dockerfile: "Docker/infra/postgres.Dockerfile" }
-          - { name: "redis", dockerfile: "Docker/infra/redis.Dockerfile" }
           - { name: "rabbitmq", dockerfile: "Docker/infra/rabbitmq.Dockerfile" }
-          - {
-              name: "sqlserver",
-              dockerfile: "Docker/infra/sqlserver.Dockerfile",
-            }
           - { name: "strapi", dockerfile: "Docker/infra/strapi.Dockerfile" }
           - { name: "loki", dockerfile: "Docker/infra/loki.Dockerfile" }
           - { name: "promtail", dockerfile: "Docker/infra/promtail.Dockerfile" }
           - { name: "grafana", dockerfile: "Docker/infra/grafana.Dockerfile" }
           - { name: "prometheus", dockerfile: "Docker/infra/prometheus.Dockerfile" }
-          - { name: "sqlserver-exporter", dockerfile: "Docker/infra/sqlserver-exporter.Dockerfile" }
-          - { name: "mongodb-exporter", dockerfile: "Docker/infra/mongodb-exporter.Dockerfile" }
-          - { name: "postgres-exporter", dockerfile: "Docker/infra/postgres-exporter.Dockerfile" }
-          - { name: "redis-exporter", dockerfile: "Docker/infra/redis-exporter.Dockerfile" }
+          # Note: redis, postgres, sqlserver, and 4x exporters now use official images
+          # configured directly in docker-compose.yml (no custom build required)
 
     steps:
       - name: Checkout Source Code

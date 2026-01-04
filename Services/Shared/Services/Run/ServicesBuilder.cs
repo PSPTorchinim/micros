@@ -5,19 +5,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
 using Shared.Configurations;
 using Shared.Services.Database;
 using Shared.Services.MessagesBroker.RabbitMQ;
 using Shared.Services.Security;
+using Shared.Services.Swagger;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Yarp.ReverseProxy.Swagger;
-using Yarp.ReverseProxy.Swagger.Extensions;
+using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
 using Scope = Shared.Services.App.Scope;
 
@@ -28,6 +28,8 @@ namespace Shared.Services.Run
         public static IServiceCollection BuildBasicServices(this IServiceCollection services, ConfigurationManager configuration, string name, string version, bool isApiGW = false)
         {
             var systemConfig = configuration.Get<SystemConfiguration>();
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+            
             services.AddControllers(options =>
             {
                 // Configure cache profiles
@@ -37,6 +39,9 @@ namespace Shared.Services.Run
                     options.CacheProfiles.Add(profile.Key, profile.Value);
                 }
             }).AddJsonOptions(ConfigureJsonOptions);
+
+            // Add HttpClientFactory - required for swagger document filter in API Gateway
+            services.AddHttpClient();
 
             // Configure Serilog for structured logging with Loki
             ConfigureSerilog(name);
@@ -53,15 +58,24 @@ namespace Shared.Services.Run
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
 
-            if (!isApiGW)
+            // Configure Redis and Reverse Proxy based on environment and service type
+            var isDevelopmentLocal = environment == "DevelopmentLocal";
+            
+            if (isDevelopmentLocal)
             {
-                Console.WriteLine("Configuring Redis for service: " + name);
-                services.ConfigureRedis(name);
+                Console.WriteLine($"Skipping Redis configuration in {environment} environment.");
+                Console.WriteLine("Registering NoOpCacheService for DevelopmentLocal mode.");
+                services.ConfigureNoOpCache();
             }
             else
             {
-                Console.WriteLine("Configuring Redis for API Gateway.");
+                Console.WriteLine($"Configuring Redis for {(isApiGW ? "API Gateway" : "service: " + name)}.");
                 services.ConfigureRedis(name);
+            }
+
+            // Configure Reverse Proxy for API Gateway
+            if (isApiGW)
+            {
                 Console.WriteLine("Building Reverse Proxy for API Gateway.");
                 services.BuildReverseProxy(configuration);
             }
@@ -223,27 +237,14 @@ namespace Shared.Services.Run
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
+                    Type = SecuritySchemeType.Http,
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
                     Description = "Enter JWT Token"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new List<string>()
-                    }
-                });
+                c.AddSecurityRequirement(document => new() { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] });
             });
             Console.WriteLine("Swagger configured.");
         }
@@ -275,6 +276,14 @@ namespace Shared.Services.Run
 
             Console.WriteLine($"Redis configured with connection: {connection}");
             // services.AddEFSecondLevelCache(options => options.UseStackExchangeRedisCacheProvider(connection, TimeSpan.FromMinutes(5)));
+        }
+
+        private static void ConfigureNoOpCache(this IServiceCollection services)
+        {
+            // Register NoOpCacheService for DevelopmentLocal environment
+            // This allows running without Redis by bypassing all caching operations
+            services.AddScoped<Shared.Services.Cache.ICacheService, Shared.Services.Cache.NoOpCacheService>();
+            Console.WriteLine("NoOpCacheService registered - all cache operations will be no-ops.");
         }
 
         private static IServiceCollection BuildReverseProxy(this IServiceCollection services, ConfigurationManager configuration)
@@ -335,8 +344,6 @@ namespace Shared.Services.Run
                 }
                 else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
                 {
-                    var keyType = property.PropertyType.GetGenericArguments()[0];
-                    var valueType = property.PropertyType.GetGenericArguments()[1];
                     var dictionary = (System.Collections.IDictionary)value;
 
                     foreach (var key in dictionary.Keys)
@@ -357,7 +364,6 @@ namespace Shared.Services.Run
                 }
                 else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
                 {
-                    var listType = property.PropertyType.GetGenericArguments()[0];
                     var list = (System.Collections.IList)value;
                     for (int i = 0; i < list.Count; i++)
                     {

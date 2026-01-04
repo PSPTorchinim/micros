@@ -1,0 +1,72 @@
+import React from 'react';
+import {
+  AiFillFacebook,
+  AiFillInstagram,
+  AiFillMail,
+  AiFillTikTok,
+  AiFillTwitterCircle,
+  AiFillYoutube,
+  AiFillSound,
+} from 'react-icons/ai';
+import type { Footer } from '../models/api/strapi/apiMap';
+
+// Map icon names to React Icon components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  instagram: AiFillInstagram,
+  facebook: AiFillFacebook,
+  twitter: AiFillTwitterCircle,
+  youtube: AiFillYoutube,
+  mail: AiFillMail,
+  email: AiFillMail,
+  tiktok: AiFillTikTok,
+  soundcloud: AiFillSound,
+  headphones: AiFillSound,
+};
+
+export function mapFooterData(footerData: Footer | null) {
+  if (!footerData) {
+    return null;
+  }
+
+  // Map columns with links
+  // Filter out columns that don't have links or have empty links arrays
+  const links =
+    footerData.columns
+      ?.filter((column) => column.links && column.links.length > 0)
+      .map((column) => ({
+        title: column.title || '',
+        items:
+          column.links?.map((link) => ({
+            href: link.url || '#',
+            text: link.label || '',
+          })) || [],
+      })) || [];
+
+  // Map social links
+  const socialLinks =
+    footerData.socialLinks?.map((social) => {
+      const iconName = (social.icon || social.platform || '').toLowerCase();
+      const iconComponent = iconMap[iconName] || AiFillMail;
+
+      return {
+        viewBox: '0 0 1024 1024',
+        iconPath: iconComponent,
+        detail: social.detail || social.url || '',
+      };
+    }) || [];
+
+  return {
+    content3:
+      footerData.copyright || '© 2024 DJ Beat Blaster. All rights reserved.',
+    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
+    logoAlt: 'DJ Management Logo',
+    socialLinkTitleCategory: 'Connect with Us',
+    links,
+    socialLinks,
+    privacyLink: 'Privacy Policy',
+    termsLink: 'Terms of Service',
+    cookiesLink: 'Cookie Policy',
+    action1: '',
+    content2: '',
+  };
+}

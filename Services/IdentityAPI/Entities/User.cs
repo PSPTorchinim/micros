@@ -10,6 +10,8 @@ namespace IdentityAPI.Entities
         public string ActivationCode { get; set; }
         public string? Token { get; set; }
         public string? RefreshToken { get; set; }
+        public string? SecurityStamp { get; set; }
+        public DateTime? LastPasswordChangeDate { get; set; }
         public virtual List<Role> Roles { get; set; }
         public virtual List<Password> Passwords { get; set; }
         public virtual List<Block> Blocks { get; set; }

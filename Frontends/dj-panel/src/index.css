@@ -107,8 +107,8 @@ body {
 
 .thq-button-filled {
   gap: var(--dl-space-space-halfunit);
-  fill: var(--dl-color-theme-secondary1);
-  color: var(--dl-color-theme-secondary1);
+  fill: var(--dl-color-theme-button-text);
+  color: var(--dl-color-theme-button-text);
   cursor: pointer;
   display: flex;
   transition: 0.3s;
@@ -127,8 +127,8 @@ body {
 }
 
 .thq-button-filled:hover {
-  fill: var(--dl-color-theme-secondary2);
-  color: var(--dl-color-theme-secondary2);
+  fill: var(--dl-color-theme-button-text);
+  color: var(--dl-color-theme-button-text);
   border-color: var(--dl-color-theme-primary2);
   background-color: var(--dl-color-theme-primary2);
 }
@@ -154,8 +154,8 @@ body {
 }
 
 .thq-button-outline:hover {
-  fill: var(--dl-color-theme-secondary2);
-  color: var(--dl-color-theme-secondary2);
+  fill: var(--dl-color-theme-button-text);
+  color: var(--dl-color-theme-button-text);
   border-color: var(--dl-color-theme-primary2);
   background-color: var(--dl-color-theme-primary2);
 }
@@ -181,10 +181,23 @@ body {
 }
 
 .thq-button-flat:hover {
-  fill: var(--dl-color-theme-secondary1);
-  color: var(--dl-color-theme-secondary1);
+  fill: var(--dl-color-theme-button-text);
+  color: var(--dl-color-theme-button-text);
   border-color: var(--dl-color-theme-primary2);
   background-color: var(--dl-color-theme-primary2);
+}
+
+/* Ensure text inside buttons inherits button text color */
+.thq-button-filled .thq-body-small,
+.thq-button-filled .thq-body-large,
+.thq-button-filled span,
+.thq-button-outline:hover .thq-body-small,
+.thq-button-outline:hover .thq-body-large,
+.thq-button-outline:hover span,
+.thq-button-flat:hover .thq-body-small,
+.thq-button-flat:hover .thq-body-large,
+.thq-button-flat:hover span {
+  color: inherit;
 }
 
 .thq-heading-1 {

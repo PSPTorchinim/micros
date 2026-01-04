@@ -13,7 +13,7 @@ namespace Shared.Services.App
     [EnableCors("cors")]
     [ApiVersion(1)]
     [ApiVersion(2)]
-    [Route("api/v{v:apiVersion}/[controller]")]
+    [Route("v{v:apiVersion}/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class BaseController<TController> : ControllerBase where TController : BaseController<TController>
@@ -27,17 +27,9 @@ namespace Shared.Services.App
             _serviceProvider = serviceProvider;
         }
 
-        [HttpGet("Hello")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Hello()
-        {
-            _logger.LogInformation("Hello endpoint called.");
-            return await Handle<object>();
-        }
-
         public async Task<IActionResult> Handle<T>(
-            Func<Task<T>> action = null,
-            Func<T, IActionResult> customResponse = null)
+            Func<Task<T>>? action = null,
+            Func<T, IActionResult>? customResponse = null)
         {
             var response = new Response<T>(default);
             try

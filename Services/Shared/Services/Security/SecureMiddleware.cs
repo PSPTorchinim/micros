@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Shared.Helpers;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -32,18 +33,20 @@ namespace Shared.Services.Security
             context.Request.Headers.TryGetValue("secure_key", out StringValues headerValue);
             var hash = headerValue.FirstOrDefault();
 
-            _logger.LogInformation("Received request for path: {Path} with secure_key header: {Hash}", context.Request.Path, hash);
+            _logger.LogInformation("Received request for path: {Path}", 
+                StringHelper.SanitizeForLog(context.Request.Path));
 
             // Compare directly if client sends hash
             if (string.IsNullOrEmpty(hash) || hash != _secureKeyHash)
             {
-                _logger.LogWarning("Unauthorized request for path: {Path} with hash: {Hash}, secure_key_hash: {SecureKeyHash}", context.Request.Path, hash, _secureKeyHash);
+                _logger.LogWarning("Unauthorized request for path: {Path} - Invalid or missing secure_key", 
+                    StringHelper.SanitizeForLog(context.Request.Path));
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("UNAUTHORIZED");
                 return;
             }
 
-            _logger.LogInformation("Authorized request for path: {Path}", context.Request.Path);
+            _logger.LogInformation("Authorized request for path: {Path}", StringHelper.SanitizeForLog(context.Request.Path));
 
             await _next(context);
         }

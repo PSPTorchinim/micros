@@ -43,7 +43,7 @@ namespace Shared.Services.MessagesBroker.RabbitMQ
             }
         }
 
-        public RabbitMQConsumerService(ILogger<RabbitMQConsumerService> logger = null)
+        public RabbitMQConsumerService(ILogger<RabbitMQConsumerService>? logger = null)
         {
             _logger = logger;
         }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from './App';
 
@@ -20,12 +20,30 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock the useDynamicRoutes hook
 jest.mock('./components/DynamicRoutes', () => ({
-  useDynamicRoutes: jest.fn(() => [[], []]),
+  useDynamicRoutes: jest.fn(() => [[], [], null]),
 }));
 
 // Mock the microservices client
+const createMockService = () => ({
+  instance: {
+    interceptors: {
+      request: {
+        use: jest.fn(() => 1),
+        eject: jest.fn(),
+      },
+      response: {
+        use: jest.fn(() => 1),
+        eject: jest.fn(),
+      },
+    },
+  },
+});
+
 jest.mock('./models/api', () => ({
   microservicesClient: {
+    brand: createMockService(),
+    documents: createMockService(),
+    gear: createMockService(),
     identity: {
       instance: {
         interceptors: {
@@ -43,6 +61,10 @@ jest.mock('./models/api', () => ({
         apiV1UsersRefreshTokenList: jest.fn(),
       },
     },
+    mailing: createMockService(),
+    music: createMockService(),
+    party: createMockService(),
+    strapi: createMockService(),
   },
 }));
 
@@ -51,8 +73,8 @@ jest.mock('./services/users-service', () => ({
   userService: {},
 }));
 
-jest.mock('./services/strapi-api', () => ({
-  strapiAPI: {},
+jest.mock('./services/strapi-service', () => ({
+  StrapiService: {},
 }));
 
 describe('App Component', () => {
@@ -64,7 +86,7 @@ describe('App Component', () => {
   it('renders without crashing', () => {
     render(<App />);
     // App should render the router structure
-    expect(document.querySelector('.hash-router')).toBeDefined();
+    expect(document.querySelector('.browser-router')).toBeDefined();
   });
 
   it('wraps content with ThemeProvider', () => {
@@ -73,9 +95,9 @@ describe('App Component', () => {
     expect(document.documentElement.hasAttribute('data-theme')).toBe(true);
   });
 
-  it('initializes with HashRouter', () => {
+  it('initializes with BrowserRouter', () => {
     const { container } = render(<App />);
-    // HashRouter should be initialized (we can verify by checking if Routes is rendered)
+    // BrowserRouter should be initialized (we can verify by checking if Routes is rendered)
     expect(container).toBeInTheDocument();
   });
 

@@ -58,7 +58,7 @@ namespace Shared.Services.App
         private static void ConfigureCommonMiddleware(WebApplication app)
         {
             app.UseMiddleware<ExceptionMiddleware>();
-            app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), appBuilder =>
+            app.UseWhen(context => context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/v"), appBuilder =>
             {
                 appBuilder.UseMiddleware<SecureMiddleware>();
             });

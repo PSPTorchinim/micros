@@ -1,26 +1,31 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './layout';
 import './index.css';
 import { AuthProvider } from './providers/auth-provider';
 import { ThemeProvider } from './context/theme-context';
 
-import { NotFoundComponent } from './components/molecules/not-found';
+import { NotFoundComponent } from './components/molecules/ErrorPage/NotFound';
 import { ServicesProvider } from './providers/services-provider';
 
 import { useDynamicRoutes } from './components/DynamicRoutes';
 
 export default function App() {
-  const [dynamicRoutes, dynamicNavigation] = useDynamicRoutes();
+  const [dynamicRoutes, dynamicNavigation, footerData] = useDynamicRoutes();
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ThemeProvider>
         <ServicesProvider>
           <AuthProvider>
             <Routes>
               <Route
                 path="/"
-                element={<Layout navigation={{ links: dynamicNavigation }} />}
+                element={
+                  <Layout
+                    navigation={{ links: dynamicNavigation }}
+                    footer={footerData}
+                  />
+                }
               >
                 {dynamicRoutes}
                 <Route path="*" element={<NotFoundComponent />} />
@@ -29,6 +34,6 @@ export default function App() {
           </AuthProvider>
         </ServicesProvider>
       </ThemeProvider>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

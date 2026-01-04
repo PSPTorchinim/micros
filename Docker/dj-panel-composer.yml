@@ -18,15 +18,22 @@ services:
     volumes:
       - mongo_data:/data/db
       - mongo_config:/data/configdb
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   strapi_db:
-    build:
-      context: ../
-      dockerfile: Docker/infra/postgres.Dockerfile
-      args:
-        DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}
-        DATABASE_USERNAME_POSTGRES: ${CMS_DATABASE_USERNAME}
-        DATABASE_PASSWORD_POSTGRES: ${CMS_DATABASE_PASSWORD}
+    image: postgres:18
+    environment:
+      - POSTGRES_DB=${CMS_DATABASE_NAME}
+      - POSTGRES_USER=${CMS_DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${CMS_DATABASE_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -36,6 +43,20 @@ services:
       - public
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${CMS_DATABASE_USERNAME}", "-d", "${CMS_DATABASE_NAME}", "-h", "127.0.0.1", "-p", "5432"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   rabbitmq:
     build:
@@ -57,13 +78,21 @@ services:
       - public
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   redis:
-    build:
-      context: ../
-      dockerfile: Docker/infra/redis.Dockerfile
-      args:
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    image: redis:8-alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    user: root
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -73,13 +102,28 @@ services:
       - public
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
   sqlserver:
-    build:
-      context: ../
-      dockerfile: Docker/infra/sqlserver.Dockerfile
-      args:
-        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+      - DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
+    user: root
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -89,6 +133,20 @@ services:
       - public
     volumes:
       - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-U", "sa", "-P", "${DATABASE_PASSWORD_SQLSERVER}", "-Q", "SELECT 1", "-C"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   apigateway:
     build:
@@ -99,7 +157,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -122,6 +180,7 @@ services:
       - ASPNETCORE_BRAND_BE_ADDRESS=${BRAND_BE_ADDRESS}
       - ASPNETCORE_PARTY_BE_ADDRESS=${PARTY_BE_ADDRESS}
       - ASPNETCORE_MAILING_BE_ADDRESS=${MAILING_BE_ADDRESS}
+      - ASPNETCORE_STRAPI_ADDRESS=${CMS_HOST}
       - ASPNETCORE_DATABASE_CATALOG=${APIGATEWAY_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
@@ -144,10 +203,21 @@ services:
         condition: service_healthy
       party_be:
         condition: service_healthy
+      strapi:
+        condition: service_healthy
     networks:
       - apigw_backends_net
       - apigw_fe_net
+      - strapi_fe_net
       - public
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   dj-panel:
     build:
@@ -158,10 +228,6 @@ services:
         API_GATEWAY: ${API_GATEWAY}
         SECURE_KEY: ${SECURE_KEY}
         JWT_TOKEN: ${JWT_KEY}
-        CMS_HOST: ${CMS_HOST}
-        CMS_PORT: ${CMS_PORT}
-        CMS_PROTOCOL: ${CMS_PROTOCOL}
-        CMS_API_PATH: ${CMS_API_PATH}
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -176,6 +242,14 @@ services:
         condition: service_healthy
       strapi:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   storybook-dj-panel:
     build:
@@ -186,9 +260,17 @@ services:
     restart: unless-stopped
     pull_policy: always
     ports:
-      - "6006:6006"
+      - "6006:3000"
     networks:
       - public
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   strapi:
     build:
@@ -196,7 +278,7 @@ services:
       dockerfile: Docker/infra/strapi.Dockerfile
       args:
         CMS_DATABASE_CLIENT: ${CMS_DATABASE_CLIENT}
-        CMS_NODE_ENV: ${CMS_NODE_ENV}
+        CMS_NODE_ENV: ${ENVIRONMENT}
         CMS_DATABASE_HOST: ${CMS_DATABASE_HOST}
         CMS_DATABASE_PORT: ${CMS_DATABASE_PORT}
         DATABASE_NAME_POSTGRES: ${CMS_DATABASE_NAME}
@@ -221,6 +303,14 @@ services:
         condition: service_healthy
     volumes:
       - strapi_app:/srv/app
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   identity_be:
     build:
@@ -231,7 +321,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -273,6 +363,14 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   music_be:
     build:
@@ -283,7 +381,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -325,6 +423,14 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   gear_be:
     build:
@@ -335,7 +441,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -377,6 +483,14 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   documents_be:
     build:
@@ -387,7 +501,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -429,6 +543,14 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   brand_be:
     build:
@@ -439,7 +561,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -481,6 +603,14 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   mailing_be:
     build:
@@ -491,7 +621,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -533,6 +663,14 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   party_be:
     build:
@@ -543,7 +681,7 @@ services:
     environment:
       - ASPNETCORE_DATABASE_HOST_SQLSERVER=${DATABASE_HOST_SQLSERVER}
       - ASPNETCORE_DATABASE_PORT_SQLSERVER=${DATABASE_PORT_SQLSERVER}
-      - ASPNETCORE_DATABASE_USER_SQLSERVER=${DATABASE_USER_SQLSERVER}
+      - ASPNETCORE_DATABASE_USER_SQLSERVER=sa
       - ASPNETCORE_DATABASE_PASSWORD_SQLSERVER=${DATABASE_PASSWORD_SQLSERVER}
       - ASPNETCORE_DATABASE_HOST_MONGODB=${DATABASE_HOST_MONGODB}
       - ASPNETCORE_DATABASE_PORT_MONGODB=${DATABASE_PORT_MONGODB}
@@ -585,6 +723,14 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   # ================================================
   # LOGGING & MONITORING SERVICES
@@ -603,6 +749,14 @@ services:
       - public
     volumes:
       - loki_data:/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   promtail:
     build:
@@ -614,13 +768,21 @@ services:
       - "9080:9080"
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
     networks:
       - logging_net
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - promtail_positions:/var/lib/promtail
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   prometheus:
     build:
@@ -642,16 +804,23 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=7d'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   sqlserver-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/sqlserver-exporter.Dockerfile
-      args:
-        DATABASE_USER_SQLSERVER: ${DATABASE_USER_SQLSERVER}
-        DATABASE_PASSWORD_SQLSERVER: ${DATABASE_PASSWORD_SQLSERVER}
-        DATABASE_HOST_SQLSERVER: sqlserver
-        DATABASE_PORT_SQLSERVER: "1433"
+    image: awaragi/prometheus-mssql-exporter:latest
+    environment:
+      - SERVER=sqlserver
+      - PORT=1433
+      - USERNAME=sa
+      - PASSWORD=${DATABASE_PASSWORD_SQLSERVER}
+      - DEBUG=false
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -661,17 +830,21 @@ services:
       - logging_net
     depends_on:
       sqlserver:
-        condition: service_healthy
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   mongodb-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/mongodb-exporter.Dockerfile
-      args:
-        DATABASE_USER_MONGODB: ${DATABASE_USER_MONGODB}
-        DATABASE_PASSWORD_MONGODB: ${DATABASE_PASSWORD_MONGODB}
-        DATABASE_HOST_MONGODB: mongodb_container
-        DATABASE_PORT_MONGODB: "27017"
+    image: percona/mongodb_exporter:0.40
+    environment:
+      - MONGODB_URI=mongodb://${DATABASE_USER_MONGODB}:${DATABASE_PASSWORD_MONGODB}@mongodb_container:27017
+    command: ["--collect-all"]
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -681,18 +854,20 @@ services:
       - logging_net
     depends_on:
       mongodb_container:
-        condition: service_healthy
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   postgres-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/postgres-exporter.Dockerfile
-      args:
-        CMS_DATABASE_USERNAME: ${CMS_DATABASE_USERNAME}
-        CMS_DATABASE_PASSWORD: ${CMS_DATABASE_PASSWORD}
-        CMS_DATABASE_NAME: ${CMS_DATABASE_NAME}
-        CMS_DATABASE_HOST: strapi_db
-        CMS_DATABASE_PORT: "5432"
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${CMS_DATABASE_USERNAME}:${CMS_DATABASE_PASSWORD}@strapi_db:5432/${CMS_DATABASE_NAME}?sslmode=disable
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -702,16 +877,21 @@ services:
       - logging_net
     depends_on:
       strapi_db:
-        condition: service_healthy
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   redis-exporter:
-    build:
-      context: ../
-      dockerfile: Docker/infra/redis-exporter.Dockerfile
-      args:
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-        REDIS_HOST: redis
-        REDIS_PORT: "6379"
+    image: oliver006/redis_exporter:latest
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -721,7 +901,15 @@ services:
       - logging_net
     depends_on:
       redis:
-        condition: service_healthy
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
 
   grafana:
     build:
@@ -738,14 +926,22 @@ services:
       - "3001:3001"
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
       prometheus:
-        condition: service_healthy
+        condition: service_started
     networks:
       - logging_net
       - public
     volumes:
       - grafana_data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
 networks:
   mongo_net:

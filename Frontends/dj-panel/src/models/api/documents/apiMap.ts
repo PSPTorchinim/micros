@@ -71,13 +71,13 @@ import type {
   AxiosResponse,
   HeadersDefaults,
   ResponseType,
-} from 'axios';
-import axios from 'axios';
+} from "axios";
+import axios from "axios";
 
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
+  extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -94,11 +94,11 @@ export interface FullRequestParams
 
 export type RequestParams = Omit<
   FullRequestParams,
-  'body' | 'method' | 'query' | 'path'
+  "body" | "method" | "query" | "path"
 >;
 
 export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
+  extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
   securityWorker?: (
     securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
@@ -107,17 +107,17 @@ export interface ApiConfig<SecurityDataType = unknown>
 }
 
 export enum ContentType {
-  Json = 'application/json',
-  JsonApi = 'application/vnd.api+json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded',
-  Text = 'text/plain',
+  Json = "application/json",
+  JsonApi = "application/vnd.api+json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private secure?: boolean;
   private format?: ResponseType;
 
@@ -129,7 +129,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || '',
+      baseURL: axiosConfig.baseURL || "",
     });
     this.secure = secure;
     this.format = format;
@@ -163,7 +163,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === 'object' && formItem !== null) {
+    if (typeof formItem === "object" && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -201,7 +201,7 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === 'boolean' ? secure : this.secure) &&
+      ((typeof secure === "boolean" ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
@@ -210,18 +210,14 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body &&
-      body !== null &&
-      typeof body === 'object'
+      body != null && typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body &&
-      body !== null &&
-      typeof body !== 'string'
+      body != null && typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -230,7 +226,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { 'Content-Type': type } : {}),
+        ...(type ? { "Content-Type": type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -252,14 +248,14 @@ export class Api<
      * No description
      *
      * @tags Documents
-     * @name ApiV1DocumentsList
-     * @request GET:/documents/api/v1/Documents
+     * @name V1DocumentsList
+     * @request GET:/documents/v1/Documents
      * @secure
      */
-    apiV1DocumentsList: (params: RequestParams = {}) =>
+    v1DocumentsList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Documents`,
-        method: 'GET',
+        path: `/documents/v1/Documents`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -268,14 +264,14 @@ export class Api<
      * No description
      *
      * @tags Documents
-     * @name ApiV1DocumentsHelloList
-     * @request GET:/documents/api/v1/Documents/Hello
+     * @name V1DocumentsHelloList
+     * @request GET:/documents/v1/Documents/Hello
      * @secure
      */
-    apiV1DocumentsHelloList: (params: RequestParams = {}) =>
+    v1DocumentsHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Documents/Hello`,
-        method: 'GET',
+        path: `/documents/v1/Documents/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -285,14 +281,14 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesList
-     * @request GET:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesList
+     * @request GET:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesList: (params: RequestParams = {}) =>
+    v1DocumentTemplatesList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
-        method: 'GET',
+        path: `/documents/v1/DocumentTemplates`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -301,17 +297,17 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesCreate
-     * @request POST:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesCreate
+     * @request POST:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesCreate: (
+    v1DocumentTemplatesCreate: (
       data: DocumentTemplate,
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
-        method: 'POST',
+        path: `/documents/v1/DocumentTemplates`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
@@ -322,11 +318,11 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesUpdate
-     * @request PUT:/documents/api/v1/DocumentTemplates
+     * @name V1DocumentTemplatesUpdate
+     * @request PUT:/documents/v1/DocumentTemplates
      * @secure
      */
-    apiV1DocumentTemplatesUpdate: (
+    v1DocumentTemplatesUpdate: (
       data: DocumentTemplate,
       query?: {
         Id?: string;
@@ -334,8 +330,8 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates`,
-        method: 'PUT',
+        path: `/documents/v1/DocumentTemplates`,
+        method: "PUT",
         query: query,
         body: data,
         secure: true,
@@ -347,14 +343,14 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesDetail
-     * @request GET:/documents/api/v1/DocumentTemplates/{id}
+     * @name V1DocumentTemplatesDetail
+     * @request GET:/documents/v1/DocumentTemplates/{id}
      * @secure
      */
-    apiV1DocumentTemplatesDetail: (id: string, params: RequestParams = {}) =>
+    v1DocumentTemplatesDetail: (id: string, params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates/${id}`,
-        method: 'GET',
+        path: `/documents/v1/DocumentTemplates/${id}`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -363,14 +359,14 @@ export class Api<
      * No description
      *
      * @tags DocumentTemplates
-     * @name ApiV1DocumentTemplatesHelloList
-     * @request GET:/documents/api/v1/DocumentTemplates/Hello
+     * @name V1DocumentTemplatesHelloList
+     * @request GET:/documents/v1/DocumentTemplates/Hello
      * @secure
      */
-    apiV1DocumentTemplatesHelloList: (params: RequestParams = {}) =>
+    v1DocumentTemplatesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/DocumentTemplates/Hello`,
-        method: 'GET',
+        path: `/documents/v1/DocumentTemplates/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
@@ -380,16 +376,31 @@ export class Api<
      * No description
      *
      * @tags Invoices
-     * @name ApiV1InvoicesHelloList
-     * @request GET:/documents/api/v1/Invoices/Hello
+     * @name V1InvoicesHelloList
+     * @request GET:/documents/v1/Invoices/Hello
      * @secure
      */
-    apiV1InvoicesHelloList: (params: RequestParams = {}) =>
+    v1InvoicesHelloList: (params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/documents/api/v1/Invoices/Hello`,
-        method: 'GET',
+        path: `/documents/v1/Invoices/Hello`,
+        method: "GET",
         secure: true,
         ...params,
       }),
   };
+}
+
+// Aliased exports for unified API client
+export { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as DocumentsHttpClient };
+
+// Injected secure_key header interceptor
+if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
+    Api.prototype.instance.interceptors.request.use((config) => {
+      if (!config.headers) config.headers = {};
+      config.headers['secure_key'] = secureKey;
+      return config;
+    });
+  }
 }
