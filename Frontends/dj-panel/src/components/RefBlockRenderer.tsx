@@ -1,8 +1,17 @@
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { renderBlock } from './renderBlock';
+import { renderBlock, type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
-import type { RefComponent, ContentBlock } from '../types/content-blocks';
+
+/**
+ * Reference components that need to be resolved
+ */
+export interface RefComponent {
+  __component: string;
+  id?: number;
+  documentId?: string;
+  [key: string]: unknown;
+}
 
 /**
  * Extracts documentId from various Strapi populate shapes

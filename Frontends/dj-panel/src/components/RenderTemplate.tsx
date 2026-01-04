@@ -1,14 +1,34 @@
 // components/RenderTemplate.tsx
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { transformStrapiBlocks, RefBlockRenderer } from './RefBlockRenderer';
-import renderBlock from './renderBlock';
+import {
+  transformStrapiBlocks,
+  RefBlockRenderer,
+  type RefComponent,
+} from './RefBlockRenderer';
+import renderBlock, { type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type {
-  TemplateEntity,
-  ContentBlock,
-  RefComponent,
-} from '../types/content-blocks';
+  Template,
+  TemplateTemplateTypeEnum,
+} from '../models/api/strapi/apiMap';
+
+/**
+ * Template entity with proper typing
+ */
+interface TemplateEntity extends Partial<Template> {
+  id?: number;
+  documentId?: string;
+  attributes?: {
+    TemplateType?: TemplateTemplateTypeEnum | undefined;
+    Content?: (ContentBlock | RefComponent)[];
+    Name?: string;
+    [key: string]: unknown;
+  };
+  TemplateType?: TemplateTemplateTypeEnum | undefined;
+  Content?: (ContentBlock | RefComponent)[];
+  Name?: string;
+}
 
 type Props = {
   /** documentId templatek (Strapi v5) */
