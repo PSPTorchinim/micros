@@ -4,7 +4,9 @@ import type { Page } from '../models/api/strapi/apiMap';
 type StrapiFilters = Record<string, unknown>;
 
 // --- Populate config for Template.Content (dynamic zone) ---
-// Deeply populates all referenced blocks so they don't need to be fetched separately
+// Deeply populates all referenced blocks so they don't need to be fetched separately.
+// Note: This uses deep populate which eliminates N+1 queries but may fetch more data 
+// than strictly needed. This is a conscious trade-off for simpler, more reliable code.
 const TEMPLATE_CONTENT_POPULATE = {
   Content: {
     on: {

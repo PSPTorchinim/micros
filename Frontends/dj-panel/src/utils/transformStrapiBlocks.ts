@@ -42,7 +42,7 @@ export function transformStrapiBlocks(
     const refComponent = block as RefComponent;
     const refUID = refComponent.__component;
     // Extract base component name more robustly (e.g., "image-slider-ref.image-slider-ref" -> "image-slider")
-    const base = refUID.replace(/-ref\..*$/, '');
+    const base = refUID.replace(/-ref(?:\..+)?$/, '');
     const relField = FIELD_BY_REF[refUID];
 
     if (!relField) {
@@ -66,7 +66,7 @@ export function transformStrapiBlocks(
   }
 
   // For regular blocks, recursively transform nested fields
-  // Only process if the block contains potential ref components
+  // Track if we found any nested refs to avoid unnecessary object creation
   const resolved: Record<string, unknown> = {
     ...(block as Record<string, unknown>),
   };
@@ -87,6 +87,6 @@ export function transformStrapiBlocks(
     }
   }
 
-  // Return original block if no transformations were made
+  // Return original block if no transformations were made to avoid unnecessary object allocation
   return hasNestedRefs ? (resolved as unknown as ContentBlock) : (block as ContentBlock);
 }
