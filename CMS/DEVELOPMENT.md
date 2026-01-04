@@ -10,6 +10,7 @@ This guide will help you set up the CMS for local development and ensure TypeScr
 - npm >= 6.0.0
 - PostgreSQL database (or another supported database)
 - Git
+- **VS Code** (optional, but recommended for automatic type generation)
 
 ### Step-by-Step Setup
 
@@ -27,6 +28,12 @@ npm install
 ```
 
 #### 3. Configure Environment Variables
+
+**Option A: Use VS Code Launch Configuration (Recommended)**
+
+The repository includes `.vscode/launch.json` with pre-configured DevelopmentLocal environment variables. Simply press `F5` in VS Code to launch with proper configuration.
+
+**Option B: Manual .env file**
 
 Create a `.env` file in the CMS directory with the following variables:
 
@@ -65,9 +72,13 @@ Ensure your PostgreSQL database is running and accessible with the credentials i
 
 After installing dependencies and configuring the environment, generate TypeScript types for all content types:
 
+**Option A: Command Line**
 ```bash
 npm run ts:generate-types
 ```
+
+**Option B: VS Code (Automatic)**
+Press `F5` or use the "CMS: Strapi Debug" launch configuration - types are generated automatically via the `generate-strapi-types` task!
 
 This command:
 - Connects to the database using your environment configuration
@@ -80,11 +91,13 @@ This command:
 - ✅ After pulling changes with new/modified content types
 - ✅ After creating new content types in the admin panel
 - ✅ When you see TypeScript errors about missing content types
+- ❗ **Not needed if using VS Code debugger** - it runs automatically!
 
 **Troubleshooting Type Generation:**
 - If the command fails with "Missing admin.auth.secret", ensure all environment variables are set
 - If database connection fails, verify your DATABASE_* environment variables
 - Run `npm run strapi version` to ensure Strapi CLI is properly installed
+- **VS Code users**: Check `.vscode/launch.json` for environment configuration
 
 #### 6. Build the Application
 
@@ -187,7 +200,7 @@ npm run ts:generate-types
 **Problem**: Cannot connect to database during type generation
 **Solution**: 
 1. Verify database is running
-2. Check DATABASE_* variables in `.env`
+2. Check DATABASE_* variables in `.env` or `.vscode/launch.json`
 3. Ensure database user has proper permissions
 
 #### Build Failures
@@ -198,11 +211,68 @@ npm run ts:generate-types
 2. Clean build cache: `rm -rf .cache build dist`
 3. Rebuild: `npm run build`
 
+### VS Code Integration
+
+The repository includes comprehensive VS Code integration for seamless development:
+
+#### Tasks (`.vscode/tasks.json`)
+
+1. **install-strapi**: Install CMS dependencies
+2. **generate-strapi-types**: Generate TypeScript types with DevelopmentLocal environment
+3. **build-strapi**: Build CMS (runs install → generate types → build)
+
+Run tasks via: `Cmd/Ctrl+Shift+P` → "Tasks: Run Task"
+
+#### Launch Configurations (`.vscode/launch.json`)
+
+**Single Service Debugging:**
+- **CMS: Strapi Debug**: Launch Strapi with automatic type generation
+  - Pre-launch: Installs deps, generates types, builds
+  - Environment: DevelopmentLocal variables auto-configured
+  - Port: 1337
+
+**Multi-Service Debugging:**
+- **Launch Frontends Stack**: CMS + DJ Panel + Storybook
+- **Launch Services Stack**: All C# microservices
+- **Launch Full Stack**: All services + all frontends
+
+#### Environment Variables
+
+The `CMS: Strapi Debug` configuration includes pre-configured DevelopmentLocal variables:
+- Database: PostgreSQL on localhost:5432
+- Database name: `djbeatblaster_cms`
+- All required secrets (JWT, API tokens, etc.)
+- Port: 1337
+
+**To customize**: Edit `.vscode/launch.json` → "CMS: Strapi Debug" → "env" section
+
+#### Using VS Code Debugger
+
+1. **Open VS Code** in the repository root
+2. **Press F5** or `Cmd/Ctrl+Shift+D` → Select "CMS: Strapi Debug"
+3. **Automatic execution**:
+   - Installs dependencies (if needed)
+   - Generates TypeScript types
+   - Builds the CMS
+   - Launches with debugger attached
+4. **Set breakpoints** in TypeScript files
+5. **Access**: http://localhost:1337/admin
+
+#### Benefits of VS Code Integration
+
+✅ **Automatic type generation**: No need to run manually
+✅ **Pre-configured environment**: DevelopmentLocal variables ready
+✅ **Debugging support**: Set breakpoints, inspect variables
+✅ **Task orchestration**: Dependencies → Types → Build → Launch
+✅ **Multi-service support**: Launch entire stack with one click
+
 ### Additional Resources
 
 - [Strapi TypeScript Documentation](https://docs.strapi.io/dev-docs/typescript)
 - [Strapi CLI Documentation](https://docs.strapi.io/dev-docs/cli)
 - [Content Type Schema Documentation](https://docs.strapi.io/dev-docs/backend-customization/models)
+- [VS Code Tasks Documentation](https://code.visualstudio.com/docs/editor/tasks)
+- [VS Code Debugging Documentation](https://code.visualstudio.com/docs/editor/debugging)
 
 ### Support
 
