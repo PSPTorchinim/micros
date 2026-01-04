@@ -76,7 +76,7 @@ The repository includes VS Code tasks and launch configurations:
 
 ### Tasks:
 - **install-strapi**: Install dependencies
-- **generate-strapi-types**: Generate TypeScript types with DevelopmentLocal env
+- **generate-strapi-types**: Generate TypeScript types with DevelopmentLocal environment variables (PostgreSQL, JWT secrets, etc.)
 - **build-strapi**: Build the CMS (includes type generation)
 
 ### Launch Configurations:

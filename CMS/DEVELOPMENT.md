@@ -218,7 +218,10 @@ The repository includes comprehensive VS Code integration for seamless developme
 #### Tasks (`.vscode/tasks.json`)
 
 1. **install-strapi**: Install CMS dependencies
-2. **generate-strapi-types**: Generate TypeScript types with DevelopmentLocal environment
+2. **generate-strapi-types**: Generate TypeScript types with DevelopmentLocal environment variables
+   - Includes all required environment variables (database, JWT secrets, etc.)
+   - Same configuration as `CMS: Strapi Debug` launch configuration
+   - Can be run standalone via: `Cmd/Ctrl+Shift+P` → "Tasks: Run Task" → "generate-strapi-types"
 3. **build-strapi**: Build CMS (runs install → generate types → build)
 
 Run tasks via: `Cmd/Ctrl+Shift+P` → "Tasks: Run Task"
@@ -238,10 +241,11 @@ Run tasks via: `Cmd/Ctrl+Shift+P` → "Tasks: Run Task"
 
 #### Environment Variables
 
-The `CMS: Strapi Debug` configuration includes pre-configured DevelopmentLocal variables:
+Both the `CMS: Strapi Debug` launch configuration and the `generate-strapi-types` task include pre-configured DevelopmentLocal variables:
 - Database: PostgreSQL on localhost:5432
 - Database name: `djbeatblaster_cms`
-- All required secrets (JWT, API tokens, etc.)
+- Database credentials: postgres/postgres
+- All required secrets (JWT, API tokens, encryption keys, etc.)
 - Port: 1337
 
 **To customize**: Edit `.vscode/launch.json` → "CMS: Strapi Debug" → "env" section
