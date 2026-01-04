@@ -4,36 +4,38 @@ import type { Page } from '../models/api/strapi/apiMap';
 type StrapiFilters = Record<string, unknown>;
 
 // --- Populate config for Template.Content (dynamic zone) ---
-// Ensures that each ref-component contains the relational field with documentId.
+// Deeply populates all referenced blocks so they don't need to be fetched separately.
+// Note: This uses deep populate which eliminates N+1 queries but may fetch more data
+// than strictly needed. This is a conscious trade-off for simpler, more reliable code.
 const TEMPLATE_CONTENT_POPULATE = {
   Content: {
     on: {
       'article-block-ref.article-block-ref': {
-        populate: { block: { fields: ['documentId'] } },
+        populate: { block: { populate: '*' } },
       },
       'hero-block-ref.hero-block-ref': {
-        populate: { hero_block: { fields: ['documentId'] } },
+        populate: { hero_block: { populate: '*' } },
       },
       'image-slider-ref.image-slider-ref': {
-        populate: { slider: { fields: ['documentId'] } },
+        populate: { slider: { populate: '*' } },
       },
       'steps-container-ref.steps-container-ref': {
-        populate: { container: { fields: ['documentId'] } },
+        populate: { container: { populate: '*' } },
       },
       'cta-ref.cta-ref': {
-        populate: { cta: { fields: ['documentId'] } },
+        populate: { cta: { populate: '*' } },
       },
       'feature-section-ref.feature-section-ref': {
-        populate: { feature_section: { fields: ['documentId'] } },
+        populate: { feature_section: { populate: '*' } },
       },
       'contact-section-ref.contact-section-ref': {
-        populate: { contact_section: { fields: ['documentId'] } },
+        populate: { contact_section: { populate: '*' } },
       },
       'feature-tab-ref.feature-tab-ref': {
-        populate: { feature_tab: { fields: ['documentId'] } },
+        populate: { feature_tab: { populate: '*' } },
       },
       'contact-info-ref.contact-info-ref': {
-        populate: { contact_info: { fields: ['documentId'] } },
+        populate: { contact_info: { populate: '*' } },
       },
     },
   },
