@@ -78,7 +78,7 @@ export const Footer = (props: FooterProps) => {
                 </div>
               </div>
             ))}
-            {footerData.socialLinks && footerData.socialLinks.length > 0 && (
+            {footerData.socialLinks?.length > 0 && (
               <div className="footer-column">
                 <strong className="thq-body-large footer-social-link-title">
                   Connect with Us

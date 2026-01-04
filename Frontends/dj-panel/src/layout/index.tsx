@@ -19,7 +19,7 @@ export const Layout = (props: LayoutProps) => {
       <main className="layout-main">
         <Outlet />
       </main>
-      <Footer footerData={props.footer} />
+      {props.footer && <Footer footerData={props.footer} />}
     </div>
   );
 };
