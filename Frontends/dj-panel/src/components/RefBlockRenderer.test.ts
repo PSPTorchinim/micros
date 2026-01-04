@@ -1,4 +1,4 @@
-import { transformStrapiBlocks } from './transformStrapiBlocks';
+import { transformStrapiBlocks } from './RefBlockRenderer';
 
 describe('transformStrapiBlocks', () => {
   it('returns ref components as-is for RefBlockRenderer to handle', () => {
