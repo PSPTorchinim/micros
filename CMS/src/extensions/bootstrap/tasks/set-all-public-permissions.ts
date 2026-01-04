@@ -44,8 +44,9 @@ function getApiContentTypes(): Array<{ uid: string; isSingleType: boolean }> {
       if (fs.existsSync(schemaJsonPath)) {
         try {
           const schema = JSON.parse(fs.readFileSync(schemaJsonPath, 'utf-8'));
-          isSingleType = schema.kind === 'singleType';
-          console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (${schema.kind || 'collectionType'})`);
+          const kind = schema.kind || 'collectionType';
+          isSingleType = kind === 'singleType';
+          console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (${kind})`);
           return [{ uid: `api::${apiName}.${ct}`, isSingleType }];
         } catch (e) {
           console.error(`[PERM-LOG] Error reading schema.json for ${apiName}.${ct}:`, e);
@@ -56,12 +57,14 @@ function getApiContentTypes(): Array<{ uid: string; isSingleType: boolean }> {
           // For .ts schemas, try to extract the kind by parsing the file content
           const schemaContent = fs.readFileSync(schemaTsPath, 'utf-8');
           // Look for kind: "singleType" or kind: 'singleType' in the file
-          const kindMatch = schemaContent.match(/kind:\s*["'](\w+)["']/);
-          if (kindMatch && kindMatch[1] === 'singleType') {
-            isSingleType = true;
-            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (singleType from schema.ts)`);
+          const kindMatch = schemaContent.match(/kind:\s*['"](\w+)['"]/);
+          if (kindMatch) {
+            const kind = kindMatch[1];
+            isSingleType = kind === 'singleType';
+            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (${kind} from schema.ts)`);
           } else {
-            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (collectionType from schema.ts)`);
+            // No kind found, assume collectionType (default)
+            console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (collectionType from schema.ts - no kind specified)`);
           }
           return [{ uid: `api::${apiName}.${ct}`, isSingleType }];
         } catch (e) {
