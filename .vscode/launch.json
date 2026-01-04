@@ -370,6 +370,7 @@
     {
       "name": "Launch Services Stack",
       "configurations": [
+        "CMS: Strapi Debug", 
         "C#: IdentityAPI Debug",
         "C#: PartyAPI Debug",
         "C#: MusicAPI Debug",
@@ -389,7 +390,6 @@
     {
       "name": "Launch Frontends Stack",
       "configurations": [
-        "CMS: Strapi Debug", 
         "DJ Panel: React Debug",
         "DJ Panel: Storybook Start"
       ],

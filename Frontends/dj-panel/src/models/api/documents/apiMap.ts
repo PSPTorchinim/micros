@@ -210,14 +210,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -255,22 +259,6 @@ export class Api<
     v1DocumentsList: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/documents/v1/Documents`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Documents
-     * @name V1DocumentsHelloList
-     * @request GET:/documents/v1/Documents/Hello
-     * @secure
-     */
-    v1DocumentsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/documents/v1/Documents/Hello`,
         method: "GET",
         secure: true,
         ...params,
@@ -354,39 +342,6 @@ export class Api<
         secure: true,
         ...params,
       }),
-
-    /**
-     * No description
-     *
-     * @tags DocumentTemplates
-     * @name V1DocumentTemplatesHelloList
-     * @request GET:/documents/v1/DocumentTemplates/Hello
-     * @secure
-     */
-    v1DocumentTemplatesHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/documents/v1/DocumentTemplates/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-  };
-  invoices = {
-    /**
-     * No description
-     *
-     * @tags Invoices
-     * @name V1InvoicesHelloList
-     * @request GET:/documents/v1/Invoices/Hello
-     * @secure
-     */
-    v1InvoicesHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/documents/v1/Invoices/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
   };
 }
 
@@ -395,7 +350,7 @@ export { Api as DocumentsApi, ContentType as DocumentsContentType, HttpClient as
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};

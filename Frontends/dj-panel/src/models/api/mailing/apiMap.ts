@@ -155,14 +155,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -194,7 +198,7 @@ export { Api as MailingApi, ContentType as MailingContentType, HttpClient as Mai
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};

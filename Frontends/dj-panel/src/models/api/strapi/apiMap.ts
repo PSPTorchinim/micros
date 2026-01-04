@@ -433,6 +433,199 @@ export interface ArticleResponse {
   meta?: object;
 }
 
+export interface ChangePasswordBlock {
+  id?: number;
+  documentId?: string;
+  title?: string;
+  description?: string;
+  oldPasswordLabel?: string;
+  newPasswordLabel?: string;
+  confirmPasswordLabel?: string;
+  submitButtonText?: string;
+  oldPasswordPlaceholder?: string;
+  newPasswordPlaceholder?: string;
+  confirmPasswordPlaceholder?: string;
+  successRedirectPath?: string;
+  customStyles?: any;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    description?: string;
+    oldPasswordLabel?: string;
+    newPasswordLabel?: string;
+    confirmPasswordLabel?: string;
+    submitButtonText?: string;
+    oldPasswordPlaceholder?: string;
+    newPasswordPlaceholder?: string;
+    confirmPasswordPlaceholder?: string;
+    successRedirectPath?: string;
+    customStyles?: any;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface ChangePasswordBlockListResponse {
+  data?: ChangePasswordBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ChangePasswordBlockRequest {
+  data: {
+    title?: string;
+    description?: string;
+    oldPasswordLabel?: string;
+    newPasswordLabel?: string;
+    confirmPasswordLabel?: string;
+    submitButtonText?: string;
+    oldPasswordPlaceholder?: string;
+    newPasswordPlaceholder?: string;
+    confirmPasswordPlaceholder?: string;
+    successRedirectPath?: string;
+    customStyles?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ChangePasswordBlockResponse {
+  data?: ChangePasswordBlock;
+  meta?: object;
+}
+
 export interface Configuration {
   id?: number;
   documentId?: string;
@@ -3029,6 +3222,187 @@ export interface PageResponse {
   meta?: object;
 }
 
+export interface ProfileBlock {
+  id?: number;
+  documentId?: string;
+  title?: string;
+  description?: string;
+  emailLabel?: string;
+  usernameLabel?: string;
+  changePasswordButtonText?: string;
+  changePasswordUrl?: string;
+  customStyles?: any;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    description?: string;
+    emailLabel?: string;
+    usernameLabel?: string;
+    changePasswordButtonText?: string;
+    changePasswordUrl?: string;
+    customStyles?: any;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface ProfileBlockListResponse {
+  data?: ProfileBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface ProfileBlockRequest {
+  data: {
+    title?: string;
+    description?: string;
+    emailLabel?: string;
+    usernameLabel?: string;
+    changePasswordButtonText?: string;
+    changePasswordUrl?: string;
+    customStyles?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface ProfileBlockResponse {
+  data?: ProfileBlock;
+  meta?: object;
+}
+
 export interface StepsContainer {
   id?: number;
   documentId?: string;
@@ -3509,42 +3883,45 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: BaseNull1 &
+  Content?: DiscriminatorNull1 &
     (
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "article-ref.article-ref",
           ArticleRefArticleRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | BaseNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
+          "cta-ref.cta-ref",
+          CtaRefCtaRefComponent
+        >
+      | DiscriminatorNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | BaseNull1ComponentMapping<
+      | DiscriminatorNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -3590,45 +3967,45 @@ export interface TemplateRequest {
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
-    Content?: PolymorphNull1 &
+    Content?: DiscriminatorNull2 &
       (
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "article-ref.article-ref",
             ArticleRefArticleRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | PolymorphNull1ComponentMapping<
+        | DiscriminatorNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -3756,6 +4133,8 @@ export enum ConfigurationTemplateTypeEnum {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
 type BaseNull = (
@@ -3816,6 +4195,8 @@ export enum FooterTemplateTypeEnum {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
 type AbstractNull = (
@@ -3896,6 +4277,8 @@ export enum PageTemplateTypeEnum {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
 type PolymorphNull = (
@@ -3957,6 +4340,8 @@ export enum TemplateTemplateTypeEnum {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
 export enum TemplateMenuEnum {
@@ -3980,6 +4365,8 @@ export enum TemplateTemplateTypeEnum1 {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
 type AbstractNull1 = (
@@ -3999,7 +4386,7 @@ type AbstractNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type BaseNull1 = (
+type DiscriminatorNull1 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -4012,7 +4399,7 @@ type BaseNull1 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type BaseNull1ComponentMapping<Key, Type> = {
+type DiscriminatorNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -4020,9 +4407,11 @@ export enum TemplateRequestTemplateTypeEnum {
   Standard = "Standard",
   Login = "Login",
   ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
 }
 
-type PolymorphNull1 = (
+type DiscriminatorNull2 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -4035,7 +4424,7 @@ type PolymorphNull1 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNull1ComponentMapping<Key, Type> = {
+type DiscriminatorNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -4204,14 +4593,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -4472,6 +4865,88 @@ export class Api<
     deleteArticleBlocksId: (id: number, params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/strapi/article-blocks/${id}`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  changePasswordBlock = {
+    /**
+     * No description
+     *
+     * @tags Change-password-block
+     * @name GetChangePasswordBlock
+     * @request GET:/strapi/change-password-block
+     * @secure
+     */
+    getChangePasswordBlock: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: object;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ChangePasswordBlockResponse, Error>({
+        path: `/strapi/change-password-block`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Change-password-block
+     * @name PutChangePasswordBlock
+     * @request PUT:/strapi/change-password-block
+     * @secure
+     */
+    putChangePasswordBlock: (
+      data: ChangePasswordBlockRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<ChangePasswordBlockResponse, Error>({
+        path: `/strapi/change-password-block`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Change-password-block
+     * @name DeleteChangePasswordBlock
+     * @request DELETE:/strapi/change-password-block
+     * @secure
+     */
+    deleteChangePasswordBlock: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/strapi/change-password-block`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5790,6 +6265,85 @@ export class Api<
         ...params,
       }),
   };
+  profileBlock = {
+    /**
+     * No description
+     *
+     * @tags Profile-block
+     * @name GetProfileBlock
+     * @request GET:/strapi/profile-block
+     * @secure
+     */
+    getProfileBlock: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: object;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ProfileBlockResponse, Error>({
+        path: `/strapi/profile-block`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Profile-block
+     * @name PutProfileBlock
+     * @request PUT:/strapi/profile-block
+     * @secure
+     */
+    putProfileBlock: (data: ProfileBlockRequest, params: RequestParams = {}) =>
+      this.request<ProfileBlockResponse, Error>({
+        path: `/strapi/profile-block`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Profile-block
+     * @name DeleteProfileBlock
+     * @request DELETE:/strapi/profile-block
+     * @secure
+     */
+    deleteProfileBlock: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/strapi/profile-block`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   stepsContainer = {
     /**
      * No description
@@ -6688,7 +7242,7 @@ export { Api as StrapiApi, ContentType as StrapiContentType, HttpClient as Strap
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};
