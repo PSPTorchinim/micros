@@ -37,10 +37,9 @@ namespace DJHostGateway.Transforms
             _logger.LogInformation("🔐 [SecurityStamp] Starting validation | CorrelationId: {CorrelationId} | Path: {Path} | Method: {Method}", 
                 StringHelper.SanitizeForLog(correlationId), StringHelper.SanitizeForLog(requestPath), StringHelper.SanitizeForLog(requestMethod));
             
-            // Try to get JWT token from Authorization header or jwtToken cookie
+            // Try to get JWT token from Authorization header
             var authHeader = request.Headers.Authorization.FirstOrDefault();
             string? token = null;
-            string tokenSource = "none";
             
             if (!string.IsNullOrWhiteSpace(authHeader))
             {
@@ -48,12 +47,6 @@ namespace DJHostGateway.Transforms
                 token = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
                     ? authHeader.Substring(7)
                     : authHeader;
-                tokenSource = "Authorization header";
-            }
-            else if (request.Cookies.TryGetValue("jwtToken", out var cookieToken) && !string.IsNullOrWhiteSpace(cookieToken))
-            {
-                token = cookieToken;
-                tokenSource = "jwtToken cookie";
             }
             
             // Skip validation if user is not logged in (no JWT included)
@@ -64,8 +57,8 @@ namespace DJHostGateway.Transforms
                 return;
             }
             
-            _logger.LogDebug("🔑 [SecurityStamp] JWT token found | CorrelationId: {CorrelationId} | Source: {Source}", 
-                correlationId, tokenSource);
+            _logger.LogDebug("🔑 [SecurityStamp] JWT token found in Authorization header | CorrelationId: {CorrelationId}", 
+                correlationId);
 
             // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
             if (request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
@@ -77,8 +70,8 @@ namespace DJHostGateway.Transforms
 
             try
             {
-                _logger.LogDebug("📝 [SecurityStamp] Parsing JWT token | CorrelationId: {CorrelationId} | Source: {Source}", 
-                    correlationId, tokenSource);
+                _logger.LogDebug("📝 [SecurityStamp] Parsing JWT token | CorrelationId: {CorrelationId}", 
+                    correlationId);
                 
                 // Parse JWT to extract claims
                 var handler = new JwtSecurityTokenHandler();
