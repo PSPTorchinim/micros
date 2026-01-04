@@ -1,0 +1,156 @@
+# Example: Adding a New Block Type
+
+This example demonstrates how to add a new "Video Block" to the system.
+
+## Before (Old System)
+
+You would need to modify **5+ files**:
+
+### 1. content-blocks.ts
+```typescript
+export interface VideoBlockContentBlock
+  extends BaseContentBlock,
+    Partial<VideoBlock> {
+  __kind: 'video-block';
+}
+
+export type ContentBlock =
+  | ArticleContentBlock
+  | VideoBlockContentBlock  // Add to union
+  | ...
+```
+
+### 2. renderBlock.tsx
+```typescript
+switch (kind) {
+  case 'video-block':
+    return <VideoBlock key={index} {...block} />;
+  // ... 15+ other cases
+}
+
+// And also legacy fallback:
+switch (comp) {
+  case 'videos.video-block':
+    return <VideoBlock key={index} {...block} />;
+  // ... 10+ other cases
+}
+```
+
+### 3. transformStrapiBlocks.ts
+```typescript
+const FIELD_BY_REF: Record<string, string> = {
+  'video-block-ref.video-block-ref': 'video',
+  // ... 10+ other mappings
+};
+```
+
+### 4. RefBlockRenderer.tsx
+```typescript
+switch (base) {
+  case 'video-block':
+    data = await StrapiService.getVideoBlockByDocumentId(docId);
+    break;
+  // ... 10+ other cases
+}
+
+// And another switch for numeric IDs:
+switch (base) {
+  case 'video-block':
+    data = await StrapiService.getVideoBlockById(numericId);
+    break;
+  // ... 10+ other cases
+}
+```
+
+### 5. strapi-service.ts
+```typescript
+const TEMPLATE_CONTENT_POPULATE = {
+  Content: {
+    on: {
+      'video-block-ref.video-block-ref': {
+        populate: { video: { populate: '*' } },
+      },
+      // ... 10+ other ref components
+    },
+  },
+};
+```
+
+**Total: 5 files modified with 7+ different places to add code!**
+
+---
+
+## After (New System)
+
+You only need to modify **2 files**:
+
+### 1. Create the component
+```typescript
+// src/components/molecules/VideoBlock/index.tsx
+import React from 'react';
+
+export interface VideoBlockProps {
+  VideoUrl?: string;
+  Title?: string;
+  Description?: string;
+}
+
+export const VideoBlock: React.FC<VideoBlockProps> = ({
+  VideoUrl,
+  Title,
+  Description,
+}) => {
+  return (
+    <div className="video-block">
+      <h2>{Title}</h2>
+      {Description && <p>{Description}</p>}
+      {VideoUrl && (
+        <video controls>
+          <source src={VideoUrl} />
+        </video>
+      )}
+    </div>
+  );
+};
+```
+
+### 2. Register in block-registry.ts
+```typescript
+export const BLOCK_REGISTRY: BlockTypeConfig[] = [
+  // ... existing blocks
+  {
+    kind: 'video-block',
+    refComponent: 'video-block-ref.video-block-ref',
+    refField: 'video',
+    legacyComponent: 'videos.video-block',
+    strapiType: 'video-block',
+  },
+];
+```
+
+### 3. Register in block-component-registry.tsx
+```typescript
+import { VideoBlock } from './molecules/VideoBlock';
+
+const COMPONENT_REGISTRY: Record<string, ComponentType<any>> = {
+  // ... existing components
+  'video-block': VideoBlock,
+};
+```
+
+**Total: 2 files, 3 simple additions!**
+
+---
+
+## Summary
+
+| Aspect | Old System | New System |
+|--------|-----------|------------|
+| Files to modify | 5+ | 2 |
+| Lines of code | 30+ | ~15 |
+| Switch statements | 4 | 0 |
+| Hardcoded mappings | 5 | 1 |
+| Risk of errors | High | Low |
+| Maintainability | Poor | Excellent |
+
+The new system reduces the work by **60%** and eliminates most opportunities for human error!
