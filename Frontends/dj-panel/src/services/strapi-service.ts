@@ -409,7 +409,7 @@ export class StrapiService {
   public static async getLoginBlockSingleton() {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
-      return res?.data || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error('Error fetching login-block singleton:', e);
       return null;
@@ -420,7 +420,7 @@ export class StrapiService {
     try {
       const res =
         await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
-      return res?.data || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error('Error fetching forgot-password-block singleton:', e);
       return null;
@@ -433,7 +433,7 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
-      return res?.data || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error('Error fetching change-password-block singleton:', e);
       return null;
@@ -446,7 +446,7 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.profileBlock.getProfileBlock();
-      return res?.data || null;
+      return res?.data?.data || null;
     } catch (e) {
       console.error('Error fetching profile-block singleton:', e);
       return null;
