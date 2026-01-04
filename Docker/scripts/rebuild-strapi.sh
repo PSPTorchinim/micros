@@ -25,6 +25,18 @@ if [ ! -f "dj-panel-composer.yml" ]; then
     exit 1
 fi
 
+# Get the Docker Compose project name
+PROJECT_NAME=$(docker-compose -f dj-panel-composer.yml config --format json 2>/dev/null | grep -o '"name": *"[^"]*"' | head -1 | sed 's/"name": "\(.*\)"/\1/' || echo "djpanel")
+echo "🏷️  Project name: $PROJECT_NAME"
+
+# Determine container and volume names
+CONTAINER_NAME="${PROJECT_NAME}-strapi-1"
+VOLUME_NAME="${PROJECT_NAME}_strapi_app"
+
+echo "📦 Container: $CONTAINER_NAME"
+echo "💾 Volume: $VOLUME_NAME"
+echo ""
+
 # Parse command line arguments
 CLEAN=false
 NO_CACHE=false
@@ -81,7 +93,7 @@ if [ "$CLEAN" = true ]; then
         # Stop strapi first
         docker-compose -f dj-panel-composer.yml stop strapi
         # Remove only the strapi volume
-        docker volume rm djpanel_strapi_app 2>/dev/null || echo "   Volume already removed or doesn't exist"
+        docker volume rm "$VOLUME_NAME" 2>/dev/null || echo "   Volume already removed or doesn't exist"
         echo "   ✅ Strapi volume removed"
     else
         echo "   ⏭️  Skipping volume removal"
@@ -122,7 +134,7 @@ if [ "$START" = true ]; then
     ELAPSED=0
     while [ $ELAPSED -lt $TIMEOUT ]; do
         # Check if container is healthy (healthcheck from Dockerfile)
-        HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' djpanel-strapi-1 2>/dev/null || echo "none")
+        HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "none")
         
         if [ "$HEALTH_STATUS" = "healthy" ]; then
             echo ""
