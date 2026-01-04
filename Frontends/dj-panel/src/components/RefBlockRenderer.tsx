@@ -192,7 +192,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
     return () => {
       cancel = true;
     };
-  }, [refUID, base, relField, relObj]);
+  }, [refUID, base, relField, block]);
 
   if (error) {
     return (
