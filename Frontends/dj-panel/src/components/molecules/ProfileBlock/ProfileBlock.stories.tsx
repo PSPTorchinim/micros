@@ -33,6 +33,10 @@ const meta = {
       control: 'text',
       description: 'URL to navigate to when change password is clicked',
     },
+    customStyles: {
+      control: 'object',
+      description: 'Custom CSS styles to apply to the container',
+    },
   },
 } satisfies Meta<typeof ProfileBlock>;
 

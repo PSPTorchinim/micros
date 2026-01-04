@@ -49,6 +49,10 @@ const meta = {
       control: 'text',
       description: 'Path to redirect to after successful password change',
     },
+    customStyles: {
+      control: 'object',
+      description: 'Custom CSS styles to apply to the container',
+    },
   },
 } satisfies Meta<typeof ChangePasswordBlock>;
 
