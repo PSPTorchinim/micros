@@ -37,6 +37,10 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy app source (after deps for better cache)
 COPY CMS/ ./
 
+# Generate TypeScript types for content types (optional, for type safety during build)
+# Note: In production builds, types are generated as part of the build process
+# For local development, run: npm run ts:generate-types
+
 # Build the app and clean up in single layer
 RUN npm run build && \
 	npm cache clean --force && \
