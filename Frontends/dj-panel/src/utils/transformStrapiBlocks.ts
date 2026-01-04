@@ -17,7 +17,7 @@ const FIELD_BY_REF: Record<string, string> = {
 /**
  * Transforms Strapi ref components into content blocks by extracting the populated data.
  * This is a synchronous transformation that works with already-populated data from the API.
- * 
+ *
  * @param block - A content block, ref component, or array of them
  * @returns Transformed content block(s) with __kind property
  */
@@ -88,5 +88,7 @@ export function transformStrapiBlocks(
   }
 
   // Return original block if no transformations were made to avoid unnecessary object allocation
-  return hasNestedRefs ? (resolved as unknown as ContentBlock) : (block as ContentBlock);
+  return hasNestedRefs
+    ? (resolved as unknown as ContentBlock)
+    : (block as ContentBlock);
 }
