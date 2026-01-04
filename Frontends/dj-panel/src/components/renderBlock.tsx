@@ -20,7 +20,7 @@ import {
 
 /**
  * Generic content block that can represent any Strapi content type
- * 
+ *
  * The __kind property identifies the block type (e.g., 'hero-block', 'article-block')
  * The __component property is the Strapi component identifier (e.g., 'hero.hero-block')
  */
