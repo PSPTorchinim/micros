@@ -1,0 +1,197 @@
+# Block Registry System - Developer Guide
+
+## Overview
+
+The Block Registry System is a centralized configuration approach for handling Strapi content blocks in the frontend. It eliminates the need to modify multiple files when adding new content types from Strapi.
+
+## Architecture
+
+The system consists of three main components:
+
+### 1. Block Registry (`src/types/block-registry.ts`)
+The **single source of truth** for all Strapi block type configurations. Each block type is defined with:
+- `kind`: The internal identifier (e.g., 'hero-block')
+- `refComponent`: The Strapi ref component name (e.g., 'hero-block-ref.hero-block-ref')
+- `refField`: The relational field name in the ref component (e.g., 'hero_block')
+- `legacyComponent`: Optional legacy __component identifier for backward compatibility
+- `strapiType`: The Strapi collection/single type name
+- `isSingleton`: Whether this is a singleton type in Strapi
+
+### 2. Block Component Registry (`src/components/block-component-registry.tsx`)
+Maps block kinds to their React components. When a block needs to be rendered, the system looks up the appropriate React component here.
+
+### 3. Transform and Render Infrastructure
+- `transformStrapiBlocks.ts`: Uses the registry to transform Strapi ref components into content blocks
+- `renderBlock.tsx`: Uses the component registry to render blocks dynamically
+- `RefBlockRenderer.tsx`: Uses the registry to fetch and render unpopulated ref components
+- `strapi-service.ts`: Uses the registry to generate populate configurations
+
+## Adding a New Block Type
+
+When Strapi adds a new content type, follow these steps:
+
+### Step 1: Create the Component
+Create your React component in `src/components/molecules/YourBlockName/`:
+
+```tsx
+// src/components/molecules/MyNewBlock/index.tsx
+import React from 'react';
+
+export interface MyNewBlockProps {
+  Title?: string;
+  Description?: string;
+  // ... other props from Strapi
+}
+
+export const MyNewBlock: React.FC<MyNewBlockProps> = ({
+  Title,
+  Description,
+  ...props
+}) => {
+  return (
+    <div className="my-new-block">
+      <h2>{Title}</h2>
+      <p>{Description}</p>
+    </div>
+  );
+};
+
+export default MyNewBlock;
+```
+
+### Step 2: Register in Block Registry
+Add your block configuration to `BLOCK_REGISTRY` in `src/types/block-registry.ts`:
+
+```typescript
+{
+  kind: 'my-new-block',
+  refComponent: 'my-new-block-ref.my-new-block-ref',
+  refField: 'my_new_block',
+  legacyComponent: 'my-blocks.my-new-block', // optional, for backward compatibility
+  strapiType: 'my-new-block',
+  isSingleton: false, // set to true if it's a singleton in Strapi
+}
+```
+
+### Step 3: Register the Component
+Import and register your component in `src/components/block-component-registry.tsx`:
+
+```typescript
+import { MyNewBlock } from './molecules/MyNewBlock';
+
+const COMPONENT_REGISTRY: Record<string, ComponentType<any>> = {
+  // ... existing registrations
+  'my-new-block': MyNewBlock,
+};
+```
+
+### Step 4: Export from molecules index (if needed)
+Add your component to `src/components/molecules/index.ts`:
+
+```typescript
+export { MyNewBlock } from './MyNewBlock';
+```
+
+That's it! The system will automatically:
+- Transform Strapi ref components
+- Fetch unpopulated references
+- Generate populate configurations
+- Render your component
+
+## Special Cases
+
+### Singleton Blocks
+For singleton blocks (like login-block, forgot-password-block), set `isSingleton: true` in the registry. The system handles these differently in `RenderTemplate.tsx`.
+
+### Props Transformation
+If your block needs special prop transformations, add a case in `renderBlock.tsx`:
+
+```typescript
+if (kind === 'my-new-block') {
+  const { specialProp, ...rest } = block as ContentBlock & {
+    specialProp?: string;
+  };
+  return <Component key={index} specialProp={specialProp} {...rest} />;
+}
+```
+
+### Custom Fetching Logic
+If you need custom fetching logic for unpopulated refs, you may need to add a case in `RefBlockRenderer.tsx`. However, this should be rare and the default logic should work for most cases.
+
+## Benefits
+
+1. **Single Source of Truth**: All block configurations in one place
+2. **Reduced Maintenance**: No need to update multiple files for new types
+3. **Consistency**: All blocks follow the same pattern
+4. **Type Safety**: TypeScript ensures correct usage
+5. **Backward Compatibility**: Legacy __component handling preserved
+6. **Easy Testing**: Centralized configuration makes testing easier
+
+## Migration from Old System
+
+The old system used hardcoded switch statements and mappings in multiple files. The new system is backward compatible - all existing blocks continue to work without changes.
+
+Old approach (required changes in 5+ files):
+```typescript
+// content-blocks.ts
+export interface MyBlockContentBlock extends BaseContentBlock, Partial<MyBlock> {
+  __kind: 'my-block';
+}
+
+// renderBlock.tsx
+case 'my-block':
+  return <MyBlock key={index} {...block} />;
+
+// transformStrapiBlocks.ts
+const FIELD_BY_REF = {
+  'my-block-ref.my-block-ref': 'my_block',
+};
+
+// RefBlockRenderer.tsx
+case 'my-block':
+  data = await StrapiService.getMyBlockByDocumentId(docId);
+  
+// strapi-service.ts
+'my-block-ref.my-block-ref': {
+  populate: { my_block: { populate: '*' } },
+}
+```
+
+New approach (changes in 2 files):
+```typescript
+// block-registry.ts
+{
+  kind: 'my-block',
+  refComponent: 'my-block-ref.my-block-ref',
+  refField: 'my_block',
+  strapiType: 'my-block',
+}
+
+// block-component-registry.tsx
+'my-block': MyBlock,
+```
+
+## Troubleshooting
+
+### Block not rendering
+1. Check that the block is registered in `block-registry.ts`
+2. Verify the component is registered in `block-component-registry.tsx`
+3. Ensure `kind`, `refComponent`, and `refField` match Strapi's configuration
+
+### Type errors
+1. Ensure your component props interface matches the Strapi type
+2. Check that ContentBlock union type includes your block type (automatic if using the registry)
+
+### Unpopulated refs not loading
+1. Verify the `refField` in the registry matches the Strapi relation field name
+2. Check that the StrapiService has the appropriate getter methods
+3. Look at browser console for fetch errors
+
+## Future Enhancements
+
+Possible improvements to the system:
+1. Auto-generate block registry from Strapi API schema
+2. Runtime validation of block configurations
+3. Visual registry editor/admin panel
+4. Performance metrics and monitoring per block type
+5. Lazy loading of block components for better performance
