@@ -33,8 +33,19 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
 
   const relObj = relField ? block[relField] : undefined;
   
-  // Check if data is already populated
-  const isPopulated = relObj && typeof relObj === 'object';
+  // Check if data is already populated - must have actual data fields beyond just id
+  const isPopulated = 
+    relObj && 
+    typeof relObj === 'object' &&
+    Object.keys(relObj as Record<string, unknown>).length > 1 &&
+    (
+      'documentId' in relObj ||
+      'Title' in relObj ||
+      '__component' in relObj ||
+      Object.keys(relObj as Record<string, unknown>).some(key => 
+        key !== 'id' && (relObj as Record<string, unknown>)[key] !== null
+      )
+    );
   
   const [resolved, setResolved] = React.useState<ContentBlock | null>(null);
   const [error, setError] = React.useState<string | null>(null);
