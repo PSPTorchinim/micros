@@ -6,7 +6,11 @@
 You get a 404 error when trying to access a Strapi API endpoint (e.g., `/api/profile-block`), even though the API files exist in the codebase.
 
 ### Root Cause
-When new content types or APIs are added to Strapi, the Docker image must be rebuilt to include the compiled TypeScript code. If you run `docker-compose up` without rebuilding, Docker uses a cached image that was built before the new API existed.
+The 404 error can occur for two reasons:
+
+1. **Docker image caching**: When new content types or APIs are added to Strapi, the Docker image must be rebuilt to include the compiled TypeScript code. If you run `docker-compose up` without rebuilding, Docker uses a cached image that was built before the new API existed.
+
+2. **Permissions issue (singleType)**: If the endpoint is a singleType (like profile-block, login-block, etc.), permissions must be configured correctly. Prior versions incorrectly added both `.find` and `.findOne` permissions for singleTypes, but singleTypes only support `.find`. This has been fixed to correctly detect singleTypes and only add `.find` permissions.
 
 ### Solution
 

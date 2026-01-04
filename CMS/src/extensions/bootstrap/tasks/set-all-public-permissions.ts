@@ -9,8 +9,8 @@ const PUBLIC_ROLE_TYPE = 'public';
 import fs from 'fs';
 import path from 'path';
 
-// Helper to get all api content-types
-function getApiContentTypes() {
+// Helper to get all api content-types with their kind
+function getApiContentTypes(): Array<{ uid: string; isSingleType: boolean }> {
   // Always resolve from project root, not __dirname (which may be dist)
   // Try src/api first, fallback to api (for monorepo or custom setups)
   const rootDir = process.cwd();
@@ -32,22 +32,37 @@ function getApiContentTypes() {
       console.log(`[PERM-LOG] No content-types dir for API: ${apiName}`);
       return [];
     }
-    const cts = fs.readdirSync(ctDir).filter((ct) => {
+    const cts = fs.readdirSync(ctDir).flatMap((ct) => {
       const ctPath = path.join(ctDir, ct);
-      if (!fs.statSync(ctPath).isDirectory()) return false;
-      const hasSchemaJson = fs.existsSync(path.join(ctPath, 'schema.json'));
-      const hasSchemaTs = fs.existsSync(path.join(ctPath, 'schema.ts'));
-      if (hasSchemaJson || hasSchemaTs) {
-        console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct}`);
-        return true;
+      if (!fs.statSync(ctPath).isDirectory()) return [];
+      
+      const schemaJsonPath = path.join(ctPath, 'schema.json');
+      const schemaTsPath = path.join(ctPath, 'schema.ts');
+      
+      let isSingleType = false;
+      if (fs.existsSync(schemaJsonPath)) {
+        try {
+          const schema = JSON.parse(fs.readFileSync(schemaJsonPath, 'utf-8'));
+          isSingleType = schema.kind === 'singleType';
+          console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (${schema.kind || 'collectionType'})`);
+          return [{ uid: `api::${apiName}.${ct}`, isSingleType }];
+        } catch (e) {
+          console.log(`[PERM-LOG] Error reading schema for ${apiName}.${ct}:`, e);
+          return [];
+        }
+      } else if (fs.existsSync(schemaTsPath)) {
+        // For .ts schemas, we can't easily determine the kind without evaluating
+        // Assume collectionType for now (most common)
+        console.log(`[PERM-LOG] Found content-type: api::${apiName}.${ct} (schema.ts - assuming collectionType)`);
+        return [{ uid: `api::${apiName}.${ct}`, isSingleType: false }];
       } else {
         console.log(
           `[PERM-LOG] Skipping ${ctPath}, no schema.json or schema.ts`,
         );
-        return false;
+        return [];
       }
     });
-    return cts.map((ct) => `api::${apiName}.${ct}`);
+    return cts;
   });
   console.log(`[PERM-LOG] All detected API content-types:`, allTypes);
   return allTypes;
@@ -68,10 +83,16 @@ const PLUGIN_ACTIONS = [
 function getAllPublicActions() {
   const apiTypes = getApiContentTypes();
   console.log(`[PERM-LOG] getAllPublicActions: API types:`, apiTypes);
-  const apiFindActions = apiTypes.flatMap((uid) => [
-    `${uid}.find`,
-    `${uid}.findOne`,
-  ]);
+  const apiFindActions = apiTypes.flatMap(({ uid, isSingleType }) => {
+    // singleTypes only have .find action, not .findOne
+    if (isSingleType) {
+      console.log(`[PERM-LOG] Adding .find for singleType: ${uid}`);
+      return [`${uid}.find`];
+    } else {
+      console.log(`[PERM-LOG] Adding .find and .findOne for collectionType: ${uid}`);
+      return [`${uid}.find`, `${uid}.findOne`];
+    }
+  });
   console.log(
     `[PERM-LOG] getAllPublicActions: API find actions:`,
     apiFindActions,
