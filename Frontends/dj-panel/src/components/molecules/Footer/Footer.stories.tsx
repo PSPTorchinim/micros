@@ -1,11 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Footer } from './index';
-import {
-  AiFillFacebook,
-  AiFillInstagram,
-  AiFillMail,
-  AiFillTikTok,
-} from 'react-icons/ai';
+import type { Footer as FooterData } from '../../../models/api/strapi/apiMap';
 
 const meta = {
   title: 'Molecules/Footer',
@@ -22,146 +17,163 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content3: '© 2024 DJ Beat Blaster. All Rights Reserved.',
-    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
-    logoAlt: 'DJ Management Logo',
-    socialLinkTitleCategory: 'Connect with Us',
-    links: [
-      {
-        title: 'Company',
-        items: [
-          { href: '/home', text: 'Home' },
-          { href: '/services', text: 'Services' },
-          { href: '/about', text: 'About Us' },
-          { href: '/contact', text: 'Contact Us' },
-        ],
-      },
-      {
-        title: 'Quick Links',
-        items: [
-          { href: '/privacy', text: 'Privacy Policy' },
-          { href: '/cookies', text: 'Cookie Policy' },
-          { href: '/contracts', text: 'Manage DJ Contracts' },
-          { href: '/invoices', text: 'Manage Invoices' },
-        ],
-      },
-    ],
-    socialLinks: [
-      {
-        title: 'Email',
-        content: 'Send us an email for any questions or concerns.',
-        detail: 'contact@djbeatblaster.com',
-        iconPath: AiFillMail,
-      },
-      {
-        title: 'Facebook',
-        content: 'Stay connected with us on Facebook.',
-        detail: 'facebook.com/djbeatblaster2024',
-        iconPath: AiFillFacebook,
-      },
-      {
-        title: 'Instagram',
-        content: 'Follow us on Instagram for the latest updates.',
-        detail: 'instagram.com/dj.beat.blaster',
-        iconPath: AiFillInstagram,
-      },
-      {
-        title: 'TikTok',
-        content: 'Follow us on TikTok for the latest updates.',
-        detail: 'tiktok.com/@dj.beat.blaster',
-        iconPath: AiFillTikTok,
-      },
-    ],
-    privacyLink: 'Privacy Policy',
-    termsLink: 'Terms of Service',
-    cookiesLink: 'Cookie Policy',
+    footerData: {
+      copyright: '© 2024 DJ Beat Blaster. All Rights Reserved.',
+      columns: [
+        {
+          id: 1,
+          title: 'Company',
+          links: [
+            { id: 1, label: 'Home', url: '/home', newTab: false },
+            { id: 2, label: 'Services', url: '/services', newTab: false },
+            { id: 3, label: 'About Us', url: '/about', newTab: false },
+            { id: 4, label: 'Contact Us', url: '/contact', newTab: false },
+          ],
+        },
+        {
+          id: 2,
+          title: 'Quick Links',
+          links: [
+            { id: 5, label: 'Privacy Policy', url: '/privacy', newTab: false },
+            { id: 6, label: 'Cookie Policy', url: '/cookies', newTab: false },
+            {
+              id: 7,
+              label: 'Manage DJ Contracts',
+              url: '/contracts',
+              newTab: false,
+            },
+            {
+              id: 8,
+              label: 'Manage Invoices',
+              url: '/invoices',
+              newTab: false,
+            },
+          ],
+        },
+      ],
+      socialLinks: [
+        {
+          id: 1,
+          platform: 'Email',
+          icon: 'mail',
+          detail: 'contact@djbeatblaster.com',
+          url: 'mailto:contact@djbeatblaster.com',
+        },
+        {
+          id: 2,
+          platform: 'Facebook',
+          icon: 'facebook',
+          detail: 'facebook.com/djbeatblaster2024',
+          url: 'https://facebook.com/djbeatblaster2024',
+        },
+        {
+          id: 3,
+          platform: 'Instagram',
+          icon: 'instagram',
+          detail: 'instagram.com/dj.beat.blaster',
+          url: 'https://instagram.com/dj.beat.blaster',
+        },
+        {
+          id: 4,
+          platform: 'TikTok',
+          icon: 'tiktok',
+          detail: 'tiktok.com/@dj.beat.blaster',
+          url: 'https://tiktok.com/@dj.beat.blaster',
+        },
+      ],
+    } as FooterData,
   },
 };
 
 export const MinimalFooter: Story = {
   args: {
-    content3: '© 2024 DJ Beat Blaster. All Rights Reserved.',
-    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
-    logoAlt: 'DJ Management Logo',
-    socialLinkTitleCategory: 'Connect with Us',
-    links: [
-      {
-        title: 'Company',
-        items: [
-          { href: '/home', text: 'Home' },
-          { href: '/about', text: 'About' },
-        ],
-      },
-    ],
-    socialLinks: [
-      {
-        title: 'Email',
-        content: 'Send us an email.',
-        detail: 'contact@djbeatblaster.com',
-        iconPath: AiFillMail,
-      },
-    ],
-    privacyLink: 'Privacy Policy',
-    termsLink: 'Terms of Service',
-    cookiesLink: 'Cookie Policy',
+    footerData: {
+      copyright: '© 2024 DJ Beat Blaster. All Rights Reserved.',
+      columns: [
+        {
+          id: 1,
+          title: 'Company',
+          links: [
+            { id: 1, label: 'Home', url: '/home', newTab: false },
+            { id: 2, label: 'About', url: '/about', newTab: false },
+          ],
+        },
+      ],
+      socialLinks: [
+        {
+          id: 1,
+          platform: 'Email',
+          icon: 'email',
+          detail: 'contact@djbeatblaster.com',
+          url: 'mailto:contact@djbeatblaster.com',
+        },
+      ],
+    } as FooterData,
   },
 };
 
 export const MusicFocusedFooter: Story = {
   args: {
-    content3: '© 2024 DJ Beat Blaster. All Rights Reserved.',
-    logoSrc: 'https://presentation-website-assets.teleporthq.io/logos/logo.png',
-    logoAlt: 'DJ Management Logo',
-    socialLinkTitleCategory: 'Follow the Beat',
-    links: [
-      {
-        title: 'Music',
-        items: [
-          { href: '/releases', text: 'Releases' },
-          { href: '/soundcloud', text: 'SoundCloud' },
-          { href: '/spotify', text: 'Spotify' },
-          { href: '/beatport', text: 'Beatport' },
-        ],
-      },
-      {
-        title: 'Events',
-        items: [
-          { href: '/events', text: 'Upcoming Shows' },
-          { href: '/events/archive', text: 'Past Performances' },
-          { href: '/booking', text: 'Book Now' },
-        ],
-      },
-      {
-        title: 'Connect',
-        items: [
-          { href: '/about', text: 'About' },
-          { href: '/contact', text: 'Contact' },
-          { href: '/press-kit', text: 'Press Kit' },
-        ],
-      },
-    ],
-    socialLinks: [
-      {
-        title: 'Instagram',
-        content: 'Follow us on Instagram.',
-        detail: '@djtorchinim',
-        iconPath: AiFillInstagram,
-      },
-      {
-        title: 'Facebook',
-        content: 'Like us on Facebook.',
-        detail: 'DJ Beat Blaster',
-        iconPath: AiFillFacebook,
-      },
-      {
-        title: 'Email',
-        content: 'Get in touch.',
-        detail: 'bookings@djbeatblaster.com',
-        iconPath: AiFillMail,
-      },
-    ],
-    privacyLink: 'Privacy Policy',
-    termsLink: 'Terms of Service',
-    cookiesLink: 'Cookie Policy',
+    footerData: {
+      copyright: '© 2024 DJ Beat Blaster. All Rights Reserved.',
+      columns: [
+        {
+          id: 1,
+          title: 'Music',
+          links: [
+            { id: 1, label: 'Releases', url: '/releases', newTab: false },
+            { id: 2, label: 'SoundCloud', url: '/soundcloud', newTab: false },
+            { id: 3, label: 'Spotify', url: '/spotify', newTab: false },
+            { id: 4, label: 'Beatport', url: '/beatport', newTab: false },
+          ],
+        },
+        {
+          id: 2,
+          title: 'Events',
+          links: [
+            { id: 5, label: 'Upcoming Shows', url: '/events', newTab: false },
+            {
+              id: 6,
+              label: 'Past Performances',
+              url: '/events/archive',
+              newTab: false,
+            },
+            { id: 7, label: 'Book Now', url: '/booking', newTab: false },
+          ],
+        },
+        {
+          id: 3,
+          title: 'Connect',
+          links: [
+            { id: 8, label: 'About', url: '/about', newTab: false },
+            { id: 9, label: 'Contact', url: '/contact', newTab: false },
+            { id: 10, label: 'Press Kit', url: '/press-kit', newTab: false },
+          ],
+        },
+      ],
+      socialLinks: [
+        {
+          id: 1,
+          platform: 'Instagram',
+          icon: 'instagram',
+          detail: '@djtorchinim',
+          url: 'https://instagram.com/djtorchinim',
+        },
+        {
+          id: 2,
+          platform: 'Facebook',
+          icon: 'facebook',
+          detail: 'DJ Beat Blaster',
+          url: 'https://facebook.com/djbeatblaster',
+        },
+        {
+          id: 3,
+          platform: 'Email',
+          icon: 'email',
+          detail: 'bookings@djbeatblaster.com',
+          url: 'mailto:bookings@djbeatblaster.com',
+        },
+      ],
+    } as FooterData,
   },
 };
