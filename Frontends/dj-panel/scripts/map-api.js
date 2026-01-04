@@ -1,5 +1,22 @@
 /* eslint-disable no-undef */
 const { execFileSync } = require('child_process');
+// Helper to resolve npx path cross-platform
+function getNpxPath() {
+  const isWin = process.platform === 'win32';
+  // Try to find npx in the same dir as node
+  const nodeDir = path.dirname(process.execPath);
+  const npxName = isWin ? 'npx.cmd' : 'npx';
+  const npxPath = path.join(nodeDir, npxName);
+  if (fs.existsSync(npxPath)) return npxPath;
+  // Fallback: search PATH
+  const sep = isWin ? ';' : ':';
+  for (const p of process.env.PATH.split(sep)) {
+    const candidate = path.join(p, npxName);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  // Fallback: just use 'npx' (may fail)
+  return 'npx';
+}
 const path = require('path');
 const fs = require('fs');
 
@@ -50,8 +67,9 @@ const microservices = {
 
 function generateTypesForService(serviceName, config) {
   // Validate and sanitize API gateway URL to prevent command injection
-  const apiGateway = process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000';
-  
+  const apiGateway =
+    process.env.REACT_APP_API_GATEWAY ?? 'http://localhost:5000';
+
   // Ensure the API gateway URL is a valid URL format
   try {
     new URL(apiGateway);
@@ -59,9 +77,9 @@ function generateTypesForService(serviceName, config) {
     console.error(`❌ Invalid REACT_APP_API_GATEWAY URL format`);
     return false;
   }
-  
+
   const swaggerUrl = `${apiGateway}${config.swaggerPath}`;
-  
+
   // Validate the complete swagger URL to ensure swaggerPath doesn't contain malicious content
   try {
     new URL(swaggerUrl);
@@ -75,27 +93,39 @@ function generateTypesForService(serviceName, config) {
 
   try {
     // Use execFileSync with array arguments to prevent command injection
-    execFileSync(
-      'npx',
-      [
-        'swagger-typescript-api',
-        'generate',
-        '-p',
-        swaggerUrl,
-        '-o',
-        config.outputFile,
-        '-n',
-        'apiMap.ts',
-        '--module-name-first-tag',
-        '--extract-enums',
-        '--axios',
-        '--disableStrictSSL',
-      ],
-      {
-        stdio: 'inherit',
-        cwd: path.join(__dirname, '..'),
-      },
-    );
+    const isWin = process.platform === 'win32';
+    const npxPath = getNpxPath();
+    const args = [
+      'swagger-typescript-api',
+      'generate',
+      '-p',
+      swaggerUrl,
+      '-o',
+      config.outputFile,
+      '-n',
+      'apiMap.ts',
+      '--module-name-first-tag',
+      '--extract-enums',
+      '--axios',
+      '--disableStrictSSL',
+    ];
+    const options = {
+      stdio: 'inherit',
+      cwd: path.join(__dirname, '..'),
+      shell: isWin,
+    };
+    if (isWin) {
+      // Quote npxPath if it contains spaces
+      const quotedNpx = npxPath.includes(' ') ? `"${npxPath}"` : npxPath;
+      // Escape/quote all args as needed (simple join with spaces is usually enough for these args)
+      const cmd = [
+        quotedNpx,
+        ...args.map((a) => (a.includes(' ') ? `"${a}"` : a)),
+      ].join(' ');
+      execFileSync(cmd, { ...options });
+    } else {
+      execFileSync(npxPath, args, options);
+    }
 
     // Add alias exports for Api, ContentType, HttpClient
     const capitalizedName =

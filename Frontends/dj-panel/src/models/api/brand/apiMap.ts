@@ -157,14 +157,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -224,39 +228,6 @@ export class Api<
         type: ContentType.Json,
         ...params,
       }),
-
-    /**
-     * No description
-     *
-     * @tags Brands
-     * @name V1BrandsHelloList
-     * @request GET:/brand/v1/Brands/Hello
-     * @secure
-     */
-    v1BrandsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Brands/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-  };
-  clients = {
-    /**
-     * No description
-     *
-     * @tags Clients
-     * @name V1ClientsHelloList
-     * @request GET:/brand/v1/Clients/Hello
-     * @secure
-     */
-    v1ClientsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Clients/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
   };
   company = {
     /**
@@ -274,56 +245,6 @@ export class Api<
         secure: true,
         ...params,
       }),
-
-    /**
-     * No description
-     *
-     * @tags Company
-     * @name V1CompanyHelloList
-     * @request GET:/brand/v1/Company/Hello
-     * @secure
-     */
-    v1CompanyHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Company/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-  };
-  elements = {
-    /**
-     * No description
-     *
-     * @tags Elements
-     * @name V1ElementsHelloList
-     * @request GET:/brand/v1/Elements/Hello
-     * @secure
-     */
-    v1ElementsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Elements/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-  };
-  packages = {
-    /**
-     * No description
-     *
-     * @tags Packages
-     * @name V1PackagesHelloList
-     * @request GET:/brand/v1/Packages/Hello
-     * @secure
-     */
-    v1PackagesHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Packages/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
   };
 }
 
@@ -332,7 +253,7 @@ export { Api as BrandApi, ContentType as BrandContentType, HttpClient as BrandHt
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};
