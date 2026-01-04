@@ -30,17 +30,25 @@ function isSingleType(apiName: string, ctName: string): boolean {
     }
   }
   
-  // Fallback to checking TS (though we can't easily parse it, so we'll just check if 'singleType' appears in the file)
+  // Fallback to checking TS - look for kind: 'singleType' or kind: "singleType" pattern
+  // This is a simple pattern match and may not be perfect, but should handle common cases
   if (fs.existsSync(schemaTsPath)) {
     try {
       const content = fs.readFileSync(schemaTsPath, 'utf-8');
-      return content.includes('"singleType"') || content.includes("'singleType'");
+      // Look for the pattern: kind: 'singleType' or kind: "singleType"
+      // Using a regex to be more specific about the context
+      const kindPattern = /kind\s*:\s*['"]singleType['"]/;
+      return kindPattern.test(content);
     } catch (e) {
       console.warn(`[PERM-LOG] Failed to read schema.ts for ${apiName}/${ctName}:`, e);
     }
   }
   
-  // Default to collectionType if we can't determine
+  // Default to collectionType if we can't determine (safer default)
+  // Most content types are collections, and incorrectly treating a singleType
+  // as a collection just means we try to enable a non-existent 'findOne' action,
+  // which is better than incorrectly treating a collection as a singleType
+  console.warn(`[PERM-LOG] Could not determine type for ${apiName}/${ctName}, defaulting to collectionType`);
   return false;
 }
 
