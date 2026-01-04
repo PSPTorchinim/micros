@@ -3,6 +3,7 @@ import { StrapiService } from '../services/strapi-service';
 import { renderBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
 import type { RefComponent, ContentBlock } from '../types/content-blocks';
+import { getDocId } from '../utils/mapStrapiContentToFrontend';
 
 /**
  * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
@@ -28,34 +29,6 @@ const FIELD_BY_REF: Record<string, string> = {
   'feature-tab-ref.feature-tab-ref': 'feature_tab',
   'contact-info-ref.contact-info-ref': 'contact_info',
 };
-
-// uniwersalny ekstraktor documentId z różnych kształtów populate
-function getDocId(input: unknown): string | undefined {
-  if (!input || typeof input !== 'object') return undefined;
-
-  const obj = input as Record<string, unknown>;
-
-  // Najczęstszy przypadek u Ciebie: obiekt z documentId
-  if (typeof obj.documentId === 'string') return obj.documentId;
-
-  // czasem API zwraca stringa (np. connect: ["docId"])
-  if (typeof input === 'string') return input;
-
-  // niektóre klienty spłaszczają id jako string
-  if (obj.id && typeof obj.id === 'string') return obj.id;
-
-  // Strapi v4/v5 warianty z data/attributes
-  const data = obj.data as Record<string, unknown> | undefined;
-  if (
-    data?.attributes &&
-    typeof (data.attributes as Record<string, unknown>).documentId === 'string'
-  ) {
-    return (data.attributes as Record<string, unknown>).documentId as string;
-  }
-  if (data?.id && typeof data.id === 'string') return data.id;
-
-  return undefined;
-}
 
 interface Props {
   block: RefComponent;
