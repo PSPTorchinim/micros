@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from '../components/molecules/Header';
 import { Footer } from '../components/molecules/Footer';
 import type { Footer as FooterType } from '../models/api/strapi/apiMap';
-import type { NavigationItem } from '../models/strapi/navigation-item';
+import type { NavigationItem } from '../components/DynamicRoutes';
 
 interface LayoutProps {
   navigation: {
