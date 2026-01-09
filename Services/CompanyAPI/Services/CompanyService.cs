@@ -153,6 +153,9 @@ namespace CompanyAPI.Services
                     return false;
                 }
 
+                // Note: Role information from addUserDto is not persisted in BrandUser entity
+                // In a production system, roles should be managed by the Identity service
+                // TODO: Consider adding Role field to BrandUser entity or managing roles separately
                 var brandUser = new BrandUser
                 {
                     Id = Guid.NewGuid(),
