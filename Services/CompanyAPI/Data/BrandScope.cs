@@ -1,3 +1,4 @@
+using CompanyAPI.Services;
 using Shared.Services.App;
 
 namespace CompanyAPI.Data
@@ -6,7 +7,7 @@ namespace CompanyAPI.Data
     {
         public override void CreateScope(IServiceCollection services)
         {
-
+            services.AddScoped<ICompanyService, CompanyService>();
         }
     }
 }
