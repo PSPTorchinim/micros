@@ -11,3 +11,4 @@ export { LoginBlock } from './LoginBlock';
 export { ForgotPasswordBlock } from './ForgotPasswordBlock';
 export { ChangePasswordBlock } from './ChangePasswordBlock';
 export { ProfileBlock } from './ProfileBlock';
+export { DashboardBlock } from './DashboardBlock';
