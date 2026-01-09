@@ -2,10 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { DashboardBlock } from './index';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
-import { BrandService } from '../../../services/brand-service';
-
-// Mock the BrandService for Storybook
-jest.mock('../../../services/brand-service');
+import { BrandService, type CompanyData } from '../../../services/brand-service';
 
 const mockUser: GetUserDTO = {
   id: '1',
@@ -13,10 +10,12 @@ const mockUser: GetUserDTO = {
   email: 'john.doe@example.com',
 };
 
-const mockCompanyData = {
+const mockCompanyData: CompanyData = {
   name: 'Acme Corporation',
   address: '123 Business Ave, Suite 100',
   phone: '+1 (555) 123-4567',
+  email: 'info@acme.com',
+  website: 'https://acme.com',
   industry: 'Technology',
 };
 
@@ -39,8 +38,14 @@ const meta = {
         logout: jest.fn(),
       };
 
-      // Mock the company data fetch
-      (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
+      // Mock the BrandService for this story
+      const originalGetCompany = BrandService.getCompany;
+      BrandService.getCompany = async () => mockCompanyData;
+
+      // Restore after story unmounts
+      setTimeout(() => {
+        BrandService.getCompany = originalGetCompany;
+      }, 0);
 
       return (
         <AuthContext.Provider value={mockAuthContext}>
@@ -82,8 +87,14 @@ export const NoCompanyData: Story = {
         logout: jest.fn(),
       };
 
-      // Mock empty company data
-      (BrandService.getCompany as jest.Mock).mockResolvedValue(null);
+      // Mock empty company data for this story
+      const originalGetCompany = BrandService.getCompany;
+      BrandService.getCompany = async () => null;
+
+      // Restore after story unmounts
+      setTimeout(() => {
+        BrandService.getCompany = originalGetCompany;
+      }, 0);
 
       return (
         <AuthContext.Provider value={mockAuthContext}>

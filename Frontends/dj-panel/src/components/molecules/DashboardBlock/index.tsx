@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../hooks/use-auth/use-auth';
-import { BrandService } from '../../../services/brand-service';
+import {
+  BrandService,
+  type CompanyData,
+} from '../../../services/brand-service';
 import './index.css';
 
 export interface DashboardBlock {
@@ -23,7 +26,7 @@ export const DashboardBlock: React.FC<DashboardBlock> = ({
   customStyles = {},
 }) => {
   const { user } = useAuth();
-  const [companyData, setCompanyData] = useState<any>(null);
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,7 +101,9 @@ export const DashboardBlock: React.FC<DashboardBlock> = ({
                 <div className="dashboard-block-info">
                   {Object.entries(companyData).map(([key, value]) => (
                     <div key={key} className="dashboard-block-field">
-                      <label className="dashboard-block-label">{key}</label>
+                      <label className="dashboard-block-label">
+                        {BrandService.formatFieldName(key)}
+                      </label>
                       <p className="dashboard-block-value">
                         {String(value) || 'N/A'}
                       </p>

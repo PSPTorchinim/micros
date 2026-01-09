@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import { DashboardBlock } from './index';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
-import { BrandService } from '../../../services/brand-service';
+import { BrandService, type CompanyData } from '../../../services/brand-service';
 
 // Mock BrandService
 jest.mock('../../../services/brand-service');
@@ -17,7 +17,7 @@ const mockUser: GetUserDTO = {
 };
 
 // Mock company data
-const mockCompanyData = {
+const mockCompanyData: CompanyData = {
   name: 'Test Company',
   address: '123 Test St',
   phone: '555-1234',
@@ -45,11 +45,13 @@ const renderWithAuth = (user: GetUserDTO | null = null) => {
 describe('DashboardBlock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset the mock implementation
+    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
+    // Mock formatFieldName to return the key as-is for simpler testing
+    (BrandService.formatFieldName as jest.Mock) = jest.fn((key: string) => key);
   });
 
   it('renders with default props when user is authenticated', async () => {
-    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
-    
     renderWithAuth(mockUser);
 
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -61,8 +63,6 @@ describe('DashboardBlock', () => {
   });
 
   it('displays user profile information', async () => {
-    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
-    
     renderWithAuth(mockUser);
 
     expect(screen.getByText('Username')).toBeInTheDocument();
@@ -72,8 +72,6 @@ describe('DashboardBlock', () => {
   });
 
   it('displays company information when loaded', async () => {
-    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
-    
     renderWithAuth(mockUser);
 
     await waitFor(() => {
@@ -141,8 +139,6 @@ describe('DashboardBlock', () => {
   });
 
   it('renders custom labels when provided', async () => {
-    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
-    
     const mockAuthContext = {
       user: mockUser,
       token: 'mock-token',
@@ -175,8 +171,6 @@ describe('DashboardBlock', () => {
   });
 
   it('applies custom styles when provided', async () => {
-    (BrandService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
-    
     const customStyles = { backgroundColor: 'red' };
     const mockAuthContext = {
       user: mockUser,
@@ -202,5 +196,33 @@ describe('DashboardBlock', () => {
     expect(dashboardContainer?.getAttribute('style')).toContain(
       'background-color',
     );
+  });
+});
+
+describe('BrandService', () => {
+  describe('formatFieldName', () => {
+    it('formats camelCase field names correctly', () => {
+      // Use the actual implementation from the real service
+      const actualBrandService = jest.requireActual('../../../services/brand-service');
+      expect(actualBrandService.BrandService.formatFieldName('companyName')).toBe('Company Name');
+      expect(actualBrandService.BrandService.formatFieldName('phoneNumber')).toBe('Phone Number');
+    });
+
+    it('formats snake_case field names correctly', () => {
+      const actualBrandService = jest.requireActual('../../../services/brand-service');
+      expect(actualBrandService.BrandService.formatFieldName('company_name')).toBe('Company Name');
+      expect(actualBrandService.BrandService.formatFieldName('phone_number')).toBe('Phone Number');
+    });
+
+    it('handles single word field names', () => {
+      const actualBrandService = jest.requireActual('../../../services/brand-service');
+      expect(actualBrandService.BrandService.formatFieldName('name')).toBe('Name');
+      expect(actualBrandService.BrandService.formatFieldName('address')).toBe('Address');
+    });
+
+    it('handles already formatted names', () => {
+      const actualBrandService = jest.requireActual('../../../services/brand-service');
+      expect(actualBrandService.BrandService.formatFieldName('Name')).toBe('Name');
+    });
   });
 });
