@@ -12,7 +12,7 @@ export interface DashboardBlock {
   profileSectionTitle?: string;
   companySectionTitle?: string;
   emailLabel?: string;
-  usernameLabel?: string;
+  idLabel?: string;
   customStyles?: Record<string, unknown>;
 }
 
@@ -22,7 +22,7 @@ export const DashboardBlock: React.FC<DashboardBlock> = ({
   profileSectionTitle = 'Profile Information',
   companySectionTitle = 'Company Information',
   emailLabel = 'Email',
-  usernameLabel = 'Username',
+  idLabel = 'User ID',
   customStyles = {},
 }) => {
   const { user } = useAuth();
@@ -70,18 +70,14 @@ export const DashboardBlock: React.FC<DashboardBlock> = ({
               </h2>
               <div className="dashboard-block-info">
                 <div className="dashboard-block-field">
-                  <label className="dashboard-block-label">
-                    {usernameLabel}
-                  </label>
-                  <p className="dashboard-block-value">
-                    {user.username || 'N/A'}
-                  </p>
-                </div>
-                <div className="dashboard-block-field">
                   <label className="dashboard-block-label">{emailLabel}</label>
                   <p className="dashboard-block-value">
                     {user.email || 'N/A'}
                   </p>
+                </div>
+                <div className="dashboard-block-field">
+                  <label className="dashboard-block-label">{idLabel}</label>
+                  <p className="dashboard-block-value">{user.id || 'N/A'}</p>
                 </div>
               </div>
             </div>

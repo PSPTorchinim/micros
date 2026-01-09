@@ -12,7 +12,6 @@ jest.mock('../../../services/brand-service');
 // Mock user data
 const mockUser: GetUserDTO = {
   id: '1',
-  username: 'testuser',
   email: 'test@example.com',
 };
 
@@ -65,10 +64,10 @@ describe('DashboardBlock', () => {
   it('displays user profile information', async () => {
     renderWithAuth(mockUser);
 
-    expect(screen.getByText('Username')).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    expect(screen.getByText('User ID')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
   });
 
   it('displays company information when loaded', async () => {
@@ -105,13 +104,14 @@ describe('DashboardBlock', () => {
     (BrandService.getCompany as jest.Mock).mockResolvedValue(null);
     
     const incompleteUser: GetUserDTO = {
-      id: '2',
+      id: undefined,
+      email: undefined,
     };
 
     renderWithAuth(incompleteUser);
 
     const values = screen.getAllByText('N/A');
-    expect(values.length).toBeGreaterThanOrEqual(2); // At least username and email
+    expect(values.length).toBeGreaterThanOrEqual(2); // At least email and id
   });
 
   it('handles company data fetch error', async () => {
@@ -156,7 +156,7 @@ describe('DashboardBlock', () => {
           description="Custom description"
           profileSectionTitle="My Profile"
           companySectionTitle="My Company"
-          usernameLabel="User Name"
+          idLabel="ID"
           emailLabel="Email Address"
         />
       </AuthContext.Provider>,
@@ -166,7 +166,7 @@ describe('DashboardBlock', () => {
     expect(screen.getByText('Custom description')).toBeInTheDocument();
     expect(screen.getByText('My Profile')).toBeInTheDocument();
     expect(screen.getByText('My Company')).toBeInTheDocument();
-    expect(screen.getByText('User Name')).toBeInTheDocument();
+    expect(screen.getByText('ID')).toBeInTheDocument();
     expect(screen.getByText('Email Address')).toBeInTheDocument();
   });
 

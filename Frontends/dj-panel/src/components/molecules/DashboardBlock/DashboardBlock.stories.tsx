@@ -6,7 +6,6 @@ import { BrandService, type CompanyData } from '../../../services/brand-service'
 
 const mockUser: GetUserDTO = {
   id: '1',
-  username: 'johndoe',
   email: 'john.doe@example.com',
 };
 
@@ -71,7 +70,7 @@ export const CustomLabels: Story = {
     description: 'All your important information at a glance',
     profileSectionTitle: 'User Profile',
     companySectionTitle: 'Organization Details',
-    usernameLabel: 'User Name',
+    idLabel: 'ID',
     emailLabel: 'Email Address',
   },
 };
