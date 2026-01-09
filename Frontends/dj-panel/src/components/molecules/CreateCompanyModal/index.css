@@ -1,0 +1,54 @@
+.create-company-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+}
+
+.create-company-modal__description {
+  font-size: 14px;
+  color: var(--dl-color-theme-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--dl-space-space-unit);
+}
+
+.create-company-modal__error {
+  padding: var(--dl-space-space-unit);
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: var(--dl-radius-radius-radius4);
+  color: #dc3545;
+  font-size: 14px;
+}
+
+.create-company-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits);
+}
+
+.create-company-modal__form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--dl-space-space-unit);
+}
+
+.create-company-modal__actions {
+  display: flex;
+  gap: var(--dl-space-space-unit);
+  margin-top: var(--dl-space-space-unit);
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  .create-company-modal__form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .create-company-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .create-company-modal__actions button {
+    width: 100%;
+  }
+}
