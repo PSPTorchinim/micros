@@ -19,6 +19,9 @@ const mockCompanyData: CompanyData = {
   industry: 'Technology',
 };
 
+// Store original implementation to restore later
+const originalGetCompany = BrandService.getCompany;
+
 const meta = {
   title: 'Molecules/DashboardBlock',
   component: DashboardBlock,
@@ -32,26 +35,25 @@ const meta = {
         user: mockUser,
         token: 'mock-token',
         refreshToken: 'mock-refresh-token',
-        setUser: jest.fn(),
-        setToken: jest.fn(),
-        setRefreshToken: jest.fn(),
-        logout: jest.fn(),
+        setUser: () => {},
+        setToken: () => {},
+        setRefreshToken: () => {},
+        logout: () => {},
       };
 
       // Mock the BrandService for this story
-      const originalGetCompany = BrandService.getCompany;
       BrandService.getCompany = async () => mockCompanyData;
-
-      // Restore after story unmounts
-      setTimeout(() => {
-        BrandService.getCompany = originalGetCompany;
-      }, 0);
 
       return (
         <AuthContext.Provider value={mockAuthContext}>
           <Story />
         </AuthContext.Provider>
       );
+    },
+    // Cleanup decorator to restore original implementation
+    () => {
+      BrandService.getCompany = originalGetCompany;
+      return null;
     },
   ],
 } satisfies Meta<typeof DashboardBlock>;
@@ -81,26 +83,25 @@ export const NoCompanyData: Story = {
         user: mockUser,
         token: 'mock-token',
         refreshToken: 'mock-refresh-token',
-        setUser: jest.fn(),
-        setToken: jest.fn(),
-        setRefreshToken: jest.fn(),
-        logout: jest.fn(),
+        setUser: () => {},
+        setToken: () => {},
+        setRefreshToken: () => {},
+        logout: () => {},
       };
 
       // Mock empty company data for this story
-      const originalGetCompany = BrandService.getCompany;
       BrandService.getCompany = async () => null;
-
-      // Restore after story unmounts
-      setTimeout(() => {
-        BrandService.getCompany = originalGetCompany;
-      }, 0);
 
       return (
         <AuthContext.Provider value={mockAuthContext}>
           <Story />
         </AuthContext.Provider>
       );
+    },
+    // Cleanup decorator
+    () => {
+      BrandService.getCompany = originalGetCompany;
+      return null;
     },
   ],
 };
@@ -112,10 +113,10 @@ export const NotAuthenticated: Story = {
         user: null,
         token: null,
         refreshToken: null,
-        setUser: jest.fn(),
-        setToken: jest.fn(),
-        setRefreshToken: jest.fn(),
-        logout: jest.fn(),
+        setUser: () => {},
+        setToken: () => {},
+        setRefreshToken: () => {},
+        logout: () => {},
       };
 
       return (
