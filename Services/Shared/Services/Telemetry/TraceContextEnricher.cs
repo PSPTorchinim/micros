@@ -15,8 +15,12 @@ namespace Shared.Services.Telemetry
                     "TraceId", activity.TraceId.ToString()));
                 logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
                     "SpanId", activity.SpanId.ToString()));
-                logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                    "ParentId", activity.ParentSpanId.ToString()));
+                // Only add ParentId if it's not the default value (root span)
+                if (activity.ParentSpanId != default)
+                {
+                    logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                        "ParentId", activity.ParentSpanId.ToString()));
+                }
             }
             else
             {

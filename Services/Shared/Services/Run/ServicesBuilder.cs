@@ -435,7 +435,8 @@ namespace Shared.Services.Run
                         {
                             // Don't trace health checks and swagger endpoints
                             var path = httpContext.Request.Path.Value ?? "";
-                            return !path.Contains("/healthz") && !path.Contains("/swagger");
+                            return !path.Contains("/healthz", StringComparison.OrdinalIgnoreCase) 
+                                && !path.Contains("/swagger", StringComparison.OrdinalIgnoreCase);
                         };
                         options.EnrichWithHttpRequest = (activity, httpRequest) =>
                         {
@@ -454,7 +455,7 @@ namespace Shared.Services.Run
                         {
                             // Don't trace internal health checks
                             var uri = httpRequest.RequestUri?.ToString() ?? "";
-                            return !uri.Contains("/healthz");
+                            return !uri.Contains("/healthz", StringComparison.OrdinalIgnoreCase);
                         };
                         options.EnrichWithHttpRequestMessage = (activity, httpRequest) =>
                         {
@@ -467,7 +468,9 @@ namespace Shared.Services.Run
                     })
                     .AddSqlClientInstrumentation(options =>
                     {
-                        options.SetDbStatementForText = true;
+                        // Only include SQL statements in development environments to avoid exposing sensitive data
+                        var isDevelopment = environment == "Development" || environment == "DevelopmentLocal";
+                        options.SetDbStatementForText = isDevelopment;
                         options.RecordException = true;
                     })
                     .AddOtlpExporter(options =>

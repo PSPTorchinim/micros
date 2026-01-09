@@ -16,7 +16,7 @@ datasources:
       maxLines: 1000
       derivedFields:
         - datasourceUid: tempo
-          matcherRegex: "trace_id=(\\w+)"
+          matcherRegex: "TraceId=(\\w+)"
           name: TraceID
           url: "$${__value.raw}"
 
@@ -46,8 +46,8 @@ datasources:
         tags: ['service', 'environment']
         mappedTags: [{ key: 'service.name', value: 'service' }]
         mapTagNamesEnabled: false
-        spanStartTimeShift: '1h'
-        spanEndTimeShift: '1h'
+        spanStartTimeShift: '5m'
+        spanEndTimeShift: '5m'
         filterByTraceID: true
         filterBySpanID: false
       serviceMap:
