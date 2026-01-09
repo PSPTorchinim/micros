@@ -457,14 +457,7 @@ namespace Shared.Services.Run
                             var uri = httpRequest.RequestUri?.ToString() ?? "";
                             return !uri.Contains("/healthz", StringComparison.OrdinalIgnoreCase);
                         };
-                        options.EnrichWithHttpRequestMessage = (activity, httpRequest) =>
-                        {
-                            activity.SetTag("http.request.method", httpRequest.Method.ToString());
-                        };
-                        options.EnrichWithHttpResponseMessage = (activity, httpResponse) =>
-                        {
-                            activity.SetTag("http.response.status_code", (int)httpResponse.StatusCode);
-                        };
+                        // Note: HTTP method and status code are already captured by default instrumentation
                     })
                     .AddSqlClientInstrumentation(options =>
                     {
