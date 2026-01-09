@@ -468,7 +468,6 @@ namespace Shared.Services.Run
                     .AddSqlClientInstrumentation(options =>
                     {
                         options.SetDbStatementForText = true;
-                        options.SetDbStatementForStoredProcedure = true;
                         options.RecordException = true;
                     })
                     .AddOtlpExporter(options =>
