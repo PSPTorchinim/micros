@@ -21,7 +21,8 @@
         "Login",
         "ForgotPassword",
         "ChangePassword",
-        "Profile"
+        "Profile",
+        "Company"
       ]
     },
     "page": {
