@@ -42,16 +42,16 @@ const mockUsers = [
 describe('CompanyBlock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (CompanyService.getCompany as jest.Mock).mockResolvedValue(
-      mockCompanyData,
-    );
+    (CompanyService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
     (CompanyService.getCompanyUsers as jest.Mock).mockResolvedValue(mockUsers);
     (CompanyService.getCompanyStructure as jest.Mock).mockResolvedValue([]);
   });
 
   it('renders loading state initially', () => {
     render(<CompanyBlock />);
-    expect(screen.getByText('Loading company information...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Loading company information...'),
+    ).toBeInTheDocument();
   });
 
   it('renders company information after loading', async () => {
@@ -142,7 +142,9 @@ describe('CompanyBlock', () => {
     render(<CompanyBlock />);
 
     await waitFor(() => {
-      expect(screen.getByText('No company structure defined.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No company structure defined.'),
+      ).toBeInTheDocument();
     });
   });
 

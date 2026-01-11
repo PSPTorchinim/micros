@@ -77,28 +77,43 @@ const meta = {
     (Story) => {
       useEffect(() => {
         // Mock the CompanyService methods for all stories
-        const originalGetCompany = CompanyServiceModule.CompanyService.getCompany;
-        const originalGetCompanyUsers = CompanyServiceModule.CompanyService.getCompanyUsers;
-        const originalGetCompanyStructure = CompanyServiceModule.CompanyService.getCompanyStructure;
-        const originalUpdateCompany = CompanyServiceModule.CompanyService.updateCompany;
-        const originalAddCompanyUser = CompanyServiceModule.CompanyService.addCompanyUser;
-        const originalRemoveCompanyUser = CompanyServiceModule.CompanyService.removeCompanyUser;
+        const originalGetCompany =
+          CompanyServiceModule.CompanyService.getCompany;
+        const originalGetCompanyUsers =
+          CompanyServiceModule.CompanyService.getCompanyUsers;
+        const originalGetCompanyStructure =
+          CompanyServiceModule.CompanyService.getCompanyStructure;
+        const originalUpdateCompany =
+          CompanyServiceModule.CompanyService.updateCompany;
+        const originalAddCompanyUser =
+          CompanyServiceModule.CompanyService.addCompanyUser;
+        const originalRemoveCompanyUser =
+          CompanyServiceModule.CompanyService.removeCompanyUser;
 
-        CompanyServiceModule.CompanyService.getCompany = async () => mockCompanyData;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () => mockUsers;
-        CompanyServiceModule.CompanyService.getCompanyStructure = async () => mockStructure;
+        CompanyServiceModule.CompanyService.getCompany = async () =>
+          mockCompanyData;
+        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
+          mockUsers;
+        CompanyServiceModule.CompanyService.getCompanyStructure = async () =>
+          mockStructure;
         CompanyServiceModule.CompanyService.updateCompany = async () => true;
         CompanyServiceModule.CompanyService.addCompanyUser = async () => true;
-        CompanyServiceModule.CompanyService.removeCompanyUser = async () => true;
+        CompanyServiceModule.CompanyService.removeCompanyUser = async () =>
+          true;
 
         return () => {
           // Restore original methods on cleanup
           CompanyServiceModule.CompanyService.getCompany = originalGetCompany;
-          CompanyServiceModule.CompanyService.getCompanyUsers = originalGetCompanyUsers;
-          CompanyServiceModule.CompanyService.getCompanyStructure = originalGetCompanyStructure;
-          CompanyServiceModule.CompanyService.updateCompany = originalUpdateCompany;
-          CompanyServiceModule.CompanyService.addCompanyUser = originalAddCompanyUser;
-          CompanyServiceModule.CompanyService.removeCompanyUser = originalRemoveCompanyUser;
+          CompanyServiceModule.CompanyService.getCompanyUsers =
+            originalGetCompanyUsers;
+          CompanyServiceModule.CompanyService.getCompanyStructure =
+            originalGetCompanyStructure;
+          CompanyServiceModule.CompanyService.updateCompany =
+            originalUpdateCompany;
+          CompanyServiceModule.CompanyService.addCompanyUser =
+            originalAddCompanyUser;
+          CompanyServiceModule.CompanyService.removeCompanyUser =
+            originalRemoveCompanyUser;
         };
       }, []);
 
@@ -187,18 +202,24 @@ export const EmptyState: Story = {
     (Story) => {
       useEffect(() => {
         // Override with empty data
-        const originalGetCompany = CompanyServiceModule.CompanyService.getCompany;
-        const originalGetCompanyUsers = CompanyServiceModule.CompanyService.getCompanyUsers;
-        const originalGetCompanyStructure = CompanyServiceModule.CompanyService.getCompanyStructure;
+        const originalGetCompany =
+          CompanyServiceModule.CompanyService.getCompany;
+        const originalGetCompanyUsers =
+          CompanyServiceModule.CompanyService.getCompanyUsers;
+        const originalGetCompanyStructure =
+          CompanyServiceModule.CompanyService.getCompanyStructure;
 
         CompanyServiceModule.CompanyService.getCompany = async () => null;
         CompanyServiceModule.CompanyService.getCompanyUsers = async () => [];
-        CompanyServiceModule.CompanyService.getCompanyStructure = async () => [];
+        CompanyServiceModule.CompanyService.getCompanyStructure =
+          async () => [];
 
         return () => {
           CompanyServiceModule.CompanyService.getCompany = originalGetCompany;
-          CompanyServiceModule.CompanyService.getCompanyUsers = originalGetCompanyUsers;
-          CompanyServiceModule.CompanyService.getCompanyStructure = originalGetCompanyStructure;
+          CompanyServiceModule.CompanyService.getCompanyUsers =
+            originalGetCompanyUsers;
+          CompanyServiceModule.CompanyService.getCompanyStructure =
+            originalGetCompanyStructure;
         };
       }, []);
 
@@ -237,15 +258,20 @@ export const MinimalCompanyInfo: Story = {
           },
         ];
 
-        const originalGetCompany = CompanyServiceModule.CompanyService.getCompany;
-        const originalGetCompanyUsers = CompanyServiceModule.CompanyService.getCompanyUsers;
+        const originalGetCompany =
+          CompanyServiceModule.CompanyService.getCompany;
+        const originalGetCompanyUsers =
+          CompanyServiceModule.CompanyService.getCompanyUsers;
 
-        CompanyServiceModule.CompanyService.getCompany = async () => minimalCompany;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () => minimalUsers;
+        CompanyServiceModule.CompanyService.getCompany = async () =>
+          minimalCompany;
+        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
+          minimalUsers;
 
         return () => {
           CompanyServiceModule.CompanyService.getCompany = originalGetCompany;
-          CompanyServiceModule.CompanyService.getCompanyUsers = originalGetCompanyUsers;
+          CompanyServiceModule.CompanyService.getCompanyUsers =
+            originalGetCompanyUsers;
         };
       }, []);
 
@@ -268,11 +294,14 @@ export const LargeTeam: Story = {
           role: i === 0 ? 'Admin' : i < 3 ? 'Manager' : 'Member',
         }));
 
-        const originalGetCompanyUsers = CompanyServiceModule.CompanyService.getCompanyUsers;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () => largeTeam;
+        const originalGetCompanyUsers =
+          CompanyServiceModule.CompanyService.getCompanyUsers;
+        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
+          largeTeam;
 
         return () => {
-          CompanyServiceModule.CompanyService.getCompanyUsers = originalGetCompanyUsers;
+          CompanyServiceModule.CompanyService.getCompanyUsers =
+            originalGetCompanyUsers;
         };
       }, []);
 
