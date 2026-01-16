@@ -77,7 +77,7 @@ export class CompanyService {
   public static async getCompanyUsers(): Promise<CompanyUserDTO[]> {
     try {
       const response =
-        await microservicesClient.brand.company.v1CompanyUsersListList();
+        await microservicesClient.brand.company.v1CompanyUsersList();
       if (response.data.success && Array.isArray(response.data.data)) {
         return response.data.data as unknown as CompanyUserDTO[];
       }
@@ -119,7 +119,7 @@ export class CompanyService {
   > {
     try {
       const response =
-        await microservicesClient.brand.company.v1CompanyStructureListList();
+        await microservicesClient.brand.company.v1CompanyStructureList();
       if (response.data.success && Array.isArray(response.data.data)) {
         return response.data.data as unknown as CompanyStructureNodeDTO[];
       }

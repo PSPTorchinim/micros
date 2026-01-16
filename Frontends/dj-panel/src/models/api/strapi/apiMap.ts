@@ -626,6 +626,199 @@ export interface ChangePasswordBlockResponse {
   meta?: object;
 }
 
+export interface CompanyBlock {
+  id?: number;
+  documentId?: string;
+  title?: string;
+  description?: string;
+  companyInfoTitle?: string;
+  usersTitle?: string;
+  structureTitle?: string;
+  editButtonText?: string;
+  saveButtonText?: string;
+  cancelButtonText?: string;
+  addUserButtonText?: string;
+  removeUserButtonText?: string;
+  customStyles?: any;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  updatedAt?: string;
+  /** @format date-time */
+  publishedAt?: string;
+  createdBy?: {
+    id?: number;
+    documentId?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    /** @format email */
+    email?: string;
+    resetPasswordToken?: string;
+    registrationToken?: string;
+    isActive?: boolean;
+    roles?: {
+      id?: number;
+      documentId?: string;
+      name?: string;
+      code?: string;
+      description?: string;
+      users?: {
+        id?: number;
+        documentId?: string;
+      }[];
+      permissions?: {
+        id?: number;
+        documentId?: string;
+        action?: string;
+        actionParameters?: any;
+        subject?: string;
+        properties?: any;
+        conditions?: any;
+        role?: {
+          id?: number;
+          documentId?: string;
+        };
+        /** @format date-time */
+        createdAt?: string;
+        /** @format date-time */
+        updatedAt?: string;
+        /** @format date-time */
+        publishedAt?: string;
+        createdBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        updatedBy?: {
+          id?: number;
+          documentId?: string;
+        };
+        locale?: string;
+        localizations?: {
+          id?: number;
+          documentId?: string;
+        }[];
+      }[];
+      /** @format date-time */
+      createdAt?: string;
+      /** @format date-time */
+      updatedAt?: string;
+      /** @format date-time */
+      publishedAt?: string;
+      createdBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      updatedBy?: {
+        id?: number;
+        documentId?: string;
+      };
+      locale?: string;
+      localizations?: {
+        id?: number;
+        documentId?: string;
+      }[];
+    }[];
+    blocked?: boolean;
+    preferedLanguage?: string;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  };
+  updatedBy?: {
+    id?: number;
+    documentId?: string;
+  };
+  locale?: string;
+  localizations?: {
+    id?: number;
+    documentId?: string;
+    title?: string;
+    description?: string;
+    companyInfoTitle?: string;
+    usersTitle?: string;
+    structureTitle?: string;
+    editButtonText?: string;
+    saveButtonText?: string;
+    cancelButtonText?: string;
+    addUserButtonText?: string;
+    removeUserButtonText?: string;
+    customStyles?: any;
+    /** @format date-time */
+    createdAt?: string;
+    /** @format date-time */
+    updatedAt?: string;
+    /** @format date-time */
+    publishedAt?: string;
+    createdBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    updatedBy?: {
+      id?: number;
+      documentId?: string;
+    };
+    locale?: string;
+    localizations?: {
+      id?: number;
+      documentId?: string;
+    }[];
+  }[];
+}
+
+export interface CompanyBlockListResponse {
+  data?: CompanyBlock[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      /** @min 25 */
+      pageSize?: number;
+      /** @max 1 */
+      pageCount?: number;
+      total?: number;
+    };
+  };
+}
+
+export interface CompanyBlockRequest {
+  data: {
+    title?: string;
+    description?: string;
+    companyInfoTitle?: string;
+    usersTitle?: string;
+    structureTitle?: string;
+    editButtonText?: string;
+    saveButtonText?: string;
+    cancelButtonText?: string;
+    addUserButtonText?: string;
+    removeUserButtonText?: string;
+    customStyles?: any;
+    locale?: string;
+    localizations?: (number | string)[];
+  };
+}
+
+export interface CompanyBlockResponse {
+  data?: CompanyBlock;
+  meta?: object;
+}
+
 export interface Configuration {
   id?: number;
   documentId?: string;
@@ -3883,42 +4076,42 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: PolymorphNull1 &
+  Content?: InternalNull2 &
     (
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "article-ref.article-ref",
           ArticleRefArticleRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | PolymorphNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull2ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | PolymorphNull1ComponentMapping<
+      | InternalNull2ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -4132,6 +4325,7 @@ export enum ConfigurationTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 type BaseNull = (
@@ -4194,6 +4388,7 @@ export enum FooterTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 type AbstractNull = (
@@ -4276,6 +4471,7 @@ export enum PageTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 type PolymorphNull = (
@@ -4339,6 +4535,7 @@ export enum TemplateTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 export enum TemplateMenuEnum {
@@ -4364,6 +4561,7 @@ export enum TemplateTemplateTypeEnum1 {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 type InternalNull1 = (
@@ -4383,7 +4581,7 @@ type InternalNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
-type PolymorphNull1 = (
+type InternalNull2 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
   | ArticleBlockRefArticleBlockRefComponent
@@ -4396,7 +4594,7 @@ type PolymorphNull1 = (
   | HeroBlockRefHeroBlockRefComponent
 )[];
 
-type PolymorphNull1ComponentMapping<Key, Type> = {
+type InternalNull2ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
@@ -4406,6 +4604,7 @@ export enum TemplateRequestTemplateTypeEnum {
   ForgotPassword = "ForgotPassword",
   ChangePassword = "ChangePassword",
   Profile = "Profile",
+  Company = "Company",
 }
 
 type AbstractNull1 = (
@@ -4944,6 +5143,85 @@ export class Api<
     deleteChangePasswordBlock: (params: RequestParams = {}) =>
       this.request<number, Error>({
         path: `/strapi/change-password-block`,
+        method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  companyBlock = {
+    /**
+     * No description
+     *
+     * @tags Company-block
+     * @name GetCompanyBlock
+     * @request GET:/strapi/company-block
+     * @secure
+     */
+    getCompanyBlock: (
+      query?: {
+        /** Sort by attributes ascending (asc) or descending (desc) */
+        sort?: string;
+        /** Return page/pageSize (default: true) */
+        "pagination[withCount]"?: boolean;
+        /** Page number (default: 0) */
+        "pagination[page]"?: number;
+        /** Page size (default: 25) */
+        "pagination[pageSize]"?: number;
+        /** Offset value (default: 0) */
+        "pagination[start]"?: number;
+        /** Number of entities to return (default: 25) */
+        "pagination[limit]"?: number;
+        /** Fields to return (ex: title,author) */
+        fields?: string;
+        /** Relations to return */
+        populate?: string;
+        /** Filters to apply */
+        filters?: object;
+        /** Locale to apply */
+        locale?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CompanyBlockResponse, Error>({
+        path: `/strapi/company-block`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company-block
+     * @name PutCompanyBlock
+     * @request PUT:/strapi/company-block
+     * @secure
+     */
+    putCompanyBlock: (data: CompanyBlockRequest, params: RequestParams = {}) =>
+      this.request<CompanyBlockResponse, Error>({
+        path: `/strapi/company-block`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company-block
+     * @name DeleteCompanyBlock
+     * @request DELETE:/strapi/company-block
+     * @secure
+     */
+    deleteCompanyBlock: (params: RequestParams = {}) =>
+      this.request<number, Error>({
+        path: `/strapi/company-block`,
         method: "DELETE",
         secure: true,
         format: "json",
