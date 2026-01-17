@@ -40,7 +40,7 @@ runs:
       shell: bash
 
     - name: Build Project
-      run: dotnet build "Services/${{ inputs.service }}" --no-restore -c Debug
+      run: dotnet build "Services/${{ inputs.service }}" -c Debug
       shell: bash
 
     - name: Run Unit Tests (if present)
