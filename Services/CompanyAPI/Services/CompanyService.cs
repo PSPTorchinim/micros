@@ -109,6 +109,29 @@ namespace CompanyAPI.Services
                     };
                     
                     await brandsRepository.Add(brand);
+                    
+                    // Automatically add the current user as company owner
+                    var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
+                    if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        _logger.LogInformation($"Adding user {userId} as company owner");
+                        var brandUser = new BrandUser
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = userId,
+                            BrandId = brand.Id,
+                            Brand = brand
+                        };
+                        
+                        await brandUsersRepository.Add(brandUser);
+                        
+                        // Invalidate users cache since we added a new user
+                        await _cacheService.RemoveAsync($"{CompanyCachePrefix}Users");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Could not determine current user ID to add as company owner");
+                    }
                 }
                 else
                 {
