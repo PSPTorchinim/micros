@@ -85,24 +85,46 @@ namespace CompanyAPI.Services
             {
                 // Get the first brand (company)
                 var brand = (await brandsRepository.Get()).FirstOrDefault();
+                
                 if (brand == null)
                 {
-                    _logger.LogWarning("No company found to update");
-                    return false;
+                    // Create new company if none exists
+                    _logger.LogInformation("No company found, creating new company");
+                    brand = new Brand
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = updateDto.Name,
+                        BrandEmail = updateDto.Email,
+                        BrandPhone = updateDto.Phone,
+                        Country = updateDto.Country,
+                        City = updateDto.City,
+                        PostCode = updateDto.PostCode,
+                        AddresLine1 = updateDto.AddressLine1,
+                        AddresLine2 = updateDto.AddressLine2,
+                        Logo = updateDto.Logo,
+                        CreatedDate = DateTime.UtcNow,
+                        BrandCustomFields = new List<BrandCustomField>(),
+                        Packages = new List<Package>(),
+                        Clients = new List<Client>()
+                    };
+                    
+                    await brandsRepository.Add(brand);
                 }
+                else
+                {
+                    // Update existing brand properties
+                    brand.Name = updateDto.Name;
+                    brand.BrandEmail = updateDto.Email;
+                    brand.BrandPhone = updateDto.Phone;
+                    brand.Country = updateDto.Country;
+                    brand.City = updateDto.City;
+                    brand.PostCode = updateDto.PostCode;
+                    brand.AddresLine1 = updateDto.AddressLine1;
+                    brand.AddresLine2 = updateDto.AddressLine2;
+                    brand.Logo = updateDto.Logo;
 
-                // Update brand properties
-                brand.Name = updateDto.Name;
-                brand.BrandEmail = updateDto.Email;
-                brand.BrandPhone = updateDto.Phone;
-                brand.Country = updateDto.Country;
-                brand.City = updateDto.City;
-                brand.PostCode = updateDto.PostCode;
-                brand.AddresLine1 = updateDto.AddressLine1;
-                brand.AddresLine2 = updateDto.AddressLine2;
-                brand.Logo = updateDto.Logo;
-
-                await brandsRepository.Update(brand);
+                    await brandsRepository.Update(brand);
+                }
                 
                 // Invalidate cache
                 await _cacheService.RemoveAsync($"{CompanyCachePrefix}Info");
