@@ -18,6 +18,7 @@ namespace CompanyAPI.Services
         Task<bool> RemoveCompanyUser(Guid userId);
         Task<List<CompanyStructureNodeDTO>> GetCompanyStructure();
         Task<bool> UpdateCompanyStructure(UpdateCompanyStructureDTO structureDto);
+        Task<bool> IsUserCompanyMember();
     }
 
     public class CompanyService : BaseService<ICompanyService>, ICompanyService
@@ -273,6 +274,27 @@ namespace CompanyAPI.Services
                 await _cacheService.RemoveAsync($"{CompanyCachePrefix}Structure");
                 
                 return true;
+            }, _logger);
+        }
+
+        public async Task<bool> IsUserCompanyMember()
+        {
+            return await ExceptionHandler.Handle(async () =>
+            {
+                // Get current user ID from claims
+                var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                {
+                    _logger.LogWarning("Could not determine current user ID");
+                    return false;
+                }
+                
+                // Check if user is a member of any company
+                var brandUsers = await brandUsersRepository.Get();
+                var isMember = brandUsers.Any(bu => bu.UserId == userId);
+                
+                _logger.LogDebug($"User {userId} company membership: {isMember}");
+                return isMember;
             }, _logger);
         }
     }

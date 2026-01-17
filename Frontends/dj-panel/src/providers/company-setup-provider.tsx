@@ -42,16 +42,16 @@ export const CompanySetupProvider = ({
         }
       }
 
-      // Check if company exists
+      // Check if user is a member of any company
       setIsCheckingCompany(true);
       try {
-        const company = await CompanyService.getCompany();
-        if (!company) {
-          // No company found, show the modal
+        const isMember = await CompanyService.isUserCompanyMember();
+        if (!isMember) {
+          // User is not a member of any company, show the modal
           setShowModal(true);
         }
       } catch (error) {
-        console.error('Error checking company setup:', error);
+        console.error('Error checking company membership:', error);
       } finally {
         setIsCheckingCompany(false);
       }

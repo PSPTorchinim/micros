@@ -61,6 +61,17 @@ export class CompanyService {
     }
   }
 
+  public static async isUserCompanyMember(): Promise<boolean> {
+    try {
+      const response =
+        await microservicesClient.brand.company.v1CompanyMembershipList();
+      return response.data.success && response.data.data === true;
+    } catch (error) {
+      console.error('Error checking company membership:', error);
+      return false;
+    }
+  }
+
   public static async updateCompany(
     updateDto: UpdateCompanyDTO,
   ): Promise<boolean> {

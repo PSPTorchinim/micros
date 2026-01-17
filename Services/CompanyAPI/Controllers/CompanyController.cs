@@ -47,6 +47,12 @@ namespace CompanyAPI.Controllers
             return await Handle(async () => await CompanyService.RemoveCompanyUser(userId));
         }
 
+        [HttpGet("membership")]
+        public async Task<IActionResult> IsUserCompanyMemberV1()
+        {
+            return await Handle(async () => await CompanyService.IsUserCompanyMember());
+        }
+
         [HttpGet("structure")]
         public async Task<IActionResult> GetCompanyStructureV1()
         {
