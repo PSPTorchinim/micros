@@ -14,9 +14,12 @@ runs:
         
     - name: Restore Dependencies
       run: dotnet restore "Services/${{ inputs.service }}"
+      shell: bash
 
     - name: Build Project
       run: dotnet build "Services/${{ inputs.service }}" -c Debug
+      shell: bash
 
     - name: Run Unit Tests (if present)
       run: dotnet test "Tests/${{ inputs.service }}.Tests" --collect:"XPlat Code Coverage"
+      shell: bash
