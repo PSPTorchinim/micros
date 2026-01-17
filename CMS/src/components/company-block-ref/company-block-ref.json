@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_company_block_refs",
+  "info": { "displayName": "CompanyBlockRef" },
+  "attributes": {
+    "company_block": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::company-block.company-block"
+    }
+  }
+}
