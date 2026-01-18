@@ -18,7 +18,7 @@ namespace Shared.Services.Security
         }
 
         /// <summary>
-        /// Seeds permissions in the Identity API if they don't exist
+        /// Seeds permissions in the Identity API if they don't exist (batch operation)
         /// </summary>
         /// <param name="permissions">List of permissions to seed</param>
         /// <returns>True if seeding was successful or permissions already exist</returns>
@@ -27,63 +27,121 @@ namespace Shared.Services.Security
             try
             {
                 var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL") ?? "http://identity:8080";
-                _logger.LogInformation("Seeding {Count} permissions to Identity API at {Url}", permissions.Count(), identityApiUrl);
+                var permissionList = permissions.ToList();
+                _logger.LogInformation("Seeding {Count} permissions to Identity API at {Url} using batch operation", permissionList.Count, identityApiUrl);
 
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.BaseAddress = new Uri(identityApiUrl);
 
-                foreach (var permission in permissions)
+                // Batch create permissions
+                var batchRequest = permissionList.Select(p => new
                 {
-                    try
+                    name = p.Name,
+                    description = p.Description
+                }).ToList();
+
+                var createResponse = await httpClient.PostAsJsonAsync("/api/v1/Permissions/batch", batchRequest);
+
+                if (createResponse.IsSuccessStatusCode)
+                {
+                    var result = await createResponse.Content.ReadFromJsonAsync<BatchPermissionResult>();
+                    
+                    if (result != null)
                     {
-                        // Check if permission exists
-                        var checkResponse = await httpClient.GetAsync($"/api/v1/Permissions?name={Uri.EscapeDataString(permission.Name)}");
+                        _logger.LogInformation("Successfully seeded {Created} permissions, {Skipped} already existed", 
+                            result.Created, result.Skipped);
                         
-                        if (checkResponse.IsSuccessStatusCode)
+                        foreach (var createdPermission in result.CreatedPermissions)
                         {
-                            var existingPermissions = await checkResponse.Content.ReadFromJsonAsync<List<PermissionDto>>();
-                            if (existingPermissions != null && existingPermissions.Any())
-                            {
-                                _logger.LogDebug("Permission {Permission} already exists, skipping", permission.Name);
-                                continue;
-                            }
+                            _logger.LogDebug("Created permission: {Permission}", createdPermission);
                         }
-
-                        // Create permission
-                        var createResponse = await httpClient.PostAsJsonAsync("/api/v1/Permissions", new
+                        
+                        foreach (var skippedPermission in result.SkippedPermissions)
                         {
-                            name = permission.Name,
-                            description = permission.Description
-                        });
-
-                        if (createResponse.IsSuccessStatusCode)
-                        {
-                            _logger.LogInformation("Successfully seeded permission: {Permission}", permission.Name);
-                        }
-                        else if (createResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
-                        {
-                            _logger.LogDebug("Permission {Permission} already exists (conflict), skipping", permission.Name);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Failed to seed permission {Permission}: {StatusCode}", 
-                                permission.Name, createResponse.StatusCode);
+                            _logger.LogDebug("Skipped existing permission: {Permission}", skippedPermission);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogWarning(ex, "Error seeding permission {Permission}, continuing with others", permission.Name);
+                        _logger.LogInformation("Batch permission seeding completed successfully");
                     }
+                    
+                    return true;
                 }
-
-                _logger.LogInformation("Permission seeding completed");
-                return true;
+                else
+                {
+                    _logger.LogWarning("Batch permission seeding failed with status: {StatusCode}", createResponse.StatusCode);
+                    
+                    // Fallback to individual seeding if batch endpoint is not available (404)
+                    if (createResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogInformation("Batch endpoint not available, falling back to individual seeding");
+                        return await SeedPermissionsIndividuallyAsync(httpClient, permissionList);
+                    }
+                    
+                    return false;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to seed permissions");
+                _logger.LogError(ex, "Failed to seed permissions using batch operation");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Fallback method to seed permissions individually if batch endpoint is unavailable
+        /// </summary>
+        private async Task<bool> SeedPermissionsIndividuallyAsync(HttpClient httpClient, List<PermissionDefinition> permissions)
+        {
+            _logger.LogInformation("Seeding {Count} permissions individually", permissions.Count);
+
+            foreach (var permission in permissions)
+            {
+                try
+                {
+                    // Check if permission exists
+                    var checkResponse = await httpClient.GetAsync($"/api/v1/Permissions?name={Uri.EscapeDataString(permission.Name)}");
+                    
+                    if (checkResponse.IsSuccessStatusCode)
+                    {
+                        var existingPermissions = await checkResponse.Content.ReadFromJsonAsync<List<PermissionDto>>();
+                        if (existingPermissions != null && existingPermissions.Any())
+                        {
+                            _logger.LogDebug("Permission {Permission} already exists, skipping", permission.Name);
+                            continue;
+                        }
+                    }
+
+                    // Create permission
+                    var createResponse = await httpClient.PostAsJsonAsync("/api/v1/Permissions", new
+                    {
+                        name = permission.Name,
+                        description = permission.Description
+                    });
+
+                    if (createResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("Successfully seeded permission: {Permission}", permission.Name);
+                    }
+                    else if (createResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
+                    {
+                        _logger.LogDebug("Permission {Permission} already exists (conflict), skipping", permission.Name);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to seed permission {Permission}: {StatusCode}", 
+                            permission.Name, createResponse.StatusCode);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error seeding permission {Permission}, continuing with others", permission.Name);
+                }
+            }
+
+            _logger.LogInformation("Individual permission seeding completed");
+            return true;
         }
 
         private class PermissionDto
@@ -91,6 +149,14 @@ namespace Shared.Services.Security
             public Guid Id { get; set; }
             public string Name { get; set; } = string.Empty;
             public string Description { get; set; } = string.Empty;
+        }
+
+        private class BatchPermissionResult
+        {
+            public int Created { get; set; }
+            public int Skipped { get; set; }
+            public List<string> CreatedPermissions { get; set; } = new();
+            public List<string> SkippedPermissions { get; set; } = new();
         }
     }
 
