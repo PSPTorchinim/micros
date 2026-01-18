@@ -33,6 +33,14 @@ namespace Shared.Services.Security
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.BaseAddress = new Uri(identityApiUrl);
 
+                // Add service authentication if available
+                var serviceApiKey = Environment.GetEnvironmentVariable("SERVICE_API_KEY");
+                if (!string.IsNullOrEmpty(serviceApiKey))
+                {
+                    httpClient.DefaultRequestHeaders.Add("X-Service-API-Key", serviceApiKey);
+                    _logger.LogDebug("Using service API key for authentication");
+                }
+
                 // Batch create permissions
                 var batchRequest = permissionList.Select(p => new
                 {

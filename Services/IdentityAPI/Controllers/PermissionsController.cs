@@ -85,7 +85,7 @@ namespace IdentityAPI.Controllers
         }
 
         [HttpPost("batch")]
-        [AllowAnonymous] // Allow services to seed permissions without authentication
+        [Authorize(Policy = "PermissionBatchCreate")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<BatchPermissionsResultDTO>))]
         public async Task<IActionResult> PostBatchV1(BatchAddPermissionsDTO request)
         {
