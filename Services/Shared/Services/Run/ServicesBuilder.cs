@@ -59,6 +59,7 @@ namespace Shared.Services.Run
             services.ConfigureApiVersioning();
             services.ConfigureHealthChecks();
             services.ConfigureAuthentication(systemConfig);
+            services.AddPermissionAuthorization();
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
             services.ConfigureOpenTelemetry(name, environment);
