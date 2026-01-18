@@ -483,6 +483,10 @@ namespace Shared.Services.Run
             new Sc().CreateScope(services);
             services.AddAutoMapper(cfg => cfg.AddMaps(typeof(P).Assembly));
             services.AddScoped(typeof(S));
+            
+            // Register PermissionSeeder for services that need to seed permissions
+            services.AddScoped<PermissionSeeder>();
+            
             Console.WriteLine($"Scope built for {typeof(P).Name}, {typeof(S).Name}, {typeof(Sc).Name}.");
             return services;
         }
