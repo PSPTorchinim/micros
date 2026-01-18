@@ -15,6 +15,7 @@ namespace IdentityAPI.Services
         Task<List<GetPermissionsDTO>> GetPermissions();
         Task<GetPermissionDTO?> GetPermission(Guid id);
         Task<bool> AddPermission(AddPermissionDTO request);
+        Task<BatchPermissionsResultDTO> AddPermissionsBatch(BatchAddPermissionsDTO request);
         Task<bool> EditPermission(Guid id, EditPermissionDTO request);
         Task<bool> DeletePermission(Guid id);
     }
@@ -77,6 +78,68 @@ namespace IdentityAPI.Services
                 await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
 
                 _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", StringHelper.SanitizeForLog(request.Name), result);
+                return result;
+            }, _logger);
+        }
+
+        public async Task<BatchPermissionsResultDTO> AddPermissionsBatch(BatchAddPermissionsDTO request)
+        {
+            _logger.LogInformation("Adding batch of {Count} permissions", request.Permissions?.Count ?? 0);
+            return await ExceptionHandler.Handle(async () =>
+            {
+                if (request.Permissions == null || !request.Permissions.Any())
+                {
+                    _logger.LogWarning("Batch permissions request contains no permissions");
+                    return new BatchPermissionsResultDTO { Created = 0, Skipped = 0, Failed = 0 };
+                }
+
+                var result = new BatchPermissionsResultDTO();
+                var shouldInvalidateCache = false;
+
+                foreach (var permissionDto in request.Permissions)
+                {
+                    try
+                    {
+                        _logger.LogDebug("Checking if permission with name {Name} exists.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        if (await _permissionsRepository.Exists(x => x.Name.Equals(permissionDto.Name)))
+                        {
+                            _logger.LogDebug("Permission with name {Name} already exists, skipping.", StringHelper.SanitizeForLog(permissionDto.Name));
+                            result.Skipped++;
+                            continue;
+                        }
+
+                        var permission = _mapper.Map<Permission>(permissionDto);
+                        _logger.LogDebug("Mapped AddPermissionDTO to Permission entity for {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        var addResult = await _permissionsRepository.Add(permission);
+
+                        if (addResult)
+                        {
+                            result.Created++;
+                            shouldInvalidateCache = true;
+                            _logger.LogDebug("Permission with name {Name} added successfully.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        }
+                        else
+                        {
+                            result.Failed++;
+                            _logger.LogWarning("Failed to add permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Failed++;
+                        _logger.LogError(ex, "Error adding permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                    }
+                }
+
+                // Invalidate cache if any permissions were added
+                if (shouldInvalidateCache)
+                {
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                    _logger.LogDebug("Cache invalidated after batch permission creation");
+                }
+
+                _logger.LogInformation("Batch permissions result: Created={Created}, Skipped={Skipped}, Failed={Failed}", 
+                    result.Created, result.Skipped, result.Failed);
                 return result;
             }, _logger);
         }

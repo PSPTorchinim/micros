@@ -83,5 +83,29 @@ namespace IdentityAPI.Controllers
                 }
             });
         }
+
+        [HttpPost("batch")]
+        [AllowAnonymous] // Allow services to seed permissions without authentication
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<BatchPermissionsResultDTO>))]
+        public async Task<IActionResult> PostBatchV1(BatchAddPermissionsDTO request)
+        {
+            return await Handle(async () =>
+            {
+                var permissionCount = request?.Permissions?.Count ?? 0;
+                _logger.LogInformation("PostBatchV1 called for {Count} permissions at {Time}", permissionCount, DateTime.UtcNow);
+                try
+                {
+                    var result = await _permissionsService.AddPermissionsBatch(request);
+                    _logger.LogInformation("PostBatchV1 succeeded: Created={Created}, Skipped={Skipped}, Failed={Failed} at {Time}", 
+                        result.Created, result.Skipped, result.Failed, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "PostBatchV1 failed for batch permissions at {Time}", DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
     }
 }
