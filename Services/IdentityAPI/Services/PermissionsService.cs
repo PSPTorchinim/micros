@@ -74,8 +74,14 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
 
-                // Invalidate cache so it will be refreshed on next read
-                await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                if (result)
+                {
+                    // Invalidate cache so it will be refreshed on next read
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                    
+                    // Update SuperOwner role with all permissions
+                    await UpdateSuperOwnerPermissions();
+                }
 
                 _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", StringHelper.SanitizeForLog(request.Name), result);
                 return result;
@@ -136,12 +142,46 @@ namespace IdentityAPI.Services
                 {
                     await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
                     _logger.LogDebug("Cache invalidated after batch permission creation");
+                    
+                    // Update SuperOwner role with all permissions
+                    await UpdateSuperOwnerPermissions();
                 }
 
                 _logger.LogInformation("Batch permissions result: Created={Created}, Skipped={Skipped}, Failed={Failed}", 
                     result.Created, result.Skipped, result.Failed);
                 return result;
             }, _logger);
+        }
+
+        private async Task UpdateSuperOwnerPermissions()
+        {
+            try
+            {
+                var rolesRepository = _serviceProvider.GetRequiredService<IRolesRepository>();
+                _logger.LogInformation("Updating SuperOwner role with all permissions");
+                
+                var superOwnerRoles = await rolesRepository.Get(x => x.Name == "SuperOwner");
+                var superOwnerRole = superOwnerRoles.FirstOrDefault();
+                
+                if (superOwnerRole == null)
+                {
+                    _logger.LogWarning("SuperOwner role not found, skipping permission update");
+                    return;
+                }
+                
+                var allPermissions = await _permissionsRepository.Get();
+                _logger.LogDebug("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                
+                superOwnerRole.Permissions = allPermissions;
+                await rolesRepository.Update(superOwnerRole);
+                
+                _logger.LogInformation("SuperOwner role updated with {Count} permissions", allPermissions.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update SuperOwner role with new permissions");
+                // Don't throw - this is a best-effort operation
+            }
         }
 
         public async Task<GetPermissionDTO?> GetPermission(Guid id)
