@@ -123,16 +123,17 @@ namespace CompanyAPI.Services
                     
                     await brandsRepository.Add(brand);
                     
-                    // Automatically add the current user as company owner
+                    // Automatically add the current user as company creator
                     if (createdByUserId.HasValue)
                     {
-                        _logger.LogInformation($"Adding user {createdByUserId.Value} as company owner");
+                        _logger.LogInformation($"Adding user {createdByUserId.Value} as company creator");
                         var brandUser = new BrandUser
                         {
                             Id = Guid.NewGuid(),
                             UserId = createdByUserId.Value,
                             BrandId = brand.Id,
-                            Brand = brand
+                            Brand = brand,
+                            Role = BrandUserRole.Creator
                         };
                         
                         await brandUsersRepository.Add(brandUser);
@@ -142,7 +143,7 @@ namespace CompanyAPI.Services
                     }
                     else
                     {
-                        _logger.LogWarning("Could not determine current user ID to add as company owner");
+                        _logger.LogWarning("Could not determine current user ID to add as company creator");
                     }
                 }
                 else
@@ -188,7 +189,7 @@ namespace CompanyAPI.Services
                             UserId = bu.UserId,
                             Username = $"User_{bu.UserId.ToString()[..8]}", // Placeholder - would come from Identity service
                             Email = $"user_{bu.UserId.ToString()[..8]}@company.com", // Placeholder
-                            Role = "Member" // Placeholder - would come from role system
+                            Role = bu.Role.ToString() // Role from BrandUser entity
                         }).ToList();
                     },
                     DefaultCacheExpiration
@@ -210,15 +211,24 @@ namespace CompanyAPI.Services
                     return false;
                 }
 
-                // Note: Role information from addUserDto is not persisted in BrandUser entity
-                // In a production system, roles should be managed by the Identity service
-                // TODO: Consider adding Role field to BrandUser entity or managing roles separately
+                // Parse role from DTO, default to Member if invalid
+                BrandUserRole role = BrandUserRole.Member;
+                if (Enum.TryParse<BrandUserRole>(addUserDto.Role, ignoreCase: true, out var parsedRole))
+                {
+                    role = parsedRole;
+                }
+                else
+                {
+                    _logger.LogWarning($"Invalid role '{addUserDto.Role}' provided, defaulting to Member");
+                }
+                
                 var brandUser = new BrandUser
                 {
                     Id = Guid.NewGuid(),
                     UserId = addUserDto.UserId,
                     BrandId = brand.Id,
-                    Brand = brand
+                    Brand = brand,
+                    Role = role
                 };
 
                 await brandUsersRepository.Add(brandUser);
