@@ -14,6 +14,21 @@ namespace CompanyAPI.Data
 
         public BrandContext(DbContextOptions<BrandContext> options) : base(options) { }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder) { }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Configure Brand-BrandUser relationship
+            modelBuilder.Entity<Brand>()
+                .HasMany(b => b.BrandUsers)
+                .WithOne(bu => bu.Brand)
+                .HasForeignKey(bu => bu.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            // Configure BrandUser indexes for performance
+            modelBuilder.Entity<BrandUser>()
+                .HasIndex(bu => bu.UserId);
+                
+            modelBuilder.Entity<BrandUser>()
+                .HasIndex(bu => bu.BrandId);
+        }
     }
 }

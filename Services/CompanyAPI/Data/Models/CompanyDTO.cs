@@ -23,6 +23,7 @@ namespace CompanyAPI.Data.Models
         public string? AddressLine2 { get; set; }
         public string? Logo { get; set; }
         public DateTime CreatedDate { get; set; }
+        public Guid? CreatedByUserId { get; set; }
     }
 
     public class UpdateCompanyDTO

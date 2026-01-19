@@ -70,7 +70,8 @@ namespace CompanyAPI.Services
                             AddressLine1 = brand.AddresLine1,
                             AddressLine2 = brand.AddresLine2,
                             Logo = brand.Logo,
-                            CreatedDate = brand.CreatedDate
+                            CreatedDate = brand.CreatedDate,
+                            CreatedByUserId = brand.CreatedByUserId
                         };
                     },
                     DefaultCacheExpiration
@@ -91,6 +92,15 @@ namespace CompanyAPI.Services
                 {
                     // Create new company if none exists
                     _logger.LogInformation("No company found, creating new company");
+                    
+                    // Get current user ID for CreatedBy tracking
+                    var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
+                    Guid? createdByUserId = null;
+                    if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        createdByUserId = userId;
+                    }
+                    
                     brand = new Brand
                     {
                         Id = Guid.NewGuid(),
@@ -104,22 +114,23 @@ namespace CompanyAPI.Services
                         AddresLine2 = updateDto.AddressLine2,
                         Logo = updateDto.Logo,
                         CreatedDate = DateTime.UtcNow,
+                        CreatedByUserId = createdByUserId,
                         BrandCustomFields = new List<BrandCustomField>(),
                         Packages = new List<Package>(),
-                        Clients = new List<Client>()
+                        Clients = new List<Client>(),
+                        BrandUsers = new List<BrandUser>()
                     };
                     
                     await brandsRepository.Add(brand);
                     
                     // Automatically add the current user as company owner
-                    var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
-                    if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+                    if (createdByUserId.HasValue)
                     {
-                        _logger.LogInformation($"Adding user {userId} as company owner");
+                        _logger.LogInformation($"Adding user {createdByUserId.Value} as company owner");
                         var brandUser = new BrandUser
                         {
                             Id = Guid.NewGuid(),
-                            UserId = userId,
+                            UserId = createdByUserId.Value,
                             BrandId = brand.Id,
                             Brand = brand
                         };

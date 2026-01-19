@@ -69,6 +69,9 @@ namespace CompanyAPI.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Logo")
                         .HasColumnType("nvarchar(max)");
 
@@ -140,6 +143,8 @@ namespace CompanyAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BrandId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BrandUsers");
                 });
@@ -288,7 +293,7 @@ namespace CompanyAPI.Migrations
             modelBuilder.Entity("CompanyAPI.Entities.BrandUser", b =>
                 {
                     b.HasOne("CompanyAPI.Entities.Brand", "Brand")
-                        .WithMany()
+                        .WithMany("BrandUsers")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
