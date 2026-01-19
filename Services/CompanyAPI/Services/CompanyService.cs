@@ -219,7 +219,10 @@ namespace CompanyAPI.Services
                 }
                 else
                 {
-                    _logger.LogWarning($"Invalid role '{addUserDto.Role}' provided, defaulting to Member");
+                    var sanitizedRole = (addUserDto.Role ?? string.Empty)
+                        .Replace("\r", string.Empty)
+                        .Replace("\n", string.Empty);
+                    _logger.LogWarning($"Invalid role '{sanitizedRole}' provided, defaulting to Member");
                 }
                 
                 var brandUser = new BrandUser
