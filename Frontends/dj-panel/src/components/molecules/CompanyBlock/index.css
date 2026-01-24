@@ -160,6 +160,44 @@
   color: var(--dl-color-theme-text-secondary);
 }
 
+.company-info-create {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-unit);
+  padding: var(--dl-space-space-twounits);
+  border-radius: var(--dl-radius-radius-radius4);
+  background-color: var(--dl-color-theme-background);
+}
+
+.company-create-description {
+  font-size: 16px;
+  color: var(--dl-color-theme-text-secondary);
+  margin: 0 0 var(--dl-space-space-oneandhalfunits);
+  text-align: center;
+}
+
+.company-create-error {
+  padding: var(--dl-space-space-unit);
+  border-radius: var(--dl-radius-radius-radius4);
+  background-color: #fee;
+  color: #c33;
+  font-size: 14px;
+  margin-bottom: var(--dl-space-space-unit);
+  text-align: center;
+}
+
+.company-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dl-space-space-unit);
+}
+
+.company-create-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--dl-space-space-oneandhalfunits);
+}
+
 @media (max-width: 767px) {
   .company-block-container {
     padding: var(--dl-space-space-twounits);

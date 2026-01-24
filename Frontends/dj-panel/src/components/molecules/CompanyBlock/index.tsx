@@ -51,6 +51,19 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
     userId: '',
     role: 'Member',
   });
+  const [isCreatingCompany, setIsCreatingCompany] = useState(false);
+  const [newCompany, setNewCompany] = useState<UpdateCompanyDTO>({
+    name: '',
+    email: '',
+    phone: '',
+    country: '',
+    city: '',
+    postCode: '',
+    addressLine1: '',
+    addressLine2: '',
+    logo: '',
+  });
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCompanyData();
@@ -129,6 +142,51 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       } else {
         alert('Failed to remove user');
       }
+    }
+  };
+
+  const handleCreateCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError(null);
+
+    // Basic validation
+    if (
+      !newCompany.name ||
+      !newCompany.email ||
+      !newCompany.phone ||
+      !newCompany.country ||
+      !newCompany.city ||
+      !newCompany.postCode ||
+      !newCompany.addressLine1
+    ) {
+      setCreateError('Please fill in all required fields');
+      return;
+    }
+
+    setIsCreatingCompany(true);
+    try {
+      const success = await CompanyService.updateCompany(newCompany);
+      if (success) {
+        await loadCompanyData();
+        setNewCompany({
+          name: '',
+          email: '',
+          phone: '',
+          country: '',
+          city: '',
+          postCode: '',
+          addressLine1: '',
+          addressLine2: '',
+          logo: '',
+        });
+      } else {
+        setCreateError('Failed to create company. Please try again.');
+      }
+    } catch (err) {
+      setCreateError('An error occurred. Please try again.');
+      console.error('Error creating company:', err);
+    } finally {
+      setIsCreatingCompany(false);
     }
   };
 
@@ -282,7 +340,125 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
               )}
             </div>
           ) : (
-            <p>No company information available.</p>
+            <div className="company-info-create">
+              <p className="company-create-description">
+                You don't have a company profile yet. Please fill in your
+                company details to get started.
+              </p>
+
+              {createError && (
+                <div className="company-create-error">{createError}</div>
+              )}
+
+              <form
+                onSubmit={handleCreateCompany}
+                className="company-create-form"
+              >
+                <Input
+                  label="Company Name *"
+                  value={newCompany.name}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="Enter company name"
+                  required
+                />
+
+                <Input
+                  label="Email *"
+                  type="email"
+                  value={newCompany.email}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  placeholder="company@example.com"
+                  required
+                />
+
+                <Input
+                  label="Phone *"
+                  value={newCompany.phone}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
+                  placeholder="+1 (555) 123-4567"
+                  required
+                />
+
+                <Input
+                  label="Country *"
+                  value={newCompany.country}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      country: e.target.value,
+                    }))
+                  }
+                  placeholder="United States"
+                  required
+                />
+
+                <Input
+                  label="City *"
+                  value={newCompany.city}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({ ...prev, city: e.target.value }))
+                  }
+                  placeholder="New York"
+                  required
+                />
+
+                <Input
+                  label="Postal Code *"
+                  value={newCompany.postCode}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      postCode: e.target.value,
+                    }))
+                  }
+                  placeholder="10001"
+                  required
+                />
+
+                <Input
+                  label="Address Line 1 *"
+                  value={newCompany.addressLine1}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      addressLine1: e.target.value,
+                    }))
+                  }
+                  placeholder="123 Main Street"
+                  required
+                />
+
+                <Input
+                  label="Address Line 2"
+                  value={newCompany.addressLine2 || ''}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      addressLine2: e.target.value,
+                    }))
+                  }
+                  placeholder="Suite 100 (optional)"
+                />
+
+                <div className="company-create-actions">
+                  <Button type="submit" disabled={isCreatingCompany}>
+                    {isCreatingCompany ? 'Creating...' : 'Create Company'}
+                  </Button>
+                </div>
+              </form>
+            </div>
           )}
         </div>
 
