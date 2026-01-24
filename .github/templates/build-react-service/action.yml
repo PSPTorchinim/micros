@@ -35,6 +35,8 @@ runs:
     - name: Run Jest Unit Tests
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
+      env:
+        REACT_APP_API_SECURE_KEY: test_secure_key_for_ci
       run: npm run test
 
     - name: Get Playwright version
