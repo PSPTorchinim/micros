@@ -156,7 +156,9 @@ describe('CompanyBlock', () => {
     expect(screen.getByPlaceholderText('Company Name')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Phone')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create company/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /create company/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows message when no users are assigned', async () => {
