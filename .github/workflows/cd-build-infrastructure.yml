@@ -621,9 +621,11 @@ jobs:
             echo "JWT_KEY=${{ secrets.JWT_KEY }}" >> "$ENV_FILE"
             echo "DJPANEL_USER_EMAIL=${{ vars.DJPANEL_USER_EMAIL }}" >> "$ENV_FILE"
             echo "DJPANEL_USER_PASSWORD=${{ secrets.DJPANEL_USER_PASSWORD }}" >> "$ENV_FILE"
+            echo "SERVICE_API_KEY=${{ secrets.SERVICE_API_KEY }}" >> "$ENV_FILE"
 
             # Microservices Addresses
             echo "IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
+            echo "ASPNETCORE_IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "MUSIC_BE_ADDRESS=${{ vars.MUSIC_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "GEAR_BE_ADDRESS=${{ vars.GEAR_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "DOCUMENTS_BE_ADDRESS=${{ vars.DOCUMENTS_BE_ADDRESS }}" >> "$ENV_FILE"
