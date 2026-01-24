@@ -341,6 +341,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
             </div>
           ) : (
             <div className="company-info-create">
+              <h3>Create Your Company Profile</h3>
               <p className="company-create-description">
                 You don't have a company profile yet. Please fill in your
                 company details to get started.
@@ -360,7 +361,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   onChange={(e) =>
                     setNewCompany((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  placeholder="Enter company name"
+                  placeholder="Company Name"
                   required
                 />
 
@@ -374,7 +375,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                       email: e.target.value,
                     }))
                   }
-                  placeholder="company@example.com"
+                  placeholder="Email"
                   required
                 />
 
@@ -387,7 +388,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                       phone: e.target.value,
                     }))
                   }
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="Phone"
                   required
                 />
 
