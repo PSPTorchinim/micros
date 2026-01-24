@@ -7,6 +7,15 @@ import { CompanyService } from '../../../services/company-service';
 // Mock environment variables
 process.env.REACT_APP_API_SECURE_KEY = 'test-secure-key-for-testing';
 
+// Suppress console.warn for test environment
+const originalWarn = console.warn;
+beforeAll(() => {
+  console.warn = jest.fn();
+});
+afterAll(() => {
+  console.warn = originalWarn;
+});
+
 // Mock the CompanyService
 jest.mock('../../../services/company-service');
 
@@ -50,10 +59,8 @@ describe('CompanyBlock', () => {
     (CompanyService.getCompanyStructure as jest.Mock).mockResolvedValue([]);
   });
 
-  it('renders loading state initially', async () => {
-    await act(async () => {
-      render(<CompanyBlock />);
-    });
+  it('renders loading state initially', () => {
+    render(<CompanyBlock />);
     expect(
       screen.getByText('Loading company information...'),
     ).toBeInTheDocument();
