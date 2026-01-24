@@ -1,8 +1,11 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { CompanyBlock } from './index';
 import { CompanyService } from '../../../services/company-service';
+
+// Mock environment variables
+process.env.REACT_APP_API_SECURE_KEY = 'test-secure-key-for-testing';
 
 // Mock the CompanyService
 jest.mock('../../../services/company-service');
@@ -47,15 +50,19 @@ describe('CompanyBlock', () => {
     (CompanyService.getCompanyStructure as jest.Mock).mockResolvedValue([]);
   });
 
-  it('renders loading state initially', () => {
-    render(<CompanyBlock />);
+  it('renders loading state initially', async () => {
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
     expect(
       screen.getByText('Loading company information...'),
     ).toBeInTheDocument();
   });
 
   it('renders company information after loading', async () => {
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Company Details')).toBeInTheDocument();
@@ -69,7 +76,9 @@ describe('CompanyBlock', () => {
   });
 
   it('renders company users', async () => {
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -83,12 +92,14 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom title and description', async () => {
-    render(
-      <CompanyBlock
-        title="Organization Info"
-        description="Manage your organization"
-      />,
-    );
+    await act(async () => {
+      render(
+        <CompanyBlock
+          title="Organization Info"
+          description="Manage your organization"
+        />,
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Organization Info')).toBeInTheDocument();
@@ -98,13 +109,15 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom section titles', async () => {
-    render(
-      <CompanyBlock
-        companyInfoTitle="Org Details"
-        usersTitle="Team Members"
-        structureTitle="Org Structure"
-      />,
-    );
+    await act(async () => {
+      render(
+        <CompanyBlock
+          companyInfoTitle="Org Details"
+          usersTitle="Team Members"
+          structureTitle="Org Structure"
+        />,
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Org Details')).toBeInTheDocument();
@@ -117,7 +130,9 @@ describe('CompanyBlock', () => {
   it('shows message when no company data is available', async () => {
     (CompanyService.getCompany as jest.Mock).mockResolvedValue(null);
 
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(
@@ -129,7 +144,9 @@ describe('CompanyBlock', () => {
   it('shows message when no users are assigned', async () => {
     (CompanyService.getCompanyUsers as jest.Mock).mockResolvedValue([]);
 
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(
@@ -139,7 +156,9 @@ describe('CompanyBlock', () => {
   });
 
   it('shows message when no structure is defined', async () => {
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(
@@ -151,7 +170,11 @@ describe('CompanyBlock', () => {
   it('applies custom styles', async () => {
     const customStyles = { backgroundColor: 'blue' };
 
-    const { container } = render(<CompanyBlock customStyles={customStyles} />);
+    let container;
+    await act(async () => {
+      const result = render(<CompanyBlock customStyles={customStyles} />);
+      container = result.container;
+    });
 
     await waitFor(() => {
       const companyContainer = container.querySelector(
@@ -165,7 +188,9 @@ describe('CompanyBlock', () => {
   });
 
   it('calls CompanyService methods on mount', async () => {
-    render(<CompanyBlock />);
+    await act(async () => {
+      render(<CompanyBlock />);
+    });
 
     await waitFor(() => {
       expect(CompanyService.getCompany).toHaveBeenCalledTimes(1);
