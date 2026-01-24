@@ -139,7 +139,7 @@ describe('CompanyBlock', () => {
     expect(screen.getByText('Org Structure')).toBeInTheDocument();
   });
 
-  it('shows message when no company data is available', async () => {
+  it('shows creation form when no company data is available', async () => {
     (CompanyService.getCompany as jest.Mock).mockResolvedValue(null);
 
     await act(async () => {
@@ -148,9 +148,15 @@ describe('CompanyBlock', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('No company information available.'),
+        screen.getByText('Create Your Company Profile'),
       ).toBeInTheDocument();
     });
+
+    // Verify form fields are present
+    expect(screen.getByPlaceholderText('Company Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Phone')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create company/i })).toBeInTheDocument();
   });
 
   it('shows message when no users are assigned', async () => {
