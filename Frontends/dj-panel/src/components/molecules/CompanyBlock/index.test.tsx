@@ -64,7 +64,7 @@ describe('CompanyBlock', () => {
     expect(
       screen.getByText('Loading company information...'),
     ).toBeInTheDocument();
-    
+
     // Wait for async updates to complete to avoid act warnings
     await waitFor(() => {
       expect(CompanyService.getCompany).toHaveBeenCalled();
