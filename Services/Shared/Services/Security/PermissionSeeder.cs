@@ -26,7 +26,10 @@ namespace Shared.Services.Security
         {
             try
             {
-                var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL") ?? "http://identity:8080";
+                // Check for ASPNETCORE_IDENTITY_BE_ADDRESS first (matches APIGateway convention), fallback to IDENTITY_API_URL for backward compatibility
+                var identityApiUrl = Environment.GetEnvironmentVariable("ASPNETCORE_IDENTITY_BE_ADDRESS") 
+                    ?? Environment.GetEnvironmentVariable("IDENTITY_API_URL") 
+                    ?? "http://identity:8080";
                 var permissionList = permissions.ToList();
                 _logger.LogInformation("Seeding {Count} permissions to Identity API at {Url} using batch operation", permissionList.Count, identityApiUrl);
 
