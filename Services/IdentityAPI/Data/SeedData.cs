@@ -13,6 +13,7 @@ namespace IdentityAPI.Data
         private readonly IPermissionsRepository permissionsRepository;
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<SeedData> _logger; // Add logger field
+        private readonly IDbContextFactory<IdentityContext> _contextFactory;
 
         public SeedData(IServiceProvider serviceProvider)
         {
@@ -21,6 +22,7 @@ namespace IdentityAPI.Data
             this.permissionsRepository = serviceProvider.GetRequiredService<IPermissionsRepository>();
             this.serviceProvider = serviceProvider;
             this._logger = serviceProvider.GetRequiredService<ILogger<SeedData>>();
+            this._contextFactory = serviceProvider.GetRequiredService<IDbContextFactory<IdentityContext>>();
         }
 
         public async Task InitializeAsync()
@@ -117,25 +119,30 @@ namespace IdentityAPI.Data
             _logger?.LogInformation("Seeding roles at {Time}", DateTime.UtcNow);
             try
             {
+                // Use a single DbContext for the entire operation to ensure proper entity tracking
+                await using var context = await _contextFactory.CreateDbContextAsync();
+                
                 // Check if SuperOwner role already exists with all permissions
-                var existingRoles = await rolesRepository.Get(x => x.Name == "SuperOwner");
-                var existingRole = existingRoles.FirstOrDefault();
+                var existingRole = await context.Set<Role>()
+                    .Include(r => r.Permissions)
+                    .FirstOrDefaultAsync(x => x.Name == "SuperOwner");
                 
                 if (existingRole != null)
                 {
                     _logger?.LogInformation("SuperOwner role already exists, updating permissions at {Time}", DateTime.UtcNow);
                     
-                    // Update permissions for existing role
-                    var allPermissions = await permissionsRepository.Get();
+                    // Get all permissions in the same context
+                    var allPermissions = await context.Set<Permission>().ToListAsync();
                     _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
                     
+                    // Update permissions - EF Core will track changes properly since all entities are in the same context
                     existingRole.Permissions = allPermissions;
-                    await rolesRepository.Update(existingRole);
+                    await context.SaveChangesAsync();
                     _logger?.LogInformation("Permissions updated for SuperOwner role successfully at {Time}", DateTime.UtcNow);
                     return;
                 }
 
-                // Create role without permissions first
+                // Create role with all permissions in a single transaction
                 var newRole = new Role()
                 {
                     Name = "SuperOwner",
@@ -144,57 +151,46 @@ namespace IdentityAPI.Data
                 
                 try
                 {
-                    var addResult = await rolesRepository.Add(newRole);
-                    if (!addResult)
-                    {
-                        _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
-                        // Try to get the existing role
-                        existingRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).FirstOrDefault();
-                        if (existingRole != null)
-                        {
-                            // Update permissions for the existing role
-                            var allPermissions = await permissionsRepository.Get();
-                            existingRole.Permissions = allPermissions;
-                            await rolesRepository.Update(existingRole);
-                            _logger?.LogInformation("Permissions updated for existing SuperOwner role at {Time}", DateTime.UtcNow);
-                        }
-                        return;
-                    }
+                    // Get all permissions in the same context
+                    var allPermissions = await context.Set<Permission>().ToListAsync();
+                    _logger?.LogInformation("Retrieved {Count} permissions for new SuperOwner role", allPermissions.Count);
                     
-                    _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
+                    // Assign permissions before adding - this ensures the junction table entries are created
+                    newRole.Permissions = allPermissions;
+                    
+                    context.Add(newRole);
+                    await context.SaveChangesAsync();
+                    
+                    _logger?.LogInformation("SuperOwner role created with {Count} permissions at {Time}", allPermissions.Count, DateTime.UtcNow);
                 }
                 catch (DbUpdateException ex) when (ex.InnerException?.Message?.Contains("PK_Roles") == true || 
                                                      ex.InnerException?.Message?.Contains("duplicate key") == true)
                 {
                     _logger?.LogWarning("SuperOwner role already exists (caught duplicate key exception), updating permissions at {Time}", DateTime.UtcNow);
-                    // The role was added between our check and insert, get it and update permissions
-                    existingRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).FirstOrDefault();
+                    
+                    // Clear the context to reset change tracker
+                    context.ChangeTracker.Clear();
+                    
+                    // Reload the existing role with permissions in the same context
+                    existingRole = await context.Set<Role>()
+                        .Include(r => r.Permissions)
+                        .FirstOrDefaultAsync(x => x.Name == "SuperOwner");
+                        
                     if (existingRole != null)
                     {
-                        var allPermissions = await permissionsRepository.Get();
+                        var allPermissions = await context.Set<Permission>().ToListAsync();
                         existingRole.Permissions = allPermissions;
-                        await rolesRepository.Update(existingRole);
+                        await context.SaveChangesAsync();
                         _logger?.LogInformation("Permissions updated for existing SuperOwner role at {Time}", DateTime.UtcNow);
                     }
-                    return;
                 }
-
-                // Get the created role and assign permissions
-                var createdRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).First();
-                var permissions = await permissionsRepository.Get();
-                _logger?.LogInformation("Retrieved {Count} permissions for SuperOwner role", permissions.Count);
-                
-                createdRole.Permissions = permissions;
-                await rolesRepository.Update(createdRole);
-                _logger?.LogInformation("Permissions assigned to SuperOwner role successfully at {Time}", DateTime.UtcNow);
                 
                 _logger?.LogInformation("Roles seeded successfully at {Time}", DateTime.UtcNow);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Failed to seed roles at {Time}", DateTime.UtcNow);
-                // Don't re-throw if we've already handled duplicate key exceptions above
-                // This makes the seeding idempotent and won't fail on subsequent runs
+                // Don't re-throw - this makes the seeding idempotent and won't fail on subsequent runs
             }
         }
 
