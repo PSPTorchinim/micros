@@ -17,7 +17,7 @@ namespace CompanyAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -66,11 +66,11 @@ namespace CompanyAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Logo")
                         .HasColumnType("nvarchar(max)");
@@ -123,7 +123,7 @@ namespace CompanyAPI.Migrations
 
                     b.ToTable("BrandCustomFields");
 
-                    b.HasDiscriminator().HasValue("BrandCustomField");
+                    b.HasDiscriminator<string>("Discriminator").HasValue("BrandCustomField");
 
                     b.UseTphMappingStrategy();
                 });
@@ -340,6 +340,8 @@ namespace CompanyAPI.Migrations
             modelBuilder.Entity("CompanyAPI.Entities.Brand", b =>
                 {
                     b.Navigation("BrandCustomFields");
+
+                    b.Navigation("BrandUsers");
 
                     b.Navigation("Packages");
                 });

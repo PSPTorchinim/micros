@@ -19,6 +19,7 @@ namespace CompanyAPI.Migrations
                     BrandEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BrandPhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Logo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -70,7 +71,8 @@ namespace CompanyAPI.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BrandId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    BrandId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -201,6 +203,11 @@ namespace CompanyAPI.Migrations
                 name: "IX_BrandUsers_BrandId",
                 table: "BrandUsers",
                 column: "BrandId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BrandUsers_UserId",
+                table: "BrandUsers",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ElementPackage_PackagesId",
