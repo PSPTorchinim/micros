@@ -65,6 +65,21 @@ namespace Shared.Services.Security
                         _logger.LogWarning("SERVICE_API_KEY environment variable not set - authentication will fail");
                     }
 
+                    // Add secure_key header for SecureMiddleware (required for all /api requests)
+                    var secureKey = Environment.GetEnvironmentVariable("ASPNETCORE_SECURE_KEY");
+                    if (!string.IsNullOrEmpty(secureKey))
+                    {
+                        httpClient.DefaultRequestHeaders.Add("secure_key", secureKey);
+                        if (attempt == 0)
+                        {
+                            _logger.LogDebug("Using secure key for SecureMiddleware authentication");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("ASPNETCORE_SECURE_KEY environment variable not set - requests may be rejected by SecureMiddleware");
+                    }
+
                     // First, check if Identity API is available with a health check
                     try
                     {
