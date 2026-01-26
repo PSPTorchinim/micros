@@ -1,5 +1,6 @@
 ﻿using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Shared.Helpers;
 using Shared.Services.Database;
 
@@ -141,14 +142,42 @@ namespace IdentityAPI.Data
                     Description = "Full access to all functions"
                 };
                 
-                var addResult = await rolesRepository.Add(newRole);
-                if (!addResult)
+                try
                 {
-                    _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
+                    var addResult = await rolesRepository.Add(newRole);
+                    if (!addResult)
+                    {
+                        _logger?.LogWarning("Failed to add SuperOwner role, it may have been added concurrently at {Time}", DateTime.UtcNow);
+                        // Try to get the existing role
+                        existingRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).FirstOrDefault();
+                        if (existingRole != null)
+                        {
+                            // Update permissions for the existing role
+                            var allPermissions = await permissionsRepository.Get();
+                            existingRole.Permissions = allPermissions;
+                            await rolesRepository.Update(existingRole);
+                            _logger?.LogInformation("Permissions updated for existing SuperOwner role at {Time}", DateTime.UtcNow);
+                        }
+                        return;
+                    }
+                    
+                    _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message?.Contains("PK_Roles") == true || 
+                                                     ex.InnerException?.Message?.Contains("duplicate key") == true)
+                {
+                    _logger?.LogWarning("SuperOwner role already exists (caught duplicate key exception), updating permissions at {Time}", DateTime.UtcNow);
+                    // The role was added between our check and insert, get it and update permissions
+                    existingRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).FirstOrDefault();
+                    if (existingRole != null)
+                    {
+                        var allPermissions = await permissionsRepository.Get();
+                        existingRole.Permissions = allPermissions;
+                        await rolesRepository.Update(existingRole);
+                        _logger?.LogInformation("Permissions updated for existing SuperOwner role at {Time}", DateTime.UtcNow);
+                    }
                     return;
                 }
-                
-                _logger?.LogInformation("SuperOwner role created at {Time}", DateTime.UtcNow);
 
                 // Get the created role and assign permissions
                 var createdRole = (await rolesRepository.Get(x => x.Name == "SuperOwner")).First();
