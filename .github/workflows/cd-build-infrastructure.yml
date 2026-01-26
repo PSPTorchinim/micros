@@ -625,7 +625,6 @@ jobs:
 
             # Microservices Addresses
             echo "IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
-            echo "ASPNETCORE_IDENTITY_BE_ADDRESS=${{ vars.IDENTITY_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "MUSIC_BE_ADDRESS=${{ vars.MUSIC_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "GEAR_BE_ADDRESS=${{ vars.GEAR_BE_ADDRESS }}" >> "$ENV_FILE"
             echo "DOCUMENTS_BE_ADDRESS=${{ vars.DOCUMENTS_BE_ADDRESS }}" >> "$ENV_FILE"
