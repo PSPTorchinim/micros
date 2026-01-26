@@ -13,18 +13,18 @@ namespace CompanyAPI.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "Role",
                 table: "BrandUsers",
-                type: "integer",
+                type: "int",
                 nullable: false,
                 defaultValue: 2); // Default to Member (2)
             
             // Update existing records where CreatedByUserId matches UserId to Creator (0)
             migrationBuilder.Sql(@"
-                UPDATE ""BrandUsers"" bu
-                SET ""Role"" = 0
-                FROM ""Brands"" b
-                WHERE bu.""BrandId"" = b.""Id""
-                  AND bu.""UserId"" = b.""CreatedByUserId""
-                  AND b.""CreatedByUserId"" IS NOT NULL;
+                UPDATE [BrandUsers]
+                SET [Role] = 0
+                FROM [Brands] b
+                WHERE [BrandUsers].[BrandId] = b.[Id]
+                  AND [BrandUsers].[UserId] = b.[CreatedByUserId]
+                  AND b.[CreatedByUserId] IS NOT NULL;
             ");
         }
 

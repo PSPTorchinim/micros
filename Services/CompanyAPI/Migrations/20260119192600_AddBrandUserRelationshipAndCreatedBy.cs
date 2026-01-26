@@ -13,7 +13,7 @@ namespace CompanyAPI.Migrations
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
                 table: "Brands",
-                type: "uuid",
+                type: "uniqueidentifier",
                 nullable: true);
 
             migrationBuilder.CreateIndex(
