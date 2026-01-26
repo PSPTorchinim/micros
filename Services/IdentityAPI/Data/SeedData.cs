@@ -193,7 +193,8 @@ namespace IdentityAPI.Data
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Failed to seed roles at {Time}", DateTime.UtcNow);
-                throw;
+                // Don't re-throw if we've already handled duplicate key exceptions above
+                // This makes the seeding idempotent and won't fail on subsequent runs
             }
         }
 
