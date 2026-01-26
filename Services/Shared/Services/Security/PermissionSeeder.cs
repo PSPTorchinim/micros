@@ -195,6 +195,32 @@ namespace Shared.Services.Security
         private async Task<bool> SeedPermissionsIndividuallyAsync(HttpClient httpClient, List<PermissionDefinition> permissions)
         {
             _logger.LogInformation("Seeding {Count} permissions individually", permissions.Count);
+            
+            // Wait a bit longer for Identity API to fully initialize all endpoints
+            _logger.LogInformation("Waiting for Identity API to fully initialize all endpoints...");
+            await Task.Delay(3000); // 3 second delay before attempting individual seeding
+            
+            // Verify health again after delay
+            try
+            {
+                var healthResponse = await httpClient.GetAsync("/healthz/live");
+                if (!healthResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Identity API health check failed after waiting, endpoints may not be ready");
+                }
+                else
+                {
+                    _logger.LogInformation("Identity API health check passed, proceeding with individual permission seeding");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Health check failed before individual seeding, will attempt anyway");
+            }
+
+            int successCount = 0;
+            int skipCount = 0;
+            int failCount = 0;
 
             foreach (var permission in permissions)
             {
@@ -209,8 +235,15 @@ namespace Shared.Services.Security
                         if (existingPermissions != null && existingPermissions.Any())
                         {
                             _logger.LogDebug("Permission {Permission} already exists, skipping", permission.Name);
+                            skipCount++;
                             continue;
                         }
+                    }
+                    else if (checkResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogWarning("Permission endpoint returned NotFound - Identity API may not have permission management endpoints available");
+                        failCount++;
+                        continue;
                     }
 
                     // Create permission
@@ -223,25 +256,38 @@ namespace Shared.Services.Security
                     if (createResponse.IsSuccessStatusCode)
                     {
                         _logger.LogInformation("Successfully seeded permission: {Permission}", permission.Name);
+                        successCount++;
                     }
                     else if (createResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
                     {
                         _logger.LogDebug("Permission {Permission} already exists (conflict), skipping", permission.Name);
+                        skipCount++;
+                    }
+                    else if (createResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogWarning("Failed to seed permission {Permission}: NotFound - Permission endpoints may not be implemented in Identity API", 
+                            permission.Name);
+                        failCount++;
                     }
                     else
                     {
                         _logger.LogWarning("Failed to seed permission {Permission}: {StatusCode}", 
                             permission.Name, createResponse.StatusCode);
+                        failCount++;
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Error seeding permission {Permission}, continuing with others", permission.Name);
+                    failCount++;
                 }
             }
 
-            _logger.LogInformation("Individual permission seeding completed");
-            return true;
+            _logger.LogInformation("Individual permission seeding completed: {Success} created, {Skip} skipped, {Fail} failed", 
+                successCount, skipCount, failCount);
+            
+            // Return true if we had any success or skips (permissions exist), false only if all failed
+            return successCount > 0 || skipCount > 0 || failCount == 0;
         }
 
         private class PermissionDto
