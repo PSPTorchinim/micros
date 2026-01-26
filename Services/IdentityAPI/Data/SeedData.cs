@@ -62,11 +62,32 @@ namespace IdentityAPI.Data
                 var existingUsers = await usersRepository.Get(x => x.Email == email);
                 if (existingUsers.Any())
                 {
-                    _logger?.LogInformation("User with email already exists, skipping seed at {Time}", DateTime.UtcNow);
+                    _logger?.LogInformation("User with email already exists, checking role assignment at {Time}", DateTime.UtcNow);
+                    
+                    // Check if user already has roles assigned
+                    var existingUser = existingUsers.First();
+                    if (existingUser.Roles != null && existingUser.Roles.Any())
+                    {
+                        _logger?.LogInformation("User already has {Count} roles assigned, skipping seed at {Time}", existingUser.Roles.Count, DateTime.UtcNow);
+                        return;
+                    }
+                    
+                    // User exists but has no roles, assign them
+                    _logger?.LogInformation("User exists but has no roles, assigning roles at {Time}", DateTime.UtcNow);
+                    var roles = await rolesRepository.Get();
+                    _logger?.LogInformation("Retrieved {Count} roles for existing user", roles.Count);
+                    
+                    // Clear and add roles to ensure proper tracking
+                    existingUser.Roles = new List<Role>(roles);
+                    await usersRepository.Update(existingUser);
+                    _logger?.LogInformation("Roles assigned to existing user successfully at {Time}", DateTime.UtcNow);
                     return;
                 }
 
-                // Create user without roles first
+                // Create user with roles in a single operation
+                var allRoles = await rolesRepository.Get();
+                _logger?.LogInformation("Retrieved {Count} roles for new user", allRoles.Count);
+                
                 var newUser = new User()
                 {
                     Email = email,
@@ -76,20 +97,12 @@ namespace IdentityAPI.Data
                     Activated = true,
                     ActivationCode = StringHelper.GenerateRandomPassword(5),
                     SecurityStamp = Guid.NewGuid().ToString("N"),
-                    LastPasswordChangeDate = DateTime.UtcNow
+                    LastPasswordChangeDate = DateTime.UtcNow,
+                    Roles = new List<Role>(allRoles) // Assign roles immediately
                 };
                 
                 await usersRepository.Add(newUser);
-                _logger?.LogInformation("Default user created at {Time}", DateTime.UtcNow);
-                
-                // Now retrieve the created user and assign roles
-                var createdUser = (await usersRepository.Get(x => x.Email == email)).First();
-                var roles = await rolesRepository.Get();
-                _logger?.LogInformation("Retrieved {Count} roles for default user", roles.Count);
-                
-                createdUser.Roles = roles;
-                await usersRepository.Update(createdUser);
-                _logger?.LogInformation("Roles assigned to default user successfully at {Time}", DateTime.UtcNow);
+                _logger?.LogInformation("Default user created with {Count} roles at {Time}", allRoles.Count, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
