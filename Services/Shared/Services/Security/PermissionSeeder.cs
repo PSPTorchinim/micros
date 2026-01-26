@@ -82,6 +82,7 @@ namespace Shared.Services.Security
                 else
                 {
                     _logger.LogWarning("Batch permission seeding failed with status: {StatusCode}", createResponse.StatusCode);
+                    _logger.LogDebug("Response: {Response}", await createResponse.Content.ReadAsStringAsync());
                     
                     // Fallback to individual seeding if batch endpoint is not available (404)
                     if (createResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
