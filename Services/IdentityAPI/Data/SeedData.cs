@@ -1,5 +1,4 @@
 ﻿using IdentityAPI.Entities;
-using IdentityAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Shared.Helpers;
 using Shared.Services.Database;
@@ -8,19 +7,11 @@ namespace IdentityAPI.Data
 {
     internal class SeedData : IDatabaseInitializer
     {
-        private readonly IUsersRepository usersRepository;
-        private readonly IRolesRepository rolesRepository;
-        private readonly IPermissionsRepository permissionsRepository;
-        private readonly IServiceProvider serviceProvider;
-        private readonly ILogger<SeedData> _logger; // Add logger field
+        private readonly ILogger<SeedData> _logger;
         private readonly IDbContextFactory<IdentityContext> _contextFactory;
 
         public SeedData(IServiceProvider serviceProvider)
         {
-            this.usersRepository = serviceProvider.GetRequiredService<IUsersRepository>();
-            this.rolesRepository = serviceProvider.GetRequiredService<IRolesRepository>();
-            this.permissionsRepository = serviceProvider.GetRequiredService<IPermissionsRepository>();
-            this.serviceProvider = serviceProvider;
             this._logger = serviceProvider.GetRequiredService<ILogger<SeedData>>();
             this._contextFactory = serviceProvider.GetRequiredService<IDbContextFactory<IdentityContext>>();
         }
@@ -28,24 +19,27 @@ namespace IdentityAPI.Data
         public async Task InitializeAsync()
         {
             _logger?.LogInformation("Starting database initialization at {Time}", DateTime.UtcNow);
-            if (await permissionsRepository.Empty())
+            
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            
+            if (!await context.Set<Permission>().AnyAsync())
             {
                 _logger?.LogInformation("Seeding permissions at {Time}", DateTime.UtcNow);
-                await SeedPermissions();
+                await SeedPermissions(context);
             }
-            if (await rolesRepository.Empty())
+            if (!await context.Set<Role>().AnyAsync())
             {
                 _logger?.LogInformation("Seeding roles at {Time}", DateTime.UtcNow);
-                await SeedRoles();
+                await SeedRoles(context);
             }
-            if (await usersRepository.Empty())
+            if (!await context.Set<User>().AnyAsync())
             {
                 _logger?.LogInformation("Seeding users at {Time}", DateTime.UtcNow);
-                await SeedUsers();
+                await SeedUsers(context);
             }
         }
 
-        private async Task SeedUsers()
+        private async Task SeedUsers(IdentityContext context)
         {
             _logger?.LogInformation("Seeding default user at {Time}", DateTime.UtcNow);
             try
@@ -62,13 +56,15 @@ namespace IdentityAPI.Data
                 }
 
                 // Check if user with this email already exists
-                var existingUsers = await usersRepository.Get(x => x.Email == email);
-                if (existingUsers.Any())
+                var existingUser = await context.Set<User>()
+                    .Include(u => u.Roles)
+                    .FirstOrDefaultAsync(x => x.Email == email);
+                    
+                if (existingUser != null)
                 {
                     _logger?.LogInformation("User with email already exists, checking role assignment at {Time}", DateTime.UtcNow);
                     
                     // Check if user already has roles assigned
-                    var existingUser = existingUsers.First();
                     if (existingUser.Roles != null && existingUser.Roles.Any())
                     {
                         _logger?.LogInformation("User already has {Count} roles assigned, skipping seed at {Time}", existingUser.Roles.Count, DateTime.UtcNow);
@@ -77,18 +73,18 @@ namespace IdentityAPI.Data
                     
                     // User exists but has no roles, assign them
                     _logger?.LogInformation("User exists but has no roles, assigning roles at {Time}", DateTime.UtcNow);
-                    var roles = await rolesRepository.Get();
+                    var roles = await context.Set<Role>().ToListAsync();
                     _logger?.LogInformation("Retrieved {Count} roles for existing user", roles.Count);
                     
-                    // Clear and add roles to ensure proper tracking
-                    existingUser.Roles = new List<Role>(roles);
-                    await usersRepository.Update(existingUser);
+                    // Assign roles to ensure proper tracking
+                    existingUser.Roles = roles;
+                    await context.SaveChangesAsync();
                     _logger?.LogInformation("Roles assigned to existing user successfully at {Time}", DateTime.UtcNow);
                     return;
                 }
 
                 // Create user with roles in a single operation
-                var allRoles = await rolesRepository.Get();
+                var allRoles = await context.Set<Role>().ToListAsync();
                 _logger?.LogInformation("Retrieved {Count} roles for new user", allRoles.Count);
                 
                 var newUser = new User()
@@ -101,10 +97,11 @@ namespace IdentityAPI.Data
                     ActivationCode = StringHelper.GenerateRandomPassword(5),
                     SecurityStamp = Guid.NewGuid().ToString("N"),
                     LastPasswordChangeDate = DateTime.UtcNow,
-                    Roles = new List<Role>(allRoles) // Assign roles immediately
+                    Roles = allRoles // Assign roles immediately
                 };
                 
-                await usersRepository.Add(newUser);
+                context.Add(newUser);
+                await context.SaveChangesAsync();
                 _logger?.LogInformation("Default user created with {Count} roles at {Time}", allRoles.Count, DateTime.UtcNow);
             }
             catch (Exception ex)
@@ -114,14 +111,11 @@ namespace IdentityAPI.Data
             }
         }
 
-        private async Task SeedRoles()
+        private async Task SeedRoles(IdentityContext context)
         {
             _logger?.LogInformation("Seeding roles at {Time}", DateTime.UtcNow);
             try
             {
-                // Use a single DbContext for the entire operation to ensure proper entity tracking
-                await using var context = await _contextFactory.CreateDbContextAsync();
-                
                 // Check if SuperOwner role already exists with all permissions
                 var existingRole = await context.Set<Role>()
                     .Include(r => r.Permissions)
@@ -194,13 +188,13 @@ namespace IdentityAPI.Data
             }
         }
 
-        private async Task SeedPermissions()
+        private async Task SeedPermissions(IdentityContext context)
         {
             _logger?.LogInformation("Seeding permissions at {Time}", DateTime.UtcNow);
             try
             {
                 // Check existing permissions to avoid duplicates
-                var existingPermissions = await permissionsRepository.Get();
+                var existingPermissions = await context.Set<Permission>().ToListAsync();
                 var existingPermissionNames = new HashSet<string>(existingPermissions.Select(p => p.Name));
                 
                 if (existingPermissionNames.Any())
@@ -265,12 +259,9 @@ namespace IdentityAPI.Data
 
                 _logger?.LogInformation("Seeding {Count} new permissions", permissions.Count);
                 
-                // Add all permissions sequentially to avoid duplicate key issues
-                foreach (var permission in permissions)
-                {
-                    await permissionsRepository.Add(permission);
-                    _logger?.LogDebug("Permission seeded: {Permission}", permission.Name);
-                }
+                // Add all permissions in bulk
+                context.AddRange(permissions);
+                await context.SaveChangesAsync();
 
                 _logger?.LogInformation("Permissions seeded successfully at {Time}", DateTime.UtcNow);
             }
