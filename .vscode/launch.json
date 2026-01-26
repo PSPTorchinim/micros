@@ -383,8 +383,8 @@
     {
       "name": "Launch Services Stack",
       "configurations": [
-        "CMS: Strapi Debug", 
         "C#: IdentityAPI Debug",
+        "CMS: Strapi Debug", 
         "C#: PartyAPI Debug",
         "C#: MusicAPI Debug",
         "C#: MailingAPI Debug",
