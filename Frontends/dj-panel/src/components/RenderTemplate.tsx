@@ -202,6 +202,7 @@ export const RenderTemplate: React.FC<Props> = ({
         // Render roles management block without fetching from CMS
         if (mounted) {
           setBlocks([{ __kind: 'roles-management-block' } as ContentBlock]);
+          setError(null);
         }
         return;
       }

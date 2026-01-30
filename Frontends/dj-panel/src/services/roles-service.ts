@@ -14,12 +14,14 @@ export class RolesService {
         return response.data;
       })
       .catch((error) => {
-        return {
-          success: false,
-          data: null,
-          message: error.message,
-          errors: [error.message],
-        };
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: null,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
       });
   }
 
@@ -30,12 +32,14 @@ export class RolesService {
         return response.data;
       })
       .catch((error) => {
-        return {
-          success: false,
-          data: null,
-          message: error.message,
-          errors: [error.message],
-        };
+        return (
+          error.response?.data ?? {
+            success: false,
+            data: null,
+            message: error.message,
+            errors: [error.message],
+          }
+        );
       });
   }
 

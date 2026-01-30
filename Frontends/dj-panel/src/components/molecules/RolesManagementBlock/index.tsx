@@ -57,11 +57,9 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
       if (permissionsResponse.success && permissionsResponse.data) {
         setPermissions(permissionsResponse.data);
       } else {
-        setError(
-          (prevError) =>
-            prevError +
-            ' ' +
-            (permissionsResponse.message || 'Failed to load permissions'),
+        const permissionsError = permissionsResponse.message || 'Failed to load permissions';
+        setError((prevError) =>
+          prevError ? `${prevError}. ${permissionsError}` : permissionsError
         );
       }
     } catch (err) {
@@ -107,7 +105,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
   };
 
   const handleDelete = async (roleId: string) => {
-    if (!confirm('Are you sure you want to delete this role?')) {
+    if (!window.confirm('Are you sure you want to delete this role?')) {
       return;
     }
 
@@ -201,8 +199,8 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         )}
       </div>
 
-      {error && <p className="roles-management-error">{error}</p>}
-      {success && <p className="roles-management-success">{success}</p>}
+      {error && <p className="roles-management-error" role="alert">{error}</p>}
+      {success && <p className="roles-management-success" role="alert">{success}</p>}
 
       {showForm ? (
         <form className="roles-management-form" onSubmit={handleSubmit}>
@@ -239,10 +237,12 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
               {permissions.map((permission) => (
                 <label
                   key={permission.id}
+                  htmlFor={`permission-${permission.id}`}
                   className="roles-management-permission-item"
                 >
                   <input
                     type="checkbox"
+                    id={`permission-${permission.id}`}
                     checked={selectedPermissions.includes(permission.id || '')}
                     onChange={() =>
                       handlePermissionToggle(permission.id || '')
