@@ -78,7 +78,7 @@ namespace IdentityAPI.Services
                             return null;
                         }
                         _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
-                        return _mapper.Map<GetRoleDTO>(req);
+                        return _mapper.Map<GetRoleDTO>(req.First());
                     },
                     DefaultCacheExpiration
                 );
