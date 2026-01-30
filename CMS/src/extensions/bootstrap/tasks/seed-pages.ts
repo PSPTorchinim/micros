@@ -63,6 +63,10 @@ const TEMPLATE_SEEDS = [
     Name: 'Company Template',
     TemplateType: 'Company',
   },
+  {
+    Name: 'Roles Management Template',
+    TemplateType: 'RolesManagement',
+  },
   // Note: Individual article templates are created dynamically in seedArticlePages
 ];
 
@@ -168,6 +172,15 @@ const PAGE_SEEDS = [
     NavigationOrder: 6,
     NavigationAction: 'Link',
     templateName: 'Company Template',
+  },
+  {
+    Title: 'Roles Management',
+    Slug: '/roles-management',
+    Menu: 'NotVisible',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 7,
+    NavigationAction: 'Link',
+    templateName: 'Roles Management Template',
   },
 ];
 
