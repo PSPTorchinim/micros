@@ -42,6 +42,16 @@ function buildRoutesAndNav(
   let routes: React.ReactElement[] = [];
   let nav: NavigationItem[] = [];
 
+  console.log('[buildRoutesAndNav] Building routes for pages:', {
+    count: pages.length,
+    parentPath,
+    pages: pages.map((p: any) => ({ 
+      Title: p.Title, 
+      Slug: p.Slug,
+      documentId: p.documentId 
+    }))
+  });
+
   pages.forEach((page) => {
     const isRoot = !parentPath;
     const rawPath = buildPath(page, parentPath).replace(/^\/+/g, '');
@@ -142,10 +152,20 @@ export function useDynamicRoutes() {
 
   useEffect(() => {
     (async () => {
+      console.log('[DynamicRoutes] Starting to fetch pages...');
       const rootPages = (await StrapiService.getRootPages()) || [];
+      console.log('[DynamicRoutes] Root pages fetched:', {
+        count: rootPages.length,
+        pages: rootPages.map((p: any) => ({ 
+          Title: p.Title, 
+          Slug: p.Slug,
+          documentId: p.documentId 
+        }))
+      });
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
+      console.log('[DynamicRoutes] Pages with children loaded, building routes...');
       let { routes, nav } = buildRoutesAndNav(pagesWithChildren);
 
       if (

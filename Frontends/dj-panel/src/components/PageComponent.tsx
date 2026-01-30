@@ -14,11 +14,18 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
 
   useEffect(() => {
     (async () => {
+      console.log(`[PageComponent] Loading page with pageId: ${pageId}`);
       if (!pageId) {
+        console.log('[PageComponent] No pageId provided, setting page to null');
         setPage(null);
         return;
       }
       const fetchedPage = await StrapiService.fetchPageById(pageId);
+      console.log(`[PageComponent] Page fetched:`, fetchedPage ? {
+        Title: (fetchedPage as any).Title,
+        Slug: (fetchedPage as any).Slug,
+        template: (fetchedPage as any).template
+      } : 'null');
       setPage(fetchedPage || null);
     })();
   }, [pageId]);

@@ -42,6 +42,7 @@ export const RenderTemplate: React.FC<Props> = ({
       }
 
       try {
+        console.log(`[RenderTemplate] Fetching template with documentId: ${template}`);
         setLoading(true);
         setError(null);
 
@@ -51,11 +52,17 @@ export const RenderTemplate: React.FC<Props> = ({
           ? await StrapiService.getTemplateByDocumentId(template)
           : await StrapiService.getTemplateById(template);
 
+        console.log(`[RenderTemplate] Template loaded:`, t ? {
+          Name: (t as any).Name,
+          TemplateType: (t as any).TemplateType
+        } : 'null');
+
         if (!mounted) return;
         setTpl(t ?? null);
       } catch (e: unknown) {
         if (!mounted) return;
         const error = e as Error;
+        console.error('[RenderTemplate] Error fetching template:', error);
         setTpl(null);
         setBlocks([]);
         setError(error?.message || 'Failed to fetch template');
@@ -77,6 +84,8 @@ export const RenderTemplate: React.FC<Props> = ({
     const run = async () => {
       // Get template type
       const templateType = tpl?.TemplateType;
+      
+      console.log('[RenderTemplate] Processing template type:', templateType);
 
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
@@ -199,6 +208,7 @@ export const RenderTemplate: React.FC<Props> = ({
       }
 
       if (templateType === 'RolesManagement') {
+        console.log('[RenderTemplate] Detected RolesManagement template, rendering roles-management-block');
         // Render roles management block without fetching from CMS
         if (mounted) {
           setBlocks([{ __kind: 'roles-management-block' } as ContentBlock]);
