@@ -25,17 +25,14 @@ namespace IdentityAPI.Data
 
             // Register service API key authorization for service-to-service permission seeding
             services.AddSingleton<IAuthorizationHandler, ServiceApiKeyAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationHandler, PermissionBatchCreateAuthorizationHandler>();
 
             // Add authorization policy for batch permission endpoint that allows either role-based or service API key auth
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("PermissionBatchCreate", policy =>
                 {
-                    policy.Requirements.Add(new ServiceApiKeyRequirement());
-                    // Users with permissions:create role can also use this endpoint
-                    policy.RequireAssertion(context =>
-                        context.User.IsInRole("permissions:create") ||
-                        context.HasSucceeded);
+                    policy.Requirements.Add(new PermissionBatchCreateRequirement());
                 });
             });
         }
