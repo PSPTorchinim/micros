@@ -57,15 +57,14 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
       if (permissionsResponse.success && permissionsResponse.data) {
         setPermissions(permissionsResponse.data);
       } else {
-        const permissionsError = permissionsResponse.message || 'Failed to load permissions';
+        const permissionsError =
+          permissionsResponse.message || 'Failed to load permissions';
         setError((prevError) =>
-          prevError ? `${prevError}. ${permissionsError}` : permissionsError
+          prevError ? `${prevError}. ${permissionsError}` : permissionsError,
         );
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load data',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -120,9 +119,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         setError(response.message || 'Failed to delete role');
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to delete role',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to delete role');
     }
   };
 
@@ -156,15 +153,11 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         await loadData();
       } else {
         setError(
-          response.message ||
-            response.errors?.[0] ||
-            'Failed to save role',
+          response.message || response.errors?.[0] || 'Failed to save role',
         );
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to save role',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to save role');
     } finally {
       setIsSubmitting(false);
     }
@@ -199,15 +192,23 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         )}
       </div>
 
-      {error && <p className="roles-management-error" role="alert">{error}</p>}
-      {success && <p className="roles-management-success" role="alert">{success}</p>}
+      {error && (
+        <p className="roles-management-error" role="alert">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="roles-management-success" role="alert">
+          {success}
+        </p>
+      )}
 
       {showForm ? (
         <form className="roles-management-form" onSubmit={handleSubmit}>
           <h2 className="roles-management-form-title">
             {editingRoleId ? 'Edit Role' : 'Create New Role'}
           </h2>
-          
+
           <Input
             label="Role Name"
             type="text"
@@ -244,9 +245,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
                     type="checkbox"
                     id={`permission-${permission.id}`}
                     checked={selectedPermissions.includes(permission.id || '')}
-                    onChange={() =>
-                      handlePermissionToggle(permission.id || '')
-                    }
+                    onChange={() => handlePermissionToggle(permission.id || '')}
                   />
                   <span className="roles-management-permission-name">
                     {permission.name}
