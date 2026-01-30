@@ -501,11 +501,20 @@ jobs:
             echo "$CLEAN_B64" | base64 -d > previous-compose.yml
             echo "✅ Previous compose file saved to: previous-compose.yml"
             
-            # Verify the file is valid YAML
+            # Verify the file is valid YAML and has services
             if yq eval '.' previous-compose.yml >/dev/null 2>&1; then
               echo "✅ Previous compose file is valid YAML"
-              echo "Services in previous compose:"
-              yq eval '.services | keys | .[]' previous-compose.yml | head -10
+              
+              # Check if services key exists and is a map (not null)
+              services_type=$(yq eval '.services | type' previous-compose.yml 2>/dev/null || echo "null")
+              if [ "$services_type" = "!!map" ]; then
+                echo "Services in previous compose:"
+                yq eval '.services | keys | .[]' previous-compose.yml 2>/dev/null | head -10 || echo "  (Could not list services)"
+              else
+                echo "⚠️  Previous compose file has no valid services section (type: $services_type)"
+                echo "⚠️  Will generate from scratch"
+                rm -f previous-compose.yml
+              fi
             else
               echo "⚠️  Previous compose file is not valid YAML, will generate from scratch"
               rm -f previous-compose.yml
