@@ -21,11 +21,16 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
         return;
       }
       const fetchedPage = await StrapiService.fetchPageById(pageId);
-      console.log(`[PageComponent] Page fetched:`, fetchedPage ? {
-        Title: (fetchedPage as any).Title,
-        Slug: (fetchedPage as any).Slug,
-        template: (fetchedPage as any).template
-      } : 'null');
+      console.log(
+        `[PageComponent] Page fetched:`,
+        fetchedPage
+          ? {
+              Title: (fetchedPage as any).Title,
+              Slug: (fetchedPage as any).Slug,
+              template: (fetchedPage as any).template,
+            }
+          : 'null',
+      );
       setPage(fetchedPage || null);
     })();
   }, [pageId]);

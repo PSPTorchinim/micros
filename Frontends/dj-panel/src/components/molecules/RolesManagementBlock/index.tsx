@@ -236,15 +236,20 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
             </label>
             {(() => {
               // Group permissions by their prefix (part before ':')
-              const grouped = permissions.reduce((acc, permission) => {
-                const name = permission.name || '';
-                const prefix = name.includes(':') ? name.split(':')[0] : 'other';
-                if (!acc[prefix]) {
-                  acc[prefix] = [];
-                }
-                acc[prefix].push(permission);
-                return acc;
-              }, {} as Record<string, typeof permissions>);
+              const grouped = permissions.reduce(
+                (acc, permission) => {
+                  const name = permission.name || '';
+                  const prefix = name.includes(':')
+                    ? name.split(':')[0]
+                    : 'other';
+                  if (!acc[prefix]) {
+                    acc[prefix] = [];
+                  }
+                  acc[prefix].push(permission);
+                  return acc;
+                },
+                {} as Record<string, typeof permissions>,
+              );
 
               // Sort groups by name
               const sortedGroups = Object.keys(grouped).sort();

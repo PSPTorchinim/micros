@@ -69,12 +69,12 @@ export class StrapiService {
       });
       console.log('[StrapiService] Root pages response:', {
         count: response.data.data?.length,
-        pages: response.data.data?.map((p: any) => ({ 
-          id: p.id, 
-          Title: p.Title, 
+        pages: response.data.data?.map((p: any) => ({
+          id: p.id,
+          Title: p.Title,
           Slug: p.Slug,
-          documentId: p.documentId
-        }))
+          documentId: p.documentId,
+        })),
       });
       return response.data.data;
     } catch (error) {
@@ -104,21 +104,31 @@ export class StrapiService {
     pageDocumentId: string,
   ): Promise<Page | null> {
     try {
-      console.log(`[StrapiService] Fetching page by documentId: ${pageDocumentId}`);
+      console.log(
+        `[StrapiService] Fetching page by documentId: ${pageDocumentId}`,
+      );
       const response = await microservicesClient.strapi.page.getPages({
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
         populate: '*',
       });
       const page = response?.data?.data?.[0] || null;
-      console.log(`[StrapiService] Page fetched:`, page ? {
-        id: page.id,
-        Title: (page as any).Title,
-        Slug: (page as any).Slug,
-        template: (page as any).template
-      } : 'null');
+      console.log(
+        `[StrapiService] Page fetched:`,
+        page
+          ? {
+              id: page.id,
+              Title: (page as any).Title,
+              Slug: (page as any).Slug,
+              template: (page as any).template,
+            }
+          : 'null',
+      );
       return page;
     } catch (error) {
-      console.error(`[StrapiService] Error fetching page by ID ${pageDocumentId}:`, error);
+      console.error(
+        `[StrapiService] Error fetching page by ID ${pageDocumentId}:`,
+        error,
+      );
       return null;
     }
   }
@@ -130,17 +140,24 @@ export class StrapiService {
   // DEPRECATED alias – kept for compatibility, but includes proper populate.on
   public static async getTemplateById(templateDocumentId: string) {
     try {
-      console.log(`[StrapiService] Fetching template by ID: ${templateDocumentId}`);
+      console.log(
+        `[StrapiService] Fetching template by ID: ${templateDocumentId}`,
+      );
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
         populate: TEMPLATE_CONTENT_POPULATE as any,
       });
       const template = response?.data?.data?.[0] || null;
-      console.log(`[StrapiService] Template fetched:`, template ? {
-        Name: (template as any).Name,
-        TemplateType: (template as any).TemplateType,
-        documentId: (template as any).documentId
-      } : 'null');
+      console.log(
+        `[StrapiService] Template fetched:`,
+        template
+          ? {
+              Name: (template as any).Name,
+              TemplateType: (template as any).TemplateType,
+              documentId: (template as any).documentId,
+            }
+          : 'null',
+      );
       return template;
     } catch (error) {
       console.error(
