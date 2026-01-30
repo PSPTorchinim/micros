@@ -43,7 +43,7 @@ namespace IdentityAPI.Controllers
 
         [HttpGet("{id}")]
         [ResponseCache(CacheProfileName = CacheProfiles.Medium)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<Role>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<GetRoleDTO>))]
         public async Task<IActionResult> GetRoleV1(Guid id)
         {
             return await Handle(async () =>

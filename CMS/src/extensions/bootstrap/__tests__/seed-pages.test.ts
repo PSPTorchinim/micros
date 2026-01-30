@@ -14,6 +14,8 @@ describe('Seed Pages', () => {
       { Name: 'Forgot Password Template', TemplateType: 'ForgotPassword' },
       { Name: 'Change Password Template', TemplateType: 'ChangePassword' },
       { Name: 'Profile Template', TemplateType: 'Profile' },
+      { Name: 'Company Template', TemplateType: 'Company' },
+      { Name: 'Roles Management Template', TemplateType: 'RolesManagement' },
     ];
 
     it('should have templates for all essential pages', () => {
@@ -27,6 +29,8 @@ describe('Seed Pages', () => {
         'ForgotPassword',
         'ChangePassword',
         'Profile',
+        'Company',
+        'RolesManagement',
       ];
       TEMPLATE_SEEDS.forEach((template) => {
         expect(template.Name).toBeDefined();
