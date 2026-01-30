@@ -165,7 +165,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(redis_memory_used_bytes{job=\"redis\"} / redis_memory_max_bytes{job=\"redis\"}) * 100",
+          "expr": "(redis_memory_used_bytes{job=\"redis\"} / clamp_min(redis_memory_max_bytes{job=\"redis\"}, 1)) * 100",
           "refId": "A"
         }
       ],

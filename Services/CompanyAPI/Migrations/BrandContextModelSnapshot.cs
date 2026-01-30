@@ -17,7 +17,7 @@ namespace CompanyAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -65,6 +65,9 @@ namespace CompanyAPI.Migrations
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -120,7 +123,7 @@ namespace CompanyAPI.Migrations
 
                     b.ToTable("BrandCustomFields");
 
-                    b.HasDiscriminator().HasValue("BrandCustomField");
+                    b.HasDiscriminator<string>("Discriminator").HasValue("BrandCustomField");
 
                     b.UseTphMappingStrategy();
                 });
@@ -134,12 +137,17 @@ namespace CompanyAPI.Migrations
                     b.Property<Guid>("BrandId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BrandId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BrandUsers");
                 });
@@ -288,7 +296,7 @@ namespace CompanyAPI.Migrations
             modelBuilder.Entity("CompanyAPI.Entities.BrandUser", b =>
                 {
                     b.HasOne("CompanyAPI.Entities.Brand", "Brand")
-                        .WithMany()
+                        .WithMany("BrandUsers")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -332,6 +340,8 @@ namespace CompanyAPI.Migrations
             modelBuilder.Entity("CompanyAPI.Entities.Brand", b =>
                 {
                     b.Navigation("BrandCustomFields");
+
+                    b.Navigation("BrandUsers");
 
                     b.Navigation("Packages");
                 });

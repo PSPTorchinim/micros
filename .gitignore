@@ -16,3 +16,4 @@ Docker/init/grafana/dashboards/*.json
 
 # CodeQL auto-fix generated reports
 codeql-report.md
+*.md

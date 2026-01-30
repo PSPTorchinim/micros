@@ -1,50 +1,36 @@
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { renderBlock } from './renderBlock';
+import { renderBlock, type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
-import type { RefComponent, ContentBlock } from '../types/content-blocks';
 
 /**
- * Renderer komponentu referencyjnego (np. "image-slider-ref.image-slider-ref").
- * Zakłada, że w payloadzie ref-komponentu jest pole relacyjne z documentId:
- *  - article-block-ref.article-block-ref -> field: "block"
- *  - hero-block-ref.hero-block-ref -> "hero_block"
- *  - image-slider-ref.image-slider-ref -> "slider"
- *  - steps-container-ref.steps-container-ref -> "container"
- *  - cta-ref.cta-ref -> "cta"
- *  - feature-section-ref.feature-section-ref -> "feature_section"
- *  - contact-section-ref.contact-section-ref -> "contact_section"
- *  - feature-tab-ref.feature-tab-ref -> "feature_tab"
- *  - contact-info-ref.contact-info-ref -> "contact_info"
+ * Reference components that need to be resolved
  */
-const FIELD_BY_REF: Record<string, string> = {
-  'article-block-ref.article-block-ref': 'block',
-  'hero-block-ref.hero-block-ref': 'hero_block',
-  'image-slider-ref.image-slider-ref': 'slider',
-  'steps-container-ref.steps-container-ref': 'container',
-  'cta-ref.cta-ref': 'cta',
-  'feature-section-ref.feature-section-ref': 'feature_section',
-  'contact-section-ref.contact-section-ref': 'contact_section',
-  'feature-tab-ref.feature-tab-ref': 'feature_tab',
-  'contact-info-ref.contact-info-ref': 'contact_info',
-};
+export interface RefComponent {
+  __component: string;
+  id?: number;
+  documentId?: string;
+  [key: string]: unknown;
+}
 
-// uniwersalny ekstraktor documentId z różnych kształtów populate
-function getDocId(input: unknown): string | undefined {
+/**
+ * Extracts documentId from various Strapi populate shapes
+ * @param input - The input object, string, or undefined
+ * @returns The documentId as a string, or undefined if not found
+ */
+export function getDocId(input: unknown): string | undefined {
+  if (typeof input === 'string') return input;
   if (!input || typeof input !== 'object') return undefined;
 
   const obj = input as Record<string, unknown>;
 
-  // Najczęstszy przypadek u Ciebie: obiekt z documentId
+  // Most common case: object with documentId field
   if (typeof obj.documentId === 'string') return obj.documentId;
 
-  // czasem API zwraca stringa (np. connect: ["docId"])
-  if (typeof input === 'string') return input;
-
-  // niektóre klienty spłaszczają id jako string
+  // Some clients flatten id as string
   if (obj.id && typeof obj.id === 'string') return obj.id;
 
-  // Strapi v4/v5 warianty z data/attributes
+  // Strapi v4/v5 variants with data/attributes
   const data = obj.data as Record<string, unknown> | undefined;
   if (
     data?.attributes &&
@@ -57,6 +43,92 @@ function getDocId(input: unknown): string | undefined {
   return undefined;
 }
 
+// Mapping of ref component names to their relational field names
+export const FIELD_BY_REF: Record<string, string> = {
+  'article-block-ref.article-block-ref': 'block',
+  'hero-block-ref.hero-block-ref': 'hero_block',
+  'image-slider-ref.image-slider-ref': 'slider',
+  'steps-container-ref.steps-container-ref': 'container',
+  'cta-ref.cta-ref': 'cta',
+  'feature-section-ref.feature-section-ref': 'feature_section',
+  'contact-section-ref.contact-section-ref': 'contact_section',
+  'feature-tab-ref.feature-tab-ref': 'feature_tab',
+  'contact-info-ref.contact-info-ref': 'contact_info',
+};
+
+/**
+ * Recursively processes content blocks to prepare them for rendering.
+ * - Ref components are returned as-is (will be handled by RefBlockRenderer)
+ * - Regular blocks with nested components/arrays are processed recursively
+ * - Other blocks are returned unchanged
+ *
+ * @param block - A content block, ref component, or array of them
+ * @returns Processed content block(s)
+ */
+export function transformStrapiBlocks(
+  block: ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
+): ContentBlock | ContentBlock[] {
+  // Handle arrays
+  if (Array.isArray(block)) {
+    return block.map(transformStrapiBlocks) as ContentBlock[];
+  }
+
+  if (!block || typeof block !== 'object') {
+    return block as ContentBlock;
+  }
+
+  // Check if this is a ref component - return as-is, RefBlockRenderer will handle it
+  if (
+    '__component' in block &&
+    block.__component &&
+    block.__component.endsWith('-ref')
+  ) {
+    return block as ContentBlock;
+  }
+
+  // For regular blocks, recursively process nested fields
+  const resolved: Record<string, unknown> = {
+    ...(block as Record<string, unknown>),
+  };
+
+  let hasNestedComponents = false;
+  for (const key of Object.keys(block)) {
+    const value = (block as Record<string, unknown>)[key];
+    if (
+      Array.isArray(value) ||
+      (value &&
+        typeof value === 'object' &&
+        '__component' in (value as Record<string, unknown>))
+    ) {
+      hasNestedComponents = true;
+      resolved[key] = transformStrapiBlocks(
+        value as ContentBlock | RefComponent | (ContentBlock | RefComponent)[],
+      );
+    }
+  }
+
+  // Return original block if no transformations were made to avoid unnecessary object allocation
+  return hasNestedComponents
+    ? (resolved as unknown as ContentBlock)
+    : (block as ContentBlock);
+}
+
+/**
+ * Unified renderer for ref components that handles both populated and non-populated data.
+ * First checks if data is already populated (from deep populate), then falls back to async fetching.
+ *
+ * Supported ref components:
+ *  - article-block-ref.article-block-ref -> field: "block"
+ *  - hero-block-ref.hero-block-ref -> "hero_block"
+ *  - image-slider-ref.image-slider-ref -> "slider"
+ *  - steps-container-ref.steps-container-ref -> "container"
+ *  - cta-ref.cta-ref -> "cta"
+ *  - feature-section-ref.feature-section-ref -> "feature_section"
+ *  - contact-section-ref.contact-section-ref -> "contact_section"
+ *  - feature-tab-ref.feature-tab-ref -> "feature_tab"
+ *  - contact-info-ref.contact-info-ref -> "contact_info"
+ */
+
 interface Props {
   block: RefComponent;
   index: number;
@@ -64,15 +136,28 @@ interface Props {
 
 export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const refUID = block.__component as string;
-  const base = refUID?.split('-ref')[0]; // 'image-slider', 'article-block', ...
+  const base = refUID?.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
   const relField = FIELD_BY_REF[refUID];
 
   const relObj = relField ? block[relField] : undefined;
-  const docId = getDocId(relObj);
-  const numericId =
-    typeof (relObj as Record<string, unknown>)?.id === 'number'
-      ? ((relObj as Record<string, unknown>).id as number)
-      : undefined;
+
+  // Check if data is already populated - must have actual data fields beyond just id
+  const isPopulated = React.useMemo(() => {
+    if (!relObj || typeof relObj !== 'object') return false;
+
+    const keys = Object.keys(relObj as Record<string, unknown>);
+    if (keys.length <= 1) return false;
+
+    return (
+      'documentId' in relObj ||
+      'Title' in relObj ||
+      '__component' in relObj ||
+      keys.some(
+        (key) =>
+          key !== 'id' && (relObj as Record<string, unknown>)[key] !== null,
+      )
+    );
+  }, [relObj]);
 
   const [resolved, setResolved] = React.useState<ContentBlock | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -80,19 +165,42 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   React.useEffect(() => {
     let cancel = false;
 
-    const fetchRef = async () => {
-      setError(null);
-      setResolved(null);
-
+    const resolveRef = async () => {
       try {
         if (!base) {
           setError('Unknown ref base');
           return;
         }
 
+        if (!relField) {
+          setError(`Unknown ref type: ${refUID}`);
+          return;
+        }
+
+        // Fast path: data is already populated
+        if (isPopulated) {
+          if (!cancel) {
+            setResolved({
+              __kind: base,
+              ...(relObj as Record<string, unknown>),
+            } as ContentBlock);
+          }
+          return;
+        }
+
+        // Slow path: need to fetch data async
+        setError(null);
+        setResolved(null);
+
+        const docId = getDocId(relObj);
+        const numericId =
+          typeof (relObj as Record<string, unknown>)?.id === 'number'
+            ? ((relObj as Record<string, unknown>).id as number)
+            : undefined;
+
         let data: unknown = null;
 
-        // 1) Preferuj documentId (stabilny identyfikator)
+        // Try fetching by documentId first (stable identifier)
         if (docId) {
           switch (base) {
             case 'article-block':
@@ -129,7 +237,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
           }
         }
 
-        // 2) Fallback: po numerycznym id (gdyby documentId nie przyszedł)
+        // Fallback: try numeric id
         if (!data && numericId) {
           switch (base) {
             case 'article-block':
@@ -180,7 +288,6 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
           return;
         }
 
-        // Doklej znacznik typu, żeby renderBlock nie musiał zgadywać
         setResolved({
           __kind: base,
           ...(data as Record<string, unknown>),
@@ -192,11 +299,11 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
       }
     };
 
-    fetchRef();
+    resolveRef();
     return () => {
       cancel = true;
     };
-  }, [refUID, base, relField, docId, numericId]);
+  }, [refUID, base, relField, block]);
 
   if (error) {
     return (

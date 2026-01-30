@@ -9,3 +9,7 @@ export { FeatureTabBlock } from './FeatureTabBlock';
 export { ContactInfoBlock } from './ContactInfoBlock';
 export { LoginBlock } from './LoginBlock';
 export { ForgotPasswordBlock } from './ForgotPasswordBlock';
+export { ChangePasswordBlock } from './ChangePasswordBlock';
+export { ProfileBlock } from './ProfileBlock';
+export { CompanyBlock } from './CompanyBlock';
+export { CreateCompanyModal } from './CreateCompanyModal';

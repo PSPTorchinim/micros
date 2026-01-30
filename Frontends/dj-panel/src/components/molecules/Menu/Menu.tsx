@@ -4,26 +4,10 @@ import './Menu.css';
 import { useMenuLogic } from './menuUtils';
 import { ConfigurationMenuEnum } from '../../../models/api/strapi/apiMap';
 import { Button } from '../../atoms';
-import type {
-  PageAuthStateEnum1,
-  PageMenuEnum1,
-  PageNavigationActionEnum1,
-} from '../../../models/api/strapi/apiMap';
-
-export interface MenuNavigationItem {
-  id: number;
-  text: string;
-  url?: string;
-  children?: MenuNavigationItem[];
-  NavigationOrder?: number;
-  Menu?: PageMenuEnum1;
-  AuthState?: PageAuthStateEnum1;
-  NavigationAction?: PageNavigationActionEnum1;
-  permissions?: string[];
-}
+import type { NavigationItem } from '../../DynamicRoutes';
 
 export interface MenuProps {
-  links?: MenuNavigationItem[];
+  links?: NavigationItem[];
   logoSrc?: string;
   logoAlt?: string;
 }
@@ -88,7 +72,7 @@ export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
     }
   };
 
-  const renderLinks = (items: MenuNavigationItem[]): React.ReactNode => {
+  const renderLinks = (items: NavigationItem[]): React.ReactNode => {
     return items
       .filter((element) => hasPermission(element.permissions))
       .map((element) => {

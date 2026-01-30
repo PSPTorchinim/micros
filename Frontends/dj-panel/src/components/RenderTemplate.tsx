@@ -1,15 +1,14 @@
 // components/RenderTemplate.tsx
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { mapStrapiContentToFrontend } from '../utils/mapStrapiContentToFrontend';
-import { RefBlockRenderer } from './RefBlockRenderer';
-import renderBlock from './renderBlock';
+import {
+  transformStrapiBlocks,
+  RefBlockRenderer,
+  type RefComponent,
+} from './RefBlockRenderer';
+import renderBlock, { type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
-import type {
-  TemplateEntity,
-  ContentBlock,
-  RefComponent,
-} from '../types/content-blocks';
+import type { Template } from '../models/api/strapi/apiMap';
 
 type Props = {
   /** documentId templatek (Strapi v5) */
@@ -25,7 +24,7 @@ export const RenderTemplate: React.FC<Props> = ({
   populateDeep = 5,
   pageTitle,
 }) => {
-  const [tpl, setTpl] = React.useState<TemplateEntity | null>(null);
+  const [tpl, setTpl] = React.useState<Template | null>(null);
   const [blocks, setBlocks] = React.useState<ContentBlock[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -71,31 +70,30 @@ export const RenderTemplate: React.FC<Props> = ({
     };
   }, [template]);
 
-  // 2) Wyciągnij bloki Content i zrób dereferencję ref-komponentów
+  // 2) Extract Content blocks and transform ref-components
   React.useEffect(() => {
     let mounted = true;
 
     const run = async () => {
       // Get template type
-      const templateType = tpl?.attributes?.TemplateType || tpl?.TemplateType;
+      const templateType = tpl?.TemplateType;
 
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
           const loginBlock = await StrapiService.getLoginBlockSingleton();
           if (mounted) {
-            if (loginBlock) {
-              setBlocks([
-                { __kind: 'login-block', ...loginBlock } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              { __kind: 'login-block', ...(loginBlock || {}) } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching login block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'login-block' } as ContentBlock]);
             setError(null);
           }
         }
@@ -107,21 +105,93 @@ export const RenderTemplate: React.FC<Props> = ({
           const forgotPasswordBlock =
             await StrapiService.getForgotPasswordBlockSingleton();
           if (mounted) {
-            if (forgotPasswordBlock) {
-              setBlocks([
-                {
-                  __kind: 'forgot-password-block',
-                  ...forgotPasswordBlock,
-                } as ContentBlock,
-              ]);
-            } else {
-              setBlocks([]);
-            }
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'forgot-password-block',
+                ...(forgotPasswordBlock || {}),
+              } as ContentBlock,
+            ]);
           }
         } catch (e) {
           console.error('Error fetching forgot password block singleton:', e);
           if (mounted) {
-            setBlocks([]);
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'forgot-password-block' } as ContentBlock]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
+      if (templateType === 'ChangePassword') {
+        try {
+          const changePasswordBlock =
+            await StrapiService.getChangePasswordBlockSingleton();
+          if (mounted) {
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'change-password-block',
+                ...(changePasswordBlock || {}),
+              } as ContentBlock,
+            ]);
+          }
+        } catch (e) {
+          console.error('Error fetching change password block singleton:', e);
+          if (mounted) {
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
+      if (templateType === 'Profile') {
+        try {
+          const profileBlock = await StrapiService.getProfileBlockSingleton();
+          if (mounted) {
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'profile-block',
+                ...(profileBlock || {}),
+              } as ContentBlock,
+            ]);
+          }
+        } catch (e) {
+          console.error('Error fetching profile block singleton:', e);
+          if (mounted) {
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
+      if (templateType === 'Company') {
+        try {
+          const companyBlock = await StrapiService.getCompanyBlockSingleton();
+          if (mounted) {
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'company-block',
+                ...(companyBlock || {}),
+              } as ContentBlock,
+            ]);
+          }
+        } catch (e) {
+          console.error('Error fetching company block singleton:', e);
+          if (mounted) {
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'company-block' } as ContentBlock]);
             setError(null);
           }
         }
@@ -130,9 +200,9 @@ export const RenderTemplate: React.FC<Props> = ({
 
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
-        tpl?.attributes?.Content,
+        tpl?.Content,
       )
-        ? tpl!.attributes!.Content
+        ? tpl!.Content
         : Array.isArray(tpl?.Content)
           ? tpl.Content
           : [];
@@ -169,8 +239,8 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
-      // Rekurencyjna dereferencja:
-      const resolved = await mapStrapiContentToFrontend(contentBlocks);
+      // Synchronous transformation of populated ref-components
+      const resolved = transformStrapiBlocks(contentBlocks);
       if (mounted) setBlocks(resolved as ContentBlock[]);
     };
 

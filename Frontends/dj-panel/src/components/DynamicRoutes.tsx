@@ -10,7 +10,22 @@ import { StrapiService } from '../services/strapi-service';
 import { Route, Outlet } from 'react-router-dom';
 import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
-import { NavigationItem } from '../models/strapi/navigation-item';
+
+/**
+ * Navigation item representing a menu link with optional children
+ * Used for building navigation menus from page data
+ */
+export interface NavigationItem {
+  id: number;
+  text: string;
+  url: string;
+  children?: NavigationItem[];
+  NavigationOrder?: number;
+  Menu?: PageMenuEnum1;
+  AuthState?: PageAuthStateEnum1;
+  NavigationAction?: PageNavigationActionEnum1;
+  permissions?: string[];
+}
 
 function buildPath(page: Page, parentPath = ''): string {
   const slug = (page as any)?.Slug || (page as any)?.Title || (page as any)?.id;

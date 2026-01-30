@@ -1,0 +1,317 @@
+------------------------------------------------------------------------------
+You may only use the Microsoft Visual Studio .NET/C/C++ Debugger (vsdbg) with
+Visual Studio Code, Visual Studio or Visual Studio for Mac software to help you
+develop and test your applications.
+------------------------------------------------------------------------------
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Private.CoreLib.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\CompanyAPI.dll'. Symbole zostały załadowane.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Runtime.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Step into: Stepping over non-user code 'Program.<Main>'
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Hosting.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Http.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Routing.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.ComponentModel.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Features.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Step into: Stepping over non-user code 'Program.<Main>$'
+Step into: Stepping over non-user code 'Program.<<Main>$>d__0..ctor'
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Serilog.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.DependencyInjection.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Diagnostics.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Hosting.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Hosting.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Serilog.Extensions.Hosting.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Serilog.Extensions.Logging.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Shared.dll'. Symbole zostały załadowane.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Hosting.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Collections.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Threading.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.EnvironmentVariables.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.FileProviders.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.FileProviders.Physical.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.FileExtensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Options.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Diagnostics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.DiagnosticSource.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.Binder.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Configuration.Json.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Memory.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Linq.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.IO.FileSystem.Watcher.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.ComponentModel.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Collections.Concurrent.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Threading.Overlapped.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Runtime.InteropServices.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\Microsoft.Win32.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Text.Json.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Text.Encoding.Extensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.IO.Pipelines.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.EventLog.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.Configuration.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Options.ConfigurationExtensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.Console.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.Debug.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Logging.EventSource.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.Tracing.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.DependencyInjection.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.Kestrel.Core.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.Kestrel.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.Kestrel.Transport.Quic.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Quic.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Sockets.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\Microsoft.Win32.Registry.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.IIS.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Server.IISIntegration.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.Core.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Connections.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.ObjectPool.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.HostFiltering.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.HttpOverrides.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Routing.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.ObjectModel.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Console.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.ResponseCaching.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.ComponentModel.TypeConverter.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Private.Uri.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Runtime.Loader.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Asp.Versioning.Mvc.ApiExplorer.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Asp.Versioning.Mvc.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Numerics.Vectors.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.ApiExplorer.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Authentication.Core.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Authentication.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Security.Claims.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Authorization.Policy.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Authorization.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.Cors.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Cors.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.DataAnnotations.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Serilog.Sinks.Grafana.Loki.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Serilog.Sinks.Console.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Serilog configured for Company with console logging only (Loki URL not configured)
+CORS configured.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Asp.Versioning.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Asp.Versioning.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Http.Extensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+API Versioning configured.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Diagnostics.HealthChecks.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Health checks configured.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Authentication.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.DataProtection.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.DataProtection.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Cryptography.Internal.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.WebEncoders.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Text.Encodings.Web.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Authentication configured.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.OpenApi.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Swagger configured.
+RabbitMQ services registered.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Extensions.Hosting.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Api.ProviderBuilderExtensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Api.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.IO.MemoryMappedFiles.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Instrumentation.SqlClient.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Exporter.OpenTelemetryProtocol.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Instrumentation.AspNetCore.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\OpenTelemetry.Instrumentation.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Collections.Immutable.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+OpenTelemetry configured for Company with Tempo endpoint: http://tempo:4317
+Skipping Redis configuration in DevelopmentLocal environment.
+Registering NoOpCacheService for DevelopmentLocal mode.
+NoOpCacheService registered - all cache operations will be no-ops.
+Response caching configured.
+Basic services built for: Company
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\AutoMapper.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Linq.Expressions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Scope built for Program, SeedData, BrandScope.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Threading.ThreadPool.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.IO.Pipes.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Threading.Thread.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.StaticFiles.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:20 INF] Company trace_id= span_id= CORS policy 'cors' is enabled
+[21:54:20 INF] Company trace_id= span_id= Configuring Swagger...
+[21:54:20 INF] Company trace_id= span_id= Swagger is enabled
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Reflection.Emit.Lightweight.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Reflection.Emit.ILGeneration.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Reflection.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:20 INF] Company trace_id= span_id= Swagger UI is enabled
+[21:54:20 INF] Company trace_id= span_id= Routing is enabled
+[21:54:20 INF] Company trace_id= span_id= Response caching is enabled
+[21:54:20 INF] Company trace_id= span_id= Static files middleware is enabled
+[21:54:20 INF] Company trace_id= span_id= Authentication middleware is enabled
+[21:54:20 INF] Company trace_id= span_id= Authorization middleware is enabled
+[21:54:20 INF] Company trace_id= span_id= Health checks mapped to /healthz/live
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Localization.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Mvc.Razor.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Configured JSON options.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Net.Http.Headers.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Http.Features.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Runtime.Numerics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Metadata.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\RabbitMQ.Client.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\StackExchange.Redis.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Text.RegularExpressions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.ComponentModel.Annotations.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:20 INF] Company trace_id= span_id= Controllers mapped
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Caching.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.SqlServer.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Data.Common.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'Anonymously Hosted DynamicMethods Assembly'. 
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Transactions.Local.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\runtimes\win\lib\net9.0\Microsoft.Data.SqlClient.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.FileVersionInfo.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Caching.Memory.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.NetworkInformation.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Runtime.Intrinsics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:22 INF] Company trace_id= span_id= Applying database migrations for CompanyAPI
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.StackTrace.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\System.Configuration.ConfigurationManager.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.Process.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Xml.ReaderWriter.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Private.Xml.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Collections.Specialized.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.WebClient.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Security.Cryptography.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Text.Encoding.CodePages.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Diagnostics.TraceSource.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:23 ERR] Company trace_id= span_id= Failed executing DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE [Brands] (
+    [Id] uniqueidentifier NOT NULL,
+    [BrandEmail] nvarchar(max) NOT NULL,
+    [BrandPhone] nvarchar(max) NOT NULL,
+    [Logo] nvarchar(max) NULL,
+    [Name] nvarchar(max) NOT NULL,
+    [CreatedDate] datetime2 NOT NULL,
+    [Country] nvarchar(max) NOT NULL,
+    [City] nvarchar(max) NOT NULL,
+    [PostCode] nvarchar(max) NOT NULL,
+    [AddresLine1] nvarchar(max) NOT NULL,
+    [AddresLine2] nvarchar(max) NULL,
+    CONSTRAINT [PK_Brands] PRIMARY KEY ([Id])
+);
+Exception thrown: 'Microsoft.Data.SqlClient.SqlException' in System.Private.CoreLib.dll
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Reflection.Metadata.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\pl\Microsoft.Data.SqlClient.resources.dll'. Module was built without symbols.
+[21:54:23 ERR] Company trace_id= span_id= Database migration failed for CompanyAPI
+Microsoft.Data.SqlClient.SqlException (0x80131904): There is already an object named 'Brands' in the database.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlCommand.InternalEndExecuteNonQuery(IAsyncResult asyncResult, Boolean isInternal, String endMethod)
+   at Microsoft.Data.SqlClient.SqlCommand.EndExecuteNonQueryInternal(IAsyncResult asyncResult)
+   at Microsoft.Data.SqlClient.SqlCommand.EndExecuteNonQueryAsync(IAsyncResult asyncResult)
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<InternalExecuteNonQueryAsync>b__193_1(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endFunction, Action`1 endAction, Task`1 promise, Boolean requiresSynchronization)
+--- End of stack trace from previous location ---
+3
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+2
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQueryAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+2
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateImplementationAsync(DbContext context, String targetMigration, MigrationExecutionState state, Boolean useTransaction, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.<>c.<<MigrateAsync>b__22_1>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+2
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+2
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Shared.Services.Database.UseDatabase.<>c__DisplayClass5_0`2.<<UseSQLServerAsync>b__0>d.MoveNext() in C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\Shared\Services\Database\UseDatabase.cs:line 100
+ClientConnectionId:1e9d5047-d463-476d-bd1c-c02da473cfda
+Numer błędu:2714, stan:6, klasa:16
+[21:54:23 WRN] Company trace_id= span_id= Continuing application startup despite migration failure
+[21:54:23 INF] Company trace_id= span_id= Initializing Company API data at 01/24/2026 20:54:23
+[21:54:23 INF] Company trace_id= span_id= Seeding Company API permissions at 01/24/2026 20:54:23
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Http.Json.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:23 INF] Company trace_id= span_id= Seeding 3 permissions to Identity API at http://identity:8080 using batch operation
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.Security.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.NameResolution.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+Exception thrown: 'System.Net.Http.HttpRequestException' in System.Private.CoreLib.dll
+[21:54:26 ERR] Company trace_id= span_id= Failed to seed permissions using batch operation
+System.Net.Http.HttpRequestException: Nieznany host. (identity:8080)
+ ---> System.Net.Sockets.SocketException (11001): Nieznany host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Shared.Services.Security.PermissionSeeder.SeedPermissionsAsync(IEnumerable`1 permissions) in C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\Shared\Services\Security\PermissionSeeder.cs:line 51
+[21:54:26 WRN] Company trace_id= span_id= Failed to seed some Company API permissions, service will continue but authorization may not work correctly
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Xml.XDocument.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Private.Xml.Linq.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:54:26 WRN] Company trace_id= span_id= The WebRootPath was not found: C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\wwwroot. Static files may be unavailable.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Collections.NonGeneric.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.Net.WebSockets.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.2\System.IO.Compression.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.Extensions.Validation.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Users\Hubert Troć\source\repos\DJ\DJPanel\Services\CompanyAPI\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[21:57:52 WRN] Company trace_id=e11cc87f0115012ae0d0a015713872bb span_id=2dd886ece680add8 User unknown has no permissions claim
+[21:57:52 WRN] Company trace_id=882b95d20221f2f854cf07d870b682de span_id=f6cfd14e79b66f55 User unknown has no permissions claim
+[21:57:52 WRN] Company trace_id=f7fe9e361c2e4cd4dd0b40f2b899550d span_id=e1f70fdbf2564e1b User unknown has no permissions claim
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.WebUtilities.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+CompanyAPI.dll (11528): Loaded 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.2\Microsoft.AspNetCore.Diagnostics.Abstractions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+[22:08:48 WRN] Company trace_id=1c7075799a1255b6bd24b9b79503dd20 span_id=7d5a6e415adcd8ea User unknown has no permissions claim
+[22:08:48 WRN] Company trace_id=8d01a421fccfda95269f1ba38bd9dd8a span_id=569d1a9bdbe32209 User unknown has no permissions claim
+[22:08:48 WRN] Company trace_id=0f2d832a705dc573b27569c05b10610d span_id=b82e0ed9e05e54e5 User unknown has no permissions claim
+[22:08:48 WRN] Company trace_id=f0d3fd5f869ac462b20656887adecc28 span_id=da0a78acf942c42a User unknown has no permissions claim
+[22:08:48 WRN] Company trace_id=15ec286be0a73d84c126c5536562c9a3 span_id=f61ea6573f5e100d User unknown has no permissions claim
+[22:08:48 WRN] Company trace_id=268aa4f672e58d7e4630ee3b481f2490 span_id=6d9eb1df87ab1a0c User unknown has no permissions claim
+[22:09:26 WRN] Company trace_id=94a1c008c93ec9ce0d9acca105f3df9f span_id=e44ea37b50c62d63 User unknown has no permissions claim
+[22:09:26 WRN] Company trace_id=f0ba0ccee4df2eff6598c6953bba775e span_id=25572753117d1c40 User unknown has no permissions claim
+[22:09:26 WRN] Company trace_id=a15df22b37559585c32037da0e828de0 span_id=901e9eae30c56d1a User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=1cd356ab2335726d9918e174769291a7 span_id=97146292fe4345c6 User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=749a5e557f7abe650758f5f0bf4e3abd span_id=2251da88c5801376 User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=1ee9e1f36618df82ef958f728ee36116 span_id=ac497c984d6b779f User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=1b175aeba439f887d394d5eeee159bda span_id=ba2de83a450a464e User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=2a6b10085a8825d90e66d22d732465da span_id=b64b7391ecc7068a User unknown has no permissions claim
+[22:49:21 WRN] Company trace_id=a54a1564b643de8fde82e130bc8e810c span_id=5122e72410592f3d User unknown has no permissions claim
+[23:13:42 WRN] Company trace_id=71322a282b23887f35b6bf610ed13ae4 span_id=de228730257a2b79 User unknown has no permissions claim
+[23:13:42 WRN] Company trace_id=95fa6eba7b0549ac5fe287a175a16043 span_id=50456b5036616d6b User unknown has no permissions claim
+[23:13:42 WRN] Company trace_id=0b465401234251b4dac3c7a6c4d6dfc6 span_id=15c2eb512c035f17 User unknown has no permissions claim
+[23:14:15 WRN] Company trace_id=76871c79fb6f1205ec68dbf360b4fde0 span_id=9996d6168cde2af0 User unknown has no permissions claim

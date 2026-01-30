@@ -91,7 +91,7 @@ services:
     image: redis:8-alpine
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 450mb --maxmemory-policy allkeys-lru
     user: root
     restart: unless-stopped
     pull_policy: always
@@ -184,6 +184,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${APIGATEWAY_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -347,6 +349,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${IDENTITY_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -363,6 +367,7 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -407,6 +412,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${MUSIC_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -423,6 +430,7 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -467,6 +475,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${GEAR_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -483,6 +493,7 @@ services:
       - redis_net
       - apigw_backends_net
       - rabbitmq_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -527,6 +538,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${DOCUMENTS_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -543,6 +556,7 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -587,6 +601,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${BRAND_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -603,6 +619,7 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -647,6 +664,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${MAILING_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -663,6 +682,7 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -707,6 +727,8 @@ services:
       - ASPNETCORE_DATABASE_CATALOG=${PARTY_DATABASE_CATALOG}
       - ASPNETCORE_DJPANEL_USER_EMAIL=${DJPANEL_USER_EMAIL}
       - ASPNETCORE_DJPANEL_USER_PASSWORD=${DJPANEL_USER_PASSWORD}
+      - ASPNETCORE_TEMPO_ENDPOINT=http://tempo:4317
+      - ASPNETCORE_LOKI_URL=http://loki:3100
     restart: unless-stopped
     pull_policy: always
     expose:
@@ -723,6 +745,7 @@ services:
       - redis_net
       - rabbitmq_net
       - apigw_backends_net
+      - logging_net
     deploy:
       resources:
         limits:
@@ -749,6 +772,31 @@ services:
       - public
     volumes:
       - loki_data:/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "3200:3200"   # Tempo HTTP
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - logging_net
+      - apigw_backends_net
+      - public
+    volumes:
+      - tempo_data:/var/tempo
+      - ./init/tempo/tempo.yaml:/etc/tempo.yaml:ro
     deploy:
       resources:
         limits:
@@ -929,6 +977,8 @@ services:
         condition: service_started
       prometheus:
         condition: service_started
+      tempo:
+        condition: service_started
     networks:
       - logging_net
       - public
@@ -991,6 +1041,8 @@ volumes:
   strapi_app:
     driver: local
   loki_data:
+    driver: local
+  tempo_data:
     driver: local
   promtail_positions:
     driver: local

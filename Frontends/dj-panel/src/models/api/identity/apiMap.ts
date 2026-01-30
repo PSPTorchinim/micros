@@ -359,14 +359,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -443,22 +447,6 @@ export class Api<
         method: "GET",
         secure: true,
         format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Permissions
-     * @name V1PermissionsHelloList
-     * @request GET:/identity/v1/Permissions/Hello
-     * @secure
-     */
-    v1PermissionsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/identity/v1/Permissions/Hello`,
-        method: "GET",
-        secure: true,
         ...params,
       }),
   };
@@ -553,22 +541,6 @@ export class Api<
         method: "DELETE",
         secure: true,
         format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Roles
-     * @name V1RolesHelloList
-     * @request GET:/identity/v1/Roles/Hello
-     * @secure
-     */
-    v1RolesHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/identity/v1/Roles/Hello`,
-        method: "GET",
-        secure: true,
         ...params,
       }),
   };
@@ -757,22 +729,6 @@ export class Api<
         format: "json",
         ...params,
       }),
-
-    /**
-     * No description
-     *
-     * @tags Users
-     * @name V1UsersHelloList
-     * @request GET:/identity/v1/Users/Hello
-     * @secure
-     */
-    v1UsersHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/identity/v1/Users/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
   };
 }
 
@@ -781,7 +737,7 @@ export { Api as IdentityApi, ContentType as IdentityContentType, HttpClient as I
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};

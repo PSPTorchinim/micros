@@ -14,11 +14,22 @@ import {
   ContactInfoBlock,
   LoginBlock,
   ForgotPasswordBlock,
+  ChangePasswordBlock,
+  ProfileBlock,
+  CompanyBlock,
 } from './molecules';
-import type {
-  ContentBlock,
-  ArticleContentBlock,
-} from '../types/content-blocks';
+
+/**
+ * Generic content block that can represent any Strapi content type
+ *
+ * The __kind property identifies the block type (e.g., 'hero-block', 'article-block')
+ * The __component property is the Strapi component identifier (e.g., 'hero.hero-block')
+ */
+export interface ContentBlock {
+  __kind: string;
+  __component?: string;
+  [key: string]: unknown;
+}
 
 /**
  * Główny renderer jednego „zwykłego" bloku (już zdereferencjonowanego).
@@ -65,13 +76,17 @@ export function renderBlock(
       return <LoginBlock key={index} {...block} />;
     case 'forgot-password-block':
       return <ForgotPasswordBlock key={index} {...block} />;
+    case 'change-password-block':
+      return <ChangePasswordBlock key={index} {...block} />;
+    case 'profile-block':
+      return <ProfileBlock key={index} {...block} />;
+    case 'company-block':
+      return <CompanyBlock key={index} {...block} />;
     case 'article': {
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format
-      const articleBlock = block as ArticleContentBlock;
       const articleData =
-        (articleBlock as { attributes?: Record<string, unknown> }).attributes ||
-        articleBlock;
+        (block as { attributes?: Record<string, unknown> }).attributes || block;
       const title =
         typeof articleData.Title === 'string' ? articleData.Title : '';
       const summary =
@@ -81,7 +96,9 @@ export function renderBlock(
       const body = typeof articleData.Body === 'string' ? articleData.Body : '';
 
       // Convert markdown to HTML and sanitize to prevent XSS attacks
-      const htmlBody = body ? DOMPurify.sanitize(marked.parse(body)) : '';
+      const htmlBody = body
+        ? DOMPurify.sanitize(marked.parse(body, { async: false }) as string)
+        : '';
 
       return (
         <div key={index} className="article-detail">

@@ -6,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
 using Shared.Configurations;
@@ -13,6 +16,7 @@ using Shared.Services.Database;
 using Shared.Services.MessagesBroker.RabbitMQ;
 using Shared.Services.Security;
 using Shared.Services.Swagger;
+using Shared.Services.Telemetry;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -55,8 +59,10 @@ namespace Shared.Services.Run
             services.ConfigureApiVersioning();
             services.ConfigureHealthChecks();
             services.ConfigureAuthentication(systemConfig);
+            services.AddPermissionAuthorization();
             services.ConfigureSwagger(name, version, isApiGW);
             services.RegisterRabbitMQServices();
+            services.ConfigureOpenTelemetry(name, environment);
 
             // Configure Redis and Reverse Proxy based on environment and service type
             var isDevelopmentLocal = environment == "DevelopmentLocal";
@@ -104,8 +110,9 @@ namespace Shared.Services.Run
                     .Enrich.WithProperty("Service", serviceName)
                     .Enrich.WithProperty("Environment", environment)
                     .Enrich.WithProperty("MachineName", System.Environment.MachineName)
+                    .Enrich.With(new TraceContextEnricher())
                     .WriteTo.Console(
-                        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Service} {Message:lj}{NewLine}{Exception}"
+                        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Service} trace_id={TraceId} span_id={SpanId} {Message:lj}{NewLine}{Exception}"
                     );
 
                 // Add Loki sink only if ASPNETCORE_LOKI_URL environment variable is explicitly set
@@ -406,6 +413,69 @@ namespace Shared.Services.Run
             Console.WriteLine("RabbitMQ services registered.");
         }
 
+        private static void ConfigureOpenTelemetry(this IServiceCollection services, string serviceName, string environment)
+        {
+            var tempoEndpoint = Environment.GetEnvironmentVariable("ASPNETCORE_TEMPO_ENDPOINT") ?? "http://tempo:4317";
+            
+            services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource
+                    .AddService(
+                        serviceName: serviceName,
+                        serviceVersion: "1.0.0",
+                        serviceInstanceId: Environment.MachineName)
+                    .AddAttributes(new Dictionary<string, object>
+                    {
+                        ["deployment.environment"] = environment,
+                        ["service.namespace"] = "djbeatblaster"
+                    }))
+                .WithTracing(tracing => tracing
+                    .AddAspNetCoreInstrumentation(options =>
+                    {
+                        options.RecordException = true;
+                        options.Filter = (httpContext) =>
+                        {
+                            // Don't trace health checks and swagger endpoints
+                            var path = httpContext.Request.Path.Value ?? "";
+                            return !path.Contains("/healthz", StringComparison.OrdinalIgnoreCase) 
+                                && !path.Contains("/swagger", StringComparison.OrdinalIgnoreCase);
+                        };
+                        options.EnrichWithHttpRequest = (activity, httpRequest) =>
+                        {
+                            activity.SetTag("http.client_ip", httpRequest.HttpContext.Connection.RemoteIpAddress?.ToString());
+                            activity.SetTag("http.user_agent", httpRequest.Headers["User-Agent"].ToString());
+                        };
+                        options.EnrichWithHttpResponse = (activity, httpResponse) =>
+                        {
+                            activity.SetTag("http.response.content_type", httpResponse.ContentType);
+                        };
+                    })
+                    .AddHttpClientInstrumentation(options =>
+                    {
+                        options.RecordException = true;
+                        options.FilterHttpRequestMessage = (httpRequest) =>
+                        {
+                            // Don't trace internal health checks
+                            var uri = httpRequest.RequestUri?.ToString() ?? "";
+                            return !uri.Contains("/healthz", StringComparison.OrdinalIgnoreCase);
+                        };
+                        // Note: HTTP method and status code are already captured by default instrumentation
+                    })
+                    .AddSqlClientInstrumentation(options =>
+                    {
+                        // Only include SQL statements in development environments to avoid exposing sensitive data
+                        var isDevelopment = environment == "Development" || environment == "DevelopmentLocal";
+                        options.SetDbStatementForText = isDevelopment;
+                        options.RecordException = true;
+                    })
+                    .AddOtlpExporter(options =>
+                    {
+                        options.Endpoint = new Uri(tempoEndpoint);
+                        options.Protocol = OtlpExportProtocol.Grpc;
+                    }));
+
+            Console.WriteLine($"OpenTelemetry configured for {serviceName} with Tempo endpoint: {tempoEndpoint}");
+        }
+
         public static IServiceCollection BuildScope<P, S, Sc>(this IServiceCollection services, Action<IServiceCollection> configureDbContext) where S : IDatabaseInitializer where Sc : Scope, new()
         {
             services.AddHttpContextAccessor();
@@ -413,6 +483,10 @@ namespace Shared.Services.Run
             new Sc().CreateScope(services);
             services.AddAutoMapper(cfg => cfg.AddMaps(typeof(P).Assembly));
             services.AddScoped(typeof(S));
+            
+            // Register PermissionSeeder for services that need to seed permissions
+            services.AddScoped<PermissionSeeder>();
+            
             Console.WriteLine($"Scope built for {typeof(P).Name}, {typeof(S).Name}, {typeof(Sc).Name}.");
             return services;
         }

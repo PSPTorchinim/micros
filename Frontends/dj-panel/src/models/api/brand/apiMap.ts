@@ -10,7 +10,52 @@
  * ---------------------------------------------------------------
  */
 
+export interface AddCompanyUserDTO {
+  /** @format uuid */
+  userId: string;
+  /** @minLength 1 */
+  role: string;
+}
+
+export interface CompanyStructureNodeDTO {
+  /** @format uuid */
+  id?: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  type: string;
+  /** @format uuid */
+  parentId?: string | null;
+  children?: CompanyStructureNodeDTO[] | null;
+}
+
 export type RegisterBrandDTO = object;
+
+export interface UpdateCompanyDTO {
+  /** @minLength 1 */
+  name: string;
+  /**
+   * @format email
+   * @minLength 1
+   */
+  email: string;
+  /** @minLength 1 */
+  phone: string;
+  /** @minLength 1 */
+  country: string;
+  /** @minLength 1 */
+  city: string;
+  /** @minLength 1 */
+  postCode: string;
+  /** @minLength 1 */
+  addressLine1: string;
+  addressLine2?: string | null;
+  logo?: string | null;
+}
+
+export interface UpdateCompanyStructureDTO {
+  nodes: CompanyStructureNodeDTO[];
+}
 
 import type {
   AxiosInstance,
@@ -157,14 +202,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -224,39 +273,6 @@ export class Api<
         type: ContentType.Json,
         ...params,
       }),
-
-    /**
-     * No description
-     *
-     * @tags Brands
-     * @name V1BrandsHelloList
-     * @request GET:/brand/v1/Brands/Hello
-     * @secure
-     */
-    v1BrandsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Brands/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
-  };
-  clients = {
-    /**
-     * No description
-     *
-     * @tags Clients
-     * @name V1ClientsHelloList
-     * @request GET:/brand/v1/Clients/Hello
-     * @secure
-     */
-    v1ClientsHelloList: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/brand/v1/Clients/Hello`,
-        method: "GET",
-        secure: true,
-        ...params,
-      }),
   };
   company = {
     /**
@@ -279,49 +295,107 @@ export class Api<
      * No description
      *
      * @tags Company
-     * @name V1CompanyHelloList
-     * @request GET:/brand/v1/Company/Hello
+     * @name V1CompanyUpdate
+     * @request PUT:/brand/v1/Company
      * @secure
      */
-    v1CompanyHelloList: (params: RequestParams = {}) =>
+    v1CompanyUpdate: (data: UpdateCompanyDTO, params: RequestParams = {}) =>
       this.request<void, any>({
-        path: `/brand/v1/Company/Hello`,
+        path: `/brand/v1/Company`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company
+     * @name V1CompanyUsersList
+     * @request GET:/brand/v1/Company/users
+     * @secure
+     */
+    v1CompanyUsersList: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/brand/v1/Company/users`,
         method: "GET",
         secure: true,
         ...params,
       }),
-  };
-  elements = {
+
     /**
      * No description
      *
-     * @tags Elements
-     * @name V1ElementsHelloList
-     * @request GET:/brand/v1/Elements/Hello
+     * @tags Company
+     * @name V1CompanyUsersCreate
+     * @request POST:/brand/v1/Company/users
      * @secure
      */
-    v1ElementsHelloList: (params: RequestParams = {}) =>
+    v1CompanyUsersCreate: (
+      data: AddCompanyUserDTO,
+      params: RequestParams = {},
+    ) =>
       this.request<void, any>({
-        path: `/brand/v1/Elements/Hello`,
+        path: `/brand/v1/Company/users`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company
+     * @name V1CompanyUsersDelete
+     * @request DELETE:/brand/v1/Company/users/{userId}
+     * @secure
+     */
+    v1CompanyUsersDelete: (userId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/brand/v1/Company/users/${userId}`,
+        method: "DELETE",
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company
+     * @name V1CompanyStructureList
+     * @request GET:/brand/v1/Company/structure
+     * @secure
+     */
+    v1CompanyStructureList: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/brand/v1/Company/structure`,
         method: "GET",
         secure: true,
         ...params,
       }),
-  };
-  packages = {
+
     /**
      * No description
      *
-     * @tags Packages
-     * @name V1PackagesHelloList
-     * @request GET:/brand/v1/Packages/Hello
+     * @tags Company
+     * @name V1CompanyStructureUpdate
+     * @request PUT:/brand/v1/Company/structure
      * @secure
      */
-    v1PackagesHelloList: (params: RequestParams = {}) =>
+    v1CompanyStructureUpdate: (
+      data: UpdateCompanyStructureDTO,
+      params: RequestParams = {},
+    ) =>
       this.request<void, any>({
-        path: `/brand/v1/Packages/Hello`,
-        method: "GET",
+        path: `/brand/v1/Company/structure`,
+        method: "PUT",
+        body: data,
         secure: true,
+        type: ContentType.Json,
         ...params,
       }),
   };
@@ -332,7 +406,7 @@ export { Api as BrandApi, ContentType as BrandContentType, HttpClient as BrandHt
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};

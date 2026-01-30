@@ -10,16 +10,6 @@
  * ---------------------------------------------------------------
  */
 
-export interface WeatherForecast {
-  /** @format date */
-  date?: string;
-  /** @format int32 */
-  temperatureC?: number;
-  /** @format int32 */
-  temperatureF?: number;
-  summary?: string | null;
-}
-
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -165,14 +155,18 @@ export class HttpClient<SecurityDataType = unknown> {
 
     if (
       type === ContentType.FormData &&
-      body != null && typeof body === "object"
+      body &&
+      body !== null &&
+      typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
     if (
       type === ContentType.Text &&
-      body != null && typeof body !== "string"
+      body &&
+      body !== null &&
+      typeof body !== "string"
     ) {
       body = JSON.stringify(body);
     }
@@ -197,33 +191,14 @@ export class HttpClient<SecurityDataType = unknown> {
  */
 export class Api<
   SecurityDataType extends unknown,
-> extends HttpClient<SecurityDataType> {
-  weatherForecast = {
-    /**
-     * No description
-     *
-     * @tags WeatherForecast
-     * @name GetWeatherForecast
-     * @request GET:/party/WeatherForecast
-     * @secure
-     */
-    getWeatherForecast: (params: RequestParams = {}) =>
-      this.request<WeatherForecast[], any>({
-        path: `/party/WeatherForecast`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-  };
-}
+> extends HttpClient<SecurityDataType> {}
 
 // Aliased exports for unified API client
 export { Api as PartyApi, ContentType as PartyContentType, HttpClient as PartyHttpClient };
 
 // Injected secure_key header interceptor
 if (typeof Api === 'function' && Api.prototype && Api.prototype.instance) {
-  const secureKey = process.env.REACT_APP_API_SECURE_KEY || (typeof window !== 'undefined' ? window.REACT_APP_API_SECURE_KEY : undefined);
+  const secureKey = process.env.REACT_APP_API_SECURE_KEY;
   if (secureKey && Api.prototype.instance && Api.prototype.instance.interceptors && Api.prototype.instance.interceptors.request) {
     Api.prototype.instance.interceptors.request.use((config) => {
       if (!config.headers) config.headers = {};

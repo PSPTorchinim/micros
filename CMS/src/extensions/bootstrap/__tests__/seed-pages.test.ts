@@ -12,6 +12,8 @@ describe('Seed Pages', () => {
       { Name: 'Contact Template', TemplateType: 'Standard' },
       { Name: 'Login Template', TemplateType: 'Login' },
       { Name: 'Forgot Password Template', TemplateType: 'ForgotPassword' },
+      { Name: 'Change Password Template', TemplateType: 'ChangePassword' },
+      { Name: 'Profile Template', TemplateType: 'Profile' },
     ];
 
     it('should have templates for all essential pages', () => {
@@ -19,7 +21,13 @@ describe('Seed Pages', () => {
     });
 
     it('should have valid template types', () => {
-      const validTypes = ['Standard', 'Login', 'ForgotPassword'];
+      const validTypes = [
+        'Standard',
+        'Login',
+        'ForgotPassword',
+        'ChangePassword',
+        'Profile',
+      ];
       TEMPLATE_SEEDS.forEach((template) => {
         expect(template.Name).toBeDefined();
         expect(template.TemplateType).toBeDefined();
@@ -136,7 +144,11 @@ describe('Seed Pages', () => {
     });
 
     it('should have valid AuthState values', () => {
-      const validAuthStates = ['All', 'OnlyAuthenticated', 'OnlyUnauthenticated'];
+      const validAuthStates = [
+        'All',
+        'OnlyAuthenticated',
+        'OnlyUnauthenticated',
+      ];
       PAGE_SEEDS.forEach((page) => {
         expect(validAuthStates).toContain(page.AuthState);
       });
@@ -144,8 +156,10 @@ describe('Seed Pages', () => {
 
     it('should have navigation order as sequential for main menu items', () => {
       const mainMenuPages = PAGE_SEEDS.filter((p) => p.Menu === 'Main');
-      const orders = mainMenuPages.map((p) => p.NavigationOrder).sort((a, b) => a - b);
-      
+      const orders = mainMenuPages
+        .map((p) => p.NavigationOrder)
+        .sort((a, b) => a - b);
+
       // Check that orders are sequential starting from 1
       orders.forEach((order, index) => {
         expect(order).toBe(index + 1);
@@ -160,10 +174,12 @@ describe('Seed Pages', () => {
         { Name: 'Contact Template', TemplateType: 'Standard' },
         { Name: 'Login Template', TemplateType: 'Login' },
         { Name: 'Forgot Password Template', TemplateType: 'ForgotPassword' },
+        { Name: 'Change Password Template', TemplateType: 'ChangePassword' },
+        { Name: 'Profile Template', TemplateType: 'Profile' },
       ];
 
       const templateNames = new Set(TEMPLATE_SEEDS.map((t) => t.Name));
-      
+
       PAGE_SEEDS.forEach((page) => {
         // Action items don't require templates
         if (page.NavigationAction === 'Action') {
@@ -192,6 +208,13 @@ describe('Seed Pages', () => {
       expect(logoutPage?.AuthState).toBe('OnlyAuthenticated');
       expect(logoutPage?.NavigationAction).toBe('Action');
       expect(logoutPage?.Menu).toBe('Login');
+    });
+
+    it('should have Profile page restricted to authenticated users', () => {
+      const profilePage = PAGE_SEEDS.find((p) => p.Slug === '/profile');
+      expect(profilePage).toBeDefined();
+      expect(profilePage?.AuthState).toBe('OnlyAuthenticated');
+      expect(profilePage?.Menu).toBe('Login');
     });
   });
 });
