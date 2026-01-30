@@ -104,7 +104,7 @@ namespace Shared.Services.Security
                         description = p.Description
                     }).ToList();
 
-                    var createResponse = await httpClient.PostAsJsonAsync("/api/v1/Permissions/batch", batchRequest);
+                    var createResponse = await httpClient.PostAsJsonAsync("/v1/Permissions/batch", batchRequest);
 
                     if (createResponse.IsSuccessStatusCode)
                     {
@@ -227,7 +227,7 @@ namespace Shared.Services.Security
                 try
                 {
                     // Check if permission exists
-                    var checkResponse = await httpClient.GetAsync($"/api/v1/Permissions?name={Uri.EscapeDataString(permission.Name)}");
+                    var checkResponse = await httpClient.GetAsync($"/v1/Permissions?name={Uri.EscapeDataString(permission.Name)}");
                     
                     if (checkResponse.IsSuccessStatusCode)
                     {
@@ -247,7 +247,7 @@ namespace Shared.Services.Security
                     }
 
                     // Create permission
-                    var createResponse = await httpClient.PostAsJsonAsync("/api/v1/Permissions", new
+                    var createResponse = await httpClient.PostAsJsonAsync("/v1/Permissions", new
                     {
                         name = permission.Name,
                         description = permission.Description
