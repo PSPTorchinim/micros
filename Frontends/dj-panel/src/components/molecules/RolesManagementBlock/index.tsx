@@ -234,30 +234,57 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
             <label className="roles-management-permissions-label">
               Permissions
             </label>
-            <div className="roles-management-permissions-grid">
-              {permissions.map((permission) => (
-                <label
-                  key={permission.id}
-                  htmlFor={`permission-${permission.id}`}
-                  className="roles-management-permission-item"
-                >
-                  <input
-                    type="checkbox"
-                    id={`permission-${permission.id}`}
-                    checked={selectedPermissions.includes(permission.id || '')}
-                    onChange={() => handlePermissionToggle(permission.id || '')}
-                  />
-                  <span className="roles-management-permission-name">
-                    {permission.name}
-                  </span>
-                  {permission.description && (
-                    <span className="roles-management-permission-description">
-                      {permission.description}
-                    </span>
-                  )}
-                </label>
-              ))}
-            </div>
+            {(() => {
+              // Group permissions by their prefix (part before ':')
+              const grouped = permissions.reduce((acc, permission) => {
+                const name = permission.name || '';
+                const prefix = name.includes(':') ? name.split(':')[0] : 'other';
+                if (!acc[prefix]) {
+                  acc[prefix] = [];
+                }
+                acc[prefix].push(permission);
+                return acc;
+              }, {} as Record<string, typeof permissions>);
+
+              // Sort groups by name
+              const sortedGroups = Object.keys(grouped).sort();
+
+              return sortedGroups.map((group) => (
+                <div key={group} className="roles-management-permission-group">
+                  <h4 className="roles-management-permission-group-title">
+                    {group.charAt(0).toUpperCase() + group.slice(1)}
+                  </h4>
+                  <div className="roles-management-permissions-grid">
+                    {grouped[group].map((permission) => (
+                      <label
+                        key={permission.id}
+                        htmlFor={`permission-${permission.id}`}
+                        className="roles-management-permission-item"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`permission-${permission.id}`}
+                          checked={selectedPermissions.includes(
+                            permission.id || '',
+                          )}
+                          onChange={() =>
+                            handlePermissionToggle(permission.id || '')
+                          }
+                        />
+                        <span className="roles-management-permission-name">
+                          {permission.name}
+                        </span>
+                        {permission.description && (
+                          <span className="roles-management-permission-description">
+                            {permission.description}
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ));
+            })()}
           </div>
 
           <div className="roles-management-form-actions">
