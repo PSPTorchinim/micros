@@ -13,3 +13,4 @@ export { ChangePasswordBlock } from './ChangePasswordBlock';
 export { ProfileBlock } from './ProfileBlock';
 export { CompanyBlock } from './CompanyBlock';
 export { CreateCompanyModal } from './CreateCompanyModal';
+export { RolesManagementBlock } from './RolesManagementBlock';

@@ -198,6 +198,14 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      if (templateType === 'RolesManagement') {
+        // Render roles management block without fetching from CMS
+        if (mounted) {
+          setBlocks([{ __kind: 'roles-management-block' } as ContentBlock]);
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.Content,
