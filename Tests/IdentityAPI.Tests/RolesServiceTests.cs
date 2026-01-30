@@ -68,7 +68,10 @@ namespace IdentityAPI.Tests
         {
             var service = CreateService();
             var roles = new List<Role> { new Role { Id = Guid.NewGuid(), Name = "Admin" } };
-            _rolesRepositoryMock.Setup(r => r.Get()).ReturnsAsync(roles);
+            // Setup for ISpecification-based Get (now using RolePermissionsSpec)
+            _rolesRepositoryMock
+                .Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>()))
+                .ReturnsAsync(roles);
             var result = await service.GetRoles();
             Assert.Single(result);
             Assert.Equal("Admin", result[0].Name);

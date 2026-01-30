@@ -43,9 +43,14 @@ namespace IdentityAPI.Services
                 var cacheKey = $"{RolesCachePrefix}All";
 
                 // Use GetOrCreateAsync to simplify cache-aside pattern
+                // Use RolePermissionsSpec to include permissions
                 var roles = await _cacheService.GetOrCreateAsync(
                     cacheKey,
-                    async () => (await _rolesRepository.Get()).ToList(),
+                    async () =>
+                    {
+                        var spec = new RolePermissionsSpec();
+                        return (await _rolesRepository.Get(spec)).ToList();
+                    },
                     DefaultCacheExpiration
                 );
 
