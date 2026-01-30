@@ -114,7 +114,7 @@ SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
 # Infrastructure services that need external access (exposed via Cloudflare tunnel)
 # - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
-# - Services in Docker/services/* and Docker/frontends/* get external ports (50000-59999)
+# - Services in Docker/services/* and Docker/frontends/* get external ports (50010-59999)
 # - List infra services here that need external access exceptions
 # - Format: space-separated list of service names
 # - Example: To expose a new infra service "prometheus", add it to this list:
@@ -172,7 +172,7 @@ if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
         # Determine if this was an internal or external port based on range
         if (( host_port >= 40000 && host_port < 50000 )); then
           PRESERVED_PORT_TYPES["$host_port"]="internal"
-        elif (( host_port >= 50000 && host_port < 60000 )); then
+        elif (( host_port >= 50010 && host_port < 60000 )); then
           PRESERVED_PORT_TYPES["$host_port"]="external"
         else
           # Unknown range, default to external
@@ -243,7 +243,7 @@ get_next_external_port() {
   if (( external_counter < external_count )); then
     NEXT_PORT="${EXTERNAL_PORT_ARRAY[$external_counter]}"; ((++external_counter))
   else
-    log_warn "EXT ports exhausted; fallback 50000"; NEXT_PORT="50000"
+    log_warn "EXT ports exhausted; fallback 50010"; NEXT_PORT="50010"
   fi
 }
 
@@ -509,8 +509,8 @@ while IFS= read -r service; do
   # Determine port function - check if service has official image or dockerfile
   if [[ "$existing_image" != "null" && -n "$existing_image" ]]; then
     # For official images, infer port function from service name/pattern
-    # Infrastructure services (databases, message queues, etc.) should NOT be exposed externally
-    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki|strapi_db|redis|sqlserver|mongodb_container|rabbitmq)$ ]]; then
+    # Infrastructure services (databases, message queues, monitoring) should NOT be exposed externally
+    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki|tempo|strapi_db|redis|sqlserver|mongodb_container|rabbitmq)$ ]]; then
       port_function="get_next_internal_port"
     else
       port_function="get_next_external_port"

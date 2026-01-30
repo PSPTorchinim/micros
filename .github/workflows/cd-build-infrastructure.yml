@@ -370,11 +370,11 @@ jobs:
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ""
 
-      - name: Calculate unused external ports (50000-59999)
+      - name: Calculate unused external ports (50010-59999)
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_external_ports
         with:
-          start_port: 50000
+          start_port: 50010
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ""
