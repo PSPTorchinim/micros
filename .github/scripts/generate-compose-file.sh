@@ -141,7 +141,8 @@ log_info "External ports available: $external_count"
 NEXT_PORT=""; CONVERTED_PORTS=""
 declare -A USED_HOST_PORTS
 declare -A USED_EXTERNAL_PORTS
-declare -A EXISTING_SERVICE_PORTS  # Maps service name -> host port
+declare -A EXISTING_SERVICE_PORTS  # Maps service name -> space-separated list of host ports
+declare -A PRESERVED_PORT_TYPES    # Maps host port -> "internal" or "external"
 
 # Parse existing port assignments from previous compose file
 if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
@@ -156,6 +157,8 @@ if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
     # Get port mappings for this service
     port_mappings=$(yq eval ".services.${svc}.ports[]" "$PREVIOUS_COMPOSE" 2>/dev/null || true)
     
+    # Collect all host ports for this service
+    declare -a service_ports=()
     while IFS= read -r port_mapping; do
       [[ -z "$port_mapping" || "$port_mapping" == "null" ]] && continue
       
@@ -164,33 +167,46 @@ if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
       host_port=$(echo "$port_mapping" | sed -E 's/"//g; s/^([0-9]+):.*$/\1/; t; d')
       
       if [[ -n "$host_port" && "$host_port" =~ ^[0-9]+$ ]]; then
-        # Store the first port mapping for each service (primary port)
-        if [[ -z "${EXISTING_SERVICE_PORTS[$svc]:-}" ]]; then
-          EXISTING_SERVICE_PORTS["$svc"]="$host_port"
-          log_info "Found existing port assignment: $svc -> $host_port"
-          
-          # Mark this port as used so it won't be reallocated
-          USED_HOST_PORTS["$host_port"]="${svc}:existing"
-          
-          # Remove this port from available pools if present
-          for i in "${!INTERNAL_PORT_ARRAY[@]}"; do
-            [[ "${INTERNAL_PORT_ARRAY[$i]}" == "$host_port" ]] && unset 'INTERNAL_PORT_ARRAY[$i]'
-          done
-          for i in "${!EXTERNAL_PORT_ARRAY[@]}"; do
-            [[ "${EXTERNAL_PORT_ARRAY[$i]}" == "$host_port" ]] && unset 'EXTERNAL_PORT_ARRAY[$i]'
-          done
+        service_ports+=("$host_port")
+        
+        # Determine if this was an internal or external port based on range
+        if (( host_port >= 40000 && host_port < 50000 )); then
+          PRESERVED_PORT_TYPES["$host_port"]="internal"
+        elif (( host_port >= 50000 && host_port < 60000 )); then
+          PRESERVED_PORT_TYPES["$host_port"]="external"
+        else
+          # Unknown range, default to external
+          PRESERVED_PORT_TYPES["$host_port"]="external"
         fi
+        
+        log_info "Found existing port assignment: $svc -> $host_port (${PRESERVED_PORT_TYPES[$host_port]})"
       fi
     done <<< "$port_mappings"
+    
+    # Store all ports for this service
+    if (( ${#service_ports[@]} > 0 )); then
+      EXISTING_SERVICE_PORTS["$svc"]="${service_ports[*]}"
+    fi
   done <<< "$previous_services"
   
-  # Rebuild arrays after removing used ports
-  INTERNAL_PORT_ARRAY=("${INTERNAL_PORT_ARRAY[@]}")
-  EXTERNAL_PORT_ARRAY=("${EXTERNAL_PORT_ARRAY[@]}")
+  # Remove preserved ports from available pools
+  # Build new arrays without preserved ports
+  declare -a new_internal_ports=()
+  for port in "${INTERNAL_PORT_ARRAY[@]}"; do
+    [[ -z "${PRESERVED_PORT_TYPES[$port]:-}" ]] && new_internal_ports+=("$port")
+  done
+  
+  declare -a new_external_ports=()
+  for port in "${EXTERNAL_PORT_ARRAY[@]}"; do
+    [[ -z "${PRESERVED_PORT_TYPES[$port]:-}" ]] && new_external_ports+=("$port")
+  done
+  
+  INTERNAL_PORT_ARRAY=("${new_internal_ports[@]}")
+  EXTERNAL_PORT_ARRAY=("${new_external_ports[@]}")
   internal_count=${#INTERNAL_PORT_ARRAY[@]}
   external_count=${#EXTERNAL_PORT_ARRAY[@]}
   
-  log_info "Preserved ${#EXISTING_SERVICE_PORTS[@]} existing port assignments"
+  log_info "Preserved ${#EXISTING_SERVICE_PORTS[@]} services with existing port assignments"
   log_info "Remaining internal ports: $internal_count"
   log_info "Remaining external ports: $external_count"
 fi
@@ -329,15 +345,15 @@ convert_ports() {
   local port_output="    ports:"; local port_count=0
   local port_mappings; port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
 
-  # Check if this service has an existing port assignment
-  local existing_port="${EXISTING_SERVICE_PORTS[$service_name]:-}"
-  local use_existing_port=false
-  
-  if [[ -n "$existing_port" ]]; then
-    # Service has existing port - we'll use it for the first port mapping
-    use_existing_port=true
-    log_info "Service $service_name will reuse existing port: $existing_port"
+  # Check if this service has existing port assignments (could be multiple)
+  local existing_ports_str="${EXISTING_SERVICE_PORTS[$service_name]:-}"
+  local -a existing_ports=()
+  if [[ -n "$existing_ports_str" ]]; then
+    read -ra existing_ports <<< "$existing_ports_str"
+    log_info "Service $service_name will reuse ${#existing_ports[@]} existing port(s)"
   fi
+  
+  local existing_port_idx=0
 
   while IFS= read -r port_mapping; do
     [[ -z "$port_mapping" || "$port_mapping" == "null" ]] && continue
@@ -346,13 +362,23 @@ convert_ports() {
     [[ -z "$container_port" ]] && { log_warn "Parse failure on port mapping: '$port_mapping'"; continue; }
 
     local new_port
-    if [[ "$use_existing_port" == "true" ]]; then
-      # Use the existing port for the first mapping
-      new_port="$existing_port"
-      use_existing_port=false  # Only use for first port
-      log_info "Reusing existing port for $service_name: host=$new_port -> container=$container_port"
+    # Check if we have an existing port for this mapping index
+    if (( existing_port_idx < ${#existing_ports[@]} )); then
+      # Reuse existing port for this mapping
+      new_port="${existing_ports[$existing_port_idx]}"
+      : $((existing_port_idx++))  # Increment with : to avoid exit code issues
+      
+      # Determine the correct is_external flag based on preserved port type
+      local preserved_type="${PRESERVED_PORT_TYPES[$new_port]:-}"
+      if [[ "$preserved_type" == "external" ]]; then
+        is_external="true"
+      else
+        is_external="false"
+      fi
+      
+      log_info "Reusing existing port for $service_name: host=$new_port -> container=$container_port (${preserved_type})"
     else
-      # Allocate a new port
+      # No more existing ports, allocate a new one
       NEXT_PORT=""; $get_port_function
       new_port="$NEXT_PORT"
       [[ -z "$new_port" ]] && { log_error "Allocator returned empty host port for $service_name"; continue; }
