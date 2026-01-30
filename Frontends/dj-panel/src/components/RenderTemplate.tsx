@@ -174,6 +174,30 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      if (templateType === 'Company') {
+        try {
+          const companyBlock = await StrapiService.getCompanyBlockSingleton();
+          if (mounted) {
+            // Always render the block, even if no data is configured in Strapi
+            // The component has default props that will be used
+            setBlocks([
+              {
+                __kind: 'company-block',
+                ...(companyBlock || {}),
+              } as ContentBlock,
+            ]);
+          }
+        } catch (e) {
+          console.error('Error fetching company block singleton:', e);
+          if (mounted) {
+            // Still render the block with defaults on error
+            setBlocks([{ __kind: 'company-block' } as ContentBlock]);
+            setError(null);
+          }
+        }
+        return;
+      }
+
       // Strapi v5 REST zwraca zazwyczaj { id: <documentId>, attributes: {...} }
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.Content,

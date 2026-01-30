@@ -1,0 +1,114 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--dl-space-space-unit);
+}
+
+.modal-content {
+  background-color: var(--dl-color-theme-background);
+  border-radius: var(--dl-radius-radius-cardradius);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal-content--small {
+  width: 100%;
+  max-width: 400px;
+}
+
+.modal-content--medium {
+  width: 100%;
+  max-width: 600px;
+}
+
+.modal-content--large {
+  width: 100%;
+  max-width: 900px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--dl-space-space-twounits);
+  border-bottom: 1px solid var(--dl-color-theme-neutral-light);
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--dl-color-theme-text-primary);
+  margin: 0;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--dl-color-theme-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--dl-radius-radius-radius4);
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: var(--dl-color-theme-neutral-light);
+  color: var(--dl-color-theme-text-primary);
+}
+
+.modal-body {
+  padding: var(--dl-space-space-twounits);
+}
+
+@media (max-width: 767px) {
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-content--small,
+  .modal-content--medium,
+  .modal-content--large {
+    max-width: 100%;
+  }
+
+  .modal-header {
+    padding: var(--dl-space-space-oneandhalfunits);
+  }
+
+  .modal-body {
+    padding: var(--dl-space-space-oneandhalfunits);
+  }
+
+  .modal-title {
+    font-size: 20px;
+  }
+}

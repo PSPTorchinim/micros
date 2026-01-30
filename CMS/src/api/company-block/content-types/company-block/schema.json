@@ -1,0 +1,56 @@
+{
+  "kind": "singleType",
+  "collectionName": "company_blocks",
+  "info": {
+    "singularName": "company-block",
+    "pluralName": "company-blocks",
+    "displayName": "Company Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Company Details"
+    },
+    "description": {
+      "type": "string",
+      "default": "View and manage your company information."
+    },
+    "companyInfoTitle": {
+      "type": "string",
+      "default": "Company Information"
+    },
+    "usersTitle": {
+      "type": "string",
+      "default": "Company Users"
+    },
+    "structureTitle": {
+      "type": "string",
+      "default": "Company Structure"
+    },
+    "editButtonText": {
+      "type": "string",
+      "default": "Edit"
+    },
+    "saveButtonText": {
+      "type": "string",
+      "default": "Save"
+    },
+    "cancelButtonText": {
+      "type": "string",
+      "default": "Cancel"
+    },
+    "addUserButtonText": {
+      "type": "string",
+      "default": "Add User"
+    },
+    "removeUserButtonText": {
+      "type": "string",
+      "default": "Remove"
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

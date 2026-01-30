@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/theme-context';
 
 import { NotFoundComponent } from './components/molecules/ErrorPage/NotFound';
 import { ServicesProvider } from './providers/services-provider';
+import { CompanySetupProvider } from './providers/company-setup-provider';
 
 import { useDynamicRoutes } from './components/DynamicRoutes';
 
@@ -17,20 +18,22 @@ export default function App() {
       <ThemeProvider>
         <ServicesProvider>
           <AuthProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <Layout
-                    navigation={{ links: dynamicNavigation }}
-                    footer={footerData}
-                  />
-                }
-              >
-                {dynamicRoutes}
-                <Route path="*" element={<NotFoundComponent />} />
-              </Route>
-            </Routes>
+            <CompanySetupProvider>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <Layout
+                      navigation={{ links: dynamicNavigation }}
+                      footer={footerData}
+                    />
+                  }
+                >
+                  {dynamicRoutes}
+                  <Route path="*" element={<NotFoundComponent />} />
+                </Route>
+              </Routes>
+            </CompanySetupProvider>
           </AuthProvider>
         </ServicesProvider>
       </ThemeProvider>

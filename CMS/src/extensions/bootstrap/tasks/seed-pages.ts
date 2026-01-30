@@ -59,6 +59,10 @@ const TEMPLATE_SEEDS = [
     Name: 'Article Template',
     TemplateType: 'Standard',
   },
+  {
+    Name: 'Company Template',
+    TemplateType: 'Company',
+  },
   // Note: Individual article templates are created dynamically in seedArticlePages
 ];
 
@@ -155,6 +159,15 @@ const PAGE_SEEDS = [
     NavigationOrder: 5,
     NavigationAction: 'Link',
     templateName: 'Article Template',
+  },
+  {
+    Title: 'Company',
+    Slug: '/company',
+    Menu: 'Main',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 6,
+    NavigationAction: 'Link',
+    templateName: 'Company Template',
   },
 ];
 
@@ -282,6 +295,23 @@ async function buildArticleTemplateContent(strapi: StrapiAny): Promise<any[]> {
   return content;
 }
 
+async function buildCompanyTemplateContent(strapi: StrapiAny): Promise<any[]> {
+  const content: any[] = [];
+
+  // Add company block reference if it exists
+  const companyBlocks = await strapi.db
+    .query('api::company-block.company-block')
+    .findMany({});
+  if (companyBlocks.length > 0) {
+    content.push({
+      __component: 'company-block-ref.company-block-ref',
+      company_block: companyBlocks[0].id,
+    });
+  }
+
+  return content;
+}
+
 // ============================================================================
 // Seeding Functions
 // ============================================================================
@@ -311,6 +341,8 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         content = await buildContactTemplateContent(strapi);
       } else if (templateData.Name === 'Article Template') {
         content = await buildArticleTemplateContent(strapi);
+      } else if (templateData.Name === 'Company Template') {
+        content = await buildCompanyTemplateContent(strapi);
       }
       // Login, Forgot Password, and Change Password templates use built-in blocks, no Content needed
       // Create and publish using Document Service

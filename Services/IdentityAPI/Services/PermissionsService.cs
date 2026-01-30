@@ -15,6 +15,7 @@ namespace IdentityAPI.Services
         Task<List<GetPermissionsDTO>> GetPermissions();
         Task<GetPermissionDTO?> GetPermission(Guid id);
         Task<bool> AddPermission(AddPermissionDTO request);
+        Task<BatchPermissionsResultDTO> AddPermissionsBatch(BatchAddPermissionsDTO request);
         Task<bool> EditPermission(Guid id, EditPermissionDTO request);
         Task<bool> DeletePermission(Guid id);
     }
@@ -73,12 +74,114 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Mapped AddPermissionDTO to Permission entity.");
                 var result = await _permissionsRepository.Add(req);
 
-                // Invalidate cache so it will be refreshed on next read
-                await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                if (result)
+                {
+                    // Invalidate cache so it will be refreshed on next read
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                    
+                    // Update SuperOwner role with all permissions
+                    await UpdateSuperOwnerPermissions();
+                }
 
                 _logger.LogInformation("Permission with name {Name} added and cache invalidated: {Result}", StringHelper.SanitizeForLog(request.Name), result);
                 return result;
             }, _logger);
+        }
+
+        public async Task<BatchPermissionsResultDTO> AddPermissionsBatch(BatchAddPermissionsDTO request)
+        {
+            _logger.LogInformation("Adding batch of {Count} permissions", request.Permissions?.Count ?? 0);
+            return await ExceptionHandler.Handle(async () =>
+            {
+                if (request.Permissions == null || !request.Permissions.Any())
+                {
+                    _logger.LogWarning("Batch permissions request contains no permissions");
+                    return new BatchPermissionsResultDTO { Created = 0, Skipped = 0, Failed = 0 };
+                }
+
+                var result = new BatchPermissionsResultDTO();
+                var shouldInvalidateCache = false;
+
+                foreach (var permissionDto in request.Permissions)
+                {
+                    try
+                    {
+                        _logger.LogDebug("Checking if permission with name {Name} exists.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        if (await _permissionsRepository.Exists(x => x.Name.Equals(permissionDto.Name)))
+                        {
+                            _logger.LogDebug("Permission with name {Name} already exists, skipping.", StringHelper.SanitizeForLog(permissionDto.Name));
+                            result.Skipped++;
+                            continue;
+                        }
+
+                        var permission = _mapper.Map<Permission>(permissionDto);
+                        _logger.LogDebug("Mapped AddPermissionDTO to Permission entity for {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        var addResult = await _permissionsRepository.Add(permission);
+
+                        if (addResult)
+                        {
+                            result.Created++;
+                            shouldInvalidateCache = true;
+                            _logger.LogDebug("Permission with name {Name} added successfully.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        }
+                        else
+                        {
+                            result.Failed++;
+                            _logger.LogWarning("Failed to add permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Failed++;
+                        _logger.LogError(ex, "Error adding permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
+                    }
+                }
+
+                // Invalidate cache if any permissions were added
+                if (shouldInvalidateCache)
+                {
+                    await _cacheService.RemoveAsync($"{PermissionsCachePrefix}All");
+                    _logger.LogDebug("Cache invalidated after batch permission creation");
+                    
+                    // Update SuperOwner role with all permissions
+                    await UpdateSuperOwnerPermissions();
+                }
+
+                _logger.LogInformation("Batch permissions result: Created={Created}, Skipped={Skipped}, Failed={Failed}", 
+                    result.Created, result.Skipped, result.Failed);
+                return result;
+            }, _logger);
+        }
+
+        private async Task UpdateSuperOwnerPermissions()
+        {
+            try
+            {
+                var rolesRepository = _serviceProvider.GetRequiredService<IRolesRepository>();
+                _logger.LogInformation("Updating SuperOwner role with all permissions");
+                
+                var superOwnerRoles = await rolesRepository.Get(x => x.Name == "SuperOwner");
+                var superOwnerRole = superOwnerRoles.FirstOrDefault();
+                
+                if (superOwnerRole == null)
+                {
+                    _logger.LogWarning("SuperOwner role not found, skipping permission update");
+                    return;
+                }
+                
+                var allPermissions = await _permissionsRepository.Get();
+                _logger.LogDebug("Retrieved {Count} permissions for SuperOwner role", allPermissions.Count);
+                
+                superOwnerRole.Permissions = allPermissions;
+                await rolesRepository.Update(superOwnerRole);
+                
+                _logger.LogInformation("SuperOwner role updated with {Count} permissions", allPermissions.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update SuperOwner role with new permissions");
+                // Don't throw - this is a best-effort operation
+            }
         }
 
         public async Task<GetPermissionDTO?> GetPermission(Guid id)
