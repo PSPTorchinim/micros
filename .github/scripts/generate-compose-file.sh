@@ -170,7 +170,7 @@ if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
         service_ports+=("$host_port")
         
         # Determine if this was an internal or external port based on range
-        if (( host_port >= 40000 && host_port < 50000 )); then
+        if (( host_port >= 40010 && host_port < 50000 )); then
           PRESERVED_PORT_TYPES["$host_port"]="internal"
         elif (( host_port >= 50010 && host_port < 60000 )); then
           PRESERVED_PORT_TYPES["$host_port"]="external"
