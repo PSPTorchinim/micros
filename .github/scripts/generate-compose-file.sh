@@ -80,8 +80,8 @@ validate_inputs() {
   log_info "Input validation passed"
 }
 
-if [ $# -ne 7 ]; then
-  echo "Usage: $0 \"internal_ports\" \"external_ports\" \"docker_tag\" \"repo_owner\" \"repo_name\" \"data_base_dir\" \"output_file\""
+if [ $# -lt 7 ] || [ $# -gt 8 ]; then
+  echo "Usage: $0 \"internal_ports\" \"external_ports\" \"docker_tag\" \"repo_owner\" \"repo_name\" \"data_base_dir\" \"output_file\" [\"previous_compose_file\"]"
   exit 1
 fi
 INTERNAL_PORTS="$1"
@@ -91,6 +91,7 @@ REPO_OWNER="$4"
 REPO_NAME="$5"
 DATA_BASE_DIR="$6"
 OUTPUT_FILE="$7"
+PREVIOUS_COMPOSE="${8:-}"
 
 BASE_DATA_DIR="$(normalize_base_dir "$DATA_BASE_DIR")"
 log_section "Script Initialization"
@@ -99,6 +100,11 @@ log_info "Log level: $LOG_LEVEL"
 log_info "Log file: $LOG_FILE"
 log_info "File logging: $ENABLE_FILE_LOGGING"
 log_info "Base data directory (normalized): $BASE_DATA_DIR"
+if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
+  log_info "Previous compose file provided: $PREVIOUS_COMPOSE"
+else
+  log_info "No previous compose file provided or file not found - all services will get new ports"
+fi
 
 validate_inputs
 _enable_shell_xtrace
@@ -107,8 +113,8 @@ _enable_shell_xtrace
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
 # Infrastructure services that need external access (exposed via Cloudflare tunnel)
-# - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
-# - Services in Docker/services/* and Docker/frontends/* get external ports (50000-59999)
+# - Services in Docker/infra/* are normally assigned internal ports (40010-49999)
+# - Services in Docker/services/* and Docker/frontends/* get external ports (50010-59999)
 # - List infra services here that need external access exceptions
 # - Format: space-separated list of service names
 # - Example: To expose a new infra service "prometheus", add it to this list:
@@ -135,6 +141,75 @@ log_info "External ports available: $external_count"
 NEXT_PORT=""; CONVERTED_PORTS=""
 declare -A USED_HOST_PORTS
 declare -A USED_EXTERNAL_PORTS
+declare -A EXISTING_SERVICE_PORTS  # Maps service name -> space-separated list of host ports
+declare -A PRESERVED_PORT_TYPES    # Maps host port -> "internal" or "external"
+
+# Parse existing port assignments from previous compose file
+if [[ -n "$PREVIOUS_COMPOSE" && -f "$PREVIOUS_COMPOSE" ]]; then
+  log_subsection "Parsing Existing Port Assignments"
+  
+  # Get list of services from previous compose
+  previous_services=$(yq eval '.services | keys | .[]' "$PREVIOUS_COMPOSE" 2>/dev/null || true)
+  
+  while IFS= read -r svc; do
+    [[ -z "$svc" ]] && continue
+    
+    # Get port mappings for this service
+    port_mappings=$(yq eval ".services.${svc}.ports[]" "$PREVIOUS_COMPOSE" 2>/dev/null || true)
+    
+    # Collect all host ports for this service
+    declare -a service_ports=()
+    while IFS= read -r port_mapping; do
+      [[ -z "$port_mapping" || "$port_mapping" == "null" ]] && continue
+      
+      # Extract host port from mapping (format: "host:container" or just "container")
+      # Handle quoted strings and port mappings like "50001:80" or "50001:80/tcp"
+      host_port=$(echo "$port_mapping" | sed -E 's/"//g; s/^([0-9]+):.*$/\1/; t; d')
+      
+      if [[ -n "$host_port" && "$host_port" =~ ^[0-9]+$ ]]; then
+        service_ports+=("$host_port")
+        
+        # Determine if this was an internal or external port based on range
+        if (( host_port >= 40010 && host_port < 50000 )); then
+          PRESERVED_PORT_TYPES["$host_port"]="internal"
+        elif (( host_port >= 50010 && host_port < 60000 )); then
+          PRESERVED_PORT_TYPES["$host_port"]="external"
+        else
+          # Unknown range, default to external
+          PRESERVED_PORT_TYPES["$host_port"]="external"
+        fi
+        
+        log_info "Found existing port assignment: $svc -> $host_port (${PRESERVED_PORT_TYPES[$host_port]})"
+      fi
+    done <<< "$port_mappings"
+    
+    # Store all ports for this service
+    if (( ${#service_ports[@]} > 0 )); then
+      EXISTING_SERVICE_PORTS["$svc"]="${service_ports[*]}"
+    fi
+  done <<< "$previous_services"
+  
+  # Remove preserved ports from available pools
+  # Build new arrays without preserved ports
+  declare -a new_internal_ports=()
+  for port in "${INTERNAL_PORT_ARRAY[@]}"; do
+    [[ -z "${PRESERVED_PORT_TYPES[$port]:-}" ]] && new_internal_ports+=("$port")
+  done
+  
+  declare -a new_external_ports=()
+  for port in "${EXTERNAL_PORT_ARRAY[@]}"; do
+    [[ -z "${PRESERVED_PORT_TYPES[$port]:-}" ]] && new_external_ports+=("$port")
+  done
+  
+  INTERNAL_PORT_ARRAY=("${new_internal_ports[@]}")
+  EXTERNAL_PORT_ARRAY=("${new_external_ports[@]}")
+  internal_count=${#INTERNAL_PORT_ARRAY[@]}
+  external_count=${#EXTERNAL_PORT_ARRAY[@]}
+  
+  log_info "Preserved ${#EXISTING_SERVICE_PORTS[@]} services with existing port assignments"
+  log_info "Remaining internal ports: $internal_count"
+  log_info "Remaining external ports: $external_count"
+fi
 
 track_port_use() {
   local host service cport is_external
@@ -161,14 +236,14 @@ get_next_internal_port() {
   if (( internal_counter < internal_count )); then
     NEXT_PORT="${INTERNAL_PORT_ARRAY[$internal_counter]}"; ((++internal_counter))
   else
-    log_warn "INT ports exhausted; fallback 40000"; NEXT_PORT="40000"
+    log_warn "INT ports exhausted; fallback 40010"; NEXT_PORT="40010"
   fi
 }
 get_next_external_port() {
   if (( external_counter < external_count )); then
     NEXT_PORT="${EXTERNAL_PORT_ARRAY[$external_counter]}"; ((++external_counter))
   else
-    log_warn "EXT ports exhausted; fallback 50000"; NEXT_PORT="50000"
+    log_warn "EXT ports exhausted; fallback 50010"; NEXT_PORT="50010"
   fi
 }
 
@@ -270,17 +345,46 @@ convert_ports() {
   local port_output="    ports:"; local port_count=0
   local port_mappings; port_mappings=$(yq eval ".services.${service_name}.ports[]" "$SOURCE_COMPOSE" 2>/dev/null)
 
+  # Check if this service has existing port assignments (could be multiple)
+  local existing_ports_str="${EXISTING_SERVICE_PORTS[$service_name]:-}"
+  local -a existing_ports=()
+  if [[ -n "$existing_ports_str" ]]; then
+    read -ra existing_ports <<< "$existing_ports_str"
+    log_info "Service $service_name will reuse ${#existing_ports[@]} existing port(s)"
+  fi
+  
+  local existing_port_idx=0
+
   while IFS= read -r port_mapping; do
     [[ -z "$port_mapping" || "$port_mapping" == "null" ]] && continue
     local container_port
     container_port="$(sed -E 's@.*/@@; s@.*:@@; s@/tcp@@; s@/udp@@' <<<"$port_mapping" | tr -d '"')"
     [[ -z "$container_port" ]] && { log_warn "Parse failure on port mapping: '$port_mapping'"; continue; }
 
-    NEXT_PORT=""; $get_port_function
-    local new_port="$NEXT_PORT"
-    [[ -z "$new_port" ]] && { log_error "Allocator returned empty host port for $service_name"; continue; }
+    local new_port
+    # Check if we have an existing port for this mapping index
+    if (( existing_port_idx < ${#existing_ports[@]} )); then
+      # Reuse existing port for this mapping
+      new_port="${existing_ports[$existing_port_idx]}"
+      : $((existing_port_idx++))  # Increment with : to avoid exit code issues
+      
+      # Determine the correct is_external flag based on preserved port type
+      local preserved_type="${PRESERVED_PORT_TYPES[$new_port]:-}"
+      if [[ "$preserved_type" == "external" ]]; then
+        is_external="true"
+      else
+        is_external="false"
+      fi
+      
+      log_info "Reusing existing port for $service_name: host=$new_port -> container=$container_port (${preserved_type})"
+    else
+      # No more existing ports, allocate a new one
+      NEXT_PORT=""; $get_port_function
+      new_port="$NEXT_PORT"
+      [[ -z "$new_port" ]] && { log_error "Allocator returned empty host port for $service_name"; continue; }
+      log_info "Assign new port for $service_name: host=$new_port -> container=$container_port"
+    fi
 
-    log_info "Assign $service_name: host=$new_port -> container=$container_port"
     track_port_use "$new_port" "$service_name" "$container_port" "$is_external"
     port_output="${port_output}\n      - \"${new_port}:${container_port}\""
     ((++port_count))
@@ -405,8 +509,8 @@ while IFS= read -r service; do
   # Determine port function - check if service has official image or dockerfile
   if [[ "$existing_image" != "null" && -n "$existing_image" ]]; then
     # For official images, infer port function from service name/pattern
-    # Infrastructure services (databases, message queues, etc.) should NOT be exposed externally
-    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki|strapi_db|redis|sqlserver|mongodb_container|rabbitmq)$ ]]; then
+    # Infrastructure services (databases, message queues, monitoring) should NOT be exposed externally
+    if [[ "$service" == *-exporter* || "$service" =~ ^(grafana|prometheus|loki|tempo|strapi_db|redis|sqlserver|mongodb_container|rabbitmq)$ ]]; then
       port_function="get_next_internal_port"
     else
       port_function="get_next_external_port"

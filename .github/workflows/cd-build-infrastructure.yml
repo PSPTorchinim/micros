@@ -361,20 +361,20 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Calculate unused internal ports (40000-49999)
+      - name: Calculate unused internal ports (40010-49999)
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_internal_ports
         with:
-          start_port: 40000
+          start_port: 40010
           end_port: 50000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ""
 
-      - name: Calculate unused external ports (50000-59999)
+      - name: Calculate unused external ports (50010-59999)
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_external_ports
         with:
-          start_port: 50000
+          start_port: 50010
           end_port: 60000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ""
@@ -462,6 +462,67 @@ jobs:
             echo "✅ All required Docker images exist in registry"
           fi
 
+      - name: Download previous compose file (if exists)
+        id: download_previous_compose
+        uses: appleboy/ssh-action@v1
+        continue-on-error: true
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
+          script: |
+            #!/bin/sh
+            set -euo pipefail
+            
+            COMPOSE_PATH="/mnt/Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}/Images/dj-panel-${{ needs.setup.outputs.env_slug }}.yml"
+            
+            if [ -f "$COMPOSE_PATH" ]; then
+              echo "📥 Previous compose file found: $COMPOSE_PATH"
+              cat "$COMPOSE_PATH" | base64 -w0
+            else
+              echo "ℹ️  No previous compose file found at: $COMPOSE_PATH"
+              echo "This is likely the first deployment."
+              exit 1
+            fi
+
+      - name: Save previous compose locally
+        if: steps.download_previous_compose.outcome == 'success'
+        run: |
+          set -euo pipefail
+          
+          echo "💾 Saving previous compose file locally..."
+          PREVIOUS_B64="${{ steps.download_previous_compose.outputs.stdout }}"
+          
+          # Extract base64 content (skip any non-base64 lines like status messages)
+          CLEAN_B64=$(echo "$PREVIOUS_B64" | grep -E '^[A-Za-z0-9+/=]+$' | head -1 || echo "")
+          
+          if [ -n "$CLEAN_B64" ]; then
+            echo "$CLEAN_B64" | base64 -d > previous-compose.yml
+            echo "✅ Previous compose file saved to: previous-compose.yml"
+            
+            # Verify the file is valid YAML and has services
+            if yq eval '.' previous-compose.yml >/dev/null 2>&1; then
+              echo "✅ Previous compose file is valid YAML"
+              
+              # Check if services key exists and is a map (not null)
+              services_type=$(yq eval '.services | type' previous-compose.yml 2>/dev/null || echo "null")
+              if [ "$services_type" = "!!map" ]; then
+                echo "Services in previous compose:"
+                yq eval '.services | keys | .[]' previous-compose.yml 2>/dev/null | head -10 || echo "  (Could not list services)"
+              else
+                echo "⚠️  Previous compose file has no valid services section (type: $services_type)"
+                echo "⚠️  Will generate from scratch"
+                rm -f previous-compose.yml
+              fi
+            else
+              echo "⚠️  Previous compose file is not valid YAML, will generate from scratch"
+              rm -f previous-compose.yml
+            fi
+          else
+            echo "⚠️  Could not decode previous compose file, will generate from scratch"
+          fi
+
       - name: Generate compose from template and free ports
         id: generate_compose_file
         shell: bash
@@ -482,6 +543,16 @@ jobs:
           echo "Repository: $repo_name"
 
           echo "Running compose generator script..."
+          
+          # Check if previous compose file exists
+          previous_compose_arg=""
+          if [ -f "previous-compose.yml" ]; then
+            echo "📋 Using previous compose file for port preservation"
+            previous_compose_arg="previous-compose.yml"
+          else
+            echo "ℹ️  No previous compose file - all services will get new ports"
+          fi
+          
           external_map_json=$(.github/scripts/generate-compose-file.sh \
             "${{ needs.calculate_unused_ports.outputs.internal_ports }}" \
             "${{ needs.calculate_unused_ports.outputs.external_ports }}" \
@@ -489,7 +560,8 @@ jobs:
             "${{ github.repository_owner }}" \
             "$repo_name" \
             "Files/Apps/DJPanel/${{ needs.setup.outputs.current_env }}" \
-            "$output_file")
+            "$output_file" \
+            "$previous_compose_arg")
 
           echo "✅ Compose file generated successfully"
           {
