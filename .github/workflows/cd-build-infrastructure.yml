@@ -361,11 +361,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Calculate unused internal ports (40000-49999)
+      - name: Calculate unused internal ports (40010-49999)
         uses: ./.github/templates/calculate-unused-ports
         id: calculate_internal_ports
         with:
-          start_port: 40000
+          start_port: 40010
           end_port: 50000
           truenas_ports: ${{ needs.get_truenas_ports.outputs.ports }}
           tunnel_ports: ""

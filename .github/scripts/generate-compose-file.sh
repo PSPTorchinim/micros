@@ -113,7 +113,7 @@ _enable_shell_xtrace
 SOURCE_COMPOSE="Docker/dj-panel-composer.yml"
 
 # Infrastructure services that need external access (exposed via Cloudflare tunnel)
-# - Services in Docker/infra/* are normally assigned internal ports (40000-49999)
+# - Services in Docker/infra/* are normally assigned internal ports (40010-49999)
 # - Services in Docker/services/* and Docker/frontends/* get external ports (50010-59999)
 # - List infra services here that need external access exceptions
 # - Format: space-separated list of service names
@@ -236,7 +236,7 @@ get_next_internal_port() {
   if (( internal_counter < internal_count )); then
     NEXT_PORT="${INTERNAL_PORT_ARRAY[$internal_counter]}"; ((++internal_counter))
   else
-    log_warn "INT ports exhausted; fallback 40000"; NEXT_PORT="40000"
+    log_warn "INT ports exhausted; fallback 40010"; NEXT_PORT="40010"
   fi
 }
 get_next_external_port() {
