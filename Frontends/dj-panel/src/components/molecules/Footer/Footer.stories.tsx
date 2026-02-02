@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Footer } from './index';
 import type { Footer as FooterData } from '../../../models/api/strapi/apiMap';
+import { Footer } from './index';
 
 const meta = {
   title: 'Molecules/Footer',

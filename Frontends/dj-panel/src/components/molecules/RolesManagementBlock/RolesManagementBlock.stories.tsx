@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
-import { RolesManagementBlock } from './index';
-import * as RolesServiceModule from '../../../services/roles-service';
 import * as PermissionsServiceModule from '../../../services/permissions-service';
+import * as RolesServiceModule from '../../../services/roles-service';
+import { RolesManagementBlock } from './index';
 
 // Mock data
 const mockPermissions = [

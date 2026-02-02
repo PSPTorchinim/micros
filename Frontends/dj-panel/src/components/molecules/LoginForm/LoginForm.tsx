@@ -10,15 +10,15 @@ export interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(email, password);
+      await onSubmit(emailInput, passwordInput);
     } finally {
       setIsSubmitting(false);
     }
@@ -31,8 +31,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
         label="Email"
         type="email"
         id="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={emailInput}
+        onChange={(e) => setEmailInput(e.target.value)}
         placeholder="Enter your email"
         fullWidth
         required
@@ -41,8 +41,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
         label="Password"
         type="password"
         id="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        value={passwordInput}
+        onChange={(e) => setPasswordInput(e.target.value)}
         placeholder="Enter your password"
         fullWidth
         required

@@ -1,14 +1,14 @@
 // components/RenderTemplate.tsx
 import React from 'react';
+import type { Template } from '../models/api/strapi/apiMap';
 import { StrapiService } from '../services/strapi-service';
+import { ContentSkeleton } from './atoms/Skeleton';
 import {
   transformStrapiBlocks,
   RefBlockRenderer,
   type RefComponent,
 } from './RefBlockRenderer';
 import renderBlock, { type ContentBlock } from './renderBlock';
-import { ContentSkeleton } from './atoms/Skeleton';
-import type { Template } from '../models/api/strapi/apiMap';
 
 type Props = {
   /** documentId templatek (Strapi v5) */
@@ -47,7 +47,7 @@ export const RenderTemplate: React.FC<Props> = ({
 
         // U Ciebie istnieje getTemplateById (po documentId) — ale dodaliśmy też getTemplateByDocumentId
         // Jeśli masz tylko getTemplateById, możesz go tu użyć zamiast:
-        const t = (await StrapiService.getTemplateByDocumentId)
+        const t = StrapiService.getTemplateByDocumentId
           ? await StrapiService.getTemplateByDocumentId(template)
           : await StrapiService.getTemplateById(template);
 
@@ -64,7 +64,7 @@ export const RenderTemplate: React.FC<Props> = ({
       }
     };
 
-    fetchTemplate();
+    void fetchTemplate();
     return () => {
       mounted = false;
     };
@@ -89,7 +89,7 @@ export const RenderTemplate: React.FC<Props> = ({
               { __kind: 'login-block', ...(loginBlock || {}) } as ContentBlock,
             ]);
           }
-        } catch (e) {
+        } catch {
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'login-block' } as ContentBlock]);
@@ -113,7 +113,7 @@ export const RenderTemplate: React.FC<Props> = ({
               } as ContentBlock,
             ]);
           }
-        } catch (e) {
+        } catch {
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'forgot-password-block' } as ContentBlock]);
@@ -137,7 +137,7 @@ export const RenderTemplate: React.FC<Props> = ({
               } as ContentBlock,
             ]);
           }
-        } catch (e) {
+        } catch {
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
@@ -160,7 +160,7 @@ export const RenderTemplate: React.FC<Props> = ({
               } as ContentBlock,
             ]);
           }
-        } catch (e) {
+        } catch {
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
@@ -183,7 +183,7 @@ export const RenderTemplate: React.FC<Props> = ({
               } as ContentBlock,
             ]);
           }
-        } catch (e) {
+        } catch {
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'company-block' } as ContentBlock]);
@@ -228,7 +228,7 @@ export const RenderTemplate: React.FC<Props> = ({
             }
           }
           return;
-        } catch (e) {
+        } catch {
           if (mounted) {
             setBlocks([]);
             setError(null);
@@ -247,7 +247,7 @@ export const RenderTemplate: React.FC<Props> = ({
       if (mounted) setBlocks(resolved as ContentBlock[]);
     };
 
-    run();
+    void run();
     return () => {
       mounted = false;
     };
@@ -306,3 +306,4 @@ export const RenderTemplate: React.FC<Props> = ({
 };
 
 export default RenderTemplate;
+

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { RolesService } from '../../../services/roles-service';
-import { PermissionsService } from '../../../services/permissions-service';
-import { Button } from '../../atoms/Button';
-import { Input } from '../../atoms/Input';
 import {
   Role,
   GetPermissionsDTO,
   AddRoleRequest,
 } from '../../../models/api/identity/apiMap';
+import { PermissionsService } from '../../../services/permissions-service';
+import { RolesService } from '../../../services/roles-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
 import './index.css';
 
 export interface RolesManagementBlockProps {
@@ -36,7 +36,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {

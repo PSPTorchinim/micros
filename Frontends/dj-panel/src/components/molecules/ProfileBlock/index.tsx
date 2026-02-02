@@ -4,7 +4,7 @@ import { useAuth } from '../../../hooks/use-auth/use-auth';
 import { Button } from '../../atoms/Button';
 import './index.css';
 
-export interface ProfileBlock {
+interface ProfileBlockConfig {
   title?: string;
   description?: string;
   emailLabel?: string;
@@ -14,7 +14,11 @@ export interface ProfileBlock {
   customStyles?: Record<string, unknown>;
 }
 
-export const ProfileBlock: React.FC<ProfileBlock> = ({
+export interface ProfileBlockProps extends ProfileBlockConfig {
+  // This interface extends the main interface for component props
+}
+
+export const ProfileBlock: React.FC<ProfileBlockProps> = ({
   title = 'Profile',
   description = 'View and manage your profile information.',
   emailLabel = 'Email',
@@ -27,7 +31,7 @@ export const ProfileBlock: React.FC<ProfileBlock> = ({
   const navigate = useNavigate();
 
   const handleChangePassword = () => {
-    navigate(changePasswordUrl);
+    void navigate(changePasswordUrl);
   };
 
   return (

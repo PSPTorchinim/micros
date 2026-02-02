@@ -1,7 +1,7 @@
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { renderBlock, type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
+import { renderBlock, type ContentBlock } from './renderBlock';
 
 /**
  * Reference components that need to be resolved
@@ -80,8 +80,7 @@ export function transformStrapiBlocks(
   // Check if this is a ref component - return as-is, RefBlockRenderer will handle it
   if (
     '__component' in block &&
-    block.__component &&
-    block.__component.endsWith('-ref')
+    block.__component?.endsWith('-ref')
   ) {
     return block as ContentBlock;
   }
@@ -299,7 +298,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
       }
     };
 
-    resolveRef();
+    void resolveRef();
     return () => {
       cancel = true;
     };

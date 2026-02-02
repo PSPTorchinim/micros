@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Modal } from '../../atoms/Modal';
-import { Input } from '../../atoms/Input';
-import { Button } from '../../atoms/Button';
 import {
   CompanyService,
   UpdateCompanyDTO,
 } from '../../../services/company-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
+import { Modal } from '../../atoms/Modal';
 import './index.css';
 
 export interface CreateCompanyModalProps {
@@ -77,7 +77,7 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
       } else {
         setError('Failed to create company. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);

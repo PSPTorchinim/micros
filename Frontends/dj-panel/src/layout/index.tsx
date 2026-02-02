@@ -1,9 +1,9 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Header } from '../components/molecules/Header';
-import { Footer } from '../components/molecules/Footer';
-import type { Footer as FooterType } from '../models/api/strapi/apiMap';
 import type { NavigationItem } from '../components/DynamicRoutes';
+import { Footer } from '../components/molecules/Footer';
+import { Header } from '../components/molecules/Header';
+import type { Footer as FooterType } from '../models/api/strapi/apiMap';
 
 interface LayoutProps {
   navigation: {

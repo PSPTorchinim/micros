@@ -1,6 +1,6 @@
-import React from 'react';
-import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+import React from 'react';
 import './renderBlock.css';
 import {
   HeroBlock,

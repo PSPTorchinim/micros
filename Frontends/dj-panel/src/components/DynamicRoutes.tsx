@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Route, Outlet } from 'react-router-dom';
 import {
   Page,
   PageAuthStateEnum1,
@@ -7,9 +8,8 @@ import {
   Footer,
 } from '../models/api/strapi/apiMap';
 import { StrapiService } from '../services/strapi-service';
-import { Route, Outlet } from 'react-router-dom';
-import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
+import { PageComponent } from './PageComponent';
 
 /**
  * Navigation item representing a menu link with optional children
@@ -39,8 +39,8 @@ function buildRoutesAndNav(
   pages: Page[],
   parentPath = '',
 ): { routes: React.ReactElement[]; nav: NavigationItem[] } {
-  let routes: React.ReactElement[] = [];
-  let nav: NavigationItem[] = [];
+  const routes: React.ReactElement[] = [];
+  const nav: NavigationItem[] = [];
 
   pages.forEach((page) => {
     const isRoot = !parentPath;
@@ -100,7 +100,7 @@ function buildRoutesAndNav(
     }
 
     // For navigation URLs, always use leading slash
-    const url = '/' + rawPath.replace(/^\/+/g, '');
+    const url = `/${  rawPath.replace(/^\/+/g, '')}`;
     nav.push({
       id: page.id ?? 0,
       text: page.Title || String(page.id),
@@ -141,13 +141,14 @@ export function useDynamicRoutes() {
   }
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const rootPages = (await StrapiService.getRootPages()) || [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
-      let { routes, nav } = buildRoutesAndNav(pagesWithChildren);
+      const { routes: initialRoutes, nav } = buildRoutesAndNav(pagesWithChildren);
 
+      let routes = initialRoutes;
       if (
         !routes.some(
           (r) =>

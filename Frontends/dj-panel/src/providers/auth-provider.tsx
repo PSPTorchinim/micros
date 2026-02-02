@@ -4,8 +4,8 @@ import React, {
   useLayoutEffect,
   useState,
 } from 'react';
-import { AuthContext } from '../context/auth-context';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/auth-context';
 import { microservicesClient } from '../models/api';
 import { GetUserDTO, LoginResponseDTO } from '../models/api/identity/apiMap';
 
@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setToken(null);
     setRefreshToken(null);
-    navigate('/login');
+    void navigate('/login');
   };
 
   return (

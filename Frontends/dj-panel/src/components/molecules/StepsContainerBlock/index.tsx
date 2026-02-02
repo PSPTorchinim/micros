@@ -25,7 +25,7 @@ export const StepsContainerBlock = (props: StepsContainer) => {
           <div className="steps-section-header">
             <h2 className="thq-heading-2">{props.heading}</h2>
             <p className="thq-body-large">{props.content}</p>
-            {actionItem && actionItem.url && (
+            {actionItem?.url && (
               <div className="steps-actions">
                 <a
                   href={actionItem.url}

@@ -55,7 +55,7 @@ export const LoginBlock: React.FC<LoginBlockType> = ({
             JSON.stringify(response.data?.refreshToken ?? null),
           );
         }
-        navigate(redirectPath);
+        void navigate(redirectPath);
       } else {
         setError(response.message ?? 'An error occurred.');
       }

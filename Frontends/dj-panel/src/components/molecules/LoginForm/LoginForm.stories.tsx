@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    onSubmit: async (email: string, password: string) => {
+    onSubmit: async () => {
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
@@ -34,7 +34,7 @@ export const Default: Story = {
 
 export const WithError: Story = {
   args: {
-    onSubmit: async (email: string, password: string) => {
+    onSubmit: async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error: 'Invalid email or password',
@@ -43,10 +43,11 @@ export const WithError: Story = {
 
 export const WithLongError: Story = {
   args: {
-    onSubmit: async (email: string, password: string) => {
+    onSubmit: async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error:
       'Your account has been locked due to multiple failed login attempts. Please try again in 15 minutes or reset your password.',
   },
 };
+

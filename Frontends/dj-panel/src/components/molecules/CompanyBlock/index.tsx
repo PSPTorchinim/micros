@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from '../../atoms/Button';
-import { Input } from '../../atoms/Input';
 import {
   CompanyService,
   CompanyDTO,
@@ -9,6 +7,8 @@ import {
   AddCompanyUserDTO,
   CompanyStructureNodeDTO,
 } from '../../../services/company-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
 import './index.css';
 
 export interface CompanyBlockProps {
@@ -66,7 +66,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCompanyData();
+    void loadCompanyData();
   }, []);
 
   const loadCompanyData = async () => {
@@ -80,7 +80,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       setCompany(companyData);
       setUsers(usersData);
       setStructure(structureData);
-    } catch (error) {
+    } catch {
       // Error loading company data
     } finally {
       setLoading(false);
@@ -182,7 +182,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       } else {
         setCreateError('Failed to create company. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setCreateError('An error occurred. Please try again.');
     } finally {
       setIsCreatingCompany(false);

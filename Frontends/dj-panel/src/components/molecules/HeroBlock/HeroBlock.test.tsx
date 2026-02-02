@@ -1,8 +1,8 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import '@testing-library/jest-dom';
-import { HeroBlock } from './index';
 import type { HeroBlock as HeroBlockType } from '../../../models/api/strapi/apiMap';
+import { HeroBlock } from './index';
 
 describe('HeroBlock', () => {
   it('renders heading and content', () => {

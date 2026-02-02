@@ -1,15 +1,15 @@
 // Mock console.warn before any imports to suppress API key warnings
+import { render, screen, waitFor, act } from '@testing-library/react';
+import React from 'react';
+import '@testing-library/jest-dom';
+import { CompanyService } from '../../../services/company-service';
+import { CompanyBlock } from './index';
+
 const originalWarn = console.warn;
 console.warn = jest.fn();
 
 // Mock environment variables before imports
 process.env.REACT_APP_API_SECURE_KEY = 'test-secure-key-for-testing';
-
-import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { CompanyBlock } from './index';
-import { CompanyService } from '../../../services/company-service';
 
 // Restore console.warn after tests
 afterAll(() => {

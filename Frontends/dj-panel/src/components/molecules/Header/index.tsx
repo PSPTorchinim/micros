@@ -1,7 +1,7 @@
 import React from 'react';
 import './index.css';
-import { Menu } from '../Menu';
 import { ThemeToggle } from '../../atoms/ThemeToggle';
+import { Menu } from '../Menu';
 import PropTypes from 'prop-types';
 
 export const Header = (props: any): React.ReactElement => {

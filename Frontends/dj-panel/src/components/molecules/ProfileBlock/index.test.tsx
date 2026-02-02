@@ -1,9 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import '@testing-library/jest-dom';
-import { ProfileBlock } from './index';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
+import { ProfileBlock } from './index';
 
 // Mock react-router-dom
 const mockNavigate = jest.fn();

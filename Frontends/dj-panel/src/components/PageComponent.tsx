@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './PageComponent.css';
 import type { Page } from '../models/api/strapi/apiMap';
 import { StrapiService } from '../services/strapi-service';
-import { RenderTemplate } from './RenderTemplate';
 import { ContentSkeleton } from './atoms/Skeleton';
+import { RenderTemplate } from './RenderTemplate';
 
 interface PageComponentProps {
   pageId?: string;
@@ -13,7 +13,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
   const [page, setPage] = useState<Page | null | undefined>(undefined);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       if (!pageId) {
         setPage(null);
         return;

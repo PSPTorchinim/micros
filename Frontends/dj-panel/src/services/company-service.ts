@@ -55,7 +55,7 @@ export class CompanyService {
         return response.data.data as unknown as CompanyDTO;
       }
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -65,7 +65,7 @@ export class CompanyService {
       const response =
         await microservicesClient.brand.company.v1CompanyMembershipList();
       return response.data.success && response.data.data === true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -77,7 +77,7 @@ export class CompanyService {
       const response =
         await microservicesClient.brand.company.v1CompanyUpdate(updateDto);
       return response.data.success && response.data.data;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -90,7 +90,7 @@ export class CompanyService {
         return response.data.data as unknown as CompanyUserDTO[];
       }
       return [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -104,7 +104,7 @@ export class CompanyService {
           addUserDto,
         );
       return response.data.success && response.data.data;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -114,7 +114,7 @@ export class CompanyService {
       const response =
         await microservicesClient.brand.company.v1CompanyUsersDelete(userId);
       return response.data.success && response.data.data;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -129,7 +129,7 @@ export class CompanyService {
         return response.data.data as unknown as CompanyStructureNodeDTO[];
       }
       return [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -143,8 +143,9 @@ export class CompanyService {
           nodes,
         });
       return response.data.success && response.data.data;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 }
+

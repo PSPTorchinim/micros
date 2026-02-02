@@ -1,8 +1,8 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import '@testing-library/jest-dom';
-import { StepsContainerBlock } from './index';
 import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
+import { StepsContainerBlock } from './index';
 
 describe('StepsContainerBlock', () => {
   const mockCta: Cta = {

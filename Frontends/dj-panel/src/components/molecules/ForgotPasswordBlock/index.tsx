@@ -31,11 +31,11 @@ export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockType> = ({
     try {
       const response = await UsersService.forgotPassword(email);
       if (response.success) {
-        navigate(successRedirectPath);
+        void navigate(successRedirectPath);
       } else {
         setError(response.message || 'Failed to send password reset link.');
       }
-    } catch (err: unknown) {
+    } catch {
       setError('Failed to send password reset link. Please try again later.');
     } finally {
       setIsSubmitting(false);

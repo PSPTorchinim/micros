@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
-import { CompanyBlock } from './index';
 import * as CompanyServiceModule from '../../../services/company-service';
+import { CompanyBlock } from './index';
 
 // Mock data
 const mockCompanyData = {

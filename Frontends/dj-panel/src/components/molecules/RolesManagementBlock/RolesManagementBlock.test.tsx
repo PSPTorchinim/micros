@@ -1,9 +1,9 @@
-import React from 'react';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import React from 'react';
 import '@testing-library/jest-dom';
-import { RolesManagementBlock } from './index';
-import { RolesService } from '../../../services/roles-service';
 import { PermissionsService } from '../../../services/permissions-service';
+import { RolesService } from '../../../services/roles-service';
+import { RolesManagementBlock } from './index';
 
 // Mock the services
 jest.mock('../../../services/roles-service');

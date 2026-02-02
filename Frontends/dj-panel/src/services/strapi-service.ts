@@ -67,7 +67,7 @@ export class StrapiService {
         } as StrapiFilters,
       });
       return response.data.data;
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -83,7 +83,7 @@ export class StrapiService {
       return (
         (response as any).data?.data ?? (response.data as unknown as Page[])
       );
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -98,7 +98,7 @@ export class StrapiService {
       });
       const page = response?.data?.data?.[0] || null;
       return page;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -116,7 +116,7 @@ export class StrapiService {
       });
       const template = response?.data?.data?.[0] || null;
       return template;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -129,7 +129,7 @@ export class StrapiService {
         populate: TEMPLATE_CONTENT_POPULATE as any,
       });
       return response?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -143,7 +143,7 @@ export class StrapiService {
       const response =
         await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -153,7 +153,7 @@ export class StrapiService {
       const response =
         await microservicesClient.strapi.contactInfo.getContactInfosId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -163,7 +163,7 @@ export class StrapiService {
       const response =
         await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -175,7 +175,7 @@ export class StrapiService {
           id,
         );
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -187,7 +187,7 @@ export class StrapiService {
           id,
         );
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -197,7 +197,7 @@ export class StrapiService {
       const response =
         await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -207,7 +207,7 @@ export class StrapiService {
       const response =
         await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -219,7 +219,7 @@ export class StrapiService {
           id,
         );
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -228,7 +228,7 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.cta.getCtasId(id);
       return response?.data?.data || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -245,7 +245,7 @@ export class StrapiService {
           populate: '*',
         });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -257,7 +257,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -269,7 +269,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -282,7 +282,7 @@ export class StrapiService {
           populate: '*',
         });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -294,7 +294,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -307,7 +307,7 @@ export class StrapiService {
           populate: '*',
         });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -320,7 +320,7 @@ export class StrapiService {
           populate: '*',
         });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -332,7 +332,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -344,7 +344,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -356,7 +356,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -371,7 +371,7 @@ export class StrapiService {
           },
         );
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -381,7 +381,7 @@ export class StrapiService {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -391,7 +391,7 @@ export class StrapiService {
       const res =
         await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -403,7 +403,7 @@ export class StrapiService {
       const res =
         await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -415,7 +415,7 @@ export class StrapiService {
       const res =
         await microservicesClient.strapi.profileBlock.getProfileBlock();
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -428,7 +428,7 @@ export class StrapiService {
         microservicesClient.strapi as any
       ).companyBlock.getCompanyBlock();
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -446,7 +446,7 @@ export class StrapiService {
         } as any,
       });
       return res?.data?.data || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -462,7 +462,7 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -474,8 +474,9 @@ export class StrapiService {
         populate: '*',
       });
       return res?.data?.data?.[0] || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
 }
+

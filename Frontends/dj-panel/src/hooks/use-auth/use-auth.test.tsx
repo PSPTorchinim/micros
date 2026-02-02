@@ -1,8 +1,8 @@
-import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { useAuth } from './use-auth';
+import React from 'react';
 import { AuthContext } from '../../context/auth-context';
 import { GetUserDTO } from '../../models/api/identity/apiMap';
+import { useAuth } from './use-auth';
 
 describe('useAuth Hook', () => {
   it('throws error when used outside AuthProvider', () => {

@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Menu.css';
-import { useMenuLogic } from './menuUtils';
 import { ConfigurationMenuEnum } from '../../../models/api/strapi/apiMap';
 import { Button } from '../../atoms';
 import type { NavigationItem } from '../../DynamicRoutes';
+import { useMenuLogic } from './menuUtils';
 
 export interface MenuProps {
   links?: NavigationItem[];
