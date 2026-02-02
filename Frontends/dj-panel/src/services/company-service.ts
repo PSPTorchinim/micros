@@ -56,7 +56,6 @@ export class CompanyService {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching company:', error);
       return null;
     }
   }
@@ -67,7 +66,6 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyMembershipList();
       return response.data.success && response.data.data === true;
     } catch (error) {
-      console.error('Error checking company membership:', error);
       return false;
     }
   }
@@ -80,7 +78,6 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyUpdate(updateDto);
       return response.data.success && response.data.data;
     } catch (error) {
-      console.error('Error updating company:', error);
       return false;
     }
   }
@@ -94,7 +91,6 @@ export class CompanyService {
       }
       return [];
     } catch (error) {
-      console.error('Error fetching company users:', error);
       return [];
     }
   }
@@ -109,7 +105,6 @@ export class CompanyService {
         );
       return response.data.success && response.data.data;
     } catch (error) {
-      console.error('Error adding company user:', error);
       return false;
     }
   }
@@ -120,7 +115,6 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyUsersDelete(userId);
       return response.data.success && response.data.data;
     } catch (error) {
-      console.error('Error removing company user:', error);
       return false;
     }
   }
@@ -136,7 +130,6 @@ export class CompanyService {
       }
       return [];
     } catch (error) {
-      console.error('Error fetching company structure:', error);
       return [];
     }
   }
@@ -151,7 +144,6 @@ export class CompanyService {
         });
       return response.data.success && response.data.data;
     } catch (error) {
-      console.error('Error updating company structure:', error);
       return false;
     }
   }

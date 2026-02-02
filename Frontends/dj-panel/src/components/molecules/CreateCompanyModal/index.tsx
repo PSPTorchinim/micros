@@ -79,7 +79,6 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-      console.error('Error creating company:', err);
     } finally {
       setIsSubmitting(false);
     }

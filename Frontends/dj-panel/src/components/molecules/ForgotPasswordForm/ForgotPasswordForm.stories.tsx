@@ -26,7 +26,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     onSubmit: async (email: string) => {
-      console.log('Password reset requested for:', email);
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
@@ -36,7 +35,6 @@ export const Default: Story = {
 export const WithError: Story = {
   args: {
     onSubmit: async (email: string) => {
-      console.log('Password reset requested for:', email);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error: 'Email address not found',
@@ -46,7 +44,6 @@ export const WithError: Story = {
 export const WithNetworkError: Story = {
   args: {
     onSubmit: async (email: string) => {
-      console.log('Password reset requested for:', email);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error: 'Network error. Please check your connection and try again.',

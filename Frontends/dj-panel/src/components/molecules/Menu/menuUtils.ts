@@ -36,8 +36,6 @@ export function useMenuLogic() {
       const actionFn = actionMap[actionKey];
       if (actionFn) {
         actionFn();
-      } else {
-        console.warn(`Unknown action: ${actionText}`);
       }
     },
     [logout],

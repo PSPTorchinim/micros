@@ -26,7 +26,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     onSubmit: async (email: string, password: string) => {
-      console.log('Login submitted:', { email, password });
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
@@ -36,7 +35,6 @@ export const Default: Story = {
 export const WithError: Story = {
   args: {
     onSubmit: async (email: string, password: string) => {
-      console.log('Login submitted:', { email, password });
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error: 'Invalid email or password',
@@ -46,7 +44,6 @@ export const WithError: Story = {
 export const WithLongError: Story = {
   args: {
     onSubmit: async (email: string, password: string) => {
-      console.log('Login submitted:', { email, password });
       await new Promise((resolve) => setTimeout(resolve, 1000));
     },
     error:

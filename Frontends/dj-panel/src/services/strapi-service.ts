@@ -61,24 +61,13 @@ export class StrapiService {
   // Root pages (without parent)
   public static async getRootPages(): Promise<Page[] | undefined> {
     try {
-      console.log('[StrapiService] Fetching root pages...');
       const response = await microservicesClient.strapi.page.getPages({
         filters: {
           Parents: { id: { $null: true } },
         } as StrapiFilters,
       });
-      console.log('[StrapiService] Root pages response:', {
-        count: response.data.data?.length,
-        pages: response.data.data?.map((p: any) => ({
-          id: p.id,
-          Title: p.Title,
-          Slug: p.Slug,
-          documentId: p.documentId,
-        })),
-      });
       return response.data.data;
     } catch (error) {
-      console.error(`[StrapiService] Error fetching root pages:`, error);
       return [];
     }
   }
@@ -95,7 +84,6 @@ export class StrapiService {
         (response as any).data?.data ?? (response.data as unknown as Page[])
       );
     } catch (error) {
-      console.error(`Error fetching pages by parent ID ${parentId}:`, error);
       return [];
     }
   }
@@ -104,31 +92,13 @@ export class StrapiService {
     pageDocumentId: string,
   ): Promise<Page | null> {
     try {
-      console.log(
-        `[StrapiService] Fetching page by documentId: ${pageDocumentId}`,
-      );
       const response = await microservicesClient.strapi.page.getPages({
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
         populate: '*',
       });
       const page = response?.data?.data?.[0] || null;
-      console.log(
-        `[StrapiService] Page fetched:`,
-        page
-          ? {
-              id: page.id,
-              Title: (page as any).Title,
-              Slug: (page as any).Slug,
-              template: (page as any).template,
-            }
-          : 'null',
-      );
       return page;
     } catch (error) {
-      console.error(
-        `[StrapiService] Error fetching page by ID ${pageDocumentId}:`,
-        error,
-      );
       return null;
     }
   }
@@ -140,30 +110,13 @@ export class StrapiService {
   // DEPRECATED alias – kept for compatibility, but includes proper populate.on
   public static async getTemplateById(templateDocumentId: string) {
     try {
-      console.log(
-        `[StrapiService] Fetching template by ID: ${templateDocumentId}`,
-      );
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
         populate: TEMPLATE_CONTENT_POPULATE as any,
       });
       const template = response?.data?.data?.[0] || null;
-      console.log(
-        `[StrapiService] Template fetched:`,
-        template
-          ? {
-              Name: (template as any).Name,
-              TemplateType: (template as any).TemplateType,
-              documentId: (template as any).documentId,
-            }
-          : 'null',
-      );
       return template;
     } catch (error) {
-      console.error(
-        `[StrapiService] Error fetching template by ID ${templateDocumentId}:`,
-        error,
-      );
       return null;
     }
   }
@@ -177,7 +130,6 @@ export class StrapiService {
       });
       return response?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching template by documentId ${documentId}:`, e);
       return null;
     }
   }
@@ -192,7 +144,6 @@ export class StrapiService {
         await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching feature tab block by ID ${id}:`, error);
       return null;
     }
   }
@@ -203,7 +154,6 @@ export class StrapiService {
         await microservicesClient.strapi.contactInfo.getContactInfosId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching contact info block by ID ${id}:`, error);
       return null;
     }
   }
@@ -214,7 +164,6 @@ export class StrapiService {
         await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching hero block by ID ${id}:`, error);
       return null;
     }
   }
@@ -227,7 +176,6 @@ export class StrapiService {
         );
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching feature section by ID ${id}:`, error);
       return null;
     }
   }
@@ -240,7 +188,6 @@ export class StrapiService {
         );
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching contact section by ID ${id}:`, error);
       return null;
     }
   }
@@ -251,7 +198,6 @@ export class StrapiService {
         await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching image slider block by ID ${id}:`, error);
       return null;
     }
   }
@@ -262,7 +208,6 @@ export class StrapiService {
         await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching article block by ID ${id}:`, error);
       return null;
     }
   }
@@ -275,7 +220,6 @@ export class StrapiService {
         );
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching steps container block by ID ${id}:`, error);
       return null;
     }
   }
@@ -285,7 +229,6 @@ export class StrapiService {
       const response = await microservicesClient.strapi.cta.getCtasId(id);
       return response?.data?.data || null;
     } catch (error) {
-      console.error(`Error fetching CTA block by ID ${id}:`, error);
       return null;
     }
   }
@@ -303,7 +246,6 @@ export class StrapiService {
         });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching article-block by documentId ${id}:`, e);
       return null;
     }
   }
@@ -316,7 +258,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching hero-block by documentId ${id}:`, e);
       return null;
     }
   }
@@ -329,7 +270,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching image-slider by documentId ${id}:`, e);
       return null;
     }
   }
@@ -343,7 +283,6 @@ export class StrapiService {
         });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching steps-container by documentId ${id}:`, e);
       return null;
     }
   }
@@ -356,7 +295,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching cta by documentId ${id}:`, e);
       return null;
     }
   }
@@ -370,7 +308,6 @@ export class StrapiService {
         });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching feature-section by documentId ${id}:`, e);
       return null;
     }
   }
@@ -384,7 +321,6 @@ export class StrapiService {
         });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching contact-section by documentId ${id}:`, e);
       return null;
     }
   }
@@ -397,7 +333,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching feature-tab by documentId ${id}:`, e);
       return null;
     }
   }
@@ -410,7 +345,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching contact-info by documentId ${id}:`, e);
       return null;
     }
   }
@@ -423,7 +357,6 @@ export class StrapiService {
       });
       return res?.data?.data || null;
     } catch (e) {
-      console.error(`Error fetching login-block by documentId ${id}:`, e);
       return null;
     }
   }
@@ -439,10 +372,6 @@ export class StrapiService {
         );
       return res?.data?.data || null;
     } catch (e) {
-      console.error(
-        `Error fetching forgot-password-block by documentId ${id}:`,
-        e,
-      );
       return null;
     }
   }
@@ -453,7 +382,6 @@ export class StrapiService {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching login-block singleton:', e);
       return null;
     }
   }
@@ -464,7 +392,6 @@ export class StrapiService {
         await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching forgot-password-block singleton:', e);
       return null;
     }
   }
@@ -477,7 +404,6 @@ export class StrapiService {
         await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching change-password-block singleton:', e);
       return null;
     }
   }
@@ -490,7 +416,6 @@ export class StrapiService {
         await microservicesClient.strapi.profileBlock.getProfileBlock();
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching profile-block singleton:', e);
       return null;
     }
   }
@@ -504,7 +429,6 @@ export class StrapiService {
       ).companyBlock.getCompanyBlock();
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching company-block singleton:', e);
       return null;
     }
   }
@@ -519,11 +443,10 @@ export class StrapiService {
             },
           },
           socialLinks: true,
-        },
+        } as any,
       });
       return res?.data?.data || null;
     } catch (e) {
-      console.error('Error fetching footer singleton:', e);
       return null;
     }
   }
@@ -540,7 +463,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching article by slug ${slug}:`, e);
       return null;
     }
   }
@@ -553,7 +475,6 @@ export class StrapiService {
       });
       return res?.data?.data?.[0] || null;
     } catch (e) {
-      console.error(`Error fetching article by title ${title}:`, e);
       return null;
     }
   }

@@ -1,7 +1,7 @@
 import { microservicesClient } from '../models/api';
 import {
   RoleIEnumerableResponse,
-  RoleResponse,
+  GetRoleDTOResponse,
   BooleanResponse,
   AddRoleRequest,
 } from '../models/api/identity/apiMap';
@@ -25,7 +25,7 @@ export class RolesService {
       });
   }
 
-  public static async getRole(id: string): Promise<RoleResponse> {
+  public static async getRole(id: string): Promise<GetRoleDTOResponse> {
     return microservicesClient.identity.roles
       .v1RolesDetail(id)
       .then((response) => {

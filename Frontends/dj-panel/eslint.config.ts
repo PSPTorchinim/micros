@@ -17,7 +17,15 @@ export default [
         document: 'readonly',
         navigator: 'readonly',
         JSX: 'readonly',
-        jest: 'readonly', // Add jest global for tests
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: {

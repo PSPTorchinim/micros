@@ -51,7 +51,7 @@ export const CompanySetupProvider = ({
           setShowModal(true);
         }
       } catch (error) {
-        console.error('Error checking company membership:', error);
+        // Error checking company membership
       } finally {
         setIsCheckingCompany(false);
       }

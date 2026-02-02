@@ -81,7 +81,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       setUsers(usersData);
       setStructure(structureData);
     } catch (error) {
-      console.error('Error loading company data:', error);
+      // Error loading company data
     } finally {
       setLoading(false);
     }
@@ -184,7 +184,6 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       }
     } catch (err) {
       setCreateError('An error occurred. Please try again.');
-      console.error('Error creating company:', err);
     } finally {
       setIsCreatingCompany(false);
     }

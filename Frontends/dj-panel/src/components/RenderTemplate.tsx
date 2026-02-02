@@ -42,9 +42,6 @@ export const RenderTemplate: React.FC<Props> = ({
       }
 
       try {
-        console.log(
-          `[RenderTemplate] Fetching template with documentId: ${template}`,
-        );
         setLoading(true);
         setError(null);
 
@@ -54,22 +51,11 @@ export const RenderTemplate: React.FC<Props> = ({
           ? await StrapiService.getTemplateByDocumentId(template)
           : await StrapiService.getTemplateById(template);
 
-        console.log(
-          `[RenderTemplate] Template loaded:`,
-          t
-            ? {
-                Name: (t as any).Name,
-                TemplateType: (t as any).TemplateType,
-              }
-            : 'null',
-        );
-
         if (!mounted) return;
         setTpl(t ?? null);
       } catch (e: unknown) {
         if (!mounted) return;
         const error = e as Error;
-        console.error('[RenderTemplate] Error fetching template:', error);
         setTpl(null);
         setBlocks([]);
         setError(error?.message || 'Failed to fetch template');
@@ -92,8 +78,6 @@ export const RenderTemplate: React.FC<Props> = ({
       // Get template type
       const templateType = tpl?.TemplateType;
 
-      console.log('[RenderTemplate] Processing template type:', templateType);
-
       // For Login and ForgotPassword templates, fetch the singleton blocks
       if (templateType === 'Login') {
         try {
@@ -106,7 +90,6 @@ export const RenderTemplate: React.FC<Props> = ({
             ]);
           }
         } catch (e) {
-          console.error('Error fetching login block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'login-block' } as ContentBlock]);
@@ -131,7 +114,6 @@ export const RenderTemplate: React.FC<Props> = ({
             ]);
           }
         } catch (e) {
-          console.error('Error fetching forgot password block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'forgot-password-block' } as ContentBlock]);
@@ -156,7 +138,6 @@ export const RenderTemplate: React.FC<Props> = ({
             ]);
           }
         } catch (e) {
-          console.error('Error fetching change password block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'change-password-block' } as ContentBlock]);
@@ -180,7 +161,6 @@ export const RenderTemplate: React.FC<Props> = ({
             ]);
           }
         } catch (e) {
-          console.error('Error fetching profile block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'profile-block' } as ContentBlock]);
@@ -204,7 +184,6 @@ export const RenderTemplate: React.FC<Props> = ({
             ]);
           }
         } catch (e) {
-          console.error('Error fetching company block singleton:', e);
           if (mounted) {
             // Still render the block with defaults on error
             setBlocks([{ __kind: 'company-block' } as ContentBlock]);
@@ -215,9 +194,6 @@ export const RenderTemplate: React.FC<Props> = ({
       }
 
       if (templateType === 'RolesManagement') {
-        console.log(
-          '[RenderTemplate] Detected RolesManagement template, rendering roles-management-block',
-        );
         // Render roles management block without fetching from CMS
         if (mounted) {
           setBlocks([{ __kind: 'roles-management-block' } as ContentBlock]);
@@ -253,7 +229,6 @@ export const RenderTemplate: React.FC<Props> = ({
           }
           return;
         } catch (e) {
-          console.error('Error fetching article by title:', e);
           if (mounted) {
             setBlocks([]);
             setError(null);
