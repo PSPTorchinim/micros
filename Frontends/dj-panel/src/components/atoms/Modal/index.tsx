@@ -61,7 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
         className={`modal-content modal-content--${size}`}
         onClick={handleContentClick}
       >
-        {(title ?? showCloseButton) && (
+        {(title || showCloseButton) && (
           <div className="modal-header">
             {title && <h2 className="modal-title">{title}</h2>}
             {showCloseButton && onClose && (

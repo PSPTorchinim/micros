@@ -207,9 +207,7 @@ export const RenderTemplate: React.FC<Props> = ({
         tpl?.Content,
       )
         ? tpl.Content
-        : Array.isArray(tpl?.Content)
-          ? tpl.Content
-          : [];
+        : [];
 
       // If this is a Standard template with no content and we have a page title,
       // try to fetch and render the article directly
