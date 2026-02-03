@@ -49,4 +49,3 @@ export const WithNetworkError: Story = {
     error: 'Network error. Please check your connection and try again.',
   },
 };
-

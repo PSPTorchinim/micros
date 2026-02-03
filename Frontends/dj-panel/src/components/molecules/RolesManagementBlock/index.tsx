@@ -90,7 +90,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         setRoleName(response.data.name || '');
         setRoleDescription(response.data.description || '');
         setSelectedPermissions(
-          response.data.permissions?.map((p: { id: any; }) => p.id || '') || [],
+          response.data.permissions?.map((p) => p.id || '') || [],
         );
         setShowForm(true);
       } else {

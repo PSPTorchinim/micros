@@ -14,4 +14,3 @@ export type AuthContextData = {
 export const AuthContext = createContext<AuthContextData | undefined>(
   undefined,
 );
-

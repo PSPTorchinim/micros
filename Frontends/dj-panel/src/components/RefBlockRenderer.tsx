@@ -78,10 +78,7 @@ export function transformStrapiBlocks(
   }
 
   // Check if this is a ref component - return as-is, RefBlockRenderer will handle it
-  if (
-    '__component' in block &&
-    block.__component?.endsWith('-ref')
-  ) {
+  if ('__component' in block && block.__component?.endsWith('-ref')) {
     return block as ContentBlock;
   }
 

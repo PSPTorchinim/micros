@@ -100,7 +100,7 @@ function buildRoutesAndNav(
     }
 
     // For navigation URLs, always use leading slash
-    const url = `/${  rawPath.replace(/^\/+/g, '')}`;
+    const url = `/${rawPath.replace(/^\/+/g, '')}`;
     nav.push({
       id: page.id ?? 0,
       text: page.Title || String(page.id),
@@ -115,7 +115,9 @@ function buildRoutesAndNav(
 
   return {
     routes,
-    nav: nav.sort((a, b) => (a.NavigationOrder ?? 0) - (b.NavigationOrder ?? 0)),
+    nav: nav.sort(
+      (a, b) => (a.NavigationOrder ?? 0) - (b.NavigationOrder ?? 0),
+    ),
   };
 }
 
@@ -146,7 +148,8 @@ export function useDynamicRoutes() {
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
-      const { routes: initialRoutes, nav } = buildRoutesAndNav(pagesWithChildren);
+      const { routes: initialRoutes, nav } =
+        buildRoutesAndNav(pagesWithChildren);
 
       let routes = initialRoutes;
       if (

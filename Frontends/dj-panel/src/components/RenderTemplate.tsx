@@ -306,4 +306,3 @@ export const RenderTemplate: React.FC<Props> = ({
 };
 
 export default RenderTemplate;
-

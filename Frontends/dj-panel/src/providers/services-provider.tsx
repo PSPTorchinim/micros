@@ -17,4 +17,3 @@ export const ServicesProvider: React.FC<{ children: React.ReactNode }> = ({
     </ServiceContext.Provider>
   );
 };
-

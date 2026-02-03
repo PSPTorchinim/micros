@@ -1,4 +1,10 @@
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  act,
+} from '@testing-library/react';
 import React from 'react';
 import '@testing-library/jest-dom';
 import { PermissionsService } from '../../../services/permissions-service';
@@ -57,7 +63,7 @@ describe('RolesManagementBlock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (global.confirm as jest.Mock).mockReturnValue(false);
-    
+
     // Default successful mocks
     (RolesService.getRoles as jest.Mock).mockResolvedValue({
       success: true,
@@ -108,7 +114,9 @@ describe('RolesManagementBlock', () => {
         expect(screen.getByText('Team Roles')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Configure team permissions')).toBeInTheDocument();
+      expect(
+        screen.getByText('Configure team permissions'),
+      ).toBeInTheDocument();
     });
 
     it('renders roles table after loading', async () => {
@@ -162,7 +170,9 @@ describe('RolesManagementBlock', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByRole('alert')).toHaveTextContent('Failed to load roles');
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'Failed to load roles',
+        );
       });
     });
 
@@ -241,7 +251,9 @@ describe('RolesManagementBlock', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('No roles found. Create your first role to get started.'),
+          screen.getByText(
+            'No roles found. Create your first role to get started.',
+          ),
         ).toBeInTheDocument();
       });
     });
@@ -604,11 +616,15 @@ describe('RolesManagementBlock', () => {
 
       await waitFor(() => {
         // Use document.querySelector with the checkbox ID
-        const checkbox = document.querySelector('#permission-1') as HTMLInputElement;
+        const checkbox = document.querySelector(
+          '#permission-1',
+        ) as HTMLInputElement;
         expect(checkbox).toBeInTheDocument();
       });
 
-      const checkbox = document.querySelector('#permission-1') as HTMLInputElement;
+      const checkbox = document.querySelector(
+        '#permission-1',
+      ) as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
 
       fireEvent.click(checkbox);
@@ -656,8 +672,12 @@ describe('RolesManagementBlock', () => {
         });
       });
 
-      const permission1 = document.querySelector('#permission-1') as HTMLInputElement;
-      const permission2 = document.querySelector('#permission-4') as HTMLInputElement;
+      const permission1 = document.querySelector(
+        '#permission-1',
+      ) as HTMLInputElement;
+      const permission2 = document.querySelector(
+        '#permission-4',
+      ) as HTMLInputElement;
 
       fireEvent.click(permission1);
       fireEvent.click(permission2);

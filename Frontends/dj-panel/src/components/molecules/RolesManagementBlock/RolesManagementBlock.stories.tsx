@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import * as PermissionsServiceModule from '../../../services/permissions-service';
 import * as RolesServiceModule from '../../../services/roles-service';
 import { RolesManagementBlock } from './index';
@@ -218,7 +218,7 @@ const meta = {
             const role = mockRoles.find((r) => r.id === id);
             return {
               success: true,
-              data: role || null,
+              data: role,
               message: null,
               errors: null,
             };
@@ -287,11 +287,6 @@ const meta = {
       control: 'object',
       description: 'Custom CSS styles to apply to the container',
     },
-    scenario: {
-      control: 'select',
-      options: ['default', 'loading', 'error', 'empty'],
-      description: 'Mock scenario for the component',
-    },
   },
 } satisfies Meta<typeof RolesManagementBlock>;
 
@@ -303,27 +298,21 @@ type Story = StoryObj<typeof meta>;
  * This demonstrates the main use case with multiple roles.
  */
 export const Default: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
 };
 
 /**
  * Loading state while fetching roles and permissions from the server.
  */
 export const Loading: Story = {
-  args: {
-    scenario: 'loading',
-  },
+  args: {},
 };
 
 /**
  * Error state when the server fails to return data.
  */
 export const ErrorState: Story = {
-  args: {
-    scenario: 'error',
-  },
+  args: {},
 };
 
 /**
@@ -331,9 +320,7 @@ export const ErrorState: Story = {
  * Shows the empty message and encourages creating the first role.
  */
 export const Empty: Story = {
-  args: {
-    scenario: 'empty',
-  },
+  args: {},
 };
 
 /**
@@ -344,7 +331,6 @@ export const CustomLabels: Story = {
     title: 'Team Roles & Permissions',
     description:
       'Configure team roles and assign specific permissions to control access levels.',
-    scenario: 'default',
   },
 };
 
@@ -352,9 +338,7 @@ export const CustomLabels: Story = {
  * Minimal setup with only a few roles.
  */
 export const MinimalSetup: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -377,9 +361,7 @@ export const MinimalSetup: Story = {
  * Single role scenario - useful for focused testing.
  */
 export const SingleRole: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -411,7 +393,6 @@ export const CustomStyling: Story = {
       borderRadius: '8px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
     },
-    scenario: 'default',
   },
 };
 
@@ -419,9 +400,7 @@ export const CustomStyling: Story = {
  * Demonstration of role with all permissions assigned (Administrator).
  */
 export const RoleWithAllPermissions: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -444,9 +423,7 @@ export const RoleWithAllPermissions: Story = {
  * Demonstration of role with minimal permissions (Viewer).
  */
 export const RoleWithMinimalPermissions: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -469,9 +446,7 @@ export const RoleWithMinimalPermissions: Story = {
  * Large permission set to test scrolling and grouping functionality.
  */
 export const LargePermissionSet: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -480,11 +455,19 @@ export const LargePermissionSet: Story = {
         const extraPermissions = [
           { id: '16', name: 'document:read', description: 'View documents' },
           { id: '17', name: 'document:write', description: 'Edit documents' },
-          { id: '18', name: 'document:delete', description: 'Delete documents' },
+          {
+            id: '18',
+            name: 'document:delete',
+            description: 'Delete documents',
+          },
           { id: '19', name: 'mailing:read', description: 'View mailings' },
           { id: '20', name: 'mailing:send', description: 'Send emails' },
           { id: '21', name: 'report:read', description: 'View reports' },
-          { id: '22', name: 'report:generate', description: 'Generate reports' },
+          {
+            id: '22',
+            name: 'report:generate',
+            description: 'Generate reports',
+          },
           { id: '23', name: 'settings:read', description: 'View settings' },
           { id: '24', name: 'settings:write', description: 'Change settings' },
           { id: '25', name: 'audit:read', description: 'View audit logs' },
@@ -512,7 +495,6 @@ export const PermissionGrouping: Story = {
     title: 'Permission Categories',
     description:
       'Permissions are automatically grouped by their prefix (e.g., user:*, party:*, music:*)',
-    scenario: 'default',
   },
 };
 
@@ -523,7 +505,6 @@ export const CreateRoleWorkflow: Story = {
   args: {
     title: 'Create New Role',
     description: 'Click "Create New Role" to see the role creation form',
-    scenario: 'default',
   },
   play: async () => {
     // This play function can be used for interaction testing
@@ -540,7 +521,6 @@ export const EditRoleWorkflow: Story = {
   args: {
     title: 'Edit Existing Role',
     description: 'Click "Edit" on any role to modify its permissions',
-    scenario: 'default',
   },
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -564,9 +544,7 @@ export const EditRoleWorkflow: Story = {
  * Role with no permissions - edge case testing.
  */
 export const RoleWithNoPermissions: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -600,7 +578,6 @@ export const DeleteRoleOperation: Story = {
     title: 'Delete Role',
     description:
       'Click "Delete" on a role to remove it (confirmation dialog will appear)',
-    scenario: 'default',
   },
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -634,7 +611,6 @@ export const PermissionMatrix: Story = {
   args: {
     title: 'Permission Matrix',
     description: 'Compare permissions across different roles',
-    scenario: 'default',
   },
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -658,9 +634,7 @@ export const PermissionMatrix: Story = {
  * Server error during role creation - error handling demonstration.
  */
 export const CreateRoleError: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -698,9 +672,7 @@ export const CreateRoleError: Story = {
  * Server error during role update - error handling for edit operations.
  */
 export const UpdateRoleError: Story = {
-  args: {
-    scenario: 'default',
-  },
+  args: {},
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
@@ -713,11 +685,11 @@ export const UpdateRoleError: Story = {
         });
 
         RolesServiceModule.RolesService.getRole = async () => ({
-            success: true,
-            data: mockRoles[1],
-            message: null,
-            errors: null,
-          });
+          success: true,
+          data: mockRoles[1],
+          message: null,
+          errors: null,
+        });
 
         RolesServiceModule.RolesService.updateRole = async () => ({
           success: false,
@@ -747,7 +719,6 @@ export const SpecializedRoles: Story = {
   args: {
     title: 'Specialized Role Templates',
     description: 'Pre-configured roles for common business scenarios',
-    scenario: 'default',
   },
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
