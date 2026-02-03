@@ -342,7 +342,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
             <div className="company-info-create">
               <h3>Create Your Company Profile</h3>
               <p className="company-create-description">
-                You don't have a company profile yet. Please fill in your
+                You don&apos;t have a company profile yet. Please fill in your
                 company details to get started.
               </p>
 

@@ -72,7 +72,9 @@ describe('Input Component', () => {
     const { container } = render(<Input label="Auto ID" />);
     const input = container.querySelector('input');
     expect(input).toHaveAttribute('id');
-    expect(input?.id).toMatch(/^input-/);
+    // useId generates IDs like ":r0:", ":r1:", etc. Just verify it exists and is non-empty
+    expect(input?.id).toBeTruthy();
+    expect(input?.id.length).toBeGreaterThan(0);
   });
 
   it('associates label with input via id', () => {

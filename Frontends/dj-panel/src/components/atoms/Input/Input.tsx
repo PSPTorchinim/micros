@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 import './Input.css';
 
 export interface InputProps
@@ -16,10 +16,8 @@ export const Input: React.FC<InputProps> = ({
   id,
   ...props
 }) => {
-  const inputId = useMemo(
-    () => id || `input-${Math.random().toString(36).substr(2, 9)}`,
-    [id],
-  );
+  const generatedId = useId();
+  const inputId = useMemo(() => id || generatedId, [id, generatedId]);
   const classes = [
     'atom-input',
     fullWidth && 'atom-input--full-width',

@@ -36,7 +36,7 @@ export const CompanySetupProvider = ({
             // Skip period expired, remove the flag
             localStorage.removeItem(SKIP_COMPANY_SETUP_KEY);
           }
-        } catch (_e) {
+        } catch {
           // Invalid skip data, remove it
           localStorage.removeItem(SKIP_COMPANY_SETUP_KEY);
         }
@@ -50,7 +50,7 @@ export const CompanySetupProvider = ({
           // User is not a member of any company, show the modal
           setShowModal(true);
         }
-      } catch (_error) {
+      } catch {
         // Error checking company membership
       } finally {
         setIsCheckingCompany(false);

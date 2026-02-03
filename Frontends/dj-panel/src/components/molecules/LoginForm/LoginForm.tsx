@@ -5,7 +5,7 @@ import { Input } from '../../atoms/Input';
 import './LoginForm.css';
 
 export interface LoginFormProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
+  onSubmit: (_email: string, _password: string) => Promise<void>;
   error?: string;
 }
 

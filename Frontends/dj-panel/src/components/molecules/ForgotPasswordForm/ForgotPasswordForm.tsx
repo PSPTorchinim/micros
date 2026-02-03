@@ -4,7 +4,7 @@ import { Input } from '../../atoms/Input';
 import './ForgotPasswordForm.css';
 
 export interface ForgotPasswordFormProps {
-  onSubmit: (email: string) => Promise<void>;
+  onSubmit: (_email: string) => Promise<void>;
   error?: string;
 }
 

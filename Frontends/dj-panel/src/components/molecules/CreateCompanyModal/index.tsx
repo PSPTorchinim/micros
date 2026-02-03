@@ -110,9 +110,9 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
     >
       <div className="create-company-modal">
         <p className="create-company-modal__description">
-          Welcome! It looks like you don't have a company profile yet. Please
-          fill in your company details to get started, or skip for now and
-          complete this later.
+          Welcome! It looks like you don&apos;t have a company profile yet.
+          Please fill in your company details to get started, or skip for now
+          and complete this later.
         </p>
 
         {error && <div className="create-company-modal__error">{error}</div>}
