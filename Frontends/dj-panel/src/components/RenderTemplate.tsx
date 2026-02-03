@@ -206,7 +206,7 @@ export const RenderTemplate: React.FC<Props> = ({
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.Content,
       )
-        ? tpl!.Content
+        ? tpl.Content
         : Array.isArray(tpl?.Content)
           ? tpl.Content
           : [];

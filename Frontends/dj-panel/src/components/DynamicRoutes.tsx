@@ -135,7 +135,7 @@ export function useDynamicRoutes() {
 
     if (Array.isArray(children)) {
       const subpagesWithChildren = await Promise.all(
-        children.map(async (child: Page) => await fetchAllChildren(child)),
+        children.map(async (child: Page) => fetchAllChildren(child)),
       );
       return { ...(page as any), subpages: subpagesWithChildren } as any;
     }
@@ -155,9 +155,8 @@ export function useDynamicRoutes() {
       if (
         !routes.some(
           (r) =>
-            r &&
-            r.type &&
-            r.props &&
+            r?.type &&
+            r?.props &&
             typeof r.props === 'object' &&
             r.props !== null &&
             'index' in r.props &&
