@@ -19,7 +19,7 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
         return;
       }
       const fetchedPage = await StrapiService.fetchPageById(pageId);
-      setPage(fetchedPage || null);
+      setPage(fetchedPage ?? null);
     })();
   }, [pageId]);
 

@@ -17,7 +17,7 @@ export const Input: React.FC<InputProps> = ({
   ...props
 }) => {
   const generatedId = useId();
-  const inputId = useMemo(() => id || generatedId, [id, generatedId]);
+  const inputId = useMemo(() => id ?? generatedId, [id, generatedId]);
   const classes = [
     'atom-input',
     fullWidth && 'atom-input--full-width',

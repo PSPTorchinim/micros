@@ -33,7 +33,7 @@ export const ForgotPasswordBlock: React.FC<ForgotPasswordBlockType> = ({
       if (response.success) {
         void navigate(successRedirectPath);
       } else {
-        setError(response.message || 'Failed to send password reset link.');
+        setError(response.message ?? 'Failed to send password reset link.');
       }
     } catch {
       setError('Failed to send password reset link. Please try again later.');

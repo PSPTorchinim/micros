@@ -28,7 +28,7 @@ export interface NavigationItem {
 }
 
 function buildPath(page: Page, parentPath = ''): string {
-  const slug = (page as any)?.Slug || (page as any)?.Title || (page as any)?.id;
+  const slug = (page as any)?.Slug ?? (page as any)?.Title ?? (page as any)?.id;
   const cleanParent = parentPath.replace(/\/+$/, '');
   const cleanSlug = String(slug).replace(/^\/+/, '');
   const path = `${cleanParent}/${cleanSlug}`.replace(/\\/g, '/');
@@ -54,7 +54,7 @@ function buildRoutesAndNav(
       ? ''
       : isRoot
         ? rawPath.replace(/^\/+/g, '')
-        : (page as any)?.Slug?.replace(/^\/+/g, '') ||
+        : (page as any)?.Slug?.replace(/^\/+/g, '') ??
           String((page as any)?.id);
 
     let childrenRoutes: React.ReactElement[] = [];
@@ -73,7 +73,7 @@ function buildRoutesAndNav(
       childrenNav = result.nav;
 
       routes.push(
-        <Route key={path || 'index'} path={path} element={<Outlet />}>
+        <Route key={path ?? 'index'} path={path} element={<Outlet />}>
           <Route index element={<PageComponent pageId={page.documentId} />} />
           {childrenRoutes}
         </Route>,
@@ -103,7 +103,7 @@ function buildRoutesAndNav(
     const url = `/${rawPath.replace(/^\/+/g, '')}`;
     nav.push({
       id: page.id ?? 0,
-      text: page.Title || String(page.id),
+      text: page.Title ?? String(page.id),
       url,
       ...(childrenNav.length ? { children: childrenNav } : {}),
       NavigationOrder: page.NavigationOrder ?? 0,
@@ -144,7 +144,7 @@ export function useDynamicRoutes() {
 
   useEffect(() => {
     void (async () => {
-      const rootPages = (await StrapiService.getRootPages()) || [];
+      const rootPages = (await StrapiService.getRootPages()) ?? [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );

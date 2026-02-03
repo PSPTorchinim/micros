@@ -19,8 +19,8 @@ export const FeatureBlock = (props: FeatureSection) => {
               activeTab === index && (
                 <img
                   key={index}
-                  alt={tab.imgAlt || ''}
-                  src={tab.imgSrc || ''}
+                  alt={tab.imgAlt ?? ''}
+                  src={tab.imgSrc ?? ''}
                   className="features-image thq-img-ratio-16-9"
                 />
               ),

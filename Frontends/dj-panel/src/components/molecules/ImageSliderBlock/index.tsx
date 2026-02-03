@@ -31,12 +31,12 @@ export const ImageSliderBlock = (props: ImageSlider) => {
               <img
                 key={idx}
                 alt={
-                  slide.alt ||
-                  slide.caption ||
-                  slide.alternativeText ||
+                  slide.alt ??
+                  slide.caption ??
+                  slide.alternativeText ??
                   `slide-${idx}`
                 }
-                src={slide.imageUrl || slide.src || slide.url}
+                src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
               />
             ))}
@@ -46,12 +46,12 @@ export const ImageSliderBlock = (props: ImageSlider) => {
               <img
                 key={idx}
                 alt={
-                  slide.alt ||
-                  slide.caption ||
-                  slide.alternativeText ||
+                  slide.alt ??
+                  slide.caption ??
+                  slide.alternativeText ??
                   `slide-${idx}`
                 }
-                src={slide.imageUrl || slide.src || slide.url}
+                src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
               />
             ))}

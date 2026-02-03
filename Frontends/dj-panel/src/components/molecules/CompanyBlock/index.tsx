@@ -256,7 +256,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                 <div className="company-info-edit">
                   <Input
                     label="Name"
-                    value={editedCompany?.name || ''}
+                    value={editedCompany?.name ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, name: e.target.value } : null,
@@ -266,7 +266,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   <Input
                     label="Email"
                     type="email"
-                    value={editedCompany?.email || ''}
+                    value={editedCompany?.email ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, email: e.target.value } : null,
@@ -275,7 +275,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Phone"
-                    value={editedCompany?.phone || ''}
+                    value={editedCompany?.phone ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, phone: e.target.value } : null,
@@ -284,7 +284,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Country"
-                    value={editedCompany?.country || ''}
+                    value={editedCompany?.country ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, country: e.target.value } : null,
@@ -293,7 +293,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="City"
-                    value={editedCompany?.city || ''}
+                    value={editedCompany?.city ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, city: e.target.value } : null,
@@ -302,7 +302,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Post Code"
-                    value={editedCompany?.postCode || ''}
+                    value={editedCompany?.postCode ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, postCode: e.target.value } : null,
@@ -311,7 +311,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Address Line 1"
-                    value={editedCompany?.addressLine1 || ''}
+                    value={editedCompany?.addressLine1 ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, addressLine1: e.target.value } : null,
@@ -320,7 +320,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Address Line 2"
-                    value={editedCompany?.addressLine2 || ''}
+                    value={editedCompany?.addressLine2 ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, addressLine2: e.target.value } : null,
@@ -442,7 +442,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
 
                 <Input
                   label="Address Line 2"
-                  value={newCompany.addressLine2 || ''}
+                  value={newCompany.addressLine2 ?? ''}
                   onChange={(e) =>
                     setNewCompany((prev) => ({
                       ...prev,

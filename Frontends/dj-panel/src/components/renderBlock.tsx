@@ -89,7 +89,7 @@ export function renderBlock(
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format
       const articleData =
-        (block as { attributes?: Record<string, unknown> }).attributes || block;
+        (block as { attributes?: Record<string, unknown> }).attributes ?? block;
       const title =
         typeof articleData.Title === 'string' ? articleData.Title : '';
       const summary =

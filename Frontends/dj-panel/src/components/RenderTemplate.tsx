@@ -86,7 +86,7 @@ export const RenderTemplate: React.FC<Props> = ({
             // Always render the block, even if no data is configured in Strapi
             // The component has default props that will be used
             setBlocks([
-              { __kind: 'login-block', ...(loginBlock || {}) } as ContentBlock,
+              { __kind: 'login-block', ...(loginBlock ?? {}) } as ContentBlock,
             ]);
           }
         } catch {
@@ -109,7 +109,7 @@ export const RenderTemplate: React.FC<Props> = ({
             setBlocks([
               {
                 __kind: 'forgot-password-block',
-                ...(forgotPasswordBlock || {}),
+                ...(forgotPasswordBlock ?? {}),
               } as ContentBlock,
             ]);
           }
@@ -133,7 +133,7 @@ export const RenderTemplate: React.FC<Props> = ({
             setBlocks([
               {
                 __kind: 'change-password-block',
-                ...(changePasswordBlock || {}),
+                ...(changePasswordBlock ?? {}),
               } as ContentBlock,
             ]);
           }
@@ -156,7 +156,7 @@ export const RenderTemplate: React.FC<Props> = ({
             setBlocks([
               {
                 __kind: 'profile-block',
-                ...(profileBlock || {}),
+                ...(profileBlock ?? {}),
               } as ContentBlock,
             ]);
           }
@@ -179,7 +179,7 @@ export const RenderTemplate: React.FC<Props> = ({
             setBlocks([
               {
                 __kind: 'company-block',
-                ...(companyBlock || {}),
+                ...(companyBlock ?? {}),
               } as ContentBlock,
             ]);
           }

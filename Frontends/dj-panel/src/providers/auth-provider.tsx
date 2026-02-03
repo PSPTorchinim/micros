@@ -84,8 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             try {
               // If a refresh is already in progress, wait for it
-              if (!refreshPromiseRef.current) {
-                refreshPromiseRef.current = (async () => {
+              refreshPromiseRef.current ??= (async () => {
                   try {
                     const response =
                       await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
@@ -108,7 +107,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     refreshPromiseRef.current = null;
                   }
                 })();
-              }
 
               // Wait for the refresh to complete
               const newAccessToken = await refreshPromiseRef.current;

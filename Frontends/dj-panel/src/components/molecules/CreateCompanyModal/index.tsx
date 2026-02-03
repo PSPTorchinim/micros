@@ -179,7 +179,7 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
 
           <Input
             label="Address Line 2"
-            value={formData.addressLine2 || ''}
+            value={formData.addressLine2 ?? ''}
             onChange={(e) => handleChange('addressLine2', e.target.value)}
             placeholder="Suite 100 (optional)"
           />

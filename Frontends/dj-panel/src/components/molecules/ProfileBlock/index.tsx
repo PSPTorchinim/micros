@@ -45,11 +45,11 @@ export const ProfileBlock: React.FC<ProfileBlockProps> = ({
             <div className="profile-block-info">
               <div className="profile-block-field">
                 <label className="profile-block-label">{usernameLabel}</label>
-                <p className="profile-block-value">{user.username || 'N/A'}</p>
+                <p className="profile-block-value">{user.username ?? 'N/A'}</p>
               </div>
               <div className="profile-block-field">
                 <label className="profile-block-label">{emailLabel}</label>
-                <p className="profile-block-value">{user.email || 'N/A'}</p>
+                <p className="profile-block-value">{user.email ?? 'N/A'}</p>
               </div>
             </div>
             <div className="profile-block-actions">

@@ -94,8 +94,8 @@ export const ChangePasswordBlock: React.FC<ChangePasswordBlockProps> = ({
         }, SUCCESS_REDIRECT_DELAY_MS);
       } else {
         setError(
-          response.message ||
-            response.errors?.[0] ||
+          response.message ??
+            response.errors?.[0] ??
             'Failed to change password.',
         );
       }

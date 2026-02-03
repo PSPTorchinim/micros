@@ -53,7 +53,7 @@ export const Footer = (props: FooterProps) => {
   const columns =
     footerData.columns?.filter(
       (column) => column.links && column.links.length > 0,
-    ) || [];
+    ) ?? [];
 
   return (
     <footer className="footer thq-section-padding" style={props.customStyles}>
@@ -64,17 +64,17 @@ export const Footer = (props: FooterProps) => {
               (column: FooterLinkColumnComponent, columnIndex: number) => (
                 <div key={columnIndex} className="footer-column">
                   <strong className="thq-body-large footer-column-title">
-                    {column.title || ''}
+                    {column.title ?? ''}
                   </strong>
                   <div className="footer-footer-links">
                     {column.links?.map((link, linkIndex) => (
                       <Link
                         key={linkIndex}
-                        to={link.url || '#'}
+                        to={link.url ?? '#'}
                         rel="noreferrer noopener"
                         className="thq-body-small"
                       >
-                        {link.label || ''}
+                        {link.label ?? ''}
                       </Link>
                     ))}
                   </div>
@@ -90,13 +90,13 @@ export const Footer = (props: FooterProps) => {
                   {footerData.socialLinks.map(
                     (link: FooterSocialLinkComponent, index: number) => {
                       const IconComponent = getIconComponent(
-                        link.icon || link.platform,
+                        link.icon ?? link.platform,
                       );
                       return (
                         <div key={index} className="footer-link">
                           <IconComponent className="thq-icon-small" />
                           <span className="thq-body-small">
-                            {link.detail || link.url || ''}
+                            {link.detail ?? link.url ?? ''}
                           </span>
                         </div>
                       );
@@ -111,7 +111,7 @@ export const Footer = (props: FooterProps) => {
           <div className="thq-divider-horizontal"></div>
           <div className="footer-row">
             <span className="thq-body-small">
-              {footerData.copyright ||
+              {footerData.copyright ??
                 '© 2024 DJ Beat Blaster. All rights reserved.'}
             </span>
             <div className="footer-footer-links3">

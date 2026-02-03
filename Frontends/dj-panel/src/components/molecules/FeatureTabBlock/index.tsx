@@ -7,7 +7,7 @@ export const FeatureTabBlock = (props: FeatureTab) => (
     {props.imgSrc && (
       <img
         src={props.imgSrc}
-        alt={props.imgAlt || props.title || ''}
+        alt={props.imgAlt ?? props.title ?? ''}
         style={{ maxWidth: 200 }}
       />
     )}

@@ -163,7 +163,7 @@ const meta = {
           PermissionsServiceModule.PermissionsService.getPermissions;
 
         // Determine which scenario to use
-        const scenario = context.args.scenario || 'default';
+        const scenario = context.args.scenario ?? 'default';
 
         if (scenario === 'loading') {
           // Mock loading state - delay the response

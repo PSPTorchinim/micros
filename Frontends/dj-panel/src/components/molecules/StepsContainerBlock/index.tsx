@@ -42,7 +42,7 @@ export const StepsContainerBlock = (props: StepsContainer) => {
           </div>
           <div className="steps-card-container">
             {stepsArray.map((step: Step, index: number) => (
-              <div key={step.id || index} className="steps-card thq-card">
+              <div key={step.id ?? index} className="steps-card thq-card">
                 <h2 className="thq-heading-2">{step.title}</h2>
                 <span className="steps-card-text thq-body-small">
                   {step.description}

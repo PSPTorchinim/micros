@@ -9,7 +9,7 @@ export function useMenuLogic() {
       const userPermissions =
         user?.roles?.flatMap((r: { permissions?: any[] | null }) =>
           (r.permissions ?? []).map((p) => p.name),
-        ) || [];
+        ) ?? [];
       if (!permissions) return true;
       if (!userPermissions) return false;
       for (const permission of permissions) {

@@ -77,7 +77,7 @@ export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
       .filter((element) => hasPermission(element.permissions))
       .map((element) => {
         const text = element.text;
-        const authState = element.AuthState || 'All';
+        const authState = element.AuthState ?? 'All';
         const shouldShow =
           authState === 'All' ||
           (authState === 'OnlyAuthenticated' && isAuthenticated()) ||
