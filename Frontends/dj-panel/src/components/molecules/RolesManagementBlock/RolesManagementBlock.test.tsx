@@ -87,7 +87,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('renders with default title and description', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -101,7 +101,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('renders with custom title and description', async () => {
-      await act(async () => {
+      act(() => {
         render(
           <RolesManagementBlock
             title="Team Roles"
@@ -120,7 +120,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('renders roles table after loading', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -134,7 +134,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('displays correct permission counts', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -146,7 +146,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('renders Create New Role button', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -165,7 +165,7 @@ describe('RolesManagementBlock', () => {
         errors: ['Network error'],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -184,7 +184,7 @@ describe('RolesManagementBlock', () => {
         errors: ['Permission error'],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -210,7 +210,7 @@ describe('RolesManagementBlock', () => {
         errors: [],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -226,7 +226,7 @@ describe('RolesManagementBlock', () => {
         new Error('Network failure'),
       );
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -245,7 +245,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -261,7 +261,7 @@ describe('RolesManagementBlock', () => {
 
   describe('Create Role', () => {
     it('shows create form when Create New Role is clicked', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -281,7 +281,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('displays all permissions grouped by category in create form', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -305,7 +305,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -322,7 +322,7 @@ describe('RolesManagementBlock', () => {
       });
 
       const saveButton = screen.getByText('Save Role');
-      await act(async () => {
+      act(() => {
         fireEvent.click(saveButton);
       });
 
@@ -349,7 +349,7 @@ describe('RolesManagementBlock', () => {
         errors: ['Duplicate name'],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -363,7 +363,7 @@ describe('RolesManagementBlock', () => {
         });
       });
 
-      await act(async () => {
+      act(() => {
         fireEvent.click(screen.getByText('Save Role'));
       });
 
@@ -375,7 +375,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('cancels create form', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -404,7 +404,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -427,7 +427,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -459,7 +459,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -474,7 +474,7 @@ describe('RolesManagementBlock', () => {
         });
       });
 
-      await act(async () => {
+      act(() => {
         fireEvent.click(screen.getByText('Save Role'));
       });
 
@@ -501,7 +501,7 @@ describe('RolesManagementBlock', () => {
         errors: ['Not found'],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -520,7 +520,7 @@ describe('RolesManagementBlock', () => {
 
   describe('Delete Role', () => {
     it('shows confirmation dialog when delete is clicked', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -537,7 +537,7 @@ describe('RolesManagementBlock', () => {
     it('does not delete role when confirmation is cancelled', async () => {
       (global.confirm as jest.Mock).mockReturnValue(false);
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -558,7 +558,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -587,7 +587,7 @@ describe('RolesManagementBlock', () => {
         errors: ['Role in use'],
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -606,7 +606,7 @@ describe('RolesManagementBlock', () => {
 
   describe('Permission Management', () => {
     it('toggles permission selection', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -635,7 +635,7 @@ describe('RolesManagementBlock', () => {
     });
 
     it('groups permissions by category prefix', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -657,7 +657,7 @@ describe('RolesManagementBlock', () => {
         errors: null,
       });
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -682,7 +682,7 @@ describe('RolesManagementBlock', () => {
       fireEvent.click(permission1);
       fireEvent.click(permission2);
 
-      await act(async () => {
+      act(() => {
         fireEvent.click(screen.getByText('Save Role'));
       });
 
@@ -698,7 +698,7 @@ describe('RolesManagementBlock', () => {
 
   describe('Form Validation', () => {
     it('requires role name to submit', async () => {
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -731,7 +731,7 @@ describe('RolesManagementBlock', () => {
           }),
       );
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock />);
       });
 
@@ -745,7 +745,7 @@ describe('RolesManagementBlock', () => {
         });
       });
 
-      await act(async () => {
+      act(() => {
         fireEvent.click(screen.getByText('Save Role'));
       });
 
@@ -764,7 +764,7 @@ describe('RolesManagementBlock', () => {
         padding: '20px',
       };
 
-      await act(async () => {
+      act(() => {
         render(<RolesManagementBlock customStyles={customStyles} />);
       });
 
