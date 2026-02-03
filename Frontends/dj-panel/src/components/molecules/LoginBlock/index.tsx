@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/use-auth/use-auth';
 import { useServices } from '../../../hooks/use-services/use-services';
+import type { LoginBlock as LoginBlockType } from '../../../models/api/strapi/apiMap';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import './index.css';
-import type { LoginBlock as LoginBlockType } from '../../../models/api/strapi/apiMap';
 
 export const LoginBlock: React.FC<LoginBlockType> = ({
   title = 'Login',
