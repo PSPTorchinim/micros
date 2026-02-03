@@ -72,7 +72,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders company information after loading', async () => {
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -88,7 +88,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders company users', async () => {
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -104,7 +104,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom title and description', async () => {
-    await act(() => {
+    act(() => {
       render(
         <CompanyBlock
           title="Organization Info"
@@ -121,7 +121,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom section titles', async () => {
-    await act(() => {
+    act(() => {
       render(
         <CompanyBlock
           companyInfoTitle="Org Details"
@@ -142,7 +142,7 @@ describe('CompanyBlock', () => {
   it('shows creation form when no company data is available', async () => {
     (CompanyService.getCompany as jest.Mock).mockResolvedValue(null);
 
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -164,7 +164,7 @@ describe('CompanyBlock', () => {
   it('shows message when no users are assigned', async () => {
     (CompanyService.getCompanyUsers as jest.Mock).mockResolvedValue([]);
 
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -176,7 +176,7 @@ describe('CompanyBlock', () => {
   });
 
   it('shows message when no structure is defined', async () => {
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -191,7 +191,7 @@ describe('CompanyBlock', () => {
     const customStyles = { backgroundColor: 'blue' };
 
     let container;
-    await act(() => {
+    act(() => {
       const result = render(<CompanyBlock customStyles={customStyles} />);
       container = result.container;
     });
@@ -208,7 +208,7 @@ describe('CompanyBlock', () => {
   });
 
   it('calls CompanyService methods on mount', async () => {
-    await act(() => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
