@@ -177,14 +177,14 @@ const meta = {
             });
         } else if (scenario === 'error') {
           // Mock error state
-          RolesServiceModule.RolesService.getRoles = async () => ({
+          RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
             success: false,
             data: null,
             message: 'Failed to load roles from server',
             errors: ['Network error'],
           });
           PermissionsServiceModule.PermissionsService.getPermissions =
-            async () => ({
+            () => Promise.resolve({
               success: false,
               data: null,
               message: 'Failed to load permissions',
@@ -192,14 +192,14 @@ const meta = {
             });
         } else if (scenario === 'empty') {
           // Mock empty state
-          RolesServiceModule.RolesService.getRoles = async () => ({
+          RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
             success: true,
             data: [],
             message: null,
             errors: null,
           });
           PermissionsServiceModule.PermissionsService.getPermissions =
-            async () => ({
+            () => Promise.resolve({
               success: true,
               data: mockPermissions,
               message: null,
@@ -207,38 +207,38 @@ const meta = {
             });
         } else {
           // Default scenario with data
-          RolesServiceModule.RolesService.getRoles = async () => ({
+          RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
             success: true,
             data: mockRoles,
             message: null,
             errors: null,
           });
 
-          RolesServiceModule.RolesService.getRole = async (id: string) => {
+          RolesServiceModule.RolesService.getRole = (id: string) => {
             const role = mockRoles.find((r) => r.id === id);
-            return {
+            return Promise.resolve({
               success: true,
               data: role,
               message: null,
               errors: null,
-            };
+            });
           };
 
-          RolesServiceModule.RolesService.createRole = async () => ({
+          RolesServiceModule.RolesService.createRole = () => Promise.resolve({
             success: true,
             data: true,
             message: 'Role created successfully',
             errors: null,
           });
 
-          RolesServiceModule.RolesService.updateRole = async () => ({
+          RolesServiceModule.RolesService.updateRole = () => Promise.resolve({
             success: true,
             data: true,
             message: 'Role updated successfully',
             errors: null,
           });
 
-          RolesServiceModule.RolesService.deleteRole = async () => ({
+          RolesServiceModule.RolesService.deleteRole = () => Promise.resolve({
             success: true,
             data: true,
             message: 'Role deleted successfully',
@@ -246,7 +246,7 @@ const meta = {
           });
 
           PermissionsServiceModule.PermissionsService.getPermissions =
-            async () => ({
+            () => Promise.resolve({
               success: true,
               data: mockPermissions,
               message: null,
@@ -344,7 +344,7 @@ export const MinimalSetup: Story = {
     (Story: any) => {
       useEffect(() => {
         // Override with minimal data
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[0], mockRoles[4]], // Only Admin and Viewer
           message: null,
@@ -367,7 +367,7 @@ export const SingleRole: Story = {
     (Story: any) => {
       useEffect(() => {
         // Override with single role
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[1]], // Only DJ Manager
           message: null,
@@ -406,7 +406,7 @@ export const RoleWithAllPermissions: Story = {
     (Story: any) => {
       useEffect(() => {
         // Show only the Administrator role
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[0]], // Administrator with all permissions
           message: null,
@@ -429,7 +429,7 @@ export const RoleWithMinimalPermissions: Story = {
     (Story: any) => {
       useEffect(() => {
         // Show only the Viewer role
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[4]], // Viewer with read-only permissions
           message: null,
@@ -474,7 +474,7 @@ export const LargePermissionSet: Story = {
         ];
 
         PermissionsServiceModule.PermissionsService.getPermissions =
-          async () => ({
+          () => Promise.resolve({
             success: true,
             data: [...mockPermissions, ...extraPermissions],
             message: null,
@@ -527,7 +527,7 @@ export const EditRoleWorkflow: Story = {
     (Story: any) => {
       useEffect(() => {
         // Show only one role for focused editing demo
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[1]], // DJ Manager
           message: null,
@@ -557,7 +557,7 @@ export const RoleWithNoPermissions: Story = {
           createdDate: '2024-02-20T00:00:00Z',
         };
 
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [emptyRole],
           message: null,
@@ -584,14 +584,14 @@ export const DeleteRoleOperation: Story = {
     (Story: any) => {
       useEffect(() => {
         // Show roles that can be deleted
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[3], mockRoles[4]], // Music Librarian and Viewer
           message: null,
           errors: null,
         });
 
-        RolesServiceModule.RolesService.deleteRole = async () => ({
+        RolesServiceModule.RolesService.deleteRole = () => Promise.resolve({
           success: true,
           data: true,
           message: 'Role deleted successfully',
@@ -617,7 +617,7 @@ export const PermissionMatrix: Story = {
     (Story: any) => {
       useEffect(() => {
         // Show a good variety of roles for comparison
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[0], mockRoles[1], mockRoles[3], mockRoles[4]],
           message: null,
@@ -640,14 +640,14 @@ export const CreateRoleError: Story = {
     (Story: any) => {
       useEffect(() => {
         // Mock successful data fetch but failed creation
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: mockRoles,
           message: null,
           errors: null,
         });
 
-        RolesServiceModule.RolesService.createRole = async () => ({
+        RolesServiceModule.RolesService.createRole = () => Promise.resolve({
           success: false,
           data: false,
           message: 'Role name already exists',
@@ -655,7 +655,7 @@ export const CreateRoleError: Story = {
         });
 
         PermissionsServiceModule.PermissionsService.getPermissions =
-          async () => ({
+          () => Promise.resolve({
             success: true,
             data: mockPermissions,
             message: null,
@@ -677,21 +677,21 @@ export const UpdateRoleError: Story = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => {
       useEffect(() => {
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: [mockRoles[1]], // DJ Manager
           message: null,
           errors: null,
         });
 
-        RolesServiceModule.RolesService.getRole = async () => ({
+        RolesServiceModule.RolesService.getRole = () => Promise.resolve({
           success: true,
           data: mockRoles[1],
           message: null,
           errors: null,
         });
 
-        RolesServiceModule.RolesService.updateRole = async () => ({
+        RolesServiceModule.RolesService.updateRole = () => Promise.resolve({
           success: false,
           data: false,
           message: 'Failed to update role',
@@ -699,7 +699,7 @@ export const UpdateRoleError: Story = {
         });
 
         PermissionsServiceModule.PermissionsService.getPermissions =
-          async () => ({
+          () => Promise.resolve({
             success: true,
             data: mockPermissions,
             message: null,
@@ -760,7 +760,7 @@ export const SpecializedRoles: Story = {
           },
         ];
 
-        RolesServiceModule.RolesService.getRoles = async () => ({
+        RolesServiceModule.RolesService.getRoles = () => Promise.resolve({
           success: true,
           data: specializedRoles,
           message: null,

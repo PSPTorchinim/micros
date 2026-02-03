@@ -7,7 +7,7 @@ import {
 } from '../models/api/identity/apiMap';
 
 export class RolesService {
-  public static async getRoles(): Promise<RoleIEnumerableResponse> {
+  public static getRoles(): Promise<RoleIEnumerableResponse> {
     return microservicesClient.identity.roles
       .v1RolesList()
       .then((response) => {
@@ -25,7 +25,7 @@ export class RolesService {
       });
   }
 
-  public static async getRole(id: string): Promise<GetRoleDTOResponse> {
+  public static getRole(id: string): Promise<GetRoleDTOResponse> {
     return microservicesClient.identity.roles
       .v1RolesDetail(id)
       .then((response) => {
@@ -43,7 +43,7 @@ export class RolesService {
       });
   }
 
-  public static async createRole(
+  public static createRole(
     role: AddRoleRequest,
   ): Promise<BooleanResponse> {
     return microservicesClient.identity.roles
@@ -63,7 +63,7 @@ export class RolesService {
       });
   }
 
-  public static async updateRole(
+  public static updateRole(
     id: string,
     role: AddRoleRequest,
   ): Promise<BooleanResponse> {
@@ -84,7 +84,7 @@ export class RolesService {
       });
   }
 
-  public static async deleteRole(id: string): Promise<BooleanResponse> {
+  public static deleteRole(id: string): Promise<BooleanResponse> {
     return microservicesClient.identity.roles
       .v1RolesDelete(id)
       .then((response) => {
