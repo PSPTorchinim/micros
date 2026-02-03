@@ -43,9 +43,7 @@ export class RolesService {
       });
   }
 
-  public static createRole(
-    role: AddRoleRequest,
-  ): Promise<BooleanResponse> {
+  public static createRole(role: AddRoleRequest): Promise<BooleanResponse> {
     return microservicesClient.identity.roles
       .v1RolesCreate(role)
       .then((response) => {

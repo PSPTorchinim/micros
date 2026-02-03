@@ -85,28 +85,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             try {
               // If a refresh is already in progress, wait for it
               refreshPromiseRef.current ??= (async () => {
-                  try {
-                    const response =
-                      await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+                try {
+                  const response =
+                    await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
 
-                    const {
-                      user,
-                      accessToken,
-                      refreshToken: newRefreshToken,
-                    } = response.data as LoginResponseDTO;
+                  const {
+                    user,
+                    accessToken,
+                    refreshToken: newRefreshToken,
+                  } = response.data as LoginResponseDTO;
 
-                    setUser(user ?? null);
-                    setToken(accessToken ?? null);
-                    setRefreshToken(newRefreshToken ?? null);
+                  setUser(user ?? null);
+                  setToken(accessToken ?? null);
+                  setRefreshToken(newRefreshToken ?? null);
 
-                    return accessToken ?? null;
-                  } catch (refreshError) {
-                    logout();
-                    throw refreshError;
-                  } finally {
-                    refreshPromiseRef.current = null;
-                  }
-                })();
+                  return accessToken ?? null;
+                } catch (refreshError) {
+                  logout();
+                  throw refreshError;
+                } finally {
+                  refreshPromiseRef.current = null;
+                }
+              })();
 
               // Wait for the refresh to complete
               const newAccessToken = await refreshPromiseRef.current;

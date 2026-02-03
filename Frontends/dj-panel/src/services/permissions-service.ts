@@ -25,9 +25,7 @@ export class PermissionsService {
       });
   }
 
-  public static getPermission(
-    id: string,
-  ): Promise<GetPermissionDTOResponse> {
+  public static getPermission(id: string): Promise<GetPermissionDTOResponse> {
     return microservicesClient.identity.permissions
       .v1PermissionsDetail(id)
       .then((response) => {
