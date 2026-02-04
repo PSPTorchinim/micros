@@ -50,8 +50,6 @@ describe('ProfileBlock', () => {
     expect(
       screen.getByText('View and manage your profile information.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Username')).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
     expect(screen.getByText('Change Password')).toBeInTheDocument();
@@ -73,7 +71,6 @@ describe('ProfileBlock', () => {
         <ProfileBlock
           title="My Account"
           description="Account information"
-          usernameLabel="User Name"
           emailLabel="Email Address"
         />
       </AuthContext.Provider>,
@@ -81,7 +78,6 @@ describe('ProfileBlock', () => {
 
     expect(screen.getByText('My Account')).toBeInTheDocument();
     expect(screen.getByText('Account information')).toBeInTheDocument();
-    expect(screen.getByText('User Name')).toBeInTheDocument();
     expect(screen.getByText('Email Address')).toBeInTheDocument();
   });
 
@@ -102,7 +98,7 @@ describe('ProfileBlock', () => {
     renderWithAuth(incompleteUser);
 
     const values = screen.getAllByText('N/A');
-    expect(values).toHaveLength(2); // Both username and email should show N/A
+    expect(values).toHaveLength(1); // Only email should show N/A
   });
 
   it('applies custom styles when provided', () => {
