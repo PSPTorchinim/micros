@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import './index.css';
 import type { FeatureTab } from '../../../models/api/strapi/apiMap';
 

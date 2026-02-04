@@ -1,4 +1,6 @@
-import { useState } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore - React is needed for JSX
+import React, { useState } from 'react';
 import './index.css';
 import type { FeatureSection } from '../../../models/api/strapi/apiMap';
 

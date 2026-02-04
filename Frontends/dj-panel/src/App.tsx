@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { useDynamicRoutes } from './components/DynamicRoutes';

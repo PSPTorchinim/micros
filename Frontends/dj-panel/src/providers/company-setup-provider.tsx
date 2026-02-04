@@ -1,4 +1,6 @@
-import { PropsWithChildren, useEffect, useState } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore - React is needed for JSX
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { CreateCompanyModal } from '../components/molecules/CreateCompanyModal';
 import { useAuth } from '../hooks/use-auth/use-auth';
 import { CompanyService } from '../services/company-service';
