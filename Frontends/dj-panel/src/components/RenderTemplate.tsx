@@ -39,9 +39,7 @@ async function fetchArticleBlock(
 ): Promise<ContentBlock | null> {
   try {
     const article = await StrapiService.getArticleByTitle(pageTitle);
-    return article
-      ? ({ __kind: 'article', ...article } as ContentBlock)
-      : null;
+    return article ? ({ __kind: 'article', ...article } as ContentBlock) : null;
   } catch {
     return null;
   }

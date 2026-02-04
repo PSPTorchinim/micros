@@ -60,27 +60,25 @@ export const Footer = (props: FooterProps) => {
       <div className="footer-max-width thq-section-max-width">
         <div className="footer-content">
           <div className="footer-links">
-            {columns.map(
-              (column: FooterLinkColumnComponent) => (
-                <div key={column.title ?? column.id} className="footer-column">
-                  <strong className="thq-body-large footer-column-title">
-                    {column.title ?? ''}
-                  </strong>
-                  <div className="footer-footer-links">
-                    {column.links?.map((link) => (
-                      <Link
-                        key={`${link.url}-${link.label}`}
-                        to={link.url ?? '#'}
-                        rel="noreferrer noopener"
-                        className="thq-body-small"
-                      >
-                        {link.label ?? ''}
-                      </Link>
-                    ))}
-                  </div>
+            {columns.map((column: FooterLinkColumnComponent) => (
+              <div key={column.title ?? column.id} className="footer-column">
+                <strong className="thq-body-large footer-column-title">
+                  {column.title ?? ''}
+                </strong>
+                <div className="footer-footer-links">
+                  {column.links?.map((link) => (
+                    <Link
+                      key={`${link.url}-${link.label}`}
+                      to={link.url ?? '#'}
+                      rel="noreferrer noopener"
+                      className="thq-body-small"
+                    >
+                      {link.label ?? ''}
+                    </Link>
+                  ))}
                 </div>
-              ),
-            )}
+              </div>
+            ))}
             {footerData.socialLinks && footerData.socialLinks.length > 0 && (
               <div className="footer-column">
                 <strong className="thq-body-large footer-social-link-title">
@@ -93,7 +91,10 @@ export const Footer = (props: FooterProps) => {
                         link.icon ?? link.platform,
                       );
                       return (
-                        <div key={`${link.platform}-${link.url ?? link.detail}`} className="footer-link">
+                        <div
+                          key={`${link.platform}-${link.url ?? link.detail}`}
+                          className="footer-link"
+                        >
                           <IconComponent className="thq-icon-small" />
                           <span className="thq-body-small">
                             {link.detail ?? link.url ?? ''}
