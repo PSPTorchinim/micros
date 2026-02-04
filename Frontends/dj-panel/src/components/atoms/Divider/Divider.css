@@ -1,0 +1,92 @@
+.atom-divider {
+  border: none;
+  background-color: var(--dl-color-border-base, #e0e0e0);
+}
+
+/* Orientation styles */
+.atom-divider--horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.atom-divider--vertical {
+  width: 1px;
+  height: 100%;
+  min-height: 1rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Variant styles */
+.atom-divider--solid {
+  background-color: var(--dl-color-border-base, #e0e0e0);
+}
+
+.atom-divider--horizontal.atom-divider--dashed {
+  background-image: linear-gradient(
+    to right,
+    var(--dl-color-border-base, #e0e0e0) 50%,
+    transparent 50%
+  );
+  background-size: 10px 1px;
+  background-repeat: repeat-x;
+  background-color: transparent;
+}
+
+.atom-divider--vertical.atom-divider--dashed {
+  background-image: linear-gradient(
+    to bottom,
+    var(--dl-color-border-base, #e0e0e0) 50%,
+    transparent 50%
+  );
+  background-size: 1px 10px;
+  background-repeat: repeat-y;
+  background-color: transparent;
+}
+
+.atom-divider--horizontal.atom-divider--dotted {
+  background-image: linear-gradient(
+    to right,
+    var(--dl-color-border-base, #e0e0e0) 33%,
+    transparent 33%
+  );
+  background-size: 4px 1px;
+  background-repeat: repeat-x;
+  background-color: transparent;
+}
+
+.atom-divider--vertical.atom-divider--dotted {
+  background-image: linear-gradient(
+    to bottom,
+    var(--dl-color-border-base, #e0e0e0) 33%,
+    transparent 33%
+  );
+  background-size: 1px 4px;
+  background-repeat: repeat-y;
+  background-color: transparent;
+}
+
+/* Spacing styles */
+.atom-divider--horizontal.atom-divider--spacing-small {
+  margin: 0.5rem 0;
+}
+
+.atom-divider--horizontal.atom-divider--spacing-medium {
+  margin: 1rem 0;
+}
+
+.atom-divider--horizontal.atom-divider--spacing-large {
+  margin: 1.5rem 0;
+}
+
+.atom-divider--vertical.atom-divider--spacing-small {
+  margin: 0 0.5rem;
+}
+
+.atom-divider--vertical.atom-divider--spacing-medium {
+  margin: 0 1rem;
+}
+
+.atom-divider--vertical.atom-divider--spacing-large {
+  margin: 0 1.5rem;
+}
