@@ -15,10 +15,10 @@ export interface TextProps extends React.HTMLAttributes<HTMLElement> {
   weight?: 'normal' | 'medium' | 'semibold' | 'bold';
   align?: 'left' | 'center' | 'right' | 'justify';
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success';
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }
 
-function getDefaultElement(variant: TextProps['variant']): keyof JSX.IntrinsicElements {
+function getDefaultElement(variant: TextProps['variant']): React.ElementType {
   switch (variant) {
     case 'h1':
       return 'h1';
