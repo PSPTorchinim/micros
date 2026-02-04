@@ -104,32 +104,34 @@ export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
             aria-expanded={isClickDropdownOpen || isHoverDropdownOpen}
           >
             <div className="menu-item-content">
-              {isAction ? (
-                <Button
-                  variant="flat"
-                  className="thq-link thq-body-small"
-                  onClick={(e: React.MouseEvent) => {
-                    e.preventDefault();
-                    handleAction(text, () => setIsMenuOpen(false));
-                  }}
-                >
-                  {text}
-                </Button>
-              ) : element.url && !hasChildren ? (
-                <Link
-                  to={element.url}
-                  className="thq-link thq-body-small"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {text}
-                </Link>
-              ) : (
-                <span
-                  className={`thq-link thq-body-small ${hasChildren ? 'menu-item-with-children' : ''}`}
-                >
-                  {text}
-                </span>
-              )}
+              {(() => {
+                if (isAction) {
+                  return (
+                    <Button
+                      variant="flat"
+                      className="thq-link thq-body-small"
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        handleAction(text, () => setIsMenuOpen(false));
+                      }}
+                    >
+                      {text}
+                    </Button>
+                  );
+                }
+                if (element.url && !hasChildren) {
+                  return (
+                    <Link
+                      to={element.url}
+                      className="thq-link thq-body-small"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {text}
+                    </Link>
+                  );
+                }
+                return <span className="thq-link thq-body-small">{text}</span>;
+              })()}
               {hasChildren && (
                 <button
                   className="menu-dropdown-toggle"
@@ -202,6 +204,16 @@ export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
         data-thq="thq-burger-menu"
         className="menu-burger-menu"
         onClick={toggleMenu}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleMenu();
+          }
+        }}
+        role="button"
+        aria-label="Open menu"
+        aria-expanded={isMenuOpen}
+        tabIndex={0}
       >
         <svg viewBox="0 0 1024 1024" className="menu-icon">
           <path d="M128 554.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 298.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667zM128 810.667h768c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-768c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
@@ -219,6 +231,15 @@ export const Menu: React.FC<MenuProps> = ({ links = [], logoSrc, logoAlt }) => {
               data-thq="thq-close-menu"
               className="menu-mobile-close-menu"
               onClick={toggleMenu}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleMenu();
+                }
+              }}
+              role="button"
+              aria-label="Close menu"
+              tabIndex={0}
             >
               <svg viewBox="0 0 1024 1024" className="menu-icon">
                 <path d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"></path>

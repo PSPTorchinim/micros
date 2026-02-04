@@ -104,7 +104,10 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
   };
 
   const handleDelete = async (roleId: string) => {
-    if (!window.confirm('Are you sure you want to delete this role?')) {
+    // TODO: Replace with proper modal confirmation dialog
+    // eslint-disable-next-line no-alert
+    const confirmed = window.confirm('Are you sure you want to delete this role?');
+    if (!confirmed) {
       return;
     }
 

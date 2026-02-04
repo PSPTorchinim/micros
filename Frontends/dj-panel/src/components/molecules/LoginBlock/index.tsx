@@ -36,25 +36,24 @@ export const LoginBlock: React.FC<LoginBlockType> = ({
     try {
       const response = await usersService.Login(email, password);
       if (response.success) {
-        if (setUser) {
-          setUser(response.data?.user ?? null);
-          setToken(response.data?.accessToken ?? null);
-          setRefreshToken(response.data?.refreshToken ?? null);
+        setUser(response.data?.user ?? null);
+        setToken(response.data?.accessToken ?? null);
+        setRefreshToken(response.data?.refreshToken ?? null);
 
-          // Persist user in localStorage
-          localStorage.setItem(
-            'user',
-            JSON.stringify(response.data?.user ?? null),
-          );
-          localStorage.setItem(
-            'token',
-            JSON.stringify(response.data?.accessToken ?? null),
-          );
-          localStorage.setItem(
-            'refreshToken',
-            JSON.stringify(response.data?.refreshToken ?? null),
-          );
-        }
+        // Persist user in localStorage
+        localStorage.setItem(
+          'user',
+          JSON.stringify(response.data?.user ?? null),
+        );
+        localStorage.setItem(
+          'token',
+          JSON.stringify(response.data?.accessToken ?? null),
+        );
+        localStorage.setItem(
+          'refreshToken',
+          JSON.stringify(response.data?.refreshToken ?? null),
+        );
+
         void navigate(redirectPath);
       } else {
         setError(response.message ?? 'An error occurred.');

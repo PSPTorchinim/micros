@@ -27,11 +27,20 @@ export const FeatureBlock = (props: FeatureSection) => {
               ),
           )}
         </div>
-        <div className="features-tabs-menu">
+        <div className="features-tabs-menu" role="tablist">
           {tabs.map((tab, index: number) => (
             <div
               key={index}
               onClick={() => setActiveTab(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab(index);
+                }
+              }}
+              role="tab"
+              aria-selected={activeTab === index}
+              tabIndex={0}
               className={
                 props.reversed
                   ? 'features-tab-horizontal reversed'

@@ -132,7 +132,7 @@ interface Props {
 
 export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const refUID = block.__component as string;
-  const base = refUID?.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
+  const base = refUID.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
   const relField = FIELD_BY_REF[refUID];
 
   const relObj = relField ? block[relField] : undefined;
@@ -190,7 +190,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
 
         const docId = getDocId(relObj);
         const numericId =
-          typeof (relObj as Record<string, unknown>)?.id === 'number'
+          typeof (relObj as Record<string, unknown>).id === 'number'
             ? ((relObj as Record<string, unknown>).id as number)
             : undefined;
 
@@ -272,15 +272,13 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
         if (cancel) return;
 
         if (!data) {
-          setError(
-            `${refUID}: Not found${
-              docId
-                ? ` (documentId: ${docId})`
-                : numericId
-                  ? ` (id: ${numericId})`
-                  : ''
-            }`,
-          );
+          let errorDetail = '';
+          if (docId) {
+            errorDetail = ` (documentId: ${docId})`;
+          } else if (numericId) {
+            errorDetail = ` (id: ${numericId})`;
+          }
+          setError(`${refUID}: Not found${errorDetail}`);
           return;
         }
 
@@ -291,7 +289,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
       } catch (e: unknown) {
         const error = e as Error;
         if (!cancel)
-          setError(error?.message || 'Failed to fetch referenced block');
+          setError(error.message || 'Failed to fetch referenced block');
       }
     };
 

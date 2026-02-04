@@ -295,7 +295,11 @@ export const LargeTeam: Story = {
           userId: `uid-${i + 1}`,
           username: `Team Member ${i + 1}`,
           email: `member${i + 1}@acmecorp.com`,
-          role: i === 0 ? 'Admin' : i < 3 ? 'Manager' : 'Member',
+          role: (() => {
+            if (i === 0) return 'Admin';
+            if (i < 3) return 'Manager';
+            return 'Member';
+          })(),
         }));
 
         const originalGetCompanyUsers =

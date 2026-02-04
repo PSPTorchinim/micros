@@ -58,7 +58,7 @@ export const RenderTemplate: React.FC<Props> = ({
         const error = e as Error;
         setTpl(null);
         setBlocks([]);
-        setError(error?.message || 'Failed to fetch template');
+        setError(error.message || 'Failed to fetch template');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -287,7 +287,7 @@ export const RenderTemplate: React.FC<Props> = ({
         !error &&
         blocks.map((block, index) => {
           // jeżeli coś jeszcze zostało jako ref-komponent, dobij to RefBlockRendererem
-          if (block.__component?.endsWith?.('-ref')) {
+          if (block.__component.endsWith('-ref')) {
             return (
               <RefBlockRenderer
                 key={index}

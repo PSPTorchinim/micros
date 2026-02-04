@@ -23,7 +23,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const prefersDark = window.matchMedia(
       '(prefers-color-scheme: dark)',
     ).matches;
-    return savedTheme || (prefersDark ? 'dark' : 'light');
+    return savedTheme ?? (prefersDark ? 'dark' : 'light');
   });
 
   useEffect(() => {

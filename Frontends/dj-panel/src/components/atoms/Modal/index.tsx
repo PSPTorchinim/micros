@@ -55,13 +55,27 @@ export const Modal: React.FC<ModalProps> = ({
     e.stopPropagation();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
+    <div 
+      className="modal-overlay" 
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+    >
       <div
         className={`modal-content modal-content--${size}`}
         onClick={handleContentClick}
+        role="document"
       >
-        {(title || showCloseButton) && (
+        {(title ?? showCloseButton) && (
           <div className="modal-header">
             {title && <h2 className="modal-title">{title}</h2>}
             {showCloseButton && onClose && (

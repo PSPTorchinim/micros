@@ -50,12 +50,15 @@ function buildRoutesAndNav(
 
     // For nested routes, we need to use relative paths (just the slug)
     // For root routes, use the full path
-    const path = isHomePage
-      ? ''
-      : isRoot
-        ? rawPath.replace(/^\/+/g, '')
-        : ((page as any)?.Slug?.replace(/^\/+/g, '') ??
-          String((page as any)?.id));
+    let path: string;
+    if (isHomePage) {
+      path = '';
+    } else if (isRoot) {
+      path = rawPath.replace(/^\/+/g, '');
+    } else {
+      path = ((page as any)?.Slug?.replace(/^\/+/g, '') ??
+        String((page as any)?.id));
+    }
 
     let childrenRoutes: React.ReactElement[] = [];
     let childrenNav: NavigationItem[] = [];
@@ -155,8 +158,8 @@ export function useDynamicRoutes() {
       if (
         !routes.some(
           (r) =>
-            r?.type &&
-            r?.props &&
+            r.type &&
+            r.props &&
             typeof r.props === 'object' &&
             r.props !== null &&
             'index' in r.props &&
@@ -177,7 +180,7 @@ export function useDynamicRoutes() {
       const hasLogout = nav.some(
         (item) =>
           item.NavigationAction === PageNavigationActionEnum1.Action &&
-          item.text?.toLowerCase().replace(/\s+/g, '') === 'logout',
+          item.text.toLowerCase().replace(/\s+/g, '') === 'logout',
       );
 
       if (!hasLogout) {

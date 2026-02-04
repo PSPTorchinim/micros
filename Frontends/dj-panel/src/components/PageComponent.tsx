@@ -40,8 +40,8 @@ export const PageComponent: React.FC<PageComponentProps> = ({ pageId }) => {
   return (
     <div className="page-component-wrapper">
       <RenderTemplate
-        template={page?.template?.documentId}
-        pageTitle={page?.Title}
+        template={page.template?.documentId}
+        pageTitle={page.Title}
       />
     </div>
   );

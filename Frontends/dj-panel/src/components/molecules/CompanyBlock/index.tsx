@@ -111,7 +111,8 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
         await loadCompanyData();
         setIsEditingCompany(false);
       } else {
-        alert('Failed to update company information');
+        console.error('Failed to update company information');
+        // TODO: Replace with proper toast notification
       }
     }
   };
@@ -129,18 +130,23 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
         setShowAddUser(false);
         setNewUser({ userId: '', role: 'Member' });
       } else {
-        alert('Failed to add user');
+        console.error('Failed to add user');
+        // TODO: Replace with proper toast notification
       }
     }
   };
 
   const handleRemoveUser = async (userId: string) => {
-    if (window.confirm('Are you sure you want to remove this user?')) {
+    // TODO: Replace with proper modal confirmation dialog
+    // eslint-disable-next-line no-alert
+    const confirmed = window.confirm('Are you sure you want to remove this user?');
+    if (confirmed) {
       const success = await CompanyService.removeCompanyUser(userId);
       if (success) {
         await loadCompanyData();
       } else {
-        alert('Failed to remove user');
+        console.error('Failed to remove user');
+        // TODO: Replace with proper toast notification
       }
     }
   };

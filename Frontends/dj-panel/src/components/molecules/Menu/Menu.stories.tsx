@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect } from 'react';
-import { Menu } from './Menu';
 import {
   PageMenuEnum1,
   PageAuthStateEnum1,
   PageNavigationActionEnum1,
 } from '../../../models/api/strapi/apiMap';
+import { Menu } from './Menu';
 
 const meta = {
   title: 'Molecules/Menu',
