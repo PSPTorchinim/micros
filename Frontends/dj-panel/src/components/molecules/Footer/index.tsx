@@ -61,15 +61,15 @@ export const Footer = (props: FooterProps) => {
         <div className="footer-content">
           <div className="footer-links">
             {columns.map(
-              (column: FooterLinkColumnComponent, columnIndex: number) => (
-                <div key={columnIndex} className="footer-column">
+              (column: FooterLinkColumnComponent) => (
+                <div key={column.title ?? column.id} className="footer-column">
                   <strong className="thq-body-large footer-column-title">
                     {column.title ?? ''}
                   </strong>
                   <div className="footer-footer-links">
-                    {column.links?.map((link, linkIndex) => (
+                    {column.links?.map((link) => (
                       <Link
-                        key={linkIndex}
+                        key={`${link.url}-${link.label}`}
                         to={link.url ?? '#'}
                         rel="noreferrer noopener"
                         className="thq-body-small"
@@ -87,13 +87,13 @@ export const Footer = (props: FooterProps) => {
                   Connect with Us
                 </strong>
                 <div className="footer-social-links">
-                  {footerData.socialLinks?.map(
-                    (link: FooterSocialLinkComponent, index: number) => {
+                  {footerData.socialLinks.map(
+                    (link: FooterSocialLinkComponent) => {
                       const IconComponent = getIconComponent(
                         link.icon ?? link.platform,
                       );
                       return (
-                        <div key={index} className="footer-link">
+                        <div key={`${link.platform}-${link.url ?? link.detail}`} className="footer-link">
                           <IconComponent className="thq-icon-small" />
                           <span className="thq-body-small">
                             {link.detail ?? link.url ?? ''}

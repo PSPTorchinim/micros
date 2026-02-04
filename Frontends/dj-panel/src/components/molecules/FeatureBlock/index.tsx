@@ -19,7 +19,7 @@ export const FeatureBlock = (props: FeatureSection) => {
             (tab, index: number) =>
               activeTab === index && (
                 <img
-                  key={index}
+                  key={`${tab.imgSrc}-${tab.title}`}
                   alt={tab.imgAlt ?? ''}
                   src={tab.imgSrc ?? ''}
                   className="features-image thq-img-ratio-16-9"
@@ -30,7 +30,7 @@ export const FeatureBlock = (props: FeatureSection) => {
         <div className="features-tabs-menu" role="tablist">
           {tabs.map((tab, index: number) => (
             <div
-              key={index}
+              key={`${tab.title}-${tab.description}`}
               onClick={() => setActiveTab(index)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

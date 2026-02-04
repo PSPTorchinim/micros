@@ -19,8 +19,8 @@ export const ContactBlock = (props: ContactSection) => {
           </div>
         </div>
         <div className="contact-row">
-          {contactInfoArray.map((info, index: number) => (
-            <div className="contact-info" key={index}>
+          {contactInfoArray.map((info) => (
+            <div className="contact-info" key={`${info.title}-${info.iconName}`}>
               {/* Render icon by name using a dynamic import or a mapping in your app */}
               <span className="thq-icon-medium">{info.iconName}</span>
               <div className="contact-info-content">

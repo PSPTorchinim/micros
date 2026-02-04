@@ -76,7 +76,7 @@ function buildRoutesAndNav(
       childrenNav = result.nav;
 
       routes.push(
-        <Route key={path ?? 'index'} path={path} element={<Outlet />}>
+        <Route key={path || 'index'} path={path} element={<Outlet />}>
           <Route index element={<PageComponent pageId={page.documentId} />} />
           {childrenRoutes}
         </Route>,
@@ -136,13 +136,10 @@ export function useDynamicRoutes() {
     const children = await StrapiService.getPagesByParentId(page.id);
     if (!children || children.length === 0) return page;
 
-    if (Array.isArray(children)) {
-      const subpagesWithChildren = await Promise.all(
-        children.map((child: Page) => fetchAllChildren(child)),
-      );
-      return { ...(page as any), subpages: subpagesWithChildren } as any;
-    }
-    return page;
+    const subpagesWithChildren = await Promise.all(
+      children.map((child: Page) => fetchAllChildren(child)),
+    );
+    return { ...(page as any), subpages: subpagesWithChildren } as any;
   }
 
   useEffect(() => {
@@ -158,7 +155,6 @@ export function useDynamicRoutes() {
       if (
         !routes.some(
           (r) =>
-            r.type &&
             r.props &&
             typeof r.props === 'object' &&
             r.props !== null &&

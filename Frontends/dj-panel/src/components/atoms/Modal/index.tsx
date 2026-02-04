@@ -73,6 +73,10 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={`modal-content modal-content--${size}`}
         onClick={handleContentClick}
+        onKeyDown={(e) => {
+          // Stop propagation to prevent overlay close on Escape
+          e.stopPropagation();
+        }}
         role="document"
       >
         {(title ?? showCloseButton) && (

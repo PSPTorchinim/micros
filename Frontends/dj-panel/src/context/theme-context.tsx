@@ -18,12 +18,15 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('theme') as Theme;
+    const savedTheme = localStorage.getItem('theme') as Theme | null;
+    if (savedTheme) {
+      return savedTheme;
+    }
     // Check system preference
     const prefersDark = window.matchMedia(
       '(prefers-color-scheme: dark)',
     ).matches;
-    return savedTheme ?? (prefersDark ? 'dark' : 'light');
+    return prefersDark ? 'dark' : 'light';
   });
 
   useEffect(() => {

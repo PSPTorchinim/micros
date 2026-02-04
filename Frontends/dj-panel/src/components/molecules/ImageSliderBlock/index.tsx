@@ -28,14 +28,14 @@ export const ImageSliderBlock = (props: ImageSlider) => {
         )}
         <div className="image-slider-row-container thq-animated-group-container-horizontal thq-mask-image-horizontal">
           <div className={className}>
-            {slidesArr.map((slide: SlideData, idx: number) => (
+            {slidesArr.map((slide: SlideData) => (
               <img
-                key={idx}
+                key={`first-${slide.imageUrl ?? slide.src ?? slide.url}-${slide.caption ?? slide.alt}`}
                 alt={
                   slide.alt ??
                   slide.caption ??
                   slide.alternativeText ??
-                  `slide-${idx}`
+                  'slide'
                 }
                 src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
@@ -43,14 +43,14 @@ export const ImageSliderBlock = (props: ImageSlider) => {
             ))}
           </div>
           <div className={className}>
-            {slidesArr.map((slide: SlideData, idx: number) => (
+            {slidesArr.map((slide: SlideData) => (
               <img
-                key={idx}
+                key={`second-${slide.imageUrl ?? slide.src ?? slide.url}-${slide.caption ?? slide.alt}`}
                 alt={
                   slide.alt ??
                   slide.caption ??
                   slide.alternativeText ??
-                  `slide-${idx}`
+                  'slide'
                 }
                 src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
