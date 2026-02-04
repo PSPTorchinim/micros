@@ -287,7 +287,7 @@ export const RenderTemplate: React.FC<Props> = ({
         !error &&
         blocks.map((block, index) => {
           // jeżeli coś jeszcze zostało jako ref-komponent, dobij to RefBlockRendererem
-          if (block.__component.endsWith('-ref')) {
+          if (block.__component?.endsWith('-ref')) {
             return (
               <RefBlockRenderer
                 key={index}

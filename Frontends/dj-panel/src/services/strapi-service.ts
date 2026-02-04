@@ -51,7 +51,7 @@ const TEMPLATE_CONTENT_POPULATE = {
       'NavigationAction',
     ],
   },
-} as const;
+};
 
 export class StrapiService {
   // --------------------------------------
@@ -66,7 +66,7 @@ export class StrapiService {
           Parents: { id: { $null: true } },
         } as StrapiFilters,
       });
-      return response.data.data;
+      return response.data.data ?? [];
     } catch {
       return [];
     }
@@ -80,9 +80,7 @@ export class StrapiService {
         } as StrapiFilters,
       });
       // Depending on the generator, it might be response.data.data
-      return (
-        (response as any).data?.data ?? (response.data as unknown as Page[])
-      );
+      return response.data.data ?? [];
     } catch {
       return [];
     }
@@ -96,7 +94,7 @@ export class StrapiService {
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
         populate: '*',
       });
-      const page = response?.data?.data?.[0] ?? null;
+      const page = response.data.data?.[0] ?? null;
       return page;
     } catch {
       return null;
@@ -112,9 +110,9 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
-        populate: TEMPLATE_CONTENT_POPULATE as any,
+        populate: TEMPLATE_CONTENT_POPULATE,
       });
-      const template = response?.data?.data?.[0] ?? null;
+      const template = response.data.data?.[0] ?? null;
       return template;
     } catch {
       return null;
@@ -126,9 +124,9 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: documentId } } as StrapiFilters,
-        populate: TEMPLATE_CONTENT_POPULATE as any,
+        populate: TEMPLATE_CONTENT_POPULATE,
       });
-      return response?.data?.data?.[0] ?? null;
+      return response.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -142,7 +140,7 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -152,7 +150,7 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.contactInfo.getContactInfosId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -162,7 +160,7 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -174,7 +172,7 @@ export class StrapiService {
         await microservicesClient.strapi.featureSection.getFeatureSectionsId(
           id,
         );
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -186,7 +184,7 @@ export class StrapiService {
         await microservicesClient.strapi.contactSection.getContactSectionsId(
           id,
         );
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -196,7 +194,7 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -206,7 +204,7 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -218,7 +216,7 @@ export class StrapiService {
         await microservicesClient.strapi.stepsContainer.getStepsContainersId(
           id,
         );
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -227,7 +225,7 @@ export class StrapiService {
   public static async getCTABlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.cta.getCtasId(id);
-      return response?.data?.data ?? null;
+      return response.data.data ?? null;
     } catch {
       return null;
     }
@@ -244,7 +242,7 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -256,7 +254,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -268,7 +266,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -281,7 +279,7 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -293,7 +291,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -306,7 +304,7 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -319,7 +317,7 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -331,7 +329,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -343,7 +341,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -355,7 +353,7 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -370,7 +368,7 @@ export class StrapiService {
             populate: '*',
           },
         );
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -380,7 +378,7 @@ export class StrapiService {
   public static async getLoginBlockSingleton() {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -390,7 +388,7 @@ export class StrapiService {
     try {
       const res =
         await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -402,7 +400,7 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -414,7 +412,7 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.profileBlock.getProfileBlock();
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -425,9 +423,9 @@ export class StrapiService {
       // Note: Using 'as any' temporarily until API types are regenerated
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res = await (
-        microservicesClient.strapi as any
+        microservicesClient.strapi
       ).companyBlock.getCompanyBlock();
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -436,16 +434,9 @@ export class StrapiService {
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
-        populate: {
-          columns: {
-            populate: {
-              links: true,
-            },
-          },
-          socialLinks: true,
-        } as any,
+        populate: 'columns.links,socialLinks',
       });
-      return res?.data?.data ?? null;
+      return res.data.data ?? null;
     } catch {
       return null;
     }
@@ -461,7 +452,7 @@ export class StrapiService {
         filters: { Slug: { $eq: slug } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
@@ -473,7 +464,7 @@ export class StrapiService {
         filters: { Title: { $eq: title } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] ?? null;
+      return res.data.data?.[0] ?? null;
     } catch {
       return null;
     }
