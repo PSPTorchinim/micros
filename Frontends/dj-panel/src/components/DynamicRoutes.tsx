@@ -56,8 +56,8 @@ function buildRoutesAndNav(
     } else if (isRoot) {
       path = rawPath.replace(/^\/+/g, '');
     } else {
-      path = ((page as any)?.Slug?.replace(/^\/+/g, '') ??
-        String((page as any)?.id));
+      path =
+        (page as any)?.Slug?.replace(/^\/+/g, '') ?? String((page as any)?.id);
     }
 
     let childrenRoutes: React.ReactElement[] = [];

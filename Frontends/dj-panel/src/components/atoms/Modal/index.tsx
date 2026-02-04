@@ -62,8 +62,8 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div 
-      className="modal-overlay" 
+    <div
+      className="modal-overlay"
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
       role="dialog"

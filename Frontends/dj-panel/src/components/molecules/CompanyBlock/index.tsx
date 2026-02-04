@@ -139,7 +139,9 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
   const handleRemoveUser = async (userId: string) => {
     // TODO: Replace with proper modal confirmation dialog
     // eslint-disable-next-line no-alert
-    const confirmed = window.confirm('Are you sure you want to remove this user?');
+    const confirmed = window.confirm(
+      'Are you sure you want to remove this user?',
+    );
     if (confirmed) {
       const success = await CompanyService.removeCompanyUser(userId);
       if (success) {
