@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from '../../atoms/Button';
-import { Input } from '../../atoms/Input';
 import {
   CompanyService,
   CompanyDTO,
@@ -9,6 +7,8 @@ import {
   AddCompanyUserDTO,
   CompanyStructureNodeDTO,
 } from '../../../services/company-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
 import './index.css';
 
 export interface CompanyBlockProps {
@@ -66,7 +66,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCompanyData();
+    void loadCompanyData();
   }, []);
 
   const loadCompanyData = async () => {
@@ -80,8 +80,8 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       setCompany(companyData);
       setUsers(usersData);
       setStructure(structureData);
-    } catch (error) {
-      console.error('Error loading company data:', error);
+    } catch {
+      // Error loading company data
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,8 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
         await loadCompanyData();
         setIsEditingCompany(false);
       } else {
-        alert('Failed to update company information');
+        console.error('Failed to update company information');
+        // TODO: Replace with proper toast notification
       }
     }
   };
@@ -129,18 +130,25 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
         setShowAddUser(false);
         setNewUser({ userId: '', role: 'Member' });
       } else {
-        alert('Failed to add user');
+        console.error('Failed to add user');
+        // TODO: Replace with proper toast notification
       }
     }
   };
 
   const handleRemoveUser = async (userId: string) => {
-    if (window.confirm('Are you sure you want to remove this user?')) {
+    // TODO: Replace with proper modal confirmation dialog
+    // eslint-disable-next-line no-alert
+    const confirmed = window.confirm(
+      'Are you sure you want to remove this user?',
+    );
+    if (confirmed) {
       const success = await CompanyService.removeCompanyUser(userId);
       if (success) {
         await loadCompanyData();
       } else {
-        alert('Failed to remove user');
+        console.error('Failed to remove user');
+        // TODO: Replace with proper toast notification
       }
     }
   };
@@ -182,9 +190,8 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
       } else {
         setCreateError('Failed to create company. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setCreateError('An error occurred. Please try again.');
-      console.error('Error creating company:', err);
     } finally {
       setIsCreatingCompany(false);
     }
@@ -257,7 +264,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                 <div className="company-info-edit">
                   <Input
                     label="Name"
-                    value={editedCompany?.name || ''}
+                    value={editedCompany?.name ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, name: e.target.value } : null,
@@ -267,7 +274,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   <Input
                     label="Email"
                     type="email"
-                    value={editedCompany?.email || ''}
+                    value={editedCompany?.email ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, email: e.target.value } : null,
@@ -276,7 +283,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Phone"
-                    value={editedCompany?.phone || ''}
+                    value={editedCompany?.phone ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, phone: e.target.value } : null,
@@ -285,7 +292,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Country"
-                    value={editedCompany?.country || ''}
+                    value={editedCompany?.country ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, country: e.target.value } : null,
@@ -294,7 +301,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="City"
-                    value={editedCompany?.city || ''}
+                    value={editedCompany?.city ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, city: e.target.value } : null,
@@ -303,7 +310,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Post Code"
-                    value={editedCompany?.postCode || ''}
+                    value={editedCompany?.postCode ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, postCode: e.target.value } : null,
@@ -312,7 +319,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Address Line 1"
-                    value={editedCompany?.addressLine1 || ''}
+                    value={editedCompany?.addressLine1 ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, addressLine1: e.target.value } : null,
@@ -321,7 +328,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
                   />
                   <Input
                     label="Address Line 2"
-                    value={editedCompany?.addressLine2 || ''}
+                    value={editedCompany?.addressLine2 ?? ''}
                     onChange={(e) =>
                       setEditedCompany((prev) =>
                         prev ? { ...prev, addressLine2: e.target.value } : null,
@@ -343,7 +350,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
             <div className="company-info-create">
               <h3>Create Your Company Profile</h3>
               <p className="company-create-description">
-                You don't have a company profile yet. Please fill in your
+                You don&apos;t have a company profile yet. Please fill in your
                 company details to get started.
               </p>
 
@@ -443,7 +450,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
 
                 <Input
                   label="Address Line 2"
-                  value={newCompany.addressLine2 || ''}
+                  value={newCompany.addressLine2 ?? ''}
                   onChange={(e) =>
                     setNewCompany((prev) => ({
                       ...prev,

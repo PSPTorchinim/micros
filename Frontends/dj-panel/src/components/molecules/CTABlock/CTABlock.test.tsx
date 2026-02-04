@@ -1,8 +1,9 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
-import { CTABlock } from './index';
 import type { Cta } from '../../../models/api/strapi/apiMap';
+import { CTABlock } from './index';
 
 describe('CTABlock', () => {
   it('renders CTA with label and url', () => {

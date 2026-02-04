@@ -7,7 +7,7 @@ import {
 } from '../models/api/identity/apiMap';
 
 export class PermissionsService {
-  public static async getPermissions(): Promise<GetPermissionsDTOIEnumerableResponse> {
+  public static getPermissions(): Promise<GetPermissionsDTOIEnumerableResponse> {
     return microservicesClient.identity.permissions
       .v1PermissionsList()
       .then((response) => {
@@ -25,9 +25,7 @@ export class PermissionsService {
       });
   }
 
-  public static async getPermission(
-    id: string,
-  ): Promise<GetPermissionDTOResponse> {
+  public static getPermission(id: string): Promise<GetPermissionDTOResponse> {
     return microservicesClient.identity.permissions
       .v1PermissionsDetail(id)
       .then((response) => {
@@ -45,7 +43,7 @@ export class PermissionsService {
       });
   }
 
-  public static async createPermission(
+  public static createPermission(
     permission: AddPermissionDTO,
   ): Promise<BooleanResponse> {
     return microservicesClient.identity.permissions

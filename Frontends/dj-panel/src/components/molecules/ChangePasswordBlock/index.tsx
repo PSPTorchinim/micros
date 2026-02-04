@@ -10,7 +10,7 @@ import './index.css';
 const MIN_PASSWORD_LENGTH = 6;
 const SUCCESS_REDIRECT_DELAY_MS = 1500;
 
-export interface ChangePasswordBlock {
+interface ChangePasswordBlockConfig {
   title?: string;
   description?: string;
   oldPasswordLabel?: string;
@@ -24,7 +24,11 @@ export interface ChangePasswordBlock {
   customStyles?: Record<string, unknown>;
 }
 
-export const ChangePasswordBlock: React.FC<ChangePasswordBlock> = ({
+export interface ChangePasswordBlockProps extends ChangePasswordBlockConfig {
+  // This interface extends the main interface for component props
+}
+
+export const ChangePasswordBlock: React.FC<ChangePasswordBlockProps> = ({
   title = 'Change Password',
   description = 'Update your password to keep your account secure.',
   oldPasswordLabel = 'Current Password',
@@ -86,12 +90,12 @@ export const ChangePasswordBlock: React.FC<ChangePasswordBlock> = ({
         setConfirmPassword('');
         // Redirect after a short delay
         setTimeout(() => {
-          navigate(successRedirectPath);
+          void navigate(successRedirectPath);
         }, SUCCESS_REDIRECT_DELAY_MS);
       } else {
         setError(
-          response.message ||
-            response.errors?.[0] ||
+          response.message ??
+            response.errors?.[0] ??
             'Failed to change password.',
         );
       }

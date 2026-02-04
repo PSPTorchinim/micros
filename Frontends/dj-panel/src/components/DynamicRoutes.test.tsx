@@ -1,14 +1,15 @@
-import React from 'react';
 import { render, waitFor } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
-import { useDynamicRoutes } from './DynamicRoutes';
-import type { Page } from '../models/api/strapi/apiMap';
 import {
+  type Page,
   PageMenuEnum1,
   PageAuthStateEnum1,
   PageNavigationActionEnum1,
 } from '../models/api/strapi/apiMap';
+import { useDynamicRoutes } from './DynamicRoutes';
 
 // Mock the strapi API
 const mockGetRootPages = jest.fn();

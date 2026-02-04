@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React, { useState } from 'react';
 import './index.css';
 import type { FeatureSection } from '../../../models/api/strapi/apiMap';
@@ -18,19 +19,28 @@ export const FeatureBlock = (props: FeatureSection) => {
             (tab, index: number) =>
               activeTab === index && (
                 <img
-                  key={index}
-                  alt={tab.imgAlt || ''}
-                  src={tab.imgSrc || ''}
+                  key={`${tab.imgSrc}-${tab.title}`}
+                  alt={tab.imgAlt ?? ''}
+                  src={tab.imgSrc ?? ''}
                   className="features-image thq-img-ratio-16-9"
                 />
               ),
           )}
         </div>
-        <div className="features-tabs-menu">
+        <div className="features-tabs-menu" role="tablist">
           {tabs.map((tab, index: number) => (
             <div
-              key={index}
+              key={`${tab.title}-${tab.description}`}
               onClick={() => setActiveTab(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab(index);
+                }
+              }}
+              role="tab"
+              aria-selected={activeTab === index}
+              tabIndex={0}
               className={
                 props.reversed
                   ? 'features-tab-horizontal reversed'

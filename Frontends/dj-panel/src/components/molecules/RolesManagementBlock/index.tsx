@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { RolesService } from '../../../services/roles-service';
-import { PermissionsService } from '../../../services/permissions-service';
-import { Button } from '../../atoms/Button';
-import { Input } from '../../atoms/Input';
 import {
   Role,
   GetPermissionsDTO,
   AddRoleRequest,
 } from '../../../models/api/identity/apiMap';
+import { PermissionsService } from '../../../services/permissions-service';
+import { RolesService } from '../../../services/roles-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
 import './index.css';
 
 export interface RolesManagementBlockProps {
@@ -36,7 +36,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -51,14 +51,14 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
       if (rolesResponse.success && rolesResponse.data) {
         setRoles(rolesResponse.data);
       } else {
-        setError(rolesResponse.message || 'Failed to load roles');
+        setError(rolesResponse.message ?? 'Failed to load roles');
       }
 
       if (permissionsResponse.success && permissionsResponse.data) {
         setPermissions(permissionsResponse.data);
       } else {
         const permissionsError =
-          permissionsResponse.message || 'Failed to load permissions';
+          permissionsResponse.message ?? 'Failed to load permissions';
         setError((prevError) =>
           prevError ? `${prevError}. ${permissionsError}` : permissionsError,
         );
@@ -87,14 +87,14 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
       const response = await RolesService.getRole(roleId);
       if (response.success && response.data) {
         setEditingRoleId(roleId);
-        setRoleName(response.data.name || '');
-        setRoleDescription(response.data.description || '');
+        setRoleName(response.data.name ?? '');
+        setRoleDescription(response.data.description ?? '');
         setSelectedPermissions(
-          response.data.permissions?.map((p) => p.id || '') || [],
+          response.data.permissions?.map((p) => p.id ?? '') ?? [],
         );
         setShowForm(true);
       } else {
-        setError(response.message || 'Failed to load role details');
+        setError(response.message ?? 'Failed to load role details');
       }
     } catch (err) {
       setError(
@@ -104,7 +104,12 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
   };
 
   const handleDelete = async (roleId: string) => {
-    if (!window.confirm('Are you sure you want to delete this role?')) {
+    // TODO: Replace with proper modal confirmation dialog
+    // eslint-disable-next-line no-alert
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this role?',
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -116,7 +121,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         setSuccess('Role deleted successfully');
         await loadData();
       } else {
-        setError(response.message || 'Failed to delete role');
+        setError(response.message ?? 'Failed to delete role');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete role');
@@ -153,7 +158,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
         await loadData();
       } else {
         setError(
-          response.message || response.errors?.[0] || 'Failed to save role',
+          response.message ?? response.errors?.[0] ?? 'Failed to save role',
         );
       }
     } catch (err) {
@@ -238,7 +243,7 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
               // Group permissions by their prefix (part before ':')
               const grouped = permissions.reduce(
                 (acc, permission) => {
-                  const name = permission.name || '';
+                  const name = permission.name ?? '';
                   const prefix = name.includes(':')
                     ? name.split(':')[0]
                     : 'other';
@@ -270,10 +275,10 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
                           type="checkbox"
                           id={`permission-${permission.id}`}
                           checked={selectedPermissions.includes(
-                            permission.id || '',
+                            permission.id ?? '',
                           )}
                           onChange={() =>
-                            handlePermissionToggle(permission.id || '')
+                            handlePermissionToggle(permission.id ?? '')
                           }
                         />
                         <span className="roles-management-permission-name">
@@ -326,20 +331,20 @@ export const RolesManagementBlock: React.FC<RolesManagementBlockProps> = ({
                 {roles.map((role) => (
                   <tr key={role.id}>
                     <td>{role.name}</td>
-                    <td>{role.description || '-'}</td>
-                    <td>{role.permissions?.length || 0} permissions</td>
+                    <td>{role.description ?? '-'}</td>
+                    <td>{role.permissions?.length ?? 0} permissions</td>
                     <td className="roles-management-actions">
                       <Button
                         size="small"
                         variant="outline"
-                        onClick={() => handleEdit(role.id || '')}
+                        onClick={() => handleEdit(role.id ?? '')}
                       >
                         Edit
                       </Button>
                       <Button
                         size="small"
                         variant="outline"
-                        onClick={() => handleDelete(role.id || '')}
+                        onClick={() => handleDelete(role.id ?? '')}
                       >
                         Delete
                       </Button>

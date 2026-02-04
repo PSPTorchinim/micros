@@ -4,7 +4,7 @@ import { useAuth } from '../../../hooks/use-auth/use-auth';
 import { Button } from '../../atoms/Button';
 import './index.css';
 
-export interface ProfileBlock {
+interface ProfileBlockConfig {
   title?: string;
   description?: string;
   emailLabel?: string;
@@ -14,11 +14,14 @@ export interface ProfileBlock {
   customStyles?: Record<string, unknown>;
 }
 
-export const ProfileBlock: React.FC<ProfileBlock> = ({
+export interface ProfileBlockProps extends ProfileBlockConfig {
+  // This interface extends the main interface for component props
+}
+
+export const ProfileBlock: React.FC<ProfileBlockProps> = ({
   title = 'Profile',
   description = 'View and manage your profile information.',
   emailLabel = 'Email',
-  usernameLabel = 'Username',
   changePasswordButtonText = 'Change Password',
   changePasswordUrl = '/change-password',
   customStyles = {},
@@ -27,7 +30,7 @@ export const ProfileBlock: React.FC<ProfileBlock> = ({
   const navigate = useNavigate();
 
   const handleChangePassword = () => {
-    navigate(changePasswordUrl);
+    void navigate(changePasswordUrl);
   };
 
   return (
@@ -40,12 +43,8 @@ export const ProfileBlock: React.FC<ProfileBlock> = ({
           <>
             <div className="profile-block-info">
               <div className="profile-block-field">
-                <label className="profile-block-label">{usernameLabel}</label>
-                <p className="profile-block-value">{user.username || 'N/A'}</p>
-              </div>
-              <div className="profile-block-field">
                 <label className="profile-block-label">{emailLabel}</label>
-                <p className="profile-block-value">{user.email || 'N/A'}</p>
+                <p className="profile-block-value">{user.email ?? 'N/A'}</p>
               </div>
             </div>
             <div className="profile-block-actions">

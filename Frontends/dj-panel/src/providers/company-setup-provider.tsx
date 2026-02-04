@@ -1,7 +1,8 @@
+// @ts-ignore - React is needed for JSX
 import React, { PropsWithChildren, useEffect, useState } from 'react';
+import { CreateCompanyModal } from '../components/molecules/CreateCompanyModal';
 import { useAuth } from '../hooks/use-auth/use-auth';
 import { CompanyService } from '../services/company-service';
-import { CreateCompanyModal } from '../components/molecules/CreateCompanyModal';
 
 type CompanySetupProviderProps = PropsWithChildren;
 
@@ -36,7 +37,7 @@ export const CompanySetupProvider = ({
             // Skip period expired, remove the flag
             localStorage.removeItem(SKIP_COMPANY_SETUP_KEY);
           }
-        } catch (e) {
+        } catch {
           // Invalid skip data, remove it
           localStorage.removeItem(SKIP_COMPANY_SETUP_KEY);
         }
@@ -50,14 +51,14 @@ export const CompanySetupProvider = ({
           // User is not a member of any company, show the modal
           setShowModal(true);
         }
-      } catch (error) {
-        console.error('Error checking company membership:', error);
+      } catch {
+        // Error checking company membership
       } finally {
         setIsCheckingCompany(false);
       }
     };
 
-    checkCompanySetup();
+    void checkCompanySetup();
   }, [user]);
 
   const handleSkip = () => {

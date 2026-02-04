@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import './index.css';
 import type { FeatureTab } from '../../../models/api/strapi/apiMap';
@@ -7,7 +8,7 @@ export const FeatureTabBlock = (props: FeatureTab) => (
     {props.imgSrc && (
       <img
         src={props.imgSrc}
-        alt={props.imgAlt || props.title || ''}
+        alt={props.imgAlt ?? props.title ?? ''}
         style={{ maxWidth: 200 }}
       />
     )}

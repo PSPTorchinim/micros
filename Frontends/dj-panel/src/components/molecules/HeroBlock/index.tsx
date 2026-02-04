@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import './index.css';
 import type { HeroBlock as HeroBlockType } from '../../../models/api/strapi/apiMap';
@@ -10,9 +11,9 @@ export const HeroBlock = (props: HeroBlockType) => (
         <p className="hero-text thq-body-large">{props.content}</p>
       </div>
       <div className="hero-actions">
-        {props.actions?.map((action, idx: number) => (
+        {props.actions?.map((action) => (
           <a
-            key={idx}
+            key={`${action.url}-${action.Label}`}
             href={action.url}
             className="thq-button-filled hero-button"
             target={action.OpenInNewTab ? '_blank' : undefined}

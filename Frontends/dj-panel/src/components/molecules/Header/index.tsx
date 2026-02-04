@@ -1,8 +1,8 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import './index.css';
-import { Menu } from '../Menu';
 import { ThemeToggle } from '../../atoms/ThemeToggle';
-import PropTypes from 'prop-types';
+import { Menu } from '../Menu';
 
 export const Header = (props: any): React.ReactElement => {
   return (

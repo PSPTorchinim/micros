@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import './index.css';
 import type { ImageSlider } from '../../../models/api/strapi/apiMap';
@@ -27,31 +28,25 @@ export const ImageSliderBlock = (props: ImageSlider) => {
         )}
         <div className="image-slider-row-container thq-animated-group-container-horizontal thq-mask-image-horizontal">
           <div className={className}>
-            {slidesArr.map((slide: SlideData, idx: number) => (
+            {slidesArr.map((slide: SlideData) => (
               <img
-                key={idx}
+                key={`first-${slide.imageUrl ?? slide.src ?? slide.url}-${slide.caption ?? slide.alt}`}
                 alt={
-                  slide.alt ||
-                  slide.caption ||
-                  slide.alternativeText ||
-                  `slide-${idx}`
+                  slide.alt ?? slide.caption ?? slide.alternativeText ?? 'slide'
                 }
-                src={slide.imageUrl || slide.src || slide.url}
+                src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
               />
             ))}
           </div>
           <div className={className}>
-            {slidesArr.map((slide: SlideData, idx: number) => (
+            {slidesArr.map((slide: SlideData) => (
               <img
-                key={idx}
+                key={`second-${slide.imageUrl ?? slide.src ?? slide.url}-${slide.caption ?? slide.alt}`}
                 alt={
-                  slide.alt ||
-                  slide.caption ||
-                  slide.alternativeText ||
-                  `slide-${idx}`
+                  slide.alt ?? slide.caption ?? slide.alternativeText ?? 'slide'
                 }
-                src={slide.imageUrl || slide.src || slide.url}
+                src={slide.imageUrl ?? slide.src ?? slide.url}
                 className="image-slider-placeholder-image thq-img-scale thq-img-ratio-1-1"
               />
             ))}

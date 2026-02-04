@@ -1,7 +1,7 @@
-import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { useTheme } from './use-theme';
+import React from 'react';
 import { ThemeContext } from '../../context/theme-context';
+import { useTheme } from './use-theme';
 
 describe('useTheme Hook', () => {
   it('throws error when used outside ThemeProvider', () => {

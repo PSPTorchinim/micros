@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Modal } from '../../atoms/Modal';
-import { Input } from '../../atoms/Input';
-import { Button } from '../../atoms/Button';
 import {
   CompanyService,
   UpdateCompanyDTO,
 } from '../../../services/company-service';
+import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
+import { Modal } from '../../atoms/Modal';
 import './index.css';
 
 export interface CreateCompanyModalProps {
@@ -77,9 +77,8 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
       } else {
         setError('Failed to create company. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
-      console.error('Error creating company:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -111,9 +110,9 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
     >
       <div className="create-company-modal">
         <p className="create-company-modal__description">
-          Welcome! It looks like you don't have a company profile yet. Please
-          fill in your company details to get started, or skip for now and
-          complete this later.
+          Welcome! It looks like you don&apos;t have a company profile yet.
+          Please fill in your company details to get started, or skip for now
+          and complete this later.
         </p>
 
         {error && <div className="create-company-modal__error">{error}</div>}
@@ -180,7 +179,7 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
 
           <Input
             label="Address Line 2"
-            value={formData.addressLine2 || ''}
+            value={formData.addressLine2 ?? ''}
             onChange={(e) => handleChange('addressLine2', e.target.value)}
             placeholder="Suite 100 (optional)"
           />

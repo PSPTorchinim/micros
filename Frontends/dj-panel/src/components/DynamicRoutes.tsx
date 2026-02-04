@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Route, Outlet } from 'react-router-dom';
 import {
   Page,
   PageAuthStateEnum1,
@@ -7,9 +8,8 @@ import {
   Footer,
 } from '../models/api/strapi/apiMap';
 import { StrapiService } from '../services/strapi-service';
-import { Route, Outlet } from 'react-router-dom';
-import { PageComponent } from './PageComponent';
 import { ContentSkeleton } from './atoms/Skeleton';
+import { PageComponent } from './PageComponent';
 
 /**
  * Navigation item representing a menu link with optional children
@@ -18,7 +18,7 @@ import { ContentSkeleton } from './atoms/Skeleton';
 export interface NavigationItem {
   id: number;
   text: string;
-  url: string;
+  url?: string;
   children?: NavigationItem[];
   NavigationOrder?: number;
   Menu?: PageMenuEnum1;
@@ -28,7 +28,7 @@ export interface NavigationItem {
 }
 
 function buildPath(page: Page, parentPath = ''): string {
-  const slug = (page as any)?.Slug || (page as any)?.Title || (page as any)?.id;
+  const slug = (page as any)?.Slug ?? (page as any)?.Title ?? (page as any)?.id;
   const cleanParent = parentPath.replace(/\/+$/, '');
   const cleanSlug = String(slug).replace(/^\/+/, '');
   const path = `${cleanParent}/${cleanSlug}`.replace(/\\/g, '/');
@@ -39,18 +39,8 @@ function buildRoutesAndNav(
   pages: Page[],
   parentPath = '',
 ): { routes: React.ReactElement[]; nav: NavigationItem[] } {
-  let routes: React.ReactElement[] = [];
-  let nav: NavigationItem[] = [];
-
-  console.log('[buildRoutesAndNav] Building routes for pages:', {
-    count: pages.length,
-    parentPath,
-    pages: pages.map((p: any) => ({
-      Title: p.Title,
-      Slug: p.Slug,
-      documentId: p.documentId,
-    })),
-  });
+  const routes: React.ReactElement[] = [];
+  const nav: NavigationItem[] = [];
 
   pages.forEach((page) => {
     const isRoot = !parentPath;
@@ -60,12 +50,15 @@ function buildRoutesAndNav(
 
     // For nested routes, we need to use relative paths (just the slug)
     // For root routes, use the full path
-    const path = isHomePage
-      ? ''
-      : isRoot
-        ? rawPath.replace(/^\/+/g, '')
-        : (page as any)?.Slug?.replace(/^\/+/g, '') ||
-          String((page as any)?.id);
+    let path: string;
+    if (isHomePage) {
+      path = '';
+    } else if (isRoot) {
+      path = rawPath.replace(/^\/+/g, '');
+    } else {
+      path =
+        (page as any)?.Slug?.replace(/^\/+/g, '') ?? String((page as any)?.id);
+    }
 
     let childrenRoutes: React.ReactElement[] = [];
     let childrenNav: NavigationItem[] = [];
@@ -110,10 +103,10 @@ function buildRoutesAndNav(
     }
 
     // For navigation URLs, always use leading slash
-    const url = '/' + rawPath.replace(/^\/+/g, '');
+    const url = `/${rawPath.replace(/^\/+/g, '')}`;
     nav.push({
       id: page.id ?? 0,
-      text: page.Title || String(page.id),
+      text: page.Title ?? String(page.id),
       url,
       ...(childrenNav.length ? { children: childrenNav } : {}),
       NavigationOrder: page.NavigationOrder ?? 0,
@@ -125,7 +118,9 @@ function buildRoutesAndNav(
 
   return {
     routes,
-    nav: nav.sort((a, b) => a.NavigationOrder - b.NavigationOrder),
+    nav: nav.sort(
+      (a, b) => (a.NavigationOrder ?? 0) - (b.NavigationOrder ?? 0),
+    ),
   };
 }
 
@@ -141,40 +136,25 @@ export function useDynamicRoutes() {
     const children = await StrapiService.getPagesByParentId(page.id);
     if (!children || children.length === 0) return page;
 
-    if (Array.isArray(children)) {
-      const subpagesWithChildren = await Promise.all(
-        children.map(async (child: Page) => await fetchAllChildren(child)),
-      );
-      return { ...(page as any), subpages: subpagesWithChildren } as any;
-    }
-    return page;
+    const subpagesWithChildren = await Promise.all(
+      children.map((child: Page) => fetchAllChildren(child)),
+    );
+    return { ...(page as any), subpages: subpagesWithChildren } as any;
   }
 
   useEffect(() => {
-    (async () => {
-      console.log('[DynamicRoutes] Starting to fetch pages...');
-      const rootPages = (await StrapiService.getRootPages()) || [];
-      console.log('[DynamicRoutes] Root pages fetched:', {
-        count: rootPages.length,
-        pages: rootPages.map((p: any) => ({
-          Title: p.Title,
-          Slug: p.Slug,
-          documentId: p.documentId,
-        })),
-      });
+    void (async () => {
+      const rootPages = (await StrapiService.getRootPages()) ?? [];
       const pagesWithChildren = await Promise.all(
         rootPages.map((p) => fetchAllChildren(p)),
       );
-      console.log(
-        '[DynamicRoutes] Pages with children loaded, building routes...',
-      );
-      let { routes, nav } = buildRoutesAndNav(pagesWithChildren);
+      const { routes: initialRoutes, nav } =
+        buildRoutesAndNav(pagesWithChildren);
 
+      let routes = initialRoutes;
       if (
         !routes.some(
           (r) =>
-            r &&
-            r.type &&
             r.props &&
             typeof r.props === 'object' &&
             r.props !== null &&
@@ -196,7 +176,7 @@ export function useDynamicRoutes() {
       const hasLogout = nav.some(
         (item) =>
           item.NavigationAction === PageNavigationActionEnum1.Action &&
-          item.text?.toLowerCase().replace(/\s+/g, '') === 'logout',
+          item.text.toLowerCase().replace(/\s+/g, '') === 'logout',
       );
 
       if (!hasLogout) {

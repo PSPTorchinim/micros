@@ -4,8 +4,8 @@ import React, {
   useLayoutEffect,
   useState,
 } from 'react';
-import { AuthContext } from '../context/auth-context';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/auth-context';
 import { microservicesClient } from '../models/api';
 import { GetUserDTO, LoginResponseDTO } from '../models/api/identity/apiMap';
 
@@ -84,31 +84,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             try {
               // If a refresh is already in progress, wait for it
-              if (!refreshPromiseRef.current) {
-                refreshPromiseRef.current = (async () => {
-                  try {
-                    const response =
-                      await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+              refreshPromiseRef.current ??= (async () => {
+                try {
+                  const response =
+                    await microservicesClient.identity.users.v1UsersRefreshTokenList();
 
-                    const {
-                      user,
-                      accessToken,
-                      refreshToken: newRefreshToken,
-                    } = response.data as LoginResponseDTO;
+                  const {
+                    user,
+                    accessToken,
+                    refreshToken: newRefreshToken,
+                  } = response.data as LoginResponseDTO;
 
-                    setUser(user ?? null);
-                    setToken(accessToken ?? null);
-                    setRefreshToken(newRefreshToken ?? null);
+                  setUser(user ?? null);
+                  setToken(accessToken ?? null);
+                  setRefreshToken(newRefreshToken ?? null);
 
-                    return accessToken ?? null;
-                  } catch (refreshError) {
-                    logout();
-                    throw refreshError;
-                  } finally {
-                    refreshPromiseRef.current = null;
-                  }
-                })();
-              }
+                  return accessToken ?? null;
+                } catch (refreshError) {
+                  logout();
+                  throw refreshError;
+                } finally {
+                  refreshPromiseRef.current = null;
+                }
+              })();
 
               // Wait for the refresh to complete
               const newAccessToken = await refreshPromiseRef.current;
@@ -161,7 +159,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setToken(null);
     setRefreshToken(null);
-    navigate('/login');
+    void navigate('/login');
   };
 
   return (

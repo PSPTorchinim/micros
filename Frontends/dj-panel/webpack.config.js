@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-// const HtmlWebPackPlugin = require('html-webpack-plugin'); // Temporarily disabled due to localStorage issue
+const HtmlWebPackPlugin = require('html-webpack-plugin');
 const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 const webpack = require('webpack');
 const path = require('path');
@@ -94,12 +94,11 @@ module.exports = (_env, argv = {}) => {
           },
         },
       }),
-      // Temporarily disable HtmlWebPackPlugin to avoid localStorage issue
-      // new HtmlWebPackPlugin({
-      //   template: './src/index.html',
-      //   inject: false,
-      //   minify: false,
-      // }),
+      new HtmlWebPackPlugin({
+        template: './src/index.html',
+        inject: true,
+        minify: false,
+      }),
       new webpack.DefinePlugin({
         'process.env.REACT_APP_API_SECURE_KEY': JSON.stringify(process.env.REACT_APP_API_SECURE_KEY),
         'process.env.REACT_APP_API_GATEWAY': JSON.stringify(process.env.REACT_APP_API_GATEWAY),
@@ -108,7 +107,6 @@ module.exports = (_env, argv = {}) => {
       new CopyWebpackPlugin({
         patterns: [
           { from: path.resolve(__dirname, 'public'), to: 'public' },
-          { from: path.resolve(__dirname, 'src/index.html'), to: 'index.html' },
         ],
       }),
     ],

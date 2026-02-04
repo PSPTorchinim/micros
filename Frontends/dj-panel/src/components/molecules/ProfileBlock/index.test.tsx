@@ -1,9 +1,10 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
-import { ProfileBlock } from './index';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
+import { ProfileBlock } from './index';
 
 // Mock react-router-dom
 const mockNavigate = jest.fn();
@@ -15,7 +16,6 @@ jest.mock('react-router-dom', () => ({
 // Mock user data
 const mockUser: GetUserDTO = {
   id: '1',
-  username: 'testuser',
   email: 'test@example.com',
 };
 
@@ -50,8 +50,6 @@ describe('ProfileBlock', () => {
     expect(
       screen.getByText('View and manage your profile information.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Username')).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('test@example.com')).toBeInTheDocument();
     expect(screen.getByText('Change Password')).toBeInTheDocument();
@@ -73,7 +71,6 @@ describe('ProfileBlock', () => {
         <ProfileBlock
           title="My Account"
           description="Account information"
-          usernameLabel="User Name"
           emailLabel="Email Address"
         />
       </AuthContext.Provider>,
@@ -81,7 +78,6 @@ describe('ProfileBlock', () => {
 
     expect(screen.getByText('My Account')).toBeInTheDocument();
     expect(screen.getByText('Account information')).toBeInTheDocument();
-    expect(screen.getByText('User Name')).toBeInTheDocument();
     expect(screen.getByText('Email Address')).toBeInTheDocument();
   });
 
@@ -102,7 +98,7 @@ describe('ProfileBlock', () => {
     renderWithAuth(incompleteUser);
 
     const values = screen.getAllByText('N/A');
-    expect(values).toHaveLength(2); // Both username and email should show N/A
+    expect(values).toHaveLength(1); // Only email should show N/A
   });
 
   it('applies custom styles when provided', () => {

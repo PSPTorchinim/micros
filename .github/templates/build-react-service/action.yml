@@ -27,10 +27,10 @@ runs:
       shell: bash
       run: npm run format
 
-    - name: Build React App
+    - name: Check Code Quality
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm run build
+      run: npm run type-check
 
     - name: Run Jest Unit Tests
       working-directory: Frontends/${{ inputs.service }}
@@ -78,3 +78,8 @@ runs:
           Frontends/${{ inputs.service }}/playwright-report/
           Frontends/${{ inputs.service }}/test-results/
         retention-days: 30
+
+    - name: Build React App
+      working-directory: Frontends/${{ inputs.service }}
+      shell: bash
+      run: npm run build

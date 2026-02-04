@@ -1,8 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
-import { ThemeToggle } from './ThemeToggle';
 import { ThemeContext } from '../../../context/theme-context';
+import { ThemeToggle } from './ThemeToggle';
 
 const mockToggleTheme = jest.fn();
 
