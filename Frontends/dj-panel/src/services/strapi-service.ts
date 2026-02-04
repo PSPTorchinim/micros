@@ -110,6 +110,7 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
+        // @ts-expect-error - Strapi v5 supports complex populate objects for dynamic zones, but generated types only allow strings
         populate: TEMPLATE_CONTENT_POPULATE,
       });
       const template = response.data.data?.[0] ?? null;
@@ -124,6 +125,7 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: documentId } } as StrapiFilters,
+        // @ts-expect-error - Strapi v5 supports complex populate objects for dynamic zones, but generated types only allow strings
         populate: TEMPLATE_CONTENT_POPULATE,
       });
       return response.data.data?.[0] ?? null;
