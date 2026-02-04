@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import { Badge } from './Badge';
 
 const meta: Meta<typeof Badge> = {
