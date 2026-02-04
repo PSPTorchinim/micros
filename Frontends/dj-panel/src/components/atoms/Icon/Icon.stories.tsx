@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { AiFillHeart, AiFillHome, AiFillStar } from 'react-icons/ai';
 import { Icon } from './Icon';
-import { AiFillHeart, AiFillStar, AiFillHome } from 'react-icons/ai';
 
 const meta: Meta<typeof Icon> = {
   title: 'Atoms/Icon',

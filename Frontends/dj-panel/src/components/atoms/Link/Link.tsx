@@ -29,7 +29,7 @@ export const Link: React.FC<LinkProps> = ({
     .filter(Boolean)
     .join(' ');
 
-  const destination = to || href || '#';
+  const destination = to ?? href ?? '#';
 
   // External links or mailto/tel links
   if (external || destination.startsWith('http') || destination.startsWith('mailto:') || destination.startsWith('tel:')) {

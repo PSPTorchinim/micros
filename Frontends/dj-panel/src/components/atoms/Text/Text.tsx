@@ -18,36 +18,6 @@ export interface TextProps extends React.HTMLAttributes<HTMLElement> {
   as?: keyof JSX.IntrinsicElements;
 }
 
-export const Text: React.FC<TextProps> = ({
-  children,
-  variant = 'body',
-  weight = 'normal',
-  align = 'left',
-  color,
-  as,
-  className = '',
-  ...props
-}) => {
-  const Component = as || getDefaultElement(variant);
-
-  const classes = [
-    'atom-text',
-    `atom-text--${variant}`,
-    `atom-text--weight-${weight}`,
-    `atom-text--align-${align}`,
-    color && `atom-text--color-${color}`,
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  return (
-    <Component className={classes} {...props}>
-      {children}
-    </Component>
-  );
-};
-
 function getDefaultElement(variant: TextProps['variant']): keyof JSX.IntrinsicElements {
   switch (variant) {
     case 'h1':
@@ -70,3 +40,33 @@ function getDefaultElement(variant: TextProps['variant']): keyof JSX.IntrinsicEl
       return 'p';
   }
 }
+
+export const Text: React.FC<TextProps> = ({
+  children,
+  variant = 'body',
+  weight = 'normal',
+  align = 'left',
+  color,
+  as,
+  className = '',
+  ...props
+}) => {
+  const elementType = as ?? getDefaultElement(variant);
+
+  const classes = [
+    'atom-text',
+    `atom-text--${variant}`,
+    `atom-text--weight-${weight}`,
+    `atom-text--align-${align}`,
+    color && `atom-text--color-${color}`,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return React.createElement(
+    elementType,
+    { className: classes, ...props },
+    children,
+  );
+};
