@@ -31,10 +31,18 @@ export const Default: Story = {
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-      <Icon size="small"><AiFillHeart /></Icon>
-      <Icon size="medium"><AiFillHeart /></Icon>
-      <Icon size="large"><AiFillHeart /></Icon>
-      <Icon size="xlarge"><AiFillHeart /></Icon>
+      <Icon size="small">
+        <AiFillHeart />
+      </Icon>
+      <Icon size="medium">
+        <AiFillHeart />
+      </Icon>
+      <Icon size="large">
+        <AiFillHeart />
+      </Icon>
+      <Icon size="xlarge">
+        <AiFillHeart />
+      </Icon>
     </div>
   ),
 };
@@ -42,11 +50,21 @@ export const Sizes: Story = {
 export const Colors: Story = {
   render: () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-      <Icon color="primary"><AiFillStar /></Icon>
-      <Icon color="secondary"><AiFillStar /></Icon>
-      <Icon color="muted"><AiFillStar /></Icon>
-      <Icon color="error"><AiFillStar /></Icon>
-      <Icon color="success"><AiFillStar /></Icon>
+      <Icon color="primary">
+        <AiFillStar />
+      </Icon>
+      <Icon color="secondary">
+        <AiFillStar />
+      </Icon>
+      <Icon color="muted">
+        <AiFillStar />
+      </Icon>
+      <Icon color="error">
+        <AiFillStar />
+      </Icon>
+      <Icon color="success">
+        <AiFillStar />
+      </Icon>
     </div>
   ),
 };
@@ -54,9 +72,15 @@ export const Colors: Story = {
 export const DifferentIcons: Story = {
   render: () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-      <Icon color="primary"><AiFillHeart /></Icon>
-      <Icon color="primary"><AiFillStar /></Icon>
-      <Icon color="primary"><AiFillHome /></Icon>
+      <Icon color="primary">
+        <AiFillHeart />
+      </Icon>
+      <Icon color="primary">
+        <AiFillStar />
+      </Icon>
+      <Icon color="primary">
+        <AiFillHome />
+      </Icon>
     </div>
   ),
 };

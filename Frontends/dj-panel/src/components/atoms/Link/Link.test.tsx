@@ -25,7 +25,11 @@ describe('Link', () => {
   });
 
   it('renders as anchor tag for external links', () => {
-    render(<Link href="https://example.com" external>External Link</Link>);
+    render(
+      <Link href="https://example.com" external>
+        External Link
+      </Link>,
+    );
     const link = screen.getByText('External Link');
     expect(link).toHaveAttribute('href', 'https://example.com');
     expect(link).toHaveAttribute('target', '_blank');
@@ -35,7 +39,9 @@ describe('Link', () => {
   it('applies correct variant class', () => {
     render(
       <MemoryRouter>
-        <Link variant="primary" to="/test">Primary Link</Link>
+        <Link variant="primary" to="/test">
+          Primary Link
+        </Link>
       </MemoryRouter>,
     );
     expect(screen.getByText('Primary Link')).toHaveClass('atom-link--primary');
@@ -44,10 +50,14 @@ describe('Link', () => {
   it('applies correct underline class', () => {
     render(
       <MemoryRouter>
-        <Link underline="always" to="/test">Always Underlined</Link>
+        <Link underline="always" to="/test">
+          Always Underlined
+        </Link>
       </MemoryRouter>,
     );
-    expect(screen.getByText('Always Underlined')).toHaveClass('atom-link--underline-always');
+    expect(screen.getByText('Always Underlined')).toHaveClass(
+      'atom-link--underline-always',
+    );
   });
 
   it('handles mailto links correctly', () => {
@@ -59,7 +69,9 @@ describe('Link', () => {
   it('applies custom className', () => {
     render(
       <MemoryRouter>
-        <Link className="custom-class" to="/test">Link</Link>
+        <Link className="custom-class" to="/test">
+          Link
+        </Link>
       </MemoryRouter>,
     );
     expect(screen.getByText('Link')).toHaveClass('custom-class');

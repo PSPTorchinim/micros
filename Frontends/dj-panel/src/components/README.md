@@ -126,6 +126,7 @@ Organisms are complex UI components composed of groups of molecules and/or atoms
 1. **Identify the component level**: Determine if your component is an atom, molecule, or organism based on its complexity.
 
 2. **Create the component directory**:
+
    ```bash
    mkdir src/components/atoms/NewComponent
    ```

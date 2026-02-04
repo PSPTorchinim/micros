@@ -1,5 +1,8 @@
 import React from 'react';
-import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import {
+  Link as RouterLink,
+  LinkProps as RouterLinkProps,
+} from 'react-router-dom';
 import './Link.css';
 
 export interface LinkProps extends Omit<RouterLinkProps, 'to'> {
@@ -32,7 +35,12 @@ export const Link: React.FC<LinkProps> = ({
   const destination = to ?? href ?? '#';
 
   // External links or mailto/tel links
-  if (external || destination.startsWith('http') || destination.startsWith('mailto:') || destination.startsWith('tel:')) {
+  if (
+    external ||
+    destination.startsWith('http') ||
+    destination.startsWith('mailto:') ||
+    destination.startsWith('tel:')
+  ) {
     return (
       <a
         href={destination}

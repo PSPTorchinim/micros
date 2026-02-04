@@ -30,10 +30,18 @@ export const Default: Story = {
 export const Variants: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <Link variant="default" to="/home">Default Link</Link>
-      <Link variant="primary" to="/home">Primary Link</Link>
-      <Link variant="secondary" to="/home">Secondary Link</Link>
-      <Link variant="muted" to="/home">Muted Link</Link>
+      <Link variant="default" to="/home">
+        Default Link
+      </Link>
+      <Link variant="primary" to="/home">
+        Primary Link
+      </Link>
+      <Link variant="secondary" to="/home">
+        Secondary Link
+      </Link>
+      <Link variant="muted" to="/home">
+        Muted Link
+      </Link>
     </div>
   ),
 };
@@ -41,9 +49,15 @@ export const Variants: Story = {
 export const Underline: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <Link underline="none" to="/home">No Underline</Link>
-      <Link underline="hover" to="/home">Underline on Hover</Link>
-      <Link underline="always" to="/home">Always Underlined</Link>
+      <Link underline="none" to="/home">
+        No Underline
+      </Link>
+      <Link underline="hover" to="/home">
+        Underline on Hover
+      </Link>
+      <Link underline="always" to="/home">
+        Always Underlined
+      </Link>
     </div>
   ),
 };
