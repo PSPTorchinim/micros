@@ -1,7 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { render, waitFor } from '@testing-library/react';
 // @ts-ignore - React is needed for JSX
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Routes, MemoryRouter } from 'react-router-dom';
 import {

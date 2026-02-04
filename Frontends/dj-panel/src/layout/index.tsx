@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // @ts-ignore - React is needed for JSX
 import React from 'react';
 import { Outlet } from 'react-router-dom';

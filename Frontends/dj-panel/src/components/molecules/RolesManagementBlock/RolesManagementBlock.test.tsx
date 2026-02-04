@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @ts-ignore - React is needed for JSX
-import React from 'react';
 import {
   render,
   screen,
@@ -8,6 +5,8 @@ import {
   fireEvent,
   act,
 } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
 import { PermissionsService } from '../../../services/permissions-service';
 import { RolesService } from '../../../services/roles-service';

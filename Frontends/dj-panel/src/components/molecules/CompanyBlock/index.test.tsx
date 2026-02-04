@@ -1,8 +1,7 @@
 // Mock console.warn before any imports to suppress API key warnings
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { render, screen, waitFor, act } from '@testing-library/react';
 // @ts-ignore - React is needed for JSX
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { CompanyService } from '../../../services/company-service';
 import { CompanyBlock } from './index';
