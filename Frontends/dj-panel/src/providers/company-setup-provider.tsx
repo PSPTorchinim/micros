@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import { PropsWithChildren, useEffect, useState } from 'react';
 import { CreateCompanyModal } from '../components/molecules/CreateCompanyModal';
 import { useAuth } from '../hooks/use-auth/use-auth';
 import { CompanyService } from '../services/company-service';

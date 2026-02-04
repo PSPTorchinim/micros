@@ -1,4 +1,3 @@
-import React from 'react';
 import './index.css';
 import type { FeatureTab } from '../../../models/api/strapi/apiMap';
 

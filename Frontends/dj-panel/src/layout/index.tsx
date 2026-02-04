@@ -1,4 +1,3 @@
-import React from 'react';
 import { Outlet } from 'react-router-dom';
 import type { NavigationItem } from '../components/DynamicRoutes';
 import { Footer } from '../components/molecules/Footer';

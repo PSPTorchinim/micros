@@ -80,7 +80,7 @@ describe('LoginForm Component', () => {
 
   it('disables submit button while submitting', async () => {
     const slowSubmit = jest.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () => new Promise<void>((resolve) => setTimeout(resolve, 100)),
     );
     renderWithRouter(<LoginForm onSubmit={slowSubmit} />);
 

@@ -51,8 +51,8 @@ export class CompanyService {
   public static async getCompany(): Promise<CompanyDTO | null> {
     try {
       const response = await microservicesClient.brand.company.v1CompanyList();
-      if (response.data.success && response.data.data) {
-        return response.data.data as unknown as CompanyDTO;
+      if ((response.data as any)?.success && (response.data as any)?.data) {
+        return (response.data as any).data as unknown as CompanyDTO;
       }
       return null;
     } catch {
@@ -64,7 +64,9 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyMembershipList();
-      return response.data.success && response.data.data === true;
+      return (
+        (response.data as any)?.success && (response.data as any)?.data === true
+      );
     } catch {
       return false;
     }
@@ -76,7 +78,7 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUpdate(updateDto);
-      return response.data.success && response.data.data;
+      return (response.data as any)?.success && (response.data as any)?.data;
     } catch {
       return false;
     }
@@ -86,8 +88,11 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUsersList();
-      if (response.data.success && Array.isArray(response.data.data)) {
-        return response.data.data as unknown as CompanyUserDTO[];
+      if (
+        (response.data as any)?.success &&
+        Array.isArray((response.data as any)?.data)
+      ) {
+        return (response.data as any).data as unknown as CompanyUserDTO[];
       }
       return [];
     } catch {
@@ -103,7 +108,7 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyUsersCreate(
           addUserDto,
         );
-      return response.data.success && response.data.data;
+      return (response.data as any)?.success && (response.data as any)?.data;
     } catch {
       return false;
     }
@@ -113,7 +118,7 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUsersDelete(userId);
-      return response.data.success && response.data.data;
+      return (response.data as any)?.success && (response.data as any)?.data;
     } catch {
       return false;
     }
@@ -125,8 +130,12 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyStructureList();
-      if (response.data.success && Array.isArray(response.data.data)) {
-        return response.data.data as unknown as CompanyStructureNodeDTO[];
+      if (
+        (response.data as any)?.success &&
+        Array.isArray((response.data as any)?.data)
+      ) {
+        return (response.data as any)
+          .data as unknown as CompanyStructureNodeDTO[];
       }
       return [];
     } catch {
@@ -142,7 +151,7 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyStructureUpdate({
           nodes,
         });
-      return response.data.success && response.data.data;
+      return (response.data as any)?.success && (response.data as any)?.data;
     } catch {
       return false;
     }

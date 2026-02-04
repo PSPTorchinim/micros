@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               refreshPromiseRef.current ??= (async () => {
                 try {
                   const response =
-                    await microservicesClient.identity.users.apiV1UsersRefreshTokenList();
+                    await microservicesClient.identity.users.v1UsersRefreshTokenList();
 
                   const {
                     user,

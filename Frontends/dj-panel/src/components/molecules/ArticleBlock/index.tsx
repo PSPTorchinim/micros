@@ -1,4 +1,3 @@
-import React from 'react';
 import './index.css';
 import type { ArticleBlock as ArticleBlockType } from '../../../models/api/strapi/apiMap';
 

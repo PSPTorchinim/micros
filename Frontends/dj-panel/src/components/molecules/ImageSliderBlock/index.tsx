@@ -1,4 +1,3 @@
-import React from 'react';
 import './index.css';
 import type { ImageSlider } from '../../../models/api/strapi/apiMap';
 

@@ -5,7 +5,6 @@ import {
   fireEvent,
   act,
 } from '@testing-library/react';
-import React from 'react';
 import '@testing-library/jest-dom';
 import { PermissionsService } from '../../../services/permissions-service';
 import { RolesService } from '../../../services/roles-service';

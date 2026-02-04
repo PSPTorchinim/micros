@@ -22,7 +22,6 @@ export const ProfileBlock: React.FC<ProfileBlockProps> = ({
   title = 'Profile',
   description = 'View and manage your profile information.',
   emailLabel = 'Email',
-  usernameLabel = 'Username',
   changePasswordButtonText = 'Change Password',
   changePasswordUrl = '/change-password',
   customStyles = {},
@@ -43,10 +42,6 @@ export const ProfileBlock: React.FC<ProfileBlockProps> = ({
         {user ? (
           <>
             <div className="profile-block-info">
-              <div className="profile-block-field">
-                <label className="profile-block-label">{usernameLabel}</label>
-                <p className="profile-block-value">{user.username ?? 'N/A'}</p>
-              </div>
               <div className="profile-block-field">
                 <label className="profile-block-label">{emailLabel}</label>
                 <p className="profile-block-value">{user.email ?? 'N/A'}</p>

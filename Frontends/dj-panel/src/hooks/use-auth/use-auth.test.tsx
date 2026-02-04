@@ -21,7 +21,6 @@ describe('useAuth Hook', () => {
     const mockUser: GetUserDTO = {
       id: '1',
       email: 'test@example.com',
-      username: 'testuser',
     };
 
     const mockContext = {

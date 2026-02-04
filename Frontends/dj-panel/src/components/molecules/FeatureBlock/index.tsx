@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './index.css';
 import type { FeatureSection } from '../../../models/api/strapi/apiMap';
 

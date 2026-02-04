@@ -1,4 +1,3 @@
-import React from 'react';
 import './index.css';
 import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
 

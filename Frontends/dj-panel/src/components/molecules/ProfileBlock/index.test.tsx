@@ -1,5 +1,4 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import '@testing-library/jest-dom';
 import { AuthContext } from '../../../context/auth-context';
 import type { GetUserDTO } from '../../../models/api/identity/apiMap';
@@ -15,7 +14,6 @@ jest.mock('react-router-dom', () => ({
 // Mock user data
 const mockUser: GetUserDTO = {
   id: '1',
-  username: 'testuser',
   email: 'test@example.com',
 };
 

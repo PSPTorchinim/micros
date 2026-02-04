@@ -16,7 +16,7 @@ import type {
   FooterSocialLinkComponent,
 } from '../../../models/api/strapi/apiMap';
 
-interface FooterProps {
+export interface FooterProps {
   footerData: FooterData | null;
   customStyles?: React.CSSProperties;
   additionalContent?: React.ReactNode;
@@ -81,13 +81,13 @@ export const Footer = (props: FooterProps) => {
                 </div>
               ),
             )}
-            {footerData.socialLinks?.length > 0 && (
+            {footerData.socialLinks && footerData.socialLinks.length > 0 && (
               <div className="footer-column">
                 <strong className="thq-body-large footer-social-link-title">
                   Connect with Us
                 </strong>
                 <div className="footer-social-links">
-                  {footerData.socialLinks.map(
+                  {footerData.socialLinks?.map(
                     (link: FooterSocialLinkComponent, index: number) => {
                       const IconComponent = getIconComponent(
                         link.icon ?? link.platform,

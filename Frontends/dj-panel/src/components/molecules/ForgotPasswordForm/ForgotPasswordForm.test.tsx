@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 import '@testing-library/jest-dom';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 
@@ -73,7 +72,7 @@ describe('ForgotPasswordForm Component', () => {
 
   it('disables submit button while submitting', async () => {
     const slowSubmit = jest.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () => new Promise<void>((resolve) => setTimeout(resolve, 100)),
     );
     render(<ForgotPasswordForm onSubmit={slowSubmit} />);
 

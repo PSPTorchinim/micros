@@ -1,6 +1,5 @@
 // Mock console.warn before any imports to suppress API key warnings
 import { render, screen, waitFor, act } from '@testing-library/react';
-import React from 'react';
 import '@testing-library/jest-dom';
 import { CompanyService } from '../../../services/company-service';
 import { CompanyBlock } from './index';
@@ -190,7 +189,7 @@ describe('CompanyBlock', () => {
   it('applies custom styles', async () => {
     const customStyles = { backgroundColor: 'blue' };
 
-    let container;
+    let container: HTMLElement;
     act(() => {
       const result = render(<CompanyBlock customStyles={customStyles} />);
       container = result.container;

@@ -18,7 +18,7 @@ import { PageComponent } from './PageComponent';
 export interface NavigationItem {
   id: number;
   text: string;
-  url: string;
+  url?: string;
   children?: NavigationItem[];
   NavigationOrder?: number;
   Menu?: PageMenuEnum1;
