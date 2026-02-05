@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import React from 'react';
 
 import { Card } from './Card';
 
