@@ -1,0 +1,59 @@
+.atom-card {
+  border-radius: 8px;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Variant styles */
+.atom-card--elevated {
+  background-color: var(--dl-color-background-card, #ffffff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.atom-card--outlined {
+  background-color: var(--dl-color-background-card, #ffffff);
+  border: 1px solid var(--dl-color-border-base, #e0e0e0);
+}
+
+.atom-card--filled {
+  background-color: var(--dl-color-background-secondary, #f5f5f5);
+}
+
+/* Padding styles */
+.atom-card--padding-none {
+  padding: 0;
+}
+
+.atom-card--padding-small {
+  padding: 0.75rem;
+}
+
+.atom-card--padding-medium {
+  padding: 1.5rem;
+}
+
+.atom-card--padding-large {
+  padding: 2rem;
+}
+
+/* Hoverable effect */
+.atom-card--hoverable {
+  cursor: pointer;
+}
+
+.atom-card--hoverable:hover {
+  transform: translateY(-2px);
+}
+
+.atom-card--elevated.atom-card--hoverable:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.atom-card--outlined.atom-card--hoverable:hover {
+  border-color: var(--dl-color-primary-base, #007bff);
+}
+
+.atom-card--filled.atom-card--hoverable:hover {
+  background-color: var(--dl-color-background-tertiary, #eeeeee);
+}

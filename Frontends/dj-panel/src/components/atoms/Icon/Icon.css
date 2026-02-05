@@ -1,0 +1,76 @@
+.atom-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* Size styles */
+.atom-icon--small {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.atom-icon--small svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.atom-icon--medium {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.atom-icon--medium svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.atom-icon--large {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.atom-icon--large svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.atom-icon--xlarge {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+}
+
+.atom-icon--xlarge svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Color styles */
+.atom-icon--color-primary {
+  color: var(--dl-color-primary-base, #007bff);
+}
+
+.atom-icon--color-secondary {
+  color: var(--dl-color-secondary-base, #6c757d);
+}
+
+.atom-icon--color-muted {
+  color: var(--dl-color-text-muted, #6c757d);
+}
+
+.atom-icon--color-error {
+  color: var(--dl-color-error-base, #dc3545);
+}
+
+.atom-icon--color-success {
+  color: var(--dl-color-success-base, #28a745);
+}
+
+.atom-icon--color-inherit {
+  color: inherit;
+}

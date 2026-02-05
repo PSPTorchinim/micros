@@ -1,0 +1,111 @@
+.atom-text {
+  margin: 0;
+  padding: 0;
+}
+
+/* Variant styles */
+.atom-text--h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.atom-text--h2 {
+  font-size: 2rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.atom-text--h3 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.atom-text--h4 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.atom-text--h5 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.atom-text--h6 {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.atom-text--body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.atom-text--caption {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.atom-text--small {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Weight styles */
+.atom-text--weight-normal {
+  font-weight: 400;
+}
+
+.atom-text--weight-medium {
+  font-weight: 500;
+}
+
+.atom-text--weight-semibold {
+  font-weight: 600;
+}
+
+.atom-text--weight-bold {
+  font-weight: 700;
+}
+
+/* Alignment styles */
+.atom-text--align-left {
+  text-align: left;
+}
+
+.atom-text--align-center {
+  text-align: center;
+}
+
+.atom-text--align-right {
+  text-align: right;
+}
+
+.atom-text--align-justify {
+  text-align: justify;
+}
+
+/* Color styles */
+.atom-text--color-primary {
+  color: var(--dl-color-primary-base, #007bff);
+}
+
+.atom-text--color-secondary {
+  color: var(--dl-color-secondary-base, #6c757d);
+}
+
+.atom-text--color-muted {
+  color: var(--dl-color-text-muted, #6c757d);
+}
+
+.atom-text--color-error {
+  color: var(--dl-color-error-base, #dc3545);
+}
+
+.atom-text--color-success {
+  color: var(--dl-color-success-base, #28a745);
+}
