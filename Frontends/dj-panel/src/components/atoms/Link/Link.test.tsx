@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom';
+// @ts-ignore - React is needed for JSX
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
