@@ -1,5 +1,5 @@
 import { microservicesClient } from '../models/api';
-import { BooleanResponse } from '../models/api/identity/apiMap';
+import { BooleanResponse, ContentType } from '../models/api/identity/apiMap';
 
 /**
  * Represents a user with their role assignments for management purposes
@@ -135,7 +135,7 @@ export class UserRoleManagementService {
         method: 'PUT',
         body: roleIdentifiers,
         secure: true,
-        type: 'application/json',
+        type: ContentType.Json,
         format: 'json',
       });
 
