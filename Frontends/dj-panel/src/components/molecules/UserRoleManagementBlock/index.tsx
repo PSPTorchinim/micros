@@ -99,12 +99,18 @@ export const UserRoleManagementBlock: React.FC<
         setCheckedRoleIds(new Set());
         await initializeData();
       } else {
-        setErrorText(
-          saveResult.message ?? saveResult.errors?.[0] ?? 'Save operation failed',
-        );
+        const errorMsg =
+          saveResult.message ??
+          saveResult.errors?.[0] ??
+          'Unable to update role assignments';
+        setErrorText(errorMsg);
       }
     } catch (err) {
-      setErrorText(err instanceof Error ? err.message : 'Save operation failed');
+      const errorMsg =
+        err instanceof Error
+          ? `Role update failed: ${err.message}`
+          : 'An unexpected error occurred while updating roles';
+      setErrorText(errorMsg);
     } finally {
       setIsSavingChanges(false);
     }
