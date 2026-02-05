@@ -9,6 +9,7 @@ namespace IdentityAPI.Data.Mappers
         public UserMapper()
         {
             CreateMap<User, GetUserDTO>();
+            CreateMap<User, GetUsersListDTO>();
         }
     }
 }
