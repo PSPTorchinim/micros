@@ -56,9 +56,7 @@ export const UserRoleManagementBlock: React.FC<
         setErrorText((prev) => (prev ? `${prev}. ${roleError}` : roleError));
       }
     } catch (err) {
-      setErrorText(
-        err instanceof Error ? err.message : 'Data loading failed',
-      );
+      setErrorText(err instanceof Error ? err.message : 'Data loading failed');
     } finally {
       setIsLoadingData(false);
     }
@@ -179,9 +177,7 @@ export const UserRoleManagementBlock: React.FC<
                     onChange={() => toggleRoleSelection(role.id ?? '')}
                     className="user-role-mgmt-checkbox"
                   />
-                  <span className="user-role-mgmt-role-label">
-                    {role.name}
-                  </span>
+                  <span className="user-role-mgmt-role-label">{role.name}</span>
                   {role.description && (
                     <span className="user-role-mgmt-role-desc">
                       {role.description}
@@ -239,9 +235,7 @@ export const UserRoleManagementBlock: React.FC<
                     <td>
                       {user.assignedRoles.length > 0 ? (
                         <span className="user-role-mgmt-role-list">
-                          {user.assignedRoles
-                            .map((r) => r.roleName)
-                            .join(', ')}
+                          {user.assignedRoles.map((r) => r.roleName).join(', ')}
                         </span>
                       ) : (
                         <span className="user-role-mgmt-no-roles">

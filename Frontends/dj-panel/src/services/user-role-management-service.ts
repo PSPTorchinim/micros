@@ -193,8 +193,9 @@ export class UserRoleManagementService {
   private static buildErrorResponse(error: any): UserCollectionResponse {
     const errorMsg =
       error?.response?.data?.message || error.message || 'Request failed';
-    const errors =
-      error?.response?.data?.errors || [error.message || 'Unknown error'];
+    const errors = error?.response?.data?.errors || [
+      error.message || 'Unknown error',
+    ];
 
     return {
       isSuccessful: false,
@@ -207,13 +208,12 @@ export class UserRoleManagementService {
   /**
    * Builds a standardized error response for single user
    */
-  private static buildSingleUserErrorResponse(
-    error: any,
-  ): SingleUserResponse {
+  private static buildSingleUserErrorResponse(error: any): SingleUserResponse {
     const errorMsg =
       error?.response?.data?.message || error.message || 'Request failed';
-    const errors =
-      error?.response?.data?.errors || [error.message || 'Unknown error'];
+    const errors = error?.response?.data?.errors || [
+      error.message || 'Unknown error',
+    ];
 
     return {
       isSuccessful: false,
