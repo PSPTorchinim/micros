@@ -120,3 +120,4 @@ storybook-static
 # Build artifacts
 obj/
 bin/
+package-lock.json
