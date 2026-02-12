@@ -341,21 +341,8 @@ async function buildCompanyTemplateContent(strapi: StrapiAny): Promise<any[]> {
 async function buildRolesManagementTemplateContent(
   strapi: StrapiAny,
 ): Promise<any[]> {
-  const content: any[] = [];
-
-  // Add user role management block reference if it exists
-  const userRoleManagementBlocks = await strapi.db
-    .query('api::user-role-management-block.user-role-management-block')
-    .findMany({});
-  if (userRoleManagementBlocks.length > 0) {
-    content.push({
-      __component:
-        'user-role-management-block-ref.user-role-management-block-ref',
-      user_role_management_block: userRoleManagementBlocks[0].id,
-    });
-  }
-
-  return content;
+  // Roles Management Template uses built-in RolesManagementBlock, no content needed
+  return [];
 }
 
 async function buildUsersManagementTemplateContent(
@@ -414,7 +401,7 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
       } else if (templateData.Name === 'Users Management Template') {
         content = await buildUsersManagementTemplateContent(strapi);
       }
-      // Login, Forgot Password, Change Password, and Profile templates use built-in blocks, no Content needed
+      // Login, Forgot Password, Change Password, Profile, and Roles Management templates use built-in blocks, no Content needed
       // Create and publish using Document Service
       await strapi.documents('api::template.template').create({
         data: {
