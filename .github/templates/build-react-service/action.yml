@@ -15,7 +15,7 @@ runs:
     - name: Install NPM Dependencies
       working-directory: Frontends/${{ inputs.service }}
       shell: bash
-      run: npm ci --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
+      run: npm install --retry 5 --fetch-retries 5 --fetch-retry-mintimeout 20000
 
     - name: Lint Source Code
       working-directory: Frontends/${{ inputs.service }}

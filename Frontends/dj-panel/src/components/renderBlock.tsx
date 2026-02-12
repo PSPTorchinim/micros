@@ -18,6 +18,7 @@ import {
   ProfileBlock,
   CompanyBlock,
   RolesManagementBlock,
+  UserRoleManagementBlock,
 } from './molecules';
 
 /**
@@ -85,6 +86,8 @@ export function renderBlock(
       return <CompanyBlock key={key} {...block} />;
     case 'roles-management-block':
       return <RolesManagementBlock key={key} {...block} />;
+    case 'user-role-management-block':
+      return <UserRoleManagementBlock key={key} {...block} />;
     case 'article': {
       // Direct article rendering for article pages
       // Handle both Strapi v5 format (with attributes) and direct format

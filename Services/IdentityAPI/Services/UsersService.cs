@@ -24,6 +24,9 @@ namespace IdentityAPI.Services
         Task<bool> ActivateAccount(ActivateAccountRequestDTO request);
         Task<LoginResponseDTO> GetLoggedUserData();
         Task<ValidateSecurityStampResponseDTO> ValidateSecurityStamp(ValidateSecurityStampRequestDTO request);
+        Task<List<GetUsersListDTO>> GetAllUsers();
+        Task<GetUsersListDTO?> GetUserById(Guid id);
+        Task<bool> UpdateUserRoles(UpdateUserRolesDTO request);
     }
 
     public class UsersService : BaseService<IUsersService>, IUsersService
@@ -449,6 +452,66 @@ namespace IdentityAPI.Services
                 {
                     IsValid = true
                 };
+            }, _logger);
+        }
+
+        public async Task<List<GetUsersListDTO>> GetAllUsers()
+        {
+            _logger.LogInformation("Getting all users");
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var spec = new UserWithRolesAndPermissions();
+                var users = await _usersRepository.Get(spec);
+                var result = users.Select(u => _mapper.Map<GetUsersListDTO>(u)).ToList();
+                _logger.LogInformation("Retrieved {Count} users", result.Count);
+                return result;
+            }, _logger);
+        }
+
+        public async Task<GetUsersListDTO?> GetUserById(Guid id)
+        {
+            _logger.LogInformation("Getting user by ID: {UserId}", id);
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var spec = new UserWithRolesAndPermissions(u => u.Id == id);
+                var users = await _usersRepository.Get(spec);
+                var user = users.FirstOrDefault();
+                
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found", id);
+                    return null;
+                }
+
+                var result = _mapper.Map<GetUsersListDTO>(user);
+                _logger.LogInformation("Retrieved user {UserId}", id);
+                return result;
+            }, _logger);
+        }
+
+        public async Task<bool> UpdateUserRoles(UpdateUserRolesDTO request)
+        {
+            _logger.LogInformation("Updating roles for user {UserId}", request.UserId);
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var spec = new UserWithRolesAndPermissions(u => u.Id == request.UserId);
+                var users = await _usersRepository.Get(spec);
+                var user = users.FirstOrDefault();
+
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found for role update", request.UserId);
+                    throw new AppException(ExceptionCodes.UserNotFound);
+                }
+
+                var rolesRepository = _serviceProvider.GetRequiredService<IRolesRepository>();
+                var roles = await rolesRepository.Get(r => request.RoleIds.Contains(r.Id));
+
+                user.Roles = roles.ToList();
+                var result = await _usersRepository.Update(user);
+
+                _logger.LogInformation("Updated roles for user {UserId}: {Result}", request.UserId, result);
+                return result;
             }, _logger);
         }
     }

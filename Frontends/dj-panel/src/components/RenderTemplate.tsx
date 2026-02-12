@@ -172,6 +172,14 @@ export const RenderTemplate: React.FC<Props> = ({
         return;
       }
 
+      if (templateType === 'UsersManagement') {
+        if (mounted) {
+          setBlocks([{ __kind: 'user-role-management-block' } as ContentBlock]);
+          setError(null);
+        }
+        return;
+      }
+
       // Handle Standard template with content blocks
       const contentBlocks: (ContentBlock | RefComponent)[] = Array.isArray(
         tpl?.Content,
