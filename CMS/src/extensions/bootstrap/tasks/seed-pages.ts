@@ -182,6 +182,15 @@ const PAGE_SEEDS = [
     NavigationAction: 'Link',
     templateName: 'Roles Management Template',
   },
+  {
+    Title: 'Users Management',
+    Slug: '/users-management',
+    Menu: 'NotVisible',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 8,
+    NavigationAction: 'Link',
+    templateName: 'Users Management Template',
+  },
 ];
 
 // ============================================================================
