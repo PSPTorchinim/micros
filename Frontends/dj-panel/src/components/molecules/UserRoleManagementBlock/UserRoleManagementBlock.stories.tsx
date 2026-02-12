@@ -4,6 +4,11 @@ import * as RolesServiceModule from '../../../services/roles-service';
 import * as UserRoleManagementServiceModule from '../../../services/user-role-management-service';
 import { UserRoleManagementBlock } from './index';
 
+// Extend the component props with story-specific args
+type StoryArgs = React.ComponentProps<typeof UserRoleManagementBlock> & {
+  scenario?: 'default' | 'loading' | 'error' | 'empty';
+};
+
 // Mock data for roles
 const mockRoles = [
   {
@@ -231,11 +236,19 @@ const meta = {
       control: 'object',
       description: 'Custom CSS styles to apply to the container',
     },
+    scenario: {
+      control: 'select',
+      options: ['default', 'loading', 'error', 'empty'],
+      description: 'Mock scenario for testing different states',
+      table: {
+        category: 'Story Configuration',
+      },
+    },
   },
-} satisfies Meta<typeof UserRoleManagementBlock>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 /**
  * Default state showing a list of users with their role assignments.
