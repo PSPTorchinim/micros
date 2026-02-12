@@ -189,7 +189,7 @@ const PAGE_SEEDS = [
     AuthState: 'OnlyAuthenticated',
     NavigationOrder: 8,
     NavigationAction: 'Link',
-    templateName: 'Users Management Template',
+    templateName: 'Roles Management Template',
   },
 ];
 
