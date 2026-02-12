@@ -23,7 +23,8 @@
         "ChangePassword",
         "Profile",
         "Company",
-        "RolesManagement"
+        "RolesManagement",
+        "UsersManagement"
       ]
     },
     "page": {

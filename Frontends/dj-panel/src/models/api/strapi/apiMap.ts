@@ -4540,6 +4540,7 @@ export enum TemplateTemplateTypeEnum {
   Profile = "Profile",
   Company = "Company",
   RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
 }
 
 export enum TemplateMenuEnum {
@@ -4567,6 +4568,7 @@ export enum TemplateTemplateTypeEnum1 {
   Profile = "Profile",
   Company = "Company",
   RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
 }
 
 type DiscriminatorNull1 = (
@@ -4611,6 +4613,7 @@ export enum TemplateRequestTemplateTypeEnum {
   Profile = "Profile",
   Company = "Company",
   RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
 }
 
 type InternalNull2 = (
