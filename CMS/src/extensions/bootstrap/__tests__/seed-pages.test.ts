@@ -16,6 +16,7 @@ describe('Seed Pages', () => {
       { Name: 'Profile Template', TemplateType: 'Profile' },
       { Name: 'Company Template', TemplateType: 'Company' },
       { Name: 'Roles Management Template', TemplateType: 'RolesManagement' },
+      { Name: 'Users Management Template', TemplateType: 'UsersManagement' },
     ];
 
     it('should have templates for all essential pages', () => {
@@ -31,6 +32,7 @@ describe('Seed Pages', () => {
         'Profile',
         'Company',
         'RolesManagement',
+        'UsersManagement',
       ];
       TEMPLATE_SEEDS.forEach((template) => {
         expect(template.Name).toBeDefined();
