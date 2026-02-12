@@ -121,6 +121,44 @@ namespace IdentityAPI.Tests
         }
 
         [Fact]
+        public async Task AddRole_Succeeds_WithExistingPermissions()
+        {
+            var service = CreateService();
+            var permissionId1 = Guid.NewGuid();
+            var permissionId2 = Guid.NewGuid();
+            var req = new AddRoleRequest 
+            { 
+                Name = "Editor", 
+                Description = "Editor role with permissions",
+                Permissions = new List<Guid> { permissionId1, permissionId2 }
+            };
+            
+            var existingPermissions = new List<Permission>
+            {
+                new Permission { Id = permissionId1, Name = "Read" },
+                new Permission { Id = permissionId2, Name = "Write" }
+            };
+
+            _rolesRepositoryMock.Setup(r => r.Exists(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>())).ReturnsAsync(false);
+            _permissionsRepositoryMock.Setup(p => p.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Permission, bool>>>())).ReturnsAsync(existingPermissions);
+            _rolesRepositoryMock.Setup(r => r.Add(It.IsAny<Role>())).ReturnsAsync(true);
+
+            // Mock for mapping role to DTO
+            _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<Role>())).Returns(new GetRoleDTO());
+
+            var result = await service.AddRole(req);
+            Assert.True(result);
+            
+            // Verify that Add was called with a role that has the correct permissions
+            _rolesRepositoryMock.Verify(r => r.Add(It.Is<Role>(role => 
+                role.Name == "Editor" && 
+                role.Description == "Editor role with permissions" &&
+                role.Permissions != null &&
+                role.Permissions.Count() == 2
+            )), Times.Once);
+        }
+
+        [Fact]
         public async Task EditRole_Throws_WhenRoleNotFound()
         {
             var service = CreateService();
