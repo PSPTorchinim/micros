@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_user_role_management_block_ref_user_role_management_block_refs",
+  "info": {
+    "displayName": "User Role Management Block Ref",
+    "description": "Reference to a User Role Management Block"
+  },
+  "options": {},
+  "attributes": {
+    "user_role_management_block": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::user-role-management-block.user-role-management-block"
+    }
+  }
+}

@@ -44,7 +44,9 @@
         "contact-section-ref.contact-section-ref",
         "feature-section-ref.feature-section-ref",
         "feature-tab-ref.feature-tab-ref",
-        "hero-block-ref.hero-block-ref"
+        "hero-block-ref.hero-block-ref",
+        "company-block-ref.company-block-ref",
+        "user-role-management-block-ref.user-role-management-block-ref"
       ]
     }
   }
