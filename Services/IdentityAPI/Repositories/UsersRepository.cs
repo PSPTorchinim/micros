@@ -57,20 +57,26 @@ namespace IdentityAPI.Repositories
                     // Update user properties
                     context.Entry(existingUser).CurrentValues.SetValues(entity);
                     
-                    // Clear existing roles and add new ones
-                    existingUser.Roles.Clear();
-                    if (entity.Roles != null && entity.Roles.Any())
+                    // Only update roles if the entity has roles set
+                    // (indicating this is a role update operation)
+                    if (entity.Roles != null)
                     {
-                        foreach (var role in entity.Roles)
+                        // Clear existing roles
+                        existingUser.Roles.Clear();
+                        
+                        // Add new roles if any
+                        if (entity.Roles.Any())
                         {
-                            // Attach the role if it's not tracked
-                            var roleEntry = context.Entry(role);
-                            if (roleEntry.State == EntityState.Detached)
+                            // Load the roles from the database to avoid tracking conflicts
+                            var roleIds = entity.Roles.Select(r => r.Id).ToList();
+                            var rolesToAdd = await context.Roles
+                                .Where(r => roleIds.Contains(r.Id))
+                                .ToListAsync();
+                            
+                            foreach (var role in rolesToAdd)
                             {
-                                context.Attach(role);
-                                roleEntry.State = EntityState.Unchanged;
+                                existingUser.Roles.Add(role);
                             }
-                            existingUser.Roles.Add(role);
                         }
                     }
                 }
