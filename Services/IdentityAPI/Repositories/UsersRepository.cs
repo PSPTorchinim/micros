@@ -37,28 +37,44 @@ namespace IdentityAPI.Repositories
             {
                 await using var context = await _factory.CreateDbContextAsync();
                 
-                // Attach the user entity
-                var entry = context.Entry(entity);
-                if (entry.State == EntityState.Detached)
-                {
-                    context.Attach(entity);
-                }
+                // Load the existing user with roles from database
+                var existingUser = await context.Users
+                    .Include(u => u.Roles)
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id);
                 
-                // Attach existing roles to the context and mark as unchanged
-                if (entity.Roles != null && entity.Roles.Any())
+                if (existingUser == null)
                 {
-                    foreach (var role in entity.Roles)
+                    // User doesn't exist, use standard update
+                    var entry = context.Entry(entity);
+                    if (entry.State == EntityState.Detached)
                     {
-                        var roleEntry = context.Entry(role);
-                        if (roleEntry.State == EntityState.Detached)
+                        context.Attach(entity);
+                    }
+                    context.Update(entity);
+                }
+                else
+                {
+                    // Update user properties
+                    context.Entry(existingUser).CurrentValues.SetValues(entity);
+                    
+                    // Clear existing roles and add new ones
+                    existingUser.Roles.Clear();
+                    if (entity.Roles != null && entity.Roles.Any())
+                    {
+                        foreach (var role in entity.Roles)
                         {
-                            context.Attach(role);
-                            roleEntry.State = EntityState.Unchanged;
+                            // Attach the role if it's not tracked
+                            var roleEntry = context.Entry(role);
+                            if (roleEntry.State == EntityState.Detached)
+                            {
+                                context.Attach(role);
+                                roleEntry.State = EntityState.Unchanged;
+                            }
+                            existingUser.Roles.Add(role);
                         }
                     }
                 }
                 
-                context.Update(entity);
                 return await context.SaveChangesAsync() > 0;
             }, _logger);
         }
