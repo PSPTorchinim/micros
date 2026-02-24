@@ -353,5 +353,44 @@ namespace IdentityAPI.Tests
             _securityStampServiceMock.Verify(s => s.GenerateSecurityStamp(), Times.Once);
             _securityStampServiceMock.Verify(s => s.InvalidateUserSecurityCacheAsync(userId), Times.Once);
         }
+
+        [Fact]
+        public async Task UpdateUserRoles_RegeneratesSecurityStampAndInvalidatesCache()
+        {
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var roleId = Guid.NewGuid();
+            var role = new Role { Id = roleId, Name = "TestRole", Permissions = new List<Permission>() };
+            var user = new User
+            {
+                Id = userId,
+                SecurityStamp = "old-stamp",
+                Roles = new List<Role>(),
+                Blocks = new List<Block>(),
+                Passwords = new List<Password>()
+            };
+
+            _usersRepositoryMock
+                .Setup(r => r.Get(It.IsAny<IdentityAPI.Data.Specifications.UserWithRolesAndPermissions>()))
+                .ReturnsAsync(new List<User> { user });
+
+            var mockRolesRepository = new Mock<IRolesRepository>();
+            mockRolesRepository
+                .Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>()))
+                .ReturnsAsync(new List<Role> { role });
+            _serviceProviderMock.Setup(x => x.GetService(typeof(IRolesRepository))).Returns(mockRolesRepository.Object);
+
+            _usersRepositoryMock.Setup(r => r.Update(It.IsAny<User>())).ReturnsAsync(true);
+            _securityStampServiceMock.Setup(s => s.GenerateSecurityStamp()).Returns("new-stamp");
+            _securityStampServiceMock.Setup(s => s.InvalidateUserSecurityCacheAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+
+            var request = new UpdateUserRolesDTO { UserId = userId, RoleIds = new List<Guid> { roleId } };
+            var result = await service.UpdateUserRoles(request);
+
+            Assert.True(result);
+            _securityStampServiceMock.Verify(s => s.GenerateSecurityStamp(), Times.Once);
+            _securityStampServiceMock.Verify(s => s.InvalidateUserSecurityCacheAsync(userId), Times.Once);
+            Assert.Equal("new-stamp", user.SecurityStamp);
+        }
     }
 }

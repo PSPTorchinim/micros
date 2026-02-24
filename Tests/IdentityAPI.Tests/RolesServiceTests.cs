@@ -22,12 +22,21 @@ namespace IdentityAPI.Tests
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
         private readonly RabbitMQProducerService _rabbitMQProducerServiceMock = null!;
         private readonly Mock<IServiceProvider> _serviceProviderMock = new();
+        private readonly Mock<IUsersRepository> _usersRepositoryMock = new();
+        private readonly Mock<ISecurityStampService> _securityStampServiceMock = new();
 
         private RolesService CreateService()
         {
             _serviceProviderMock.Setup(x => x.GetService(typeof(IRolesRepository))).Returns(_rolesRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(IPermissionsRepository))).Returns(_permissionsRepositoryMock.Object);
             _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(IUsersRepository))).Returns(_usersRepositoryMock.Object);
+            _serviceProviderMock.Setup(x => x.GetService(typeof(ISecurityStampService))).Returns(_securityStampServiceMock.Object);
+
+            // Default: users repository returns empty list for expression-based Gets
+            _usersRepositoryMock
+                .Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+                .ReturnsAsync(new List<User>());
 
             // Setup default cache behavior - always return null (cache miss) for any type
             _cacheServiceMock.Setup(x => x.GetAsync<List<Role>>(It.IsAny<string>()))
@@ -216,6 +225,36 @@ namespace IdentityAPI.Tests
             _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(true);
             var result = await service.DeleteRole(id);
             Assert.True(result);
+        }
+
+        [Fact]
+        public async Task EditRole_RegeneratesSecurityStampForAffectedUsers()
+        {
+            var service = CreateService();
+            var roleId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+            var role = new Role { Id = roleId, Name = "Old", Description = "desc", Permissions = new List<Permission>() };
+            var user = new User { Id = userId, SecurityStamp = "old-stamp", Roles = new List<Role> { role }, Blocks = new List<Block>(), Passwords = new List<Password>() };
+            var req = new AddRoleRequest { Name = "New", Description = "newdesc", Permissions = new List<Guid>() };
+
+            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>())).ReturnsAsync(new List<Role> { role });
+            _permissionsRepositoryMock.Setup(p => p.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Permission, bool>>>())).ReturnsAsync(new List<Permission>());
+            _rolesRepositoryMock.Setup(r => r.Update(role)).ReturnsAsync(true);
+            _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<object>())).Returns(new GetRoleDTO());
+
+            _usersRepositoryMock
+                .Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+                .ReturnsAsync(new List<User> { user });
+            _usersRepositoryMock.Setup(r => r.Update(It.IsAny<User>())).ReturnsAsync(true);
+            _securityStampServiceMock.Setup(s => s.GenerateSecurityStamp()).Returns("new-stamp");
+            _securityStampServiceMock.Setup(s => s.InvalidateUserSecurityCacheAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+
+            var result = await service.EditRole(roleId, req);
+
+            Assert.True(result);
+            _securityStampServiceMock.Verify(s => s.GenerateSecurityStamp(), Times.Once);
+            _securityStampServiceMock.Verify(s => s.InvalidateUserSecurityCacheAsync(userId), Times.Once);
+            Assert.Equal("new-stamp", user.SecurityStamp);
         }
     }
 }

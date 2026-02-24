@@ -60,11 +60,13 @@ namespace DJHostGateway.Transforms
             _logger.LogDebug("🔑 [SecurityStamp] JWT token found in Authorization header | CorrelationId: {CorrelationId}", 
                 correlationId);
 
-            // Skip validation only for the ValidateSecurityStamp endpoint (to avoid circular calls)
-            if (request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true)
+            // Skip validation only for the ValidateSecurityStamp and RefreshToken endpoints
+            // (to avoid circular calls and allow token refresh after stamp invalidation)
+            if (request.Path.Value?.Contains("ValidateSecurityStamp", StringComparison.OrdinalIgnoreCase) == true ||
+                request.Path.Value?.Contains("RefreshToken", StringComparison.OrdinalIgnoreCase) == true)
             {
-                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - ValidateSecurityStamp endpoint (avoiding circular call) | CorrelationId: {CorrelationId}", 
-                    correlationId);
+                _logger.LogInformation("✓ [SecurityStamp] SKIPPED - {Path} endpoint (avoiding circular call) | CorrelationId: {CorrelationId}", 
+                    request.Path.Value, correlationId);
                 return;
             }
 
