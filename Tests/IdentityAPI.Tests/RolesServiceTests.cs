@@ -30,8 +30,8 @@ namespace IdentityAPI.Tests
             _serviceProviderMock.Setup(x => x.GetService(typeof(ICacheService))).Returns(_cacheServiceMock.Object);
 
             // Setup default cache behavior - always return null (cache miss) for any type
-            _cacheServiceMock.Setup(x => x.GetAsync<List<Role>>(It.IsAny<string>()))
-                .ReturnsAsync(default(List<Role>));
+            _cacheServiceMock.Setup(x => x.GetAsync<List<GetRoleDTO>>(It.IsAny<string>()))
+                .ReturnsAsync(default(List<GetRoleDTO>));
             _cacheServiceMock.Setup(x => x.GetAsync<GetRoleDTO>(It.IsAny<string>()))
                 .ReturnsAsync(default(GetRoleDTO));
             _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
@@ -42,11 +42,11 @@ namespace IdentityAPI.Tests
                 .Returns(Task.CompletedTask);
 
             // Setup GetOrCreateAsync to call the factory function (simulates cache miss)
-            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<Role>>(
+            _cacheServiceMock.Setup(x => x.GetOrCreateAsync<List<GetRoleDTO>>(
                 It.IsAny<string>(),
-                It.IsAny<Func<Task<List<Role>?>>>(),
+                It.IsAny<Func<Task<List<GetRoleDTO>?>>>(),
                 It.IsAny<TimeSpan?>()))
-                .Returns<string, Func<Task<List<Role>?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
+                .Returns<string, Func<Task<List<GetRoleDTO>?>>, TimeSpan?>(async (key, factory, expiry) => await factory());
 
             _cacheServiceMock.Setup(x => x.GetOrCreateAsync<GetRoleDTO>(
                 It.IsAny<string>(),
@@ -67,11 +67,14 @@ namespace IdentityAPI.Tests
         public async Task GetRoles_ReturnsListOfRoles()
         {
             var service = CreateService();
-            var roles = new List<Role> { new Role { Id = Guid.NewGuid(), Name = "Admin" } };
+            var roleId = Guid.NewGuid();
+            var roles = new List<Role> { new Role { Id = roleId, Name = "Admin" } };
             // Setup for ISpecification-based Get (now using RolePermissionsSpec)
             _rolesRepositoryMock
                 .Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>()))
                 .ReturnsAsync(roles);
+            _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<Role>()))
+                .Returns<Role>(r => new GetRoleDTO { Id = r.Id, Name = r.Name });
             var result = await service.GetRoles();
             Assert.Single(result);
             Assert.Equal("Admin", result[0].Name);
@@ -111,8 +114,6 @@ namespace IdentityAPI.Tests
             _permissionsRepositoryMock.Setup(p => p.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Permission, bool>>>())).ReturnsAsync(new List<Permission>());
             _rolesRepositoryMock.Setup(r => r.Add(It.IsAny<Role>())).ReturnsAsync(true);
 
-            // Mock for cache update - Get all roles
-            _rolesRepositoryMock.Setup(r => r.Get()).ReturnsAsync(new List<Role>());
             // Mock for mapping role to DTO
             _mapperMock.Setup(m => m.Map<GetRoleDTO>(It.IsAny<Role>())).Returns(new GetRoleDTO());
 
@@ -192,7 +193,7 @@ namespace IdentityAPI.Tests
         {
             var service = CreateService();
             var id = Guid.NewGuid();
-            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>())).ReturnsAsync(new List<Role>());
+            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>())).ReturnsAsync(new List<Role>());
             await Assert.ThrowsAsync<AppException>(() => service.DeleteRole(id));
         }
 
@@ -202,7 +203,7 @@ namespace IdentityAPI.Tests
             var service = CreateService();
             var id = Guid.NewGuid();
             var role = new Role { Id = id, Users = new List<User> { new User() } };
-            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>())).ReturnsAsync(new List<Role> { role });
+            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>())).ReturnsAsync(new List<Role> { role });
             await Assert.ThrowsAsync<AppException>(() => service.DeleteRole(id));
         }
 
@@ -212,7 +213,7 @@ namespace IdentityAPI.Tests
             var service = CreateService();
             var id = Guid.NewGuid();
             var role = new Role { Id = id, Users = new List<User>() };
-            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>())).ReturnsAsync(new List<Role> { role });
+            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>())).ReturnsAsync(new List<Role> { role });
             _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(true);
             var result = await service.DeleteRole(id);
             Assert.True(result);

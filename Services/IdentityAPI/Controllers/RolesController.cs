@@ -1,5 +1,4 @@
 using IdentityAPI.DTO.Role;
-using IdentityAPI.Entities;
 using IdentityAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Models;
@@ -21,7 +20,7 @@ namespace IdentityAPI.Controllers
 
         [HttpGet]
         [ResponseCache(CacheProfileName = CacheProfiles.Medium)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<IEnumerable<Role>>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<IEnumerable<GetRoleDTO>>))]
         public async Task<IActionResult> GetRolesV1()
         {
             return await Handle(async () =>
