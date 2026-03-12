@@ -226,7 +226,8 @@ namespace IdentityAPI.Tests
             _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(true);
             var result = await service.DeleteRole(id);
             Assert.True(result);
-            _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Roles_"), Times.Once);
+            _cacheServiceMock.Verify(c => c.RemoveAsync($"Roles_{id}"), Times.Once);
+            _cacheServiceMock.Verify(c => c.RemoveAsync("Roles_All"), Times.Once);
         }
 
         [Fact]
@@ -239,7 +240,7 @@ namespace IdentityAPI.Tests
             _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(false);
             var result = await service.DeleteRole(id);
             Assert.False(result);
-            _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync(It.IsAny<string>()), Times.Never);
+            _cacheServiceMock.Verify(c => c.RemoveAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
