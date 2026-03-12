@@ -10,6 +10,7 @@ actionlint
 
 # Build artifacts that should never be committed
 **/obj/**/package.g.props
+**/obj\**
 
 # Generated Grafana dashboards (use templates instead)
 Docker/init/grafana/dashboards/*.json
