@@ -226,6 +226,20 @@ namespace IdentityAPI.Tests
             _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(true);
             var result = await service.DeleteRole(id);
             Assert.True(result);
+            _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Roles_"), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteRole_DoesNotInvalidateCache_WhenDeletionFails()
+        {
+            var service = CreateService();
+            var id = Guid.NewGuid();
+            var role = new Role { Id = id, Users = new List<User>() };
+            _rolesRepositoryMock.Setup(r => r.Get(It.IsAny<Shared.Data.Specifications.ISpecification<Role>>())).ReturnsAsync(new List<Role> { role });
+            _rolesRepositoryMock.Setup(r => r.Delete(role)).ReturnsAsync(false);
+            var result = await service.DeleteRole(id);
+            Assert.False(result);
+            _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
