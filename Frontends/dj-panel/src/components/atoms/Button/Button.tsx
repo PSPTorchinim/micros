@@ -1,7 +1,8 @@
 import React from 'react';
 import './Button.css';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'filled' | 'outline' | 'flat';
   size?: 'small' | 'medium' | 'large';
   fullWidth?: boolean;

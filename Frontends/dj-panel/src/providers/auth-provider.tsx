@@ -7,7 +7,11 @@ import React, {
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth-context';
 import { microservicesClient } from '../models/api';
-import { GetUserDTO, LoginResponseDTO, LoginResponseDTOResponse } from '../models/api/identity/apiMap';
+import {
+  GetUserDTO,
+  LoginResponseDTO,
+  LoginResponseDTOResponse,
+} from '../models/api/identity/apiMap';
 
 type AuthProviderProps = PropsWithChildren;
 
@@ -89,7 +93,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   const response =
                     await microservicesClient.identity.users.v1UsersRefreshTokenList();
 
-                  const loginData = (response.data as LoginResponseDTOResponse).data as LoginResponseDTO;
+                  const loginData = (response.data as LoginResponseDTOResponse)
+                    .data as LoginResponseDTO;
 
                   const {
                     user,
