@@ -13,7 +13,7 @@ namespace IdentityAPI.Services
 {
     public interface IRolesService : IService
     {
-        Task<List<Role>> GetRoles();
+        Task<List<GetRoleDTO>> GetRoles();
         Task<GetRoleDTO?> GetRole(Guid id);
         Task<bool> AddRole(AddRoleRequest request);
         Task<bool> EditRole(Guid id, AddRoleRequest request);
@@ -35,7 +35,7 @@ namespace IdentityAPI.Services
             _cacheService = serviceProvider.GetRequiredService<ICacheService>();
         }
 
-        public async Task<List<Role>> GetRoles()
+        public async Task<List<GetRoleDTO>> GetRoles()
         {
             _logger.LogInformation("Getting all roles.");
             return await ExceptionHandler.Handle(async () =>
@@ -43,19 +43,20 @@ namespace IdentityAPI.Services
                 var cacheKey = $"{RolesCachePrefix}All";
 
                 // Use GetOrCreateAsync to simplify cache-aside pattern
-                // Use RolePermissionsSpec to include permissions
+                // Map to DTOs before caching to avoid circular reference issues during serialization
                 var roles = await _cacheService.GetOrCreateAsync(
                     cacheKey,
                     async () =>
                     {
                         var spec = new RolePermissionsSpec();
-                        return (await _rolesRepository.Get(spec)).ToList();
+                        var entities = await _rolesRepository.Get(spec);
+                        return entities.Select(r => _mapper.Map<GetRoleDTO>(r)).ToList();
                     },
                     DefaultCacheExpiration
                 );
 
                 // GetOrCreateAsync will never return null for list factories that return non-null
-                var result = roles ?? new List<Role>();
+                var result = roles ?? new List<GetRoleDTO>();
                 _logger.LogInformation("Retrieved {Count} roles.", result.Count);
                 return result;
             }, _logger);
@@ -122,11 +123,11 @@ namespace IdentityAPI.Services
                 var roleDto = _mapper.Map<GetRoleDTO>(toAdd);
                 await _cacheService.SetAsync($"{RolesCachePrefix}{toAdd.Id}", roleDto, DefaultCacheExpiration);
 
-                // 2. Update the all roles cache by appending the new role if cache exists
-                var cachedAllRoles = await _cacheService.GetAsync<List<Role>>($"{RolesCachePrefix}All");
+                // 2. Update the all roles cache by appending the new role DTO if cache exists
+                var cachedAllRoles = await _cacheService.GetAsync<List<GetRoleDTO>>($"{RolesCachePrefix}All");
                 if (cachedAllRoles != null)
                 {
-                    cachedAllRoles.Add(toAdd);
+                    cachedAllRoles.Add(roleDto);
                     await _cacheService.SetAsync($"{RolesCachePrefix}All", cachedAllRoles, DefaultCacheExpiration);
                 }
                 // If cache doesn't exist, it will be lazily loaded on next read
@@ -196,14 +197,15 @@ namespace IdentityAPI.Services
             return await ExceptionHandler.Handle(async () =>
             {
                 _logger.LogDebug("Fetching role with Id: {RoleId} for deletion.", id);
-                var foundByName = (await _rolesRepository.Get(role => role.Id == id)).FirstOrDefault();
+                var spec = new RoleWithUsersSpec(role => role.Id == id);
+                var foundByName = (await _rolesRepository.Get(spec)).FirstOrDefault();
                 if (foundByName == null)
                 {
                     _logger.LogWarning("Role with Id: {RoleId} not found for deletion.", id);
                     throw new AppException(ExceptionCodes.RoleNotExists);
                 }
 
-                if (foundByName.Users.Any())
+                if (foundByName.Users != null && foundByName.Users.Any())
                 {
                     _logger.LogWarning("Role with Id: {RoleId} has users and cannot be deleted.", id);
                     throw new AppException(ExceptionCodes.RoleHasUsers);
