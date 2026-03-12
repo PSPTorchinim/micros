@@ -142,22 +142,15 @@ namespace IdentityAPI.Services
             _logger.LogInformation("RefreshToken attempt");
             return await ExceptionHandler.Handle(async () =>
             {
-                _logger.LogDebug("Getting token and user id from context");
-                var token = GetTokenAsync();
+                _logger.LogDebug("Getting user id from context");
                 var userId = GetClaim("Id");
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogError("RefreshToken failed: corrupted token (missing user id claim)");
                     throw new AppException(ExceptionCodes.CorruptedToken);
                 }
-                _logger.LogDebug("Refreshing token for user id: {UserId}", StringHelper.SanitizeForLog(userId));
-                var newToken = await _authService.RefreshTokenAsync(token, userId);
-                if (newToken == null)
-                {
-                    _logger.LogError("RefreshToken failed: corrupted token");
-                    throw new AppException(ExceptionCodes.CorruptedToken);
-                }
 
+                _logger.LogDebug("Fetching user with roles for id: {UserId}", StringHelper.SanitizeForLog(userId));
                 var matchingUser = (await _usersRepository.Get(x => x.Id.Equals(Guid.Parse(userId)))).FirstOrDefault();
                 if (matchingUser == null)
                 {
@@ -508,7 +501,14 @@ namespace IdentityAPI.Services
                 var roles = await rolesRepository.Get(r => request.RoleIds.Contains(r.Id));
 
                 user.Roles = roles.ToList();
+                user.SecurityStamp = _securityStampService.GenerateSecurityStamp();
                 var result = await _usersRepository.Update(user);
+
+                if (result)
+                {
+                    await _securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
+                    _logger.LogInformation("Security stamp regenerated and cache invalidated for user {UserId} after role update", request.UserId);
+                }
 
                 _logger.LogInformation("Updated roles for user {UserId}: {Result}", request.UserId, result);
                 return result;

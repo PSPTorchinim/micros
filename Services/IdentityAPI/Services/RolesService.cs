@@ -169,6 +169,22 @@ namespace IdentityAPI.Services
                 // Invalidate the all roles cache; it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
 
+                if (result)
+                {
+                    // Regenerate security stamps for all users assigned this role so their
+                    // JWT tokens are invalidated and refreshed with updated permissions.
+                    var usersRepository = _serviceProvider.GetRequiredService<IUsersRepository>();
+                    var securityStampService = _serviceProvider.GetRequiredService<ISecurityStampService>();
+                    var affectedUsers = await usersRepository.Get(u => u.Roles.Any(r => r.Id == id));
+                    foreach (var user in affectedUsers)
+                    {
+                        user.SecurityStamp = securityStampService.GenerateSecurityStamp();
+                        await usersRepository.Update(user);
+                        await securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
+                        _logger.LogInformation("Security stamp regenerated and cache invalidated for user {UserId} after role {RoleId} permissions change", user.Id, id);
+                    }
+                }
+
                 _logger.LogInformation("Role with Id: {RoleId} updated and cache refreshed: {Result}", id, result);
 
                 return result;
