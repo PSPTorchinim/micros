@@ -23,7 +23,6 @@ test.describe('Theme Toggle E2E', () => {
     // Find and click the theme toggle button
     const themeToggle = page.locator('button[aria-label="Toggle theme"]');
     await expect(themeToggle).toBeVisible({ timeout: 15000 });
-    await themeToggle.waitFor({ state: 'visible', timeout: 15000 });
     
     await themeToggle.click();
     
@@ -70,10 +69,19 @@ test.describe('Theme Toggle E2E', () => {
     // Toggle theme
     const themeToggle = page.locator('button[aria-label="Toggle theme"]');
     await expect(themeToggle).toBeVisible({ timeout: 15000 });
+    
+    // Get current theme before clicking
+    const themeBeforeToggle = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme')
+    );
+    
     await themeToggle.click();
     
     // Wait for theme change to apply
-    await page.waitForTimeout(1000);
+    await page.waitForFunction((oldTheme) => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      return (currentTheme === 'light' || currentTheme === 'dark') && currentTheme !== oldTheme;
+    }, themeBeforeToggle, { timeout: 10000 });
     
     // Get the current theme
     const currentTheme = await page.evaluate(() => 
