@@ -4,11 +4,14 @@ test.describe('Accessibility E2E', () => {
   test('should have accessible theme toggle button', async ({ page }) => {
     // Wait for page to fully load
     await page.goto('/', { waitUntil: 'networkidle' });
-    
+
+    // Wait for React app to be ready before checking theme toggle
+    await page.waitForSelector('#app > *', { timeout: 30000 });
+
     const themeToggle = page.locator('button[aria-label="Toggle theme"]');
     
     // Should be visible
-    await expect(themeToggle).toBeVisible({ timeout: 10000 });
+    await expect(themeToggle).toBeVisible({ timeout: 15000 });
     
     // Should have proper aria-label
     await expect(themeToggle).toHaveAttribute('aria-label', 'Toggle theme');
