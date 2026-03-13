@@ -4,7 +4,7 @@ import { Input } from '../../atoms/Input';
 import './ForgotPasswordForm.css';
 
 export interface ForgotPasswordFormProps {
-  onSubmit: (email: string) => Promise<void>;
+  onSubmit: (_email: string) => Promise<void>;
   error?: string;
 }
 
@@ -12,14 +12,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   onSubmit,
   error,
 }) => {
-  const [email, setEmail] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(email);
+      await onSubmit(emailInput);
     } finally {
       setIsSubmitting(false);
     }
@@ -35,8 +35,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         label="Email"
         type="email"
         id="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={emailInput}
+        onChange={(e) => setEmailInput(e.target.value)}
         placeholder="Enter your email"
         fullWidth
         required

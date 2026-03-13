@@ -1,7 +1,7 @@
 import React from 'react';
 import { StrapiService } from '../services/strapi-service';
-import { renderBlock, type ContentBlock } from './renderBlock';
 import { ContentSkeleton } from './atoms/Skeleton';
+import { renderBlock, type ContentBlock } from './renderBlock';
 
 /**
  * Reference components that need to be resolved
@@ -78,11 +78,7 @@ export function transformStrapiBlocks(
   }
 
   // Check if this is a ref component - return as-is, RefBlockRenderer will handle it
-  if (
-    '__component' in block &&
-    block.__component &&
-    block.__component.endsWith('-ref')
-  ) {
+  if ('__component' in block && block.__component?.endsWith('-ref')) {
     return block as ContentBlock;
   }
 
@@ -136,7 +132,7 @@ interface Props {
 
 export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
   const refUID = block.__component as string;
-  const base = refUID?.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
+  const base = refUID.replace(/-ref(?:\..+)?$/, ''); // Extract base name (e.g., "image-slider")
   const relField = FIELD_BY_REF[refUID];
 
   const relObj = relField ? block[relField] : undefined;
@@ -194,7 +190,7 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
 
         const docId = getDocId(relObj);
         const numericId =
-          typeof (relObj as Record<string, unknown>)?.id === 'number'
+          typeof (relObj as Record<string, unknown>).id === 'number'
             ? ((relObj as Record<string, unknown>).id as number)
             : undefined;
 
@@ -276,15 +272,13 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
         if (cancel) return;
 
         if (!data) {
-          setError(
-            `${refUID}: Not found${
-              docId
-                ? ` (documentId: ${docId})`
-                : numericId
-                  ? ` (id: ${numericId})`
-                  : ''
-            }`,
-          );
+          let errorDetail = '';
+          if (docId) {
+            errorDetail = ` (documentId: ${docId})`;
+          } else if (numericId) {
+            errorDetail = ` (id: ${numericId})`;
+          }
+          setError(`${refUID}: Not found${errorDetail}`);
           return;
         }
 
@@ -295,11 +289,11 @@ export const RefBlockRenderer: React.FC<Props> = ({ block, index }) => {
       } catch (e: unknown) {
         const error = e as Error;
         if (!cancel)
-          setError(error?.message || 'Failed to fetch referenced block');
+          setError(error.message || 'Failed to fetch referenced block');
       }
     };
 
-    resolveRef();
+    void resolveRef();
     return () => {
       cancel = true;
     };

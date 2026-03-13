@@ -5,9 +5,9 @@ export type AuthContextData = {
   user?: GetUserDTO | null;
   token?: string | null;
   refreshToken?: string | null;
-  setUser: (user: GetUserDTO | null) => void;
-  setToken: (token: string | null) => void;
-  setRefreshToken: (refreshToken: string | null) => void;
+  setUser: (_user: GetUserDTO | null) => void;
+  setToken: (_token: string | null) => void;
+  setRefreshToken: (_refreshToken: string | null) => void;
   logout: () => void;
 };
 

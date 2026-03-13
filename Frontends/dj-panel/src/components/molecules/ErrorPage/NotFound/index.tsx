@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import './index.css';

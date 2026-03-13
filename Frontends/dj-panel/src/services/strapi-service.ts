@@ -51,7 +51,7 @@ const TEMPLATE_CONTENT_POPULATE = {
       'NavigationAction',
     ],
   },
-} as const;
+};
 
 export class StrapiService {
   // --------------------------------------
@@ -66,9 +66,8 @@ export class StrapiService {
           Parents: { id: { $null: true } },
         } as StrapiFilters,
       });
-      return response.data.data;
-    } catch (error) {
-      console.error(`Error fetching root pages:`, error);
+      return response.data.data ?? [];
+    } catch {
       return [];
     }
   }
@@ -81,11 +80,8 @@ export class StrapiService {
         } as StrapiFilters,
       });
       // Depending on the generator, it might be response.data.data
-      return (
-        (response as any).data?.data ?? (response.data as unknown as Page[])
-      );
-    } catch (error) {
-      console.error(`Error fetching pages by parent ID ${parentId}:`, error);
+      return response.data.data ?? [];
+    } catch {
       return [];
     }
   }
@@ -98,9 +94,9 @@ export class StrapiService {
         filters: { documentId: { $eq: pageDocumentId } } as StrapiFilters,
         populate: '*',
       });
-      return response?.data?.data?.[0] || null;
-    } catch (error) {
-      console.error(`Error fetching page by ID ${pageDocumentId}:`, error);
+      const page = response.data.data?.[0] ?? null;
+      return page;
+    } catch {
       return null;
     }
   }
@@ -114,14 +110,12 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: templateDocumentId } } as StrapiFilters,
-        populate: TEMPLATE_CONTENT_POPULATE as any,
+        // @ts-expect-error - Strapi v5 supports complex populate objects for dynamic zones, but generated types only allow strings
+        populate: TEMPLATE_CONTENT_POPULATE,
       });
-      return response?.data?.data?.[0] || null;
-    } catch (error) {
-      console.error(
-        `Error fetching template by ID ${templateDocumentId}:`,
-        error,
-      );
+      const template = response.data.data?.[0] ?? null;
+      return template;
+    } catch {
       return null;
     }
   }
@@ -131,11 +125,11 @@ export class StrapiService {
     try {
       const response = await microservicesClient.strapi.template.getTemplates({
         filters: { documentId: { $eq: documentId } } as StrapiFilters,
-        populate: TEMPLATE_CONTENT_POPULATE as any,
+        // @ts-expect-error - Strapi v5 supports complex populate objects for dynamic zones, but generated types only allow strings
+        populate: TEMPLATE_CONTENT_POPULATE,
       });
-      return response?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching template by documentId ${documentId}:`, e);
+      return response.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -148,9 +142,8 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.featureTab.getFeatureTabsId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching feature tab block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -159,9 +152,8 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.contactInfo.getContactInfosId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching contact info block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -170,9 +162,8 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.heroBlock.getHeroBlocksId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching hero block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -183,9 +174,8 @@ export class StrapiService {
         await microservicesClient.strapi.featureSection.getFeatureSectionsId(
           id,
         );
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching feature section by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -196,9 +186,8 @@ export class StrapiService {
         await microservicesClient.strapi.contactSection.getContactSectionsId(
           id,
         );
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching contact section by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -207,9 +196,8 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.imageSlider.getImageSlidersId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching image slider block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -218,9 +206,8 @@ export class StrapiService {
     try {
       const response =
         await microservicesClient.strapi.articleBlock.getArticleBlocksId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching article block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -231,9 +218,8 @@ export class StrapiService {
         await microservicesClient.strapi.stepsContainer.getStepsContainersId(
           id,
         );
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching steps container block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -241,9 +227,8 @@ export class StrapiService {
   public static async getCTABlockById(id: number) {
     try {
       const response = await microservicesClient.strapi.cta.getCtasId(id);
-      return response?.data?.data || null;
-    } catch (error) {
-      console.error(`Error fetching CTA block by ID ${id}:`, error);
+      return response.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -259,9 +244,8 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching article-block by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -272,9 +256,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching hero-block by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -285,9 +268,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching image-slider by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -299,9 +281,8 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching steps-container by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -312,9 +293,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching cta by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -326,9 +306,8 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching feature-section by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -340,9 +319,8 @@ export class StrapiService {
           filters: { documentId: { $eq: id } } as StrapiFilters,
           populate: '*',
         });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching contact-section by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -353,9 +331,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching feature-tab by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -366,9 +343,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching contact-info by documentId ${id}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -379,9 +355,8 @@ export class StrapiService {
         filters: { documentId: { $eq: id } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error(`Error fetching login-block by documentId ${id}:`, e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -395,12 +370,8 @@ export class StrapiService {
             populate: '*',
           },
         );
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error(
-        `Error fetching forgot-password-block by documentId ${id}:`,
-        e,
-      );
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -409,9 +380,8 @@ export class StrapiService {
   public static async getLoginBlockSingleton() {
     try {
       const res = await microservicesClient.strapi.loginBlock.getLoginBlock();
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching login-block singleton:', e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -420,9 +390,8 @@ export class StrapiService {
     try {
       const res =
         await microservicesClient.strapi.forgotPasswordBlock.getForgotPasswordBlock();
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching forgot-password-block singleton:', e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -433,9 +402,8 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.changePasswordBlock.getChangePasswordBlock();
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching change-password-block singleton:', e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -446,9 +414,8 @@ export class StrapiService {
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
       const res =
         await microservicesClient.strapi.profileBlock.getProfileBlock();
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching profile-block singleton:', e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -457,12 +424,10 @@ export class StrapiService {
     try {
       // Note: Using 'as any' temporarily until API types are regenerated
       // Run 'npm run map:api' to generate proper TypeScript types for this endpoint
-      const res = await (
-        microservicesClient.strapi as any
-      ).companyBlock.getCompanyBlock();
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching company-block singleton:', e);
+      const res =
+        await microservicesClient.strapi.companyBlock.getCompanyBlock();
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -470,18 +435,10 @@ export class StrapiService {
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
-        populate: {
-          columns: {
-            populate: {
-              links: true,
-            },
-          },
-          socialLinks: true,
-        },
+        populate: 'columns.links,socialLinks',
       });
-      return res?.data?.data || null;
-    } catch (e) {
-      console.error('Error fetching footer singleton:', e);
+      return res.data.data ?? null;
+    } catch {
       return null;
     }
   }
@@ -496,9 +453,8 @@ export class StrapiService {
         filters: { Slug: { $eq: slug } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching article by slug ${slug}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }
@@ -509,9 +465,8 @@ export class StrapiService {
         filters: { Title: { $eq: title } } as StrapiFilters,
         populate: '*',
       });
-      return res?.data?.data?.[0] || null;
-    } catch (e) {
-      console.error(`Error fetching article by title ${title}:`, e);
+      return res.data.data?.[0] ?? null;
+    } catch {
       return null;
     }
   }

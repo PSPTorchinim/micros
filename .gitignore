@@ -10,6 +10,7 @@ actionlint
 
 # Build artifacts that should never be committed
 **/obj/**/package.g.props
+**/obj\**
 
 # Generated Grafana dashboards (use templates instead)
 Docker/init/grafana/dashboards/*.json
@@ -17,3 +18,5 @@ Docker/init/grafana/dashboards/*.json
 # CodeQL auto-fix generated reports
 codeql-report.md
 *.md
+# Backslash-named build artefacts (created on Windows, should not be tracked)
+Frontends/dj-panel/obj*/

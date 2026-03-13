@@ -366,6 +366,22 @@ export class Api<
      * No description
      *
      * @tags Company
+     * @name V1CompanyMembershipList
+     * @request GET:/brand/v1/Company/membership
+     * @secure
+     */
+    v1CompanyMembershipList: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/brand/v1/Company/membership`,
+        method: "GET",
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company
      * @name V1CompanyStructureList
      * @request GET:/brand/v1/Company/structure
      * @secure

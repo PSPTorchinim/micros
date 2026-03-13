@@ -1,0 +1,64 @@
+{
+  "kind": "singleType",
+  "collectionName": "user_role_management_blocks",
+  "info": {
+    "singularName": "user-role-management-block",
+    "pluralName": "user-role-management-blocks",
+    "displayName": "User Role Management Block"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "User Role Management"
+    },
+    "description": {
+      "type": "string",
+      "default": "Manage user roles and permissions."
+    },
+    "usersTableTitle": {
+      "type": "string",
+      "default": "Users"
+    },
+    "emailColumnHeader": {
+      "type": "string",
+      "default": "Email"
+    },
+    "rolesColumnHeader": {
+      "type": "string",
+      "default": "Roles"
+    },
+    "actionsColumnHeader": {
+      "type": "string",
+      "default": "Actions"
+    },
+    "updateButtonText": {
+      "type": "string",
+      "default": "Update Roles"
+    },
+    "cancelButtonText": {
+      "type": "string",
+      "default": "Cancel"
+    },
+    "saveButtonText": {
+      "type": "string",
+      "default": "Save"
+    },
+    "loadingText": {
+      "type": "string",
+      "default": "Loading users..."
+    },
+    "errorText": {
+      "type": "string",
+      "default": "Failed to load users. Please try again."
+    },
+    "successText": {
+      "type": "string",
+      "default": "User roles updated successfully."
+    },
+    "customStyles": {
+      "type": "json",
+      "default": {}
+    }
+  }
+}

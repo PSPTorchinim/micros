@@ -220,5 +220,73 @@ namespace IdentityAPI.Controllers
                 }
             });
         }
+
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<List<GetUsersListDTO>>))]
+        public async Task<IActionResult> GetUsersV1()
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("GetUsersV1 called at {Time}", DateTime.UtcNow);
+                try
+                {
+                    var result = await _usersService.GetAllUsers();
+                    _logger.LogInformation("GetUsersV1 succeeded at {Time}", DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "GetUsersV1 failed at {Time}", DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<GetUsersListDTO>))]
+        public async Task<IActionResult> GetUserByIdV1(Guid id)
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("GetUserByIdV1 called for ID {UserId} at {Time}", id, DateTime.UtcNow);
+                try
+                {
+                    var result = await _usersService.GetUserById(id);
+                    _logger.LogInformation("GetUserByIdV1 succeeded for ID {UserId} at {Time}", id, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "GetUserByIdV1 failed for ID {UserId} at {Time}", id, DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
+
+        [HttpPut("{id}/Roles")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<bool>))]
+        public async Task<IActionResult> UpdateUserRolesV1(Guid id, [FromBody] List<Guid> roleIds)
+        {
+            return await Handle(async () =>
+            {
+                _logger.LogInformation("UpdateUserRolesV1 called for user {UserId} at {Time}", id, DateTime.UtcNow);
+                try
+                {
+                    var request = new UpdateUserRolesDTO
+                    {
+                        UserId = id,
+                        RoleIds = roleIds
+                    };
+                    var result = await _usersService.UpdateUserRoles(request);
+                    _logger.LogInformation("UpdateUserRolesV1 succeeded for user {UserId} at {Time}", id, DateTime.UtcNow);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "UpdateUserRolesV1 failed for user {UserId} at {Time}", id, DateTime.UtcNow);
+                    throw;
+                }
+            });
+        }
     }
 }

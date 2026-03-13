@@ -9,9 +9,9 @@ export function useMenuLogic() {
       const userPermissions =
         user?.roles?.flatMap((r: { permissions?: any[] | null }) =>
           (r.permissions ?? []).map((p) => p.name),
-        ) || [];
-      if (!permissions) return true;
-      if (!userPermissions) return false;
+        ) ?? [];
+      if (!permissions || permissions.length === 0) return true;
+      if (userPermissions.length === 0) return false;
       for (const permission of permissions) {
         if (!userPermissions.includes(permission)) return false;
       }
@@ -36,8 +36,6 @@ export function useMenuLogic() {
       const actionFn = actionMap[actionKey];
       if (actionFn) {
         actionFn();
-      } else {
-        console.warn(`Unknown action: ${actionText}`);
       }
     },
     [logout],

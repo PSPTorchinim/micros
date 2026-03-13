@@ -26,6 +26,26 @@ export interface AddRoleRequest {
   permissions?: string[] | null;
 }
 
+export interface BatchAddPermissionsDTO {
+  permissions: AddPermissionDTO[];
+}
+
+export interface BatchPermissionsResultDTO {
+  /** @format int32 */
+  created?: number;
+  /** @format int32 */
+  skipped?: number;
+  /** @format int32 */
+  failed?: number;
+}
+
+export interface BatchPermissionsResultDTOResponse {
+  success?: boolean;
+  data?: BatchPermissionsResultDTO;
+  message?: string | null;
+  errors?: string[] | null;
+}
+
 export interface Block {
   /** @format uuid */
   id?: string;
@@ -99,6 +119,13 @@ export interface GetRoleDTO {
   permissions?: GetPermissionsDTO[] | null;
 }
 
+export interface GetRoleDTOResponse {
+  success?: boolean;
+  data?: GetRoleDTO;
+  message?: string | null;
+  errors?: string[] | null;
+}
+
 export interface GetUserDTO {
   /** @format uuid */
   id?: string;
@@ -167,13 +194,6 @@ export interface Role {
 export interface RoleIEnumerableResponse {
   success?: boolean;
   data?: Role[] | null;
-  message?: string | null;
-  errors?: string[] | null;
-}
-
-export interface RoleResponse {
-  success?: boolean;
-  data?: Role;
   message?: string | null;
   errors?: string[] | null;
 }
@@ -449,6 +469,28 @@ export class Api<
         format: "json",
         ...params,
       }),
+
+    /**
+     * No description
+     *
+     * @tags Permissions
+     * @name V1PermissionsBatchCreate
+     * @request POST:/identity/v1/Permissions/batch
+     * @secure
+     */
+    v1PermissionsBatchCreate: (
+      data: BatchAddPermissionsDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<BatchPermissionsResultDTOResponse, any>({
+        path: `/identity/v1/Permissions/batch`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
   };
   roles = {
     /**
@@ -496,7 +538,7 @@ export class Api<
      * @secure
      */
     v1RolesDetail: (id: string, params: RequestParams = {}) =>
-      this.request<RoleResponse, any>({
+      this.request<GetRoleDTOResponse, any>({
         path: `/identity/v1/Roles/${id}`,
         method: "GET",
         secure: true,

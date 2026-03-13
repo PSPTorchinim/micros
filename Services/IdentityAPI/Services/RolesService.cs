@@ -13,7 +13,7 @@ namespace IdentityAPI.Services
 {
     public interface IRolesService : IService
     {
-        Task<List<Role>> GetRoles();
+        Task<List<GetRoleDTO>> GetRoles();
         Task<GetRoleDTO?> GetRole(Guid id);
         Task<bool> AddRole(AddRoleRequest request);
         Task<bool> EditRole(Guid id, AddRoleRequest request);
@@ -35,7 +35,7 @@ namespace IdentityAPI.Services
             _cacheService = serviceProvider.GetRequiredService<ICacheService>();
         }
 
-        public async Task<List<Role>> GetRoles()
+        public async Task<List<GetRoleDTO>> GetRoles()
         {
             _logger.LogInformation("Getting all roles.");
             return await ExceptionHandler.Handle(async () =>
@@ -43,14 +43,20 @@ namespace IdentityAPI.Services
                 var cacheKey = $"{RolesCachePrefix}All";
 
                 // Use GetOrCreateAsync to simplify cache-aside pattern
+                // Map to DTOs before caching to avoid circular reference issues during serialization
                 var roles = await _cacheService.GetOrCreateAsync(
                     cacheKey,
-                    async () => (await _rolesRepository.Get()).ToList(),
+                    async () =>
+                    {
+                        var spec = new RolePermissionsSpec();
+                        var entities = await _rolesRepository.Get(spec);
+                        return entities.Select(r => _mapper.Map<GetRoleDTO>(r)).ToList();
+                    },
                     DefaultCacheExpiration
                 );
 
                 // GetOrCreateAsync will never return null for list factories that return non-null
-                var result = roles ?? new List<Role>();
+                var result = roles ?? new List<GetRoleDTO>();
                 _logger.LogInformation("Retrieved {Count} roles.", result.Count);
                 return result;
             }, _logger);
@@ -78,7 +84,7 @@ namespace IdentityAPI.Services
                             return null;
                         }
                         _logger.LogInformation("Role with Id: {RoleId} retrieved.", id);
-                        return _mapper.Map<GetRoleDTO>(req);
+                        return _mapper.Map<GetRoleDTO>(req.First());
                     },
                     DefaultCacheExpiration
                 );
@@ -117,11 +123,11 @@ namespace IdentityAPI.Services
                 var roleDto = _mapper.Map<GetRoleDTO>(toAdd);
                 await _cacheService.SetAsync($"{RolesCachePrefix}{toAdd.Id}", roleDto, DefaultCacheExpiration);
 
-                // 2. Update the all roles cache by appending the new role if cache exists
-                var cachedAllRoles = await _cacheService.GetAsync<List<Role>>($"{RolesCachePrefix}All");
+                // 2. Update the all roles cache by appending the new role DTO if cache exists
+                var cachedAllRoles = await _cacheService.GetAsync<List<GetRoleDTO>>($"{RolesCachePrefix}All");
                 if (cachedAllRoles != null)
                 {
-                    cachedAllRoles.Add(toAdd);
+                    cachedAllRoles.Add(roleDto);
                     await _cacheService.SetAsync($"{RolesCachePrefix}All", cachedAllRoles, DefaultCacheExpiration);
                 }
                 // If cache doesn't exist, it will be lazily loaded on next read
@@ -163,6 +169,22 @@ namespace IdentityAPI.Services
                 // Invalidate the all roles cache; it will be refreshed on next read
                 await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
 
+                if (result)
+                {
+                    // Regenerate security stamps for all users assigned this role so their
+                    // JWT tokens are invalidated and refreshed with updated permissions.
+                    var usersRepository = _serviceProvider.GetRequiredService<IUsersRepository>();
+                    var securityStampService = _serviceProvider.GetRequiredService<ISecurityStampService>();
+                    var affectedUsers = await usersRepository.Get(u => u.Roles.Any(r => r.Id == id));
+                    foreach (var user in affectedUsers)
+                    {
+                        user.SecurityStamp = securityStampService.GenerateSecurityStamp();
+                        await usersRepository.Update(user);
+                        await securityStampService.InvalidateUserSecurityCacheAsync(user.Id);
+                        _logger.LogInformation("Security stamp regenerated and cache invalidated for user {UserId} after role {RoleId} permissions change", user.Id, id);
+                    }
+                }
+
                 _logger.LogInformation("Role with Id: {RoleId} updated and cache refreshed: {Result}", id, result);
 
                 return result;
@@ -175,14 +197,15 @@ namespace IdentityAPI.Services
             return await ExceptionHandler.Handle(async () =>
             {
                 _logger.LogDebug("Fetching role with Id: {RoleId} for deletion.", id);
-                var foundByName = (await _rolesRepository.Get(role => role.Id == id)).FirstOrDefault();
+                var spec = new RoleWithUsersSpec(role => role.Id == id);
+                var foundByName = (await _rolesRepository.Get(spec)).FirstOrDefault();
                 if (foundByName == null)
                 {
                     _logger.LogWarning("Role with Id: {RoleId} not found for deletion.", id);
                     throw new AppException(ExceptionCodes.RoleNotExists);
                 }
 
-                if (foundByName.Users.Any())
+                if (foundByName.Users != null && foundByName.Users.Any())
                 {
                     _logger.LogWarning("Role with Id: {RoleId} has users and cannot be deleted.", id);
                     throw new AppException(ExceptionCodes.RoleHasUsers);
@@ -191,9 +214,19 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Deleting role with Id: {RoleId} from repository.", id);
                 var result = await _rolesRepository.Delete(foundByName);
 
-                // Invalidate cache after deleting
-                await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
-                _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated: {Result}", id, result);
+                if (result)
+                {
+                    // Remove the specific role cache key and the all-roles list using RemoveAsync,
+                    // which uses IDistributedCache directly and works regardless of whether the
+                    // Redis connection multiplexer is available (unlike RemoveByPrefixAsync).
+                    await _cacheService.RemoveAsync($"{RolesCachePrefix}{id}");
+                    await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
+                    _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated.", id);
+                }
+                else
+                {
+                    _logger.LogWarning("Role with Id: {RoleId} deletion failed; cache not modified.", id);
+                }
 
                 return result;
             }, _logger);

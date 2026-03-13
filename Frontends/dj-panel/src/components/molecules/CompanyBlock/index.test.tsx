@@ -1,15 +1,16 @@
 // Mock console.warn before any imports to suppress API key warnings
+import { render, screen, waitFor, act } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
+import '@testing-library/jest-dom';
+import { CompanyService } from '../../../services/company-service';
+import { CompanyBlock } from './index';
+
 const originalWarn = console.warn;
 console.warn = jest.fn();
 
 // Mock environment variables before imports
 process.env.REACT_APP_API_SECURE_KEY = 'test-secure-key-for-testing';
-
-import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { CompanyBlock } from './index';
-import { CompanyService } from '../../../services/company-service';
 
 // Restore console.warn after tests
 afterAll(() => {
@@ -72,7 +73,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders company information after loading', async () => {
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -88,7 +89,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders company users', async () => {
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -104,7 +105,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom title and description', async () => {
-    await act(async () => {
+    act(() => {
       render(
         <CompanyBlock
           title="Organization Info"
@@ -121,7 +122,7 @@ describe('CompanyBlock', () => {
   });
 
   it('renders custom section titles', async () => {
-    await act(async () => {
+    act(() => {
       render(
         <CompanyBlock
           companyInfoTitle="Org Details"
@@ -142,7 +143,7 @@ describe('CompanyBlock', () => {
   it('shows creation form when no company data is available', async () => {
     (CompanyService.getCompany as jest.Mock).mockResolvedValue(null);
 
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -164,7 +165,7 @@ describe('CompanyBlock', () => {
   it('shows message when no users are assigned', async () => {
     (CompanyService.getCompanyUsers as jest.Mock).mockResolvedValue([]);
 
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -176,7 +177,7 @@ describe('CompanyBlock', () => {
   });
 
   it('shows message when no structure is defined', async () => {
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 
@@ -190,8 +191,8 @@ describe('CompanyBlock', () => {
   it('applies custom styles', async () => {
     const customStyles = { backgroundColor: 'blue' };
 
-    let container;
-    await act(async () => {
+    let container: HTMLElement;
+    act(() => {
       const result = render(<CompanyBlock customStyles={customStyles} />);
       container = result.container;
     });
@@ -208,7 +209,7 @@ describe('CompanyBlock', () => {
   });
 
   it('calls CompanyService methods on mount', async () => {
-    await act(async () => {
+    act(() => {
       render(<CompanyBlock />);
     });
 

@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useId, useMemo } from 'react';
 import './Input.css';
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   fullWidth?: boolean;
@@ -16,7 +15,8 @@ export const Input: React.FC<InputProps> = ({
   id,
   ...props
 }) => {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const inputId = useMemo(() => id ?? generatedId, [id, generatedId]);
   const classes = [
     'atom-input',
     fullWidth && 'atom-input--full-width',

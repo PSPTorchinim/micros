@@ -1,6 +1,6 @@
 import { createContext } from 'react';
-import { UsersService } from '../services/users-service';
 import { StrapiService } from '../services/strapi-service';
+import { UsersService } from '../services/users-service';
 
 type Services = {
   usersService: typeof UsersService;

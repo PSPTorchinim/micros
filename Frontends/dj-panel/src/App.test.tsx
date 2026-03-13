@@ -1,5 +1,6 @@
-import React from 'react';
 import { render } from '@testing-library/react';
+// @ts-ignore - React is needed for JSX
+import React from 'react';
 import '@testing-library/jest-dom';
 import App from './App';
 

@@ -5,7 +5,7 @@ import {
 } from '../models/api/identity/apiMap';
 
 export class UsersService {
-  public static async forgotPassword(email: string): Promise<BooleanResponse> {
+  public static forgotPassword(email: string): Promise<BooleanResponse> {
     return microservicesClient.identity.users
       .v1UsersForgotPasswordUpdate({ email: email })
       .then((response) => {
@@ -21,7 +21,7 @@ export class UsersService {
       });
   }
 
-  public static async changePassword(
+  public static changePassword(
     oldPassword: string,
     newPassword: string,
   ): Promise<BooleanResponse> {
@@ -45,7 +45,7 @@ export class UsersService {
       });
   }
 
-  public static async Login(
+  public static Login(
     email: string,
     password: string,
   ): Promise<LoginResponseDTOResponse> {

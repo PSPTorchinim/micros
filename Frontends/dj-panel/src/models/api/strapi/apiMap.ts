@@ -3993,45 +3993,45 @@ export interface Template {
         id?: number;
         documentId?: string;
       };
-      Content?: InternalNull1 &
+      Content?: DiscriminatorNull1 &
         (
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "image-slider-ref.image-slider-ref",
               ImageSliderRefImageSliderRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "article-ref.article-ref",
               ArticleRefArticleRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "article-block-ref.article-block-ref",
               ArticleBlockRefArticleBlockRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "steps-container-ref.steps-container-ref",
               StepsContainerRefStepsContainerRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "cta-ref.cta-ref",
               CtaRefCtaRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "contact-info-ref.contact-info-ref",
               ContactInfoRefContactInfoRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "contact-section-ref.contact-section-ref",
               ContactSectionRefContactSectionRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "feature-section-ref.feature-section-ref",
               FeatureSectionRefFeatureSectionRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "feature-tab-ref.feature-tab-ref",
               FeatureTabRefFeatureTabRefComponent
             >
-          | InternalNull1ComponentMapping<
+          | DiscriminatorNull1ComponentMapping<
               "hero-block-ref.hero-block-ref",
               HeroBlockRefHeroBlockRefComponent
             >
@@ -4076,42 +4076,42 @@ export interface Template {
       documentId?: string;
     }[];
   };
-  Content?: InternalNull2 &
+  Content?: InternalNull1 &
     (
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "image-slider-ref.image-slider-ref",
           ImageSliderRefImageSliderRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "article-ref.article-ref",
           ArticleRefArticleRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "article-block-ref.article-block-ref",
           ArticleBlockRefArticleBlockRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "steps-container-ref.steps-container-ref",
           StepsContainerRefStepsContainerRefComponent
         >
-      | InternalNull2ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<"cta-ref.cta-ref", CtaRefCtaRefComponent>
+      | InternalNull1ComponentMapping<
           "contact-info-ref.contact-info-ref",
           ContactInfoRefContactInfoRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "contact-section-ref.contact-section-ref",
           ContactSectionRefContactSectionRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "feature-section-ref.feature-section-ref",
           FeatureSectionRefFeatureSectionRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "feature-tab-ref.feature-tab-ref",
           FeatureTabRefFeatureTabRefComponent
         >
-      | InternalNull2ComponentMapping<
+      | InternalNull1ComponentMapping<
           "hero-block-ref.hero-block-ref",
           HeroBlockRefHeroBlockRefComponent
         >
@@ -4157,45 +4157,45 @@ export interface TemplateRequest {
     TemplateType?: TemplateRequestTemplateTypeEnum;
     /** @example "string or id" */
     page?: number | string;
-    Content?: AbstractNull1 &
+    Content?: InternalNull2 &
       (
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "image-slider-ref.image-slider-ref",
             ImageSliderRefImageSliderRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "article-ref.article-ref",
             ArticleRefArticleRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "article-block-ref.article-block-ref",
             ArticleBlockRefArticleBlockRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "steps-container-ref.steps-container-ref",
             StepsContainerRefStepsContainerRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "cta-ref.cta-ref",
             CtaRefCtaRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "contact-info-ref.contact-info-ref",
             ContactInfoRefContactInfoRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "contact-section-ref.contact-section-ref",
             ContactSectionRefContactSectionRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "feature-section-ref.feature-section-ref",
             FeatureSectionRefFeatureSectionRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "feature-tab-ref.feature-tab-ref",
             FeatureTabRefFeatureTabRefComponent
           >
-        | AbstractNull1ComponentMapping<
+        | InternalNull2ComponentMapping<
             "hero-block-ref.hero-block-ref",
             HeroBlockRefHeroBlockRefComponent
           >
@@ -4326,6 +4326,7 @@ export enum ConfigurationTemplateTypeEnum {
   ChangePassword = "ChangePassword",
   Profile = "Profile",
   Company = "Company",
+  RolesManagement = "RolesManagement",
 }
 
 type BaseNull = (
@@ -4389,6 +4390,7 @@ export enum FooterTemplateTypeEnum {
   ChangePassword = "ChangePassword",
   Profile = "Profile",
   Company = "Company",
+  RolesManagement = "RolesManagement",
 }
 
 type AbstractNull = (
@@ -4472,6 +4474,7 @@ export enum PageTemplateTypeEnum {
   ChangePassword = "ChangePassword",
   Profile = "Profile",
   Company = "Company",
+  RolesManagement = "RolesManagement",
 }
 
 type PolymorphNull = (
@@ -4536,6 +4539,8 @@ export enum TemplateTemplateTypeEnum {
   ChangePassword = "ChangePassword",
   Profile = "Profile",
   Company = "Company",
+  RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
 }
 
 export enum TemplateMenuEnum {
@@ -4562,7 +4567,26 @@ export enum TemplateTemplateTypeEnum1 {
   ChangePassword = "ChangePassword",
   Profile = "Profile",
   Company = "Company",
+  RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
 }
+
+type DiscriminatorNull1 = (
+  | ImageSliderRefImageSliderRefComponent
+  | ArticleRefArticleRefComponent
+  | ArticleBlockRefArticleBlockRefComponent
+  | StepsContainerRefStepsContainerRefComponent
+  | CtaRefCtaRefComponent
+  | ContactInfoRefContactInfoRefComponent
+  | ContactSectionRefContactSectionRefComponent
+  | FeatureSectionRefFeatureSectionRefComponent
+  | FeatureTabRefFeatureTabRefComponent
+  | HeroBlockRefHeroBlockRefComponent
+)[];
+
+type DiscriminatorNull1ComponentMapping<Key, Type> = {
+  __component: Key;
+} & Type;
 
 type InternalNull1 = (
   | ImageSliderRefImageSliderRefComponent
@@ -4581,6 +4605,17 @@ type InternalNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 
+export enum TemplateRequestTemplateTypeEnum {
+  Standard = "Standard",
+  Login = "Login",
+  ForgotPassword = "ForgotPassword",
+  ChangePassword = "ChangePassword",
+  Profile = "Profile",
+  Company = "Company",
+  RolesManagement = "RolesManagement",
+  UsersManagement = "UsersManagement",
+}
+
 type InternalNull2 = (
   | ImageSliderRefImageSliderRefComponent
   | ArticleRefArticleRefComponent
@@ -4595,32 +4630,6 @@ type InternalNull2 = (
 )[];
 
 type InternalNull2ComponentMapping<Key, Type> = {
-  __component: Key;
-} & Type;
-
-export enum TemplateRequestTemplateTypeEnum {
-  Standard = "Standard",
-  Login = "Login",
-  ForgotPassword = "ForgotPassword",
-  ChangePassword = "ChangePassword",
-  Profile = "Profile",
-  Company = "Company",
-}
-
-type AbstractNull1 = (
-  | ImageSliderRefImageSliderRefComponent
-  | ArticleRefArticleRefComponent
-  | ArticleBlockRefArticleBlockRefComponent
-  | StepsContainerRefStepsContainerRefComponent
-  | CtaRefCtaRefComponent
-  | ContactInfoRefContactInfoRefComponent
-  | ContactSectionRefContactSectionRefComponent
-  | FeatureSectionRefFeatureSectionRefComponent
-  | FeatureTabRefFeatureTabRefComponent
-  | HeroBlockRefHeroBlockRefComponent
-)[];
-
-type AbstractNull1ComponentMapping<Key, Type> = {
   __component: Key;
 } & Type;
 

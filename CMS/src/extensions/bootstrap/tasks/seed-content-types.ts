@@ -1128,6 +1128,41 @@ async function seedProfileBlock(strapi: StrapiAny): Promise<any> {
   }
 }
 
+async function seedUserRoleManagementBlock(strapi: StrapiAny): Promise<any> {
+  // User Role Management Block is a singleType with draftAndPublish: false
+  // Use db.query for singleTypes without draftAndPublish
+  const existingEntries = await strapi.db
+    .query('api::user-role-management-block.user-role-management-block')
+    .findMany({});
+
+  if (existingEntries.length === 0) {
+    // Create user role management block with default content
+    const created = await strapi.db
+      .query('api::user-role-management-block.user-role-management-block')
+      .create({
+        data: {
+          title: 'User Role Management',
+          description: 'Manage user roles and permissions.',
+          usersTableTitle: 'Users',
+          emailColumnHeader: 'Email',
+          rolesColumnHeader: 'Roles',
+          actionsColumnHeader: 'Actions',
+          updateButtonText: 'Update Roles',
+          cancelButtonText: 'Cancel',
+          saveButtonText: 'Save',
+          loadingText: 'Loading users...',
+          errorText: 'Failed to load users. Please try again.',
+          successText: 'User roles updated successfully.',
+        },
+      });
+    console.info(`[SEED] Created User Role Management Block`);
+    return created;
+  } else {
+    console.info(`[SEED] User Role Management Block already exists`);
+    return existingEntries[0];
+  }
+}
+
 // ============================================================================
 // Main Export
 // ============================================================================
@@ -1192,6 +1227,9 @@ export default async function seedContentTypes({
 
   // Seed Profile Block (singleType for profile page)
   await seedProfileBlock(strapi);
+
+  // Seed User Role Management Block (singleType for roles management page)
+  await seedUserRoleManagementBlock(strapi);
 
   console.info('[SEED] Content type seeding completed.');
 }

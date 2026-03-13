@@ -1,3 +1,4 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import './index.css';
 import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
@@ -25,7 +26,7 @@ export const StepsContainerBlock = (props: StepsContainer) => {
           <div className="steps-section-header">
             <h2 className="thq-heading-2">{props.heading}</h2>
             <p className="thq-body-large">{props.content}</p>
-            {actionItem && actionItem.url && (
+            {actionItem?.url && (
               <div className="steps-actions">
                 <a
                   href={actionItem.url}
@@ -42,7 +43,7 @@ export const StepsContainerBlock = (props: StepsContainer) => {
           </div>
           <div className="steps-card-container">
             {stepsArray.map((step: Step, index: number) => (
-              <div key={step.id || index} className="steps-card thq-card">
+              <div key={step.id ?? index} className="steps-card thq-card">
                 <h2 className="thq-heading-2">{step.title}</h2>
                 <span className="steps-card-text thq-body-small">
                   {step.description}

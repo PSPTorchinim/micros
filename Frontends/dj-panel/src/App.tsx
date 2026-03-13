@@ -1,15 +1,14 @@
+// @ts-ignore - React is needed for JSX
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Layout } from './layout';
 import './index.css';
-import { AuthProvider } from './providers/auth-provider';
-import { ThemeProvider } from './context/theme-context';
-
-import { NotFoundComponent } from './components/molecules/ErrorPage/NotFound';
-import { ServicesProvider } from './providers/services-provider';
-import { CompanySetupProvider } from './providers/company-setup-provider';
-
 import { useDynamicRoutes } from './components/DynamicRoutes';
+import { NotFoundComponent } from './components/molecules/ErrorPage/NotFound';
+import { ThemeProvider } from './context/theme-context';
+import { Layout } from './layout';
+import { AuthProvider } from './providers/auth-provider';
+import { CompanySetupProvider } from './providers/company-setup-provider';
+import { ServicesProvider } from './providers/services-provider';
 
 export default function App() {
   const [dynamicRoutes, dynamicNavigation, footerData] = useDynamicRoutes();

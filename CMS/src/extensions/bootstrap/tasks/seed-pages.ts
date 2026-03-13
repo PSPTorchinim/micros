@@ -63,6 +63,14 @@ const TEMPLATE_SEEDS = [
     Name: 'Company Template',
     TemplateType: 'Company',
   },
+  {
+    Name: 'Roles Management Template',
+    TemplateType: 'RolesManagement',
+  },
+  {
+    Name: 'Users Management Template',
+    TemplateType: 'UsersManagement',
+  },
   // Note: Individual article templates are created dynamically in seedArticlePages
 ];
 
@@ -168,6 +176,24 @@ const PAGE_SEEDS = [
     NavigationOrder: 6,
     NavigationAction: 'Link',
     templateName: 'Company Template',
+  },
+  {
+    Title: 'Roles Management',
+    Slug: '/roles-management',
+    Menu: 'NotVisible',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 7,
+    NavigationAction: 'Link',
+    templateName: 'Roles Management Template',
+  },
+  {
+    Title: 'Users Management',
+    Slug: '/users-management',
+    Menu: 'NotVisible',
+    AuthState: 'OnlyAuthenticated',
+    NavigationOrder: 8,
+    NavigationAction: 'Link',
+    templateName: 'Users Management Template',
   },
 ];
 
@@ -312,6 +338,20 @@ async function buildCompanyTemplateContent(strapi: StrapiAny): Promise<any[]> {
   return content;
 }
 
+async function buildRolesManagementTemplateContent(
+  strapi: StrapiAny,
+): Promise<any[]> {
+  // Roles Management Template uses built-in RolesManagementBlock, no content needed
+  return [];
+}
+
+async function buildUsersManagementTemplateContent(
+  strapi: StrapiAny,
+): Promise<any[]> {
+  // Users Management Template uses built-in UserRoleManagementBlock, no content needed
+  return [];
+}
+
 // ============================================================================
 // Seeding Functions
 // ============================================================================
@@ -343,8 +383,12 @@ async function seedTemplates(strapi: StrapiAny): Promise<void> {
         content = await buildArticleTemplateContent(strapi);
       } else if (templateData.Name === 'Company Template') {
         content = await buildCompanyTemplateContent(strapi);
+      } else if (templateData.Name === 'Roles Management Template') {
+        content = await buildRolesManagementTemplateContent(strapi);
+      } else if (templateData.Name === 'Users Management Template') {
+        content = await buildUsersManagementTemplateContent(strapi);
       }
-      // Login, Forgot Password, and Change Password templates use built-in blocks, no Content needed
+      // Login, Forgot Password, Change Password, Profile, Roles Management, and Users Management templates use built-in blocks, no Content needed
       // Create and publish using Document Service
       await strapi.documents('api::template.template').create({
         data: {

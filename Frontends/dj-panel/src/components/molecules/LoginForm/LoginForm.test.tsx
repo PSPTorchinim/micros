@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { LoginForm } from './LoginForm';
@@ -80,7 +80,7 @@ describe('LoginForm Component', () => {
 
   it('disables submit button while submitting', async () => {
     const slowSubmit = jest.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () => new Promise<void>((resolve) => setTimeout(resolve, 100)),
     );
     renderWithRouter(<LoginForm onSubmit={slowSubmit} />);
 

@@ -20,13 +20,13 @@ describe('UnifiedApi', () => {
     const api = new UnifiedApi();
 
     // Check that all service instances have the interceptor set up
-    expect(api.brand.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.documents.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.gear.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.identity.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.mailing.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.music.instance.interceptors.request.handlers).toBeDefined();
-    expect(api.party.instance.interceptors.request.handlers).toBeDefined();
+    expect(api.brand.instance.interceptors.request).toBeDefined();
+    expect(api.documents.instance.interceptors.request).toBeDefined();
+    expect(api.gear.instance.interceptors.request).toBeDefined();
+    expect(api.identity.instance.interceptors.request).toBeDefined();
+    expect(api.mailing.instance.interceptors.request).toBeDefined();
+    expect(api.music.instance.interceptors.request).toBeDefined();
+    expect(api.party.instance.interceptors.request).toBeDefined();
   });
 
   it('should warn when REACT_APP_API_SECURE_KEY is not set', () => {

@@ -51,12 +51,11 @@ export class CompanyService {
   public static async getCompany(): Promise<CompanyDTO | null> {
     try {
       const response = await microservicesClient.brand.company.v1CompanyList();
-      if (response.data.success && response.data.data) {
-        return response.data.data as unknown as CompanyDTO;
+      if ((response.data as any)?.success && (response.data as any)?.data) {
+        return (response.data as any).data as unknown as CompanyDTO;
       }
       return null;
-    } catch (error) {
-      console.error('Error fetching company:', error);
+    } catch {
       return null;
     }
   }
@@ -65,9 +64,10 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyMembershipList();
-      return response.data.success && response.data.data === true;
-    } catch (error) {
-      console.error('Error checking company membership:', error);
+      return (
+        (response.data as any)?.success && (response.data as any)?.data === true
+      );
+    } catch {
       return false;
     }
   }
@@ -78,9 +78,8 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUpdate(updateDto);
-      return response.data.success && response.data.data;
-    } catch (error) {
-      console.error('Error updating company:', error);
+      return (response.data as any)?.success && (response.data as any)?.data;
+    } catch {
       return false;
     }
   }
@@ -89,12 +88,14 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUsersList();
-      if (response.data.success && Array.isArray(response.data.data)) {
-        return response.data.data as unknown as CompanyUserDTO[];
+      if (
+        (response.data as any)?.success &&
+        Array.isArray((response.data as any)?.data)
+      ) {
+        return (response.data as any).data as unknown as CompanyUserDTO[];
       }
       return [];
-    } catch (error) {
-      console.error('Error fetching company users:', error);
+    } catch {
       return [];
     }
   }
@@ -107,9 +108,8 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyUsersCreate(
           addUserDto,
         );
-      return response.data.success && response.data.data;
-    } catch (error) {
-      console.error('Error adding company user:', error);
+      return (response.data as any)?.success && (response.data as any)?.data;
+    } catch {
       return false;
     }
   }
@@ -118,9 +118,8 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyUsersDelete(userId);
-      return response.data.success && response.data.data;
-    } catch (error) {
-      console.error('Error removing company user:', error);
+      return (response.data as any)?.success && (response.data as any)?.data;
+    } catch {
       return false;
     }
   }
@@ -131,12 +130,15 @@ export class CompanyService {
     try {
       const response =
         await microservicesClient.brand.company.v1CompanyStructureList();
-      if (response.data.success && Array.isArray(response.data.data)) {
-        return response.data.data as unknown as CompanyStructureNodeDTO[];
+      if (
+        (response.data as any)?.success &&
+        Array.isArray((response.data as any)?.data)
+      ) {
+        return (response.data as any)
+          .data as unknown as CompanyStructureNodeDTO[];
       }
       return [];
-    } catch (error) {
-      console.error('Error fetching company structure:', error);
+    } catch {
       return [];
     }
   }
@@ -149,9 +151,8 @@ export class CompanyService {
         await microservicesClient.brand.company.v1CompanyStructureUpdate({
           nodes,
         });
-      return response.data.success && response.data.data;
-    } catch (error) {
-      console.error('Error updating company structure:', error);
+      return (response.data as any)?.success && (response.data as any)?.data;
+    } catch {
       return false;
     }
   }

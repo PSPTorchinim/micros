@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect } from 'react';
-import { CompanyBlock } from './index';
+import { useEffect } from 'react';
 import * as CompanyServiceModule from '../../../services/company-service';
+import { CompanyBlock } from './index';
 
 // Mock data
 const mockCompanyData = {
@@ -90,16 +90,18 @@ const meta = {
         const originalRemoveCompanyUser =
           CompanyServiceModule.CompanyService.removeCompanyUser;
 
-        CompanyServiceModule.CompanyService.getCompany = async () =>
-          mockCompanyData;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
-          mockUsers;
-        CompanyServiceModule.CompanyService.getCompanyStructure = async () =>
-          mockStructure;
-        CompanyServiceModule.CompanyService.updateCompany = async () => true;
-        CompanyServiceModule.CompanyService.addCompanyUser = async () => true;
-        CompanyServiceModule.CompanyService.removeCompanyUser = async () =>
-          true;
+        CompanyServiceModule.CompanyService.getCompany = () =>
+          Promise.resolve(mockCompanyData);
+        CompanyServiceModule.CompanyService.getCompanyUsers = () =>
+          Promise.resolve(mockUsers);
+        CompanyServiceModule.CompanyService.getCompanyStructure = () =>
+          Promise.resolve(mockStructure);
+        CompanyServiceModule.CompanyService.updateCompany = () =>
+          Promise.resolve(true);
+        CompanyServiceModule.CompanyService.addCompanyUser = () =>
+          Promise.resolve(true);
+        CompanyServiceModule.CompanyService.removeCompanyUser = () =>
+          Promise.resolve(true);
 
         return () => {
           // Restore original methods on cleanup
@@ -209,10 +211,12 @@ export const EmptyState: Story = {
         const originalGetCompanyStructure =
           CompanyServiceModule.CompanyService.getCompanyStructure;
 
-        CompanyServiceModule.CompanyService.getCompany = async () => null;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () => [];
-        CompanyServiceModule.CompanyService.getCompanyStructure =
-          async () => [];
+        CompanyServiceModule.CompanyService.getCompany = () =>
+          Promise.resolve(null);
+        CompanyServiceModule.CompanyService.getCompanyUsers = () =>
+          Promise.resolve([]);
+        CompanyServiceModule.CompanyService.getCompanyStructure = () =>
+          Promise.resolve([]);
 
         return () => {
           CompanyServiceModule.CompanyService.getCompany = originalGetCompany;
@@ -263,10 +267,10 @@ export const MinimalCompanyInfo: Story = {
         const originalGetCompanyUsers =
           CompanyServiceModule.CompanyService.getCompanyUsers;
 
-        CompanyServiceModule.CompanyService.getCompany = async () =>
-          minimalCompany;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
-          minimalUsers;
+        CompanyServiceModule.CompanyService.getCompany = () =>
+          Promise.resolve(minimalCompany);
+        CompanyServiceModule.CompanyService.getCompanyUsers = () =>
+          Promise.resolve(minimalUsers);
 
         return () => {
           CompanyServiceModule.CompanyService.getCompany = originalGetCompany;
@@ -291,13 +295,17 @@ export const LargeTeam: Story = {
           userId: `uid-${i + 1}`,
           username: `Team Member ${i + 1}`,
           email: `member${i + 1}@acmecorp.com`,
-          role: i === 0 ? 'Admin' : i < 3 ? 'Manager' : 'Member',
+          role: (() => {
+            if (i === 0) return 'Admin';
+            if (i < 3) return 'Manager';
+            return 'Member';
+          })(),
         }));
 
         const originalGetCompanyUsers =
           CompanyServiceModule.CompanyService.getCompanyUsers;
-        CompanyServiceModule.CompanyService.getCompanyUsers = async () =>
-          largeTeam;
+        CompanyServiceModule.CompanyService.getCompanyUsers = () =>
+          Promise.resolve(largeTeam);
 
         return () => {
           CompanyServiceModule.CompanyService.getCompanyUsers =

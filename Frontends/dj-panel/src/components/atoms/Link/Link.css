@@ -1,0 +1,60 @@
+.atom-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
+}
+
+/* Variant styles */
+.atom-link--default {
+  color: inherit;
+}
+
+.atom-link--primary {
+  color: var(--dl-color-primary-base, #007bff);
+}
+
+.atom-link--primary:hover {
+  color: var(--dl-color-primary-dark, #0056b3);
+}
+
+.atom-link--secondary {
+  color: var(--dl-color-secondary-base, #6c757d);
+}
+
+.atom-link--secondary:hover {
+  color: var(--dl-color-secondary-dark, #545b62);
+}
+
+.atom-link--muted {
+  color: var(--dl-color-text-muted, #6c757d);
+}
+
+.atom-link--muted:hover {
+  color: var(--dl-color-text-base, #212529);
+}
+
+/* Underline styles */
+.atom-link--underline-none {
+  text-decoration: none;
+}
+
+.atom-link--underline-hover {
+  text-decoration: none;
+}
+
+.atom-link--underline-hover:hover {
+  text-decoration: underline;
+}
+
+.atom-link--underline-always {
+  text-decoration: underline;
+}
+
+/* Focus state */
+.atom-link:focus-visible {
+  outline: 2px solid var(--dl-color-primary-base, #007bff);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

@@ -16,7 +16,7 @@ import type {
   FooterSocialLinkComponent,
 } from '../../../models/api/strapi/apiMap';
 
-interface FooterProps {
+export interface FooterProps {
   footerData: FooterData | null;
   customStyles?: React.CSSProperties;
   additionalContent?: React.ReactNode;
@@ -53,50 +53,51 @@ export const Footer = (props: FooterProps) => {
   const columns =
     footerData.columns?.filter(
       (column) => column.links && column.links.length > 0,
-    ) || [];
+    ) ?? [];
 
   return (
     <footer className="footer thq-section-padding" style={props.customStyles}>
       <div className="footer-max-width thq-section-max-width">
         <div className="footer-content">
           <div className="footer-links">
-            {columns.map(
-              (column: FooterLinkColumnComponent, columnIndex: number) => (
-                <div key={columnIndex} className="footer-column">
-                  <strong className="thq-body-large footer-column-title">
-                    {column.title || ''}
-                  </strong>
-                  <div className="footer-footer-links">
-                    {column.links?.map((link, linkIndex) => (
-                      <Link
-                        key={linkIndex}
-                        to={link.url || '#'}
-                        rel="noreferrer noopener"
-                        className="thq-body-small"
-                      >
-                        {link.label || ''}
-                      </Link>
-                    ))}
-                  </div>
+            {columns.map((column: FooterLinkColumnComponent) => (
+              <div key={column.title ?? column.id} className="footer-column">
+                <strong className="thq-body-large footer-column-title">
+                  {column.title ?? ''}
+                </strong>
+                <div className="footer-footer-links">
+                  {column.links?.map((link) => (
+                    <Link
+                      key={`${link.url}-${link.label}`}
+                      to={link.url ?? '#'}
+                      rel="noreferrer noopener"
+                      className="thq-body-small"
+                    >
+                      {link.label ?? ''}
+                    </Link>
+                  ))}
                 </div>
-              ),
-            )}
-            {footerData.socialLinks?.length > 0 && (
+              </div>
+            ))}
+            {footerData.socialLinks && footerData.socialLinks.length > 0 && (
               <div className="footer-column">
                 <strong className="thq-body-large footer-social-link-title">
                   Connect with Us
                 </strong>
                 <div className="footer-social-links">
                   {footerData.socialLinks.map(
-                    (link: FooterSocialLinkComponent, index: number) => {
+                    (link: FooterSocialLinkComponent) => {
                       const IconComponent = getIconComponent(
-                        link.icon || link.platform,
+                        link.icon ?? link.platform,
                       );
                       return (
-                        <div key={index} className="footer-link">
+                        <div
+                          key={`${link.platform}-${link.url ?? link.detail}`}
+                          className="footer-link"
+                        >
                           <IconComponent className="thq-icon-small" />
                           <span className="thq-body-small">
-                            {link.detail || link.url || ''}
+                            {link.detail ?? link.url ?? ''}
                           </span>
                         </div>
                       );
@@ -111,7 +112,7 @@ export const Footer = (props: FooterProps) => {
           <div className="thq-divider-horizontal"></div>
           <div className="footer-row">
             <span className="thq-body-small">
-              {footerData.copyright ||
+              {footerData.copyright ??
                 '© 2024 DJ Beat Blaster. All rights reserved.'}
             </span>
             <div className="footer-footer-links3">

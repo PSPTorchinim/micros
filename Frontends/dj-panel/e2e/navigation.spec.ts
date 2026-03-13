@@ -7,8 +7,8 @@ test.describe('Navigation E2E', () => {
     // Wait for the app to load
     await page.waitForLoadState('networkidle');
     
-    // The app should render
-    expect(page).toBeTruthy();
+    // The app should render with the root element containing content
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
   });
 
   test('should navigate to 404 page for unknown routes', async ({ page }) => {
@@ -19,7 +19,7 @@ test.describe('Navigation E2E', () => {
     
     // Should show some indication of not found (this depends on your NotFoundComponent implementation)
     // Just verify the page loads without errors
-    expect(page).toBeTruthy();
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
   });
 
   test('should have proper HTML structure', async ({ page }) => {
@@ -30,6 +30,10 @@ test.describe('Navigation E2E', () => {
     await expect(html).toBeVisible();
     
     // Check that data-theme attribute is set
+    await page.waitForFunction(
+      () => { const theme = document.documentElement.getAttribute('data-theme'); return theme !== null && theme !== ''; },
+      { timeout: 15000 }
+    );
     const themeAttr = await page.evaluate(() => 
       document.documentElement.getAttribute('data-theme')
     );

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
 import { AuthContext } from '../../../context/auth-context';
 import { ProfileBlock } from './index';
 
