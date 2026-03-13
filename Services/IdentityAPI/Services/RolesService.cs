@@ -214,9 +214,19 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Deleting role with Id: {RoleId} from repository.", id);
                 var result = await _rolesRepository.Delete(foundByName);
 
-                // Invalidate cache after deleting
-                await _cacheService.RemoveByPrefixAsync(RolesCachePrefix);
-                _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated: {Result}", id, result);
+                if (result)
+                {
+                    // Remove the specific role cache key and the all-roles list using RemoveAsync,
+                    // which uses IDistributedCache directly and works regardless of whether the
+                    // Redis connection multiplexer is available (unlike RemoveByPrefixAsync).
+                    await _cacheService.RemoveAsync($"{RolesCachePrefix}{id}");
+                    await _cacheService.RemoveAsync($"{RolesCachePrefix}All");
+                    _logger.LogInformation("Role with Id: {RoleId} deleted and cache invalidated.", id);
+                }
+                else
+                {
+                    _logger.LogWarning("Role with Id: {RoleId} deletion failed; cache not modified.", id);
+                }
 
                 return result;
             }, _logger);
