@@ -132,7 +132,6 @@ namespace CompanyAPI.Services
                             Id = Guid.NewGuid(),
                             UserId = createdByUserId.Value,
                             BrandId = brand.Id,
-                            Brand = brand,
                             Role = BrandUserRole.Creator
                         };
                         
@@ -230,7 +229,6 @@ namespace CompanyAPI.Services
                     Id = Guid.NewGuid(),
                     UserId = addUserDto.UserId,
                     BrandId = brand.Id,
-                    Brand = brand,
                     Role = role
                 };
 
