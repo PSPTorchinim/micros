@@ -89,6 +89,66 @@ namespace IdentityAPI.Tests
         }
 
         [Fact]
+        public async Task RefreshToken_FallsBackToRawToken_WhenClaimsNotPopulated()
+        {
+            // Simulate an expired token scenario where HttpContext.User has no claims
+            // (JWT middleware cannot authenticate because the token has expired), but
+            // GetUserIdFromTokenIgnoreExpiry should recover the user ID from the raw token.
+            var service = CreateService();
+            var userId = Guid.NewGuid();
+            var user = new User
+            {
+                Id = userId,
+                Email = "user@example.com",
+                Passwords = new List<Password>(),
+                Blocks = new List<Block>(),
+                Roles = new List<Role>()
+            };
+
+            // HttpContext.User has NO claims (as when JWT validation fails for an expired token)
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
+            httpContext.Request.Headers["Authorization"] = "Bearer raw_token";
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+            // AuthService returns the user ID from the raw (possibly expired) token
+            _authServiceMock
+                .Setup(a => a.GetUserIdFromTokenIgnoreExpiry("raw_token"))
+                .Returns(userId.ToString());
+
+            _usersRepositoryMock
+                .Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+                .ReturnsAsync(new List<User> { user });
+
+            _authServiceMock
+                .Setup(a => a.GenerateAccessToken(user))
+                .Returns(new LoginResponseDTO { AccessToken = "new_token", RefreshToken = "new_refresh" });
+
+            _mapperMock.Setup(m => m.Map<GetUserDTO>(user)).Returns(new GetUserDTO());
+
+            var result = await service.RefreshToken();
+
+            Assert.NotNull(result);
+            Assert.Equal("new_token", result.AccessToken);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Throws_WhenClaimsEmptyAndRawTokenReturnsNullUserId()
+        {
+            // Both HttpContext.User claims and GetUserIdFromTokenIgnoreExpiry return nothing
+            var service = CreateService();
+
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
+            httpContext.Request.Headers["Authorization"] = "Bearer invalid_token";
+            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+            _authServiceMock
+                .Setup(a => a.GetUserIdFromTokenIgnoreExpiry("invalid_token"))
+                .Returns<string?>(null);
+
+            await Assert.ThrowsAsync<AppException>(() => service.RefreshToken());
+        }
+
+        [Fact]
         public async Task BlockUser_Throws_WhenUserNotFound()
         {
             var service = CreateService();

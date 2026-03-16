@@ -80,6 +80,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
 
           if (originalRequest._retry) {
+            if (error.response?.status === 401) {
+              logout();
+            }
             return Promise.reject(error);
           }
 
@@ -91,7 +94,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               refreshPromiseRef.current ??= (async () => {
                 try {
                   const response =
-                    await microservicesClient.identity.users.v1UsersRefreshTokenList();
+                    await microservicesClient.identity.users.v1UsersRefreshTokenList(
+                      {
+                        headers: { 'Skip-Interceptor': 'true' },
+                      },
+                    );
 
                   const loginData = (response.data as LoginResponseDTOResponse)
                     .data as LoginResponseDTO;
@@ -127,6 +134,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             } catch (refreshError) {
               return Promise.reject(refreshError);
             }
+          }
+
+          if (error.response?.status === 401) {
+            logout();
           }
 
           return Promise.reject(error);

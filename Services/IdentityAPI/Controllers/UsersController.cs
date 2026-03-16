@@ -84,6 +84,7 @@ namespace IdentityAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpGet("RefreshToken")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Response<LoginResponseDTO>))]
         public async Task<IActionResult> RefreshTokenV1()

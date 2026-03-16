@@ -104,5 +104,45 @@ namespace IdentityAPI.Tests
             var service = CreateService();
             Assert.Throws<Exception>(() => service.ValidateToken("invalid.token.value"));
         }
+
+        [Fact]
+        public void GetUserIdFromTokenIgnoreExpiry_ExpiredToken_ReturnsUserId()
+        {
+            // Generate an already-expired JWT directly using JwtSecurityTokenHandler,
+            // bypassing the service's clock-skew-aware GenerateToken path.
+            var service = CreateService();
+            var user = GetTestUser();
+
+            // Build an expired token manually with the same key/issuer/audience the service uses
+            var signingKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes("supersecretkeysupersecretkeysupersecr"));
+            var credentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
+                signingKey, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
+
+            var expiredToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
+                issuer: "TestIssuer",
+                audience: "TestAudience",
+                claims: new[] { new System.Security.Claims.Claim("Id", user.Id.ToString()) },
+                notBefore: DateTime.UtcNow.AddHours(-2),
+                expires: DateTime.UtcNow.AddHours(-1), // expired one hour ago (beyond 2-min clock skew)
+                signingCredentials: credentials);
+
+            var tokenString = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(expiredToken);
+
+            // ValidateToken (lifetime check) should fail because the token is long expired
+            Assert.Throws<Exception>(() => service.ValidateToken(tokenString));
+
+            // GetUserIdFromTokenIgnoreExpiry should still extract the user ID successfully
+            var userId = service.GetUserIdFromTokenIgnoreExpiry(tokenString);
+            Assert.Equal(user.Id.ToString(), userId);
+        }
+
+        [Fact]
+        public void GetUserIdFromTokenIgnoreExpiry_InvalidToken_ReturnsNull()
+        {
+            var service = CreateService();
+            var result = service.GetUserIdFromTokenIgnoreExpiry("not.a.valid.token");
+            Assert.Null(result);
+        }
     }
 }
