@@ -351,10 +351,11 @@ namespace CompanyAPI.Services
             };
         }
 
+        private static readonly string[] SupportedLanguageCodes = { "en", "de", "fr", "es", "pl" };
+
         private async Task InvalidateCountryCacheAsync(string countryCode)
         {
-            // Invalidate for all known language codes
-            foreach (var lang in new[] { "en", "de", "fr", "es", "pl" })
+            foreach (var lang in SupportedLanguageCodes)
             {
                 await _cacheService.RemoveAsync($"{CachePrefix}Country_{countryCode}_{lang}");
             }
@@ -362,7 +363,7 @@ namespace CompanyAPI.Services
 
         private async Task InvalidateFieldsCacheAsync(Guid companyTypeId)
         {
-            foreach (var lang in new[] { "en", "de", "fr", "es", "pl" })
+            foreach (var lang in SupportedLanguageCodes)
             {
                 await _cacheService.RemoveAsync($"{CachePrefix}Fields_{companyTypeId}_{lang}");
             }
