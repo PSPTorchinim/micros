@@ -94,9 +94,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               refreshPromiseRef.current ??= (async () => {
                 try {
                   const response =
-                    await microservicesClient.identity.users.v1UsersRefreshTokenList({
-                      headers: { 'Skip-Interceptor': 'true' },
-                    });
+                    await microservicesClient.identity.users.v1UsersRefreshTokenList(
+                      {
+                        headers: { 'Skip-Interceptor': 'true' },
+                      },
+                    );
 
                   const loginData = (response.data as LoginResponseDTOResponse)
                     .data as LoginResponseDTO;
