@@ -144,6 +144,21 @@ namespace IdentityAPI.Services
             {
                 _logger.LogDebug("Getting user id from context");
                 var userId = GetClaim("Id");
+
+                // For expired tokens the JWT middleware cannot authenticate the request,
+                // so HttpContext.User claims are not populated. Fall back to reading the
+                // Id claim directly from the raw Authorization header while still
+                // validating the token signature to prevent forgery.
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogDebug("Claims not populated (likely expired token); attempting to read user id from raw token.");
+                    var rawToken = GetTokenAsync();
+                    if (!string.IsNullOrEmpty(rawToken))
+                    {
+                        userId = _authService.GetUserIdFromTokenIgnoreExpiry(rawToken);
+                    }
+                }
+
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogError("RefreshToken failed: corrupted token (missing user id claim)");

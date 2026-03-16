@@ -17,6 +17,7 @@ namespace IdentityAPI.Services
         LoginResponseDTO GenerateAccessToken(User user);
         Task<LoginResponseDTO> RefreshTokenAsync(string token, string userId);
         bool ValidateToken(string authToken, bool isInvited = false);
+        string? GetUserIdFromTokenIgnoreExpiry(string authToken);
     }
 
     public class AuthService : BaseService<IAuthService>, IAuthService
@@ -254,6 +255,43 @@ namespace IdentityAPI.Services
                     throw;
                 }
             }, _logger);
+        }
+
+        public string? GetUserIdFromTokenIgnoreExpiry(string authToken)
+        {
+            try
+            {
+                _logger.LogDebug("Reading user ID from token (ignoring expiry).");
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+
+                // Validate signature and issuer/audience but skip lifetime to support expired tokens
+                var parameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = GetSigningKey(),
+
+                    ValidateIssuer = true,
+                    ValidIssuer = _configuration["TokenConfiguration:Issuer"],
+
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["TokenConfiguration:Audience"] ?? _configuration["TokenConfiguration:Audiences:0"],
+
+                    ValidateLifetime = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var principal = tokenHandler.ValidateToken(authToken, parameters, out _);
+                var userId = principal.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+
+                _logger.LogDebug("Successfully read user ID from expired token.");
+                return userId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "GetUserIdFromTokenIgnoreExpiry failed.");
+                return null;
+            }
         }
     }
 }
