@@ -462,11 +462,10 @@ namespace Shared.Services.Run
                     })
                     .AddSqlClientInstrumentation(options =>
                     {
-                        // Only include SQL statements in development environments to avoid exposing sensitive data
-                        var isDevelopment = environment == "Development" || environment == "DevelopmentLocal";
-                        options.SetDbStatementForText = isDevelopment;
                         options.RecordException = true;
                     })
+                    .AddProcessor(new SqlQueryTextRedactingProcessor(
+                        isDevelopment: environment == "Development" || environment == "DevelopmentLocal"))
                     .AddOtlpExporter(options =>
                     {
                         options.Endpoint = new Uri(tempoEndpoint);
