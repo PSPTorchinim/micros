@@ -287,9 +287,14 @@ namespace IdentityAPI.Services
                 _logger.LogDebug("Successfully read user ID from expired token.");
                 return userId;
             }
-            catch (Exception ex)
+            catch (SecurityTokenException ex)
             {
-                _logger.LogWarning(ex, "GetUserIdFromTokenIgnoreExpiry failed.");
+                _logger.LogWarning(ex, "GetUserIdFromTokenIgnoreExpiry failed due to invalid security token.");
+                return null;
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "GetUserIdFromTokenIgnoreExpiry failed due to invalid token argument.");
                 return null;
             }
         }
