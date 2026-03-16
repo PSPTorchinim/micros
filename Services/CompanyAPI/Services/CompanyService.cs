@@ -71,7 +71,9 @@ namespace CompanyAPI.Services
                             AddressLine2 = brand.AddresLine2,
                             Logo = brand.Logo,
                             CreatedDate = brand.CreatedDate,
-                            CreatedByUserId = brand.CreatedByUserId
+                            CreatedByUserId = brand.CreatedByUserId,
+                            CompanyTypeId = brand.CompanyTypeId,
+                            CompanyTypeData = brand.CompanyTypeData
                         };
                     },
                     DefaultCacheExpiration
@@ -113,6 +115,8 @@ namespace CompanyAPI.Services
                         AddresLine1 = updateDto.AddressLine1,
                         AddresLine2 = updateDto.AddressLine2,
                         Logo = updateDto.Logo,
+                        CompanyTypeId = updateDto.CompanyTypeId,
+                        CompanyTypeData = updateDto.CompanyTypeData,
                         CreatedDate = DateTime.UtcNow,
                         CreatedByUserId = createdByUserId,
                         BrandCustomFields = new List<BrandCustomField>(),
@@ -157,6 +161,8 @@ namespace CompanyAPI.Services
                     brand.AddresLine1 = updateDto.AddressLine1;
                     brand.AddresLine2 = updateDto.AddressLine2;
                     brand.Logo = updateDto.Logo;
+                    brand.CompanyTypeId = updateDto.CompanyTypeId;
+                    brand.CompanyTypeData = updateDto.CompanyTypeData;
 
                     await brandsRepository.Update(brand);
                 }

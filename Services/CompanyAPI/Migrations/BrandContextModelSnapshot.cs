@@ -62,6 +62,12 @@ namespace CompanyAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CompanyTypeData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CompanyTypeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

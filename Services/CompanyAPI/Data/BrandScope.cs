@@ -15,11 +15,13 @@ namespace CompanyAPI.Data
             services.AddScoped<IClientsRepository, ClientsRepository>();
             services.AddScoped<IElementsRepository, ElementsRepository>();
             services.AddScoped<IPackagesRepository, PackagesRepository>();
+            services.AddScoped<ICompanyTypeRepository, CompanyTypeRepository>();
 
             services.AddScoped<IBrandsService, BrandsService>();
             services.AddScoped<IClientsService, ClientsService>();
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<IElementsService, ElementsService>();
+            services.AddScoped<ICompanyTypeService, CompanyTypeService>();
         }
     }
 }

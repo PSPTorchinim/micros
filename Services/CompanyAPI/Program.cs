@@ -7,7 +7,11 @@ using Shared.Services.Run;
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 builder.Services.BuildBasicServices(builder.Configuration, "Company", "v0.0.1");
-builder.Services.BuildScope<Program, SeedData, BrandScope>(UseDatabase.ConfigureSqlServer<BrandContext>);
+builder.Services.BuildScope<Program, SeedData, BrandScope>(services =>
+{
+    UseDatabase.ConfigureSqlServer<BrandContext>(services);
+    UseDatabase.ConfigureMongoDBServer(services);
+});
 
 var app = builder.Build();
 
