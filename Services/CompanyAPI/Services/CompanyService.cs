@@ -207,7 +207,7 @@ namespace CompanyAPI.Services
                 if (brand == null)
                 {
                     _logger.LogWarning("No company found to add user to");
-                    return false;
+                    throw new AppException(ExceptionCodes.CompanyNotFound);
                 }
 
                 // Parse role from DTO, default to Member if invalid
