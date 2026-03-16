@@ -7,6 +7,7 @@ using CompanyAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shared.Data.Exceptions;
 using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
 using Shared.Tests;
@@ -267,7 +268,7 @@ namespace CompanyAPI.Tests
         }
 
         [Fact]
-        public async Task AddCompanyUser_WhenNoBrandExists_ReturnsFalse()
+        public async Task AddCompanyUser_WhenNoBrandExists_ThrowsAppException()
         {
             // Arrange
             var service = CreateService();
@@ -277,11 +278,9 @@ namespace CompanyAPI.Tests
                 Role = "Member"
             };
 
-            // Act
-            var result = await service.AddCompanyUser(dto);
-
-            // Assert
-            Assert.False(result);
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<AppException>(() => service.AddCompanyUser(dto));
+            Assert.Equal(ExceptionCodes.CompanyNotFound, ex.Message);
         }
 
         [Fact]

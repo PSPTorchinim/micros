@@ -470,64 +470,69 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
           )}
         </div>
 
-        {/* Users Section */}
-        <div className="company-section">
-          <div className="company-section-header">
-            <h2 className="company-section-title">{usersTitle}</h2>
-            <Button variant="outline" onClick={() => setShowAddUser(true)}>
-              {addUserButtonText}
-            </Button>
-          </div>
-
-          {showAddUser && (
-            <div className="company-add-user">
-              <Input
-                label="User ID"
-                value={newUser.userId}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, userId: e.target.value }))
-                }
-                placeholder="Enter user ID"
-              />
-              <Input
-                label="Role"
-                value={newUser.role}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, role: e.target.value }))
-                }
-                placeholder="e.g., Member, Admin"
-              />
-              <div className="company-add-user-actions">
-                <Button onClick={handleAddUser}>{addUserButtonText}</Button>
-                <Button variant="outline" onClick={() => setShowAddUser(false)}>
-                  {cancelButtonText}
-                </Button>
-              </div>
+        {/* Users Section - only shown when a company exists */}
+        {company && (
+          <div className="company-section">
+            <div className="company-section-header">
+              <h2 className="company-section-title">{usersTitle}</h2>
+              <Button variant="outline" onClick={() => setShowAddUser(true)}>
+                {addUserButtonText}
+              </Button>
             </div>
-          )}
 
-          {users.length > 0 ? (
-            <div className="company-users-list">
-              {users.map((user) => (
-                <div key={user.id} className="company-user-item">
-                  <div className="company-user-info">
-                    <span className="company-user-name">{user.username}</span>
-                    <span className="company-user-email">{user.email}</span>
-                    <span className="company-user-role">{user.role}</span>
-                  </div>
+            {showAddUser && (
+              <div className="company-add-user">
+                <Input
+                  label="User ID"
+                  value={newUser.userId}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({ ...prev, userId: e.target.value }))
+                  }
+                  placeholder="Enter user ID"
+                />
+                <Input
+                  label="Role"
+                  value={newUser.role}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({ ...prev, role: e.target.value }))
+                  }
+                  placeholder="e.g., Member, Admin"
+                />
+                <div className="company-add-user-actions">
+                  <Button onClick={handleAddUser}>{addUserButtonText}</Button>
                   <Button
                     variant="outline"
-                    onClick={() => handleRemoveUser(user.userId)}
+                    onClick={() => setShowAddUser(false)}
                   >
-                    {removeUserButtonText}
+                    {cancelButtonText}
                   </Button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p>No users assigned to the company.</p>
-          )}
-        </div>
+              </div>
+            )}
+
+            {users.length > 0 ? (
+              <div className="company-users-list">
+                {users.map((user) => (
+                  <div key={user.id} className="company-user-item">
+                    <div className="company-user-info">
+                      <span className="company-user-name">{user.username}</span>
+                      <span className="company-user-email">{user.email}</span>
+                      <span className="company-user-role">{user.role}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRemoveUser(user.userId)}
+                    >
+                      {removeUserButtonText}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No users assigned to the company.</p>
+            )}
+          </div>
+        )}
 
         {/* Structure Section */}
         <div className="company-section">

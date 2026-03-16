@@ -160,6 +160,9 @@ describe('CompanyBlock', () => {
     expect(
       screen.getByRole('button', { name: /create company/i }),
     ).toBeInTheDocument();
+
+    // Users section should not be visible when no company exists
+    expect(screen.queryByText('Company Users')).not.toBeInTheDocument();
   });
 
   it('shows message when no users are assigned', async () => {
