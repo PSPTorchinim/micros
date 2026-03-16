@@ -143,7 +143,7 @@ namespace IdentityAPI.Tests
 
             _authServiceMock
                 .Setup(a => a.GetUserIdFromTokenIgnoreExpiry("invalid_token"))
-                .Returns((string?)null);
+                .Returns<string?>(null);
 
             await Assert.ThrowsAsync<AppException>(() => service.RefreshToken());
         }
