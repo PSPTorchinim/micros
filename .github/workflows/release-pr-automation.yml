@@ -63,9 +63,9 @@ jobs:
               core.warning(`Could not request Copilot review: ${err.message}`);
             }
 
-            // ── 2. Resolve all open review threads via the GraphQL API ─────────
+            // ── 2. For each open review thread: ask Copilot to fix it, then mark resolved ──
             // The REST API has no "resolve thread" endpoint; GraphQL is required.
-            // Fetch open review threads using GraphQL
+            // Also fetch the first comment's databaseId so we can post a reply via REST.
             const query = `
               query($owner: String!, $repo: String!, $prNumber: Int!) {
                 repository(owner: $owner, name: $repo) {
@@ -74,6 +74,11 @@ jobs:
                       nodes {
                         id
                         isResolved
+                        comments(first: 1) {
+                          nodes {
+                            databaseId
+                          }
+                        }
                       }
                     }
                   }
@@ -109,6 +114,25 @@ jobs:
             `;
 
             for (const thread of openThreads) {
+              const commentId = thread.comments.nodes[0]?.databaseId;
+
+              // Step 1: Reply with @copilot fix so Copilot is assigned to address the comment
+              if (commentId) {
+                try {
+                  await github.rest.pulls.createReplyForReviewComment({
+                    owner,
+                    repo,
+                    pull_number: prNumber,
+                    comment_id: commentId,
+                    body: '@copilot fix',
+                  });
+                  core.info(`✅ Posted @copilot fix reply on comment ${commentId}.`);
+                } catch (err) {
+                  core.warning(`Could not reply to comment ${commentId}: ${err.message}`);
+                }
+              }
+
+              // Step 2: Mark the thread as resolved
               try {
                 await github.graphql(resolveMutation, { threadId: thread.id });
                 core.info(`✅ Resolved thread ${thread.id}.`);
