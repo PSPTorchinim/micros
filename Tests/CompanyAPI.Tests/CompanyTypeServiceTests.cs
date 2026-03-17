@@ -168,7 +168,7 @@ namespace CompanyAPI.Tests
         public async Task GetWithFields_WhenNotFound_ReturnsNull()
         {
             // Arrange
-            _repoMock.Setup(r => r.GetById(It.IsAny<Guid>())).ReturnsAsync((CompanyType?)null);
+            _repoMock.Setup(r => r.GetById(It.IsAny<Guid>())).ReturnsAsync(default(CompanyType));
             var svc = CreateService();
 
             // Act
@@ -228,7 +228,7 @@ namespace CompanyAPI.Tests
         public async Task Update_WhenTypeNotFound_ThrowsAppException()
         {
             // Arrange
-            _repoMock.Setup(r => r.GetById(It.IsAny<Guid>())).ReturnsAsync((CompanyType?)null);
+            _repoMock.Setup(r => r.GetById(It.IsAny<Guid>())).ReturnsAsync(default(CompanyType));
             var svc = CreateService();
 
             // Act & Assert
