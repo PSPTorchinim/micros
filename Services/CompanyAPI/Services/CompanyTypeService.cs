@@ -317,7 +317,7 @@ namespace CompanyAPI.Services
 
                         affectedCountries.Add(normalizedCountry);
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not OperationCanceledException && ex is not TaskCanceledException)
                     {
                         syncResult.Failed++;
                         syncResult.Errors.Add($"Failed to import '{definition.Code}'.");
