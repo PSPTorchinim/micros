@@ -105,6 +105,10 @@ namespace CompanyAPI.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new { success = false, message = "No file uploaded." });
 
+            const long maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+            if (file.Length > maxFileSizeBytes)
+                return BadRequest(new { success = false, message = "File size exceeds the 10 MB limit." });
+
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (extension != ".json")
                 return BadRequest(new { success = false, message = "Only .json files are supported." });
@@ -119,7 +123,8 @@ namespace CompanyAPI.Controllers
             }
             catch (JsonException ex)
             {
-                return BadRequest(new { success = false, message = $"Invalid JSON: {ex.Message}" });
+                _logger.LogWarning(ex, "Failed to parse uploaded JSON file for company type import.");
+                return BadRequest(new { success = false, message = "The uploaded file contains invalid JSON. Please check the file format and try again." });
             }
 
             if (definitions == null || definitions.Count == 0)

@@ -319,7 +319,7 @@ namespace CompanyAPI.Services
                     catch (Exception ex)
                     {
                         syncResult.Failed++;
-                        syncResult.Errors.Add($"{definition.Code}: {ex.Message}");
+                        syncResult.Errors.Add($"Failed to import '{definition.Code}'.");
                         _logger.LogError(ex, "Failed to import company type {Code}", definition.Code);
                     }
                 }
@@ -388,7 +388,7 @@ namespace CompanyAPI.Services
                     catch (Exception ex)
                     {
                         syncResult.Failed++;
-                        syncResult.Errors.Add($"{externalType.Code}: {ex.Message}");
+                        syncResult.Errors.Add($"Failed to sync '{externalType.Code}'.");
                         _logger.LogError(ex, "Failed to sync company type {Code} for country {CountryCode}", externalType.Code, countryCode);
                     }
                 }
