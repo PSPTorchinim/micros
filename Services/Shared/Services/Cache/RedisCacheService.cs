@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Shared.Helpers;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -63,7 +64,7 @@ namespace Shared.Services.Cache
             var cached = await GetAsync<T>(key);
             if (cached != null)
             {
-                _logger.LogDebug("Cache hit for key: {Key}", key);
+                _logger.LogDebug("Cache hit for key: {Key}", StringHelper.SanitizeForLog(key));
                 return cached;
             }
 
@@ -77,12 +78,12 @@ namespace Shared.Services.Cache
                 cached = await GetAsync<T>(key);
                 if (cached != null)
                 {
-                    _logger.LogDebug("Cache hit for key (after lock): {Key}", key);
+                    _logger.LogDebug("Cache hit for key (after lock): {Key}", StringHelper.SanitizeForLog(key));
                     return cached;
                 }
 
                 // Cache miss - get from factory (database)
-                _logger.LogDebug("Cache miss for key: {Key}. Fetching from source.", key);
+                _logger.LogDebug("Cache miss for key: {Key}. Fetching from source.", StringHelper.SanitizeForLog(key));
                 var value = await factory();
 
                 // Don't cache null values - they could represent "not found" scenarios
@@ -90,11 +91,11 @@ namespace Shared.Services.Cache
                 if (value != null)
                 {
                     await SetAsync(key, value, expiration);
-                    _logger.LogDebug("Cached value for key: {Key}", key);
+                    _logger.LogDebug("Cached value for key: {Key}", StringHelper.SanitizeForLog(key));
                 }
                 else
                 {
-                    _logger.LogDebug("Factory returned null for key: {Key}. Not caching.", key);
+                    _logger.LogDebug("Factory returned null for key: {Key}. Not caching.", StringHelper.SanitizeForLog(key));
                 }
 
                 return value;

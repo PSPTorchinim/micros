@@ -3,6 +3,7 @@ using CompanyAPI.Data.Models;
 using CompanyAPI.Entities;
 using CompanyAPI.Repositories;
 using Shared.Data.Exceptions;
+using Shared.Helpers;
 using Shared.Services.App;
 using Shared.Services.Cache;
 using Shared.Services.MessagesBroker.RabbitMQ;
@@ -56,7 +57,7 @@ namespace CompanyAPI.Services
                     cacheKey,
                     async () =>
                     {
-                        _logger.LogDebug("Cache miss for company types by country {CountryCode}.", countryCode);
+                        _logger.LogDebug("Cache miss for company types by country {CountryCode}.", StringHelper.SanitizeForLog(countryCode));
                         var types = await _companyTypeRepository.GetByCountry(countryCode);
 
                         return types.Select(ct => MapToDto(ct, languageCode)).ToList();
@@ -320,7 +321,7 @@ namespace CompanyAPI.Services
                     {
                         syncResult.Failed++;
                         syncResult.Errors.Add($"Failed to import '{definition.Code}'.");
-                        _logger.LogError(ex, "Failed to import company type {Code}", definition.Code);
+                        _logger.LogError(ex, "Failed to import company type {Code}", StringHelper.SanitizeForLog(definition.Code));
                     }
                 }
 
@@ -347,7 +348,7 @@ namespace CompanyAPI.Services
 
                 if (!externalTypes.Any())
                 {
-                    _logger.LogWarning("No company type definitions returned from external API for country {CountryCode}", countryCode);
+                    _logger.LogWarning("No company type definitions returned from external API for country {CountryCode}", StringHelper.SanitizeForLog(countryCode));
                     return syncResult;
                 }
 
@@ -375,21 +376,21 @@ namespace CompanyAPI.Services
                             existing.Fields = MapExternalFields(externalType.Fields, existing.Id);
                             await _companyTypeRepository.Update(existing);
                             syncResult.Updated++;
-                            _logger.LogDebug("Updated company type {Code} for country {CountryCode}", normalizedCode, normalizedCountry);
+                            _logger.LogDebug("Updated company type {Code} for country {CountryCode}", StringHelper.SanitizeForLog(normalizedCode), StringHelper.SanitizeForLog(normalizedCountry));
                         }
                         else
                         {
                             var newType = BuildEntityFromExternal(externalType);
                             await _companyTypeRepository.Add(newType);
                             syncResult.Created++;
-                            _logger.LogDebug("Created company type {Code} for country {CountryCode}", normalizedCode, normalizedCountry);
+                            _logger.LogDebug("Created company type {Code} for country {CountryCode}", StringHelper.SanitizeForLog(normalizedCode), StringHelper.SanitizeForLog(normalizedCountry));
                         }
                     }
                     catch (Exception ex)
                     {
                         syncResult.Failed++;
                         syncResult.Errors.Add($"Failed to sync '{externalType.Code}'.");
-                        _logger.LogError(ex, "Failed to sync company type {Code} for country {CountryCode}", externalType.Code, countryCode);
+                        _logger.LogError(ex, "Failed to sync company type {Code} for country {CountryCode}", StringHelper.SanitizeForLog(externalType.Code), StringHelper.SanitizeForLog(countryCode));
                     }
                 }
 
@@ -397,7 +398,7 @@ namespace CompanyAPI.Services
 
                 _logger.LogInformation(
                     "Sync completed for country {CountryCode}: {Created} created, {Updated} updated, {Failed} failed",
-                    countryCode, syncResult.Created, syncResult.Updated, syncResult.Failed);
+                    StringHelper.SanitizeForLog(countryCode), syncResult.Created, syncResult.Updated, syncResult.Failed);
 
                 return syncResult;
             }, _logger);

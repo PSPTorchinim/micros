@@ -1,6 +1,7 @@
+using CompanyAPI.Data.Models;
+using Shared.Helpers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using CompanyAPI.Data.Models;
 
 namespace CompanyAPI.Services
 {
@@ -64,7 +65,7 @@ namespace CompanyAPI.Services
 
             _logger.LogInformation(
                 "Fetching entity legal forms for country {CountryCode} from GLEIF API ({Url})",
-                normalizedCountry, url);
+                StringHelper.SanitizeForLog(normalizedCountry), StringHelper.SanitizeForLog(url));
 
             var client = _httpClientFactory.CreateClient(HttpClientName);
 
@@ -83,14 +84,14 @@ namespace CompanyAPI.Services
             {
                 _logger.LogWarning(
                     "GLEIF entity-legal-forms API returned {StatusCode} for country {CountryCode}",
-                    response.StatusCode, normalizedCountry);
+                    response.StatusCode, StringHelper.SanitizeForLog(normalizedCountry));
                 return new List<ExternalCompanyTypeDefinition>();
             }
 
             var gleifResponse = await response.Content.ReadFromJsonAsync<GleifEntityLegalFormsResponse>();
             if (gleifResponse?.Data == null || gleifResponse.Data.Count == 0)
             {
-                _logger.LogWarning("GLEIF returned no entity legal forms for country {CountryCode}", normalizedCountry);
+                _logger.LogWarning("GLEIF returned no entity legal forms for country {CountryCode}", StringHelper.SanitizeForLog(normalizedCountry));
                 return new List<ExternalCompanyTypeDefinition>();
             }
 
@@ -101,7 +102,7 @@ namespace CompanyAPI.Services
 
             _logger.LogInformation(
                 "Mapped {Count} active entity legal forms for country {CountryCode} from GLEIF",
-                definitions.Count, normalizedCountry);
+                definitions.Count, StringHelper.SanitizeForLog(normalizedCountry));
 
             return definitions;
         }
