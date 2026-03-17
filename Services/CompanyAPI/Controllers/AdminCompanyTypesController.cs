@@ -69,5 +69,17 @@ namespace CompanyAPI.Controllers
         {
             return await Handle(async () => await _companyTypeService.UpdateFieldTranslations(typeId, fieldId, dto));
         }
+
+        /// <summary>
+        /// Sync company types for a country from the configured external API.
+        /// New types are created and existing ones are updated (matched by code + country).
+        /// Requires: SuperOwner role.
+        /// </summary>
+        /// <param name="countryCode">ISO 3166-1 alpha-2 country code (e.g. "US", "DE")</param>
+        [HttpPost("sync")]
+        public async Task<IActionResult> SyncFromExternalApiV1([FromQuery] string countryCode)
+        {
+            return await Handle(async () => await _companyTypeService.SyncFromExternalApiAsync(countryCode));
+        }
     }
 }

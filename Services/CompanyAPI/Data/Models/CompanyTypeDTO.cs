@@ -134,4 +134,49 @@ namespace CompanyAPI.Data.Models
         [Required]
         public List<CreateCompanyTypeFieldTranslationDTO> Translations { get; set; } = new();
     }
+
+    // ── External API contract ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Represents a company type definition returned by the external company-types API.
+    /// </summary>
+    public class ExternalCompanyTypeDefinition
+    {
+        public string Code { get; set; } = string.Empty;
+        public string CountryCode { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+        public int DisplayOrder { get; set; }
+        public List<CreateCompanyTypeTranslationDTO> Translations { get; set; } = new();
+        public List<ExternalCompanyTypeFieldDefinition> Fields { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Represents a field definition returned by the external company-types API.
+    /// </summary>
+    public class ExternalCompanyTypeFieldDefinition
+    {
+        public string FieldKey { get; set; } = string.Empty;
+        public string FieldType { get; set; } = "text";
+        public bool IsRequired { get; set; }
+        public string? ValidationRegex { get; set; }
+        public string? ValidationMessage { get; set; }
+        public int DisplayOrder { get; set; }
+        public string? DefaultValue { get; set; }
+        public string? Placeholder { get; set; }
+        public int? MaxLength { get; set; }
+        public int? MinLength { get; set; }
+        public List<CreateCompanyTypeFieldTranslationDTO> Translations { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Result of a sync operation from the external company-types API.
+    /// </summary>
+    public class CompanyTypeSyncResultDTO
+    {
+        public string CountryCode { get; set; } = string.Empty;
+        public int Created { get; set; }
+        public int Updated { get; set; }
+        public int Failed { get; set; }
+        public List<string> Errors { get; set; } = new();
+    }
 }

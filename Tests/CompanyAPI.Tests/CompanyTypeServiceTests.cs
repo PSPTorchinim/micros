@@ -16,6 +16,7 @@ namespace CompanyAPI.Tests
     {
         private readonly Mock<ICompanyTypeRepository> _repoMock = new();
         private readonly Mock<ICacheService> _cacheMock = new();
+        private readonly Mock<IExternalCompanyTypeApiClient> _externalApiMock = new();
         private readonly Mock<ILogger<ICompanyTypeService>> _loggerMock = new();
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IHttpContextAccessor> _httpMock = new();
@@ -26,6 +27,7 @@ namespace CompanyAPI.Tests
         {
             _spMock.Setup(sp => sp.GetService(typeof(ICompanyTypeRepository))).Returns(_repoMock.Object);
             _spMock.Setup(sp => sp.GetService(typeof(ICacheService))).Returns(_cacheMock.Object);
+            _spMock.Setup(sp => sp.GetService(typeof(IExternalCompanyTypeApiClient))).Returns(_externalApiMock.Object);
 
             // Wire cache to always invoke factory (no-op cache)
             _cacheMock
@@ -349,6 +351,155 @@ namespace CompanyAPI.Tests
             var ex = await Assert.ThrowsAsync<AppException>(() =>
                 svc.UpdateFieldTranslations(ct.Id, Guid.NewGuid(), new UpdateFieldTranslationsDTO { Translations = new() }));
             Assert.Equal(ExceptionCodes.NotFound, ex.Message);
+        }
+
+        // ── SyncFromExternalApiAsync tests ────────────────────────────────────
+
+        [Fact]
+        public async Task SyncFromExternalApi_WhenNoExternalTypes_ReturnsEmptyResult()
+        {
+            // Arrange
+            _externalApiMock.Setup(c => c.FetchCompanyTypesAsync("AU")).ReturnsAsync(new List<ExternalCompanyTypeDefinition>());
+            _repoMock.Setup(r => r.GetByCountry("AU")).ReturnsAsync(new List<CompanyType>());
+            var svc = CreateService();
+
+            // Act
+            var result = await svc.SyncFromExternalApiAsync("AU");
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("AU", result.CountryCode);
+            Assert.Equal(0, result.Created);
+            Assert.Equal(0, result.Updated);
+            Assert.Equal(0, result.Failed);
+        }
+
+        [Fact]
+        public async Task SyncFromExternalApi_WhenNewType_CreatesInRepository()
+        {
+            // Arrange
+            var externalType = new ExternalCompanyTypeDefinition
+            {
+                Code = "SARL",
+                CountryCode = "FR",
+                IsActive = true,
+                DisplayOrder = 2,
+                Translations = new List<CreateCompanyTypeTranslationDTO>
+                {
+                    new() { LanguageCode = "en", Name = "Limited Liability Company (SARL)", Description = "A French private company." },
+                    new() { LanguageCode = "fr", Name = "Société à Responsabilité Limitée (SARL)", Description = "Une société française à responsabilité limitée." }
+                },
+                Fields = new List<ExternalCompanyTypeFieldDefinition>
+                {
+                    new()
+                    {
+                        FieldKey = "siret",
+                        FieldType = "text",
+                        IsRequired = true,
+                        ValidationRegex = @"^\d{14}$",
+                        DisplayOrder = 1,
+                        Translations = new List<CreateCompanyTypeFieldTranslationDTO>
+                        {
+                            new() { LanguageCode = "en", Label = "SIRET Number", HelpText = "14-digit business ID" }
+                        }
+                    }
+                }
+            };
+
+            _externalApiMock.Setup(c => c.FetchCompanyTypesAsync("FR")).ReturnsAsync(new List<ExternalCompanyTypeDefinition> { externalType });
+            _repoMock.Setup(r => r.GetByCountry("FR")).ReturnsAsync(new List<CompanyType>()); // no existing types
+            _repoMock.Setup(r => r.Add(It.IsAny<CompanyType>())).ReturnsAsync(true);
+            var svc = CreateService();
+
+            // Act
+            var result = await svc.SyncFromExternalApiAsync("FR");
+
+            // Assert
+            Assert.Equal(1, result.Created);
+            Assert.Equal(0, result.Updated);
+            _repoMock.Verify(r => r.Add(It.Is<CompanyType>(ct =>
+                ct.Code == "SARL" &&
+                ct.CountryCode == "FR" &&
+                ct.Fields.Count == 1 &&
+                ct.Fields[0].FieldKey == "siret")), Times.Once);
+        }
+
+        [Fact]
+        public async Task SyncFromExternalApi_WhenExistingType_UpdatesInRepository()
+        {
+            // Arrange
+            var existing = BuildUsLlc();
+
+            var externalType = new ExternalCompanyTypeDefinition
+            {
+                Code = "LLC",
+                CountryCode = "US",
+                IsActive = false, // deactivated in external API
+                DisplayOrder = 99,
+                Translations = new List<CreateCompanyTypeTranslationDTO>
+                {
+                    new() { LanguageCode = "en", Name = "Updated LLC Name", Description = "Updated description." }
+                },
+                Fields = new List<ExternalCompanyTypeFieldDefinition>()
+            };
+
+            _externalApiMock.Setup(c => c.FetchCompanyTypesAsync("US")).ReturnsAsync(new List<ExternalCompanyTypeDefinition> { externalType });
+            _repoMock.Setup(r => r.GetByCountry("US")).ReturnsAsync(new List<CompanyType> { existing });
+            _repoMock.Setup(r => r.Update(It.IsAny<CompanyType>())).ReturnsAsync(true);
+            var svc = CreateService();
+
+            // Act
+            var result = await svc.SyncFromExternalApiAsync("US");
+
+            // Assert
+            Assert.Equal(0, result.Created);
+            Assert.Equal(1, result.Updated);
+            _repoMock.Verify(r => r.Update(It.Is<CompanyType>(ct =>
+                ct.Code == "LLC" &&
+                !ct.IsActive &&
+                ct.DisplayOrder == 99)), Times.Once);
+        }
+
+        [Fact]
+        public async Task SyncFromExternalApi_MixedNewAndExisting_ReturnsCorrectCounts()
+        {
+            // Arrange
+            var existingLlc = BuildUsLlc();
+            var externalTypes = new List<ExternalCompanyTypeDefinition>
+            {
+                new() // matches existing LLC
+                {
+                    Code = "LLC", CountryCode = "US", IsActive = true, DisplayOrder = 1,
+                    Translations = new List<CreateCompanyTypeTranslationDTO>
+                    {
+                        new() { LanguageCode = "en", Name = "LLC", Description = "" }
+                    },
+                    Fields = new List<ExternalCompanyTypeFieldDefinition>()
+                },
+                new() // new type
+                {
+                    Code = "C-CORP", CountryCode = "US", IsActive = true, DisplayOrder = 2,
+                    Translations = new List<CreateCompanyTypeTranslationDTO>
+                    {
+                        new() { LanguageCode = "en", Name = "C-Corporation", Description = "" }
+                    },
+                    Fields = new List<ExternalCompanyTypeFieldDefinition>()
+                }
+            };
+
+            _externalApiMock.Setup(c => c.FetchCompanyTypesAsync("US")).ReturnsAsync(externalTypes);
+            _repoMock.Setup(r => r.GetByCountry("US")).ReturnsAsync(new List<CompanyType> { existingLlc });
+            _repoMock.Setup(r => r.Add(It.IsAny<CompanyType>())).ReturnsAsync(true);
+            _repoMock.Setup(r => r.Update(It.IsAny<CompanyType>())).ReturnsAsync(true);
+            var svc = CreateService();
+
+            // Act
+            var result = await svc.SyncFromExternalApiAsync("US");
+
+            // Assert
+            Assert.Equal(1, result.Created);
+            Assert.Equal(1, result.Updated);
+            Assert.Equal(0, result.Failed);
         }
     }
 }

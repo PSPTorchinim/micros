@@ -18,11 +18,13 @@ namespace CompanyAPI.Services
         Task<bool> AddField(Guid companyTypeId, CreateCompanyTypeFieldDTO dto);
         Task<bool> UpdateFieldTranslations(Guid companyTypeId, Guid fieldId, UpdateFieldTranslationsDTO dto);
         Task<bool> Delete(Guid id);
+        Task<CompanyTypeSyncResultDTO> SyncFromExternalApiAsync(string countryCode);
     }
 
     public class CompanyTypeService : BaseService<ICompanyTypeService>, ICompanyTypeService
     {
         private readonly ICompanyTypeRepository _companyTypeRepository;
+        private readonly IExternalCompanyTypeApiClient _externalApiClient;
         private readonly ICacheService _cacheService;
 
         private const string CachePrefix = "CompanyType_";
@@ -38,6 +40,7 @@ namespace CompanyAPI.Services
             : base(logger, mapper, httpContextAccessor, rabbitMQProducerService, serviceProvider)
         {
             _companyTypeRepository = serviceProvider.GetRequiredService<ICompanyTypeRepository>();
+            _externalApiClient = serviceProvider.GetRequiredService<IExternalCompanyTypeApiClient>();
             _cacheService = serviceProvider.GetRequiredService<ICacheService>();
         }
 
@@ -266,6 +269,72 @@ namespace CompanyAPI.Services
             }, _logger);
         }
 
+        public async Task<CompanyTypeSyncResultDTO> SyncFromExternalApiAsync(string countryCode)
+        {
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var syncResult = new CompanyTypeSyncResultDTO { CountryCode = countryCode.ToUpperInvariant() };
+
+                var externalTypes = await _externalApiClient.FetchCompanyTypesAsync(countryCode);
+
+                if (!externalTypes.Any())
+                {
+                    _logger.LogWarning("No company type definitions returned from external API for country {CountryCode}", countryCode);
+                    return syncResult;
+                }
+
+                var existingTypes = await _companyTypeRepository.GetByCountry(countryCode);
+
+                foreach (var externalType in externalTypes)
+                {
+                    try
+                    {
+                        // Normalize once before comparison
+                        var normalizedCode = externalType.Code.ToUpperInvariant();
+                        var normalizedCountry = externalType.CountryCode.ToUpperInvariant();
+
+                        var existing = existingTypes.FirstOrDefault(ct =>
+                            ct.Code == normalizedCode &&
+                            ct.CountryCode == normalizedCountry);
+
+                        if (existing != null)
+                        {
+                            existing.IsActive = externalType.IsActive;
+                            existing.DisplayOrder = externalType.DisplayOrder;
+                            // MongoDB uses a full-document replace (ReplaceOneAsync), so overwriting
+                            // embedded collections is safe and atomic — there are no orphaned rows.
+                            existing.Translations = MapExternalTranslations(externalType.Translations, existing.Id);
+                            existing.Fields = MapExternalFields(externalType.Fields, existing.Id);
+                            await _companyTypeRepository.Update(existing);
+                            syncResult.Updated++;
+                            _logger.LogDebug("Updated company type {Code} for country {CountryCode}", normalizedCode, normalizedCountry);
+                        }
+                        else
+                        {
+                            var newType = BuildEntityFromExternal(externalType);
+                            await _companyTypeRepository.Add(newType);
+                            syncResult.Created++;
+                            _logger.LogDebug("Created company type {Code} for country {CountryCode}", normalizedCode, normalizedCountry);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        syncResult.Failed++;
+                        syncResult.Errors.Add($"{externalType.Code}: {ex.Message}");
+                        _logger.LogError(ex, "Failed to sync company type {Code} for country {CountryCode}", externalType.Code, countryCode);
+                    }
+                }
+
+                await InvalidateCountryCacheAsync(countryCode.ToUpperInvariant());
+
+                _logger.LogInformation(
+                    "Sync completed for country {CountryCode}: {Created} created, {Updated} updated, {Failed} failed",
+                    countryCode, syncResult.Created, syncResult.Updated, syncResult.Failed);
+
+                return syncResult;
+            }, _logger);
+        }
+
         private static CompanyTypeDTO MapToDto(CompanyType ct, string languageCode)
         {
             var translation = ct.Translations.FirstOrDefault(t => t.LanguageCode == languageCode.ToLowerInvariant())
@@ -368,5 +437,64 @@ namespace CompanyAPI.Services
                 await _cacheService.RemoveAsync($"{CachePrefix}Fields_{companyTypeId}_{lang}");
             }
         }
+
+        private static CompanyType BuildEntityFromExternal(ExternalCompanyTypeDefinition ext)
+        {
+            var id = Guid.NewGuid();
+            return new CompanyType
+            {
+                Id = id,
+                Code = ext.Code.ToUpperInvariant(),
+                CountryCode = ext.CountryCode.ToUpperInvariant(),
+                IsActive = ext.IsActive,
+                DisplayOrder = ext.DisplayOrder,
+                CreatedAt = DateTime.UtcNow,
+                Translations = MapExternalTranslations(ext.Translations, id),
+                Fields = MapExternalFields(ext.Fields, id)
+            };
+        }
+
+        private static List<CompanyTypeTranslation> MapExternalTranslations(
+            List<CreateCompanyTypeTranslationDTO> source, Guid companyTypeId) =>
+            source.Select(t => new CompanyTypeTranslation
+            {
+                Id = Guid.NewGuid(),
+                CompanyTypeId = companyTypeId,
+                LanguageCode = t.LanguageCode.ToLowerInvariant(),
+                Name = t.Name,
+                Description = t.Description
+            }).ToList();
+
+        private static List<CompanyTypeField> MapExternalFields(
+            List<ExternalCompanyTypeFieldDefinition> source, Guid companyTypeId) =>
+            source.Select(f =>
+            {
+                var fieldId = Guid.NewGuid();
+                return new CompanyTypeField
+                {
+                    Id = fieldId,
+                    CompanyTypeId = companyTypeId,
+                    FieldKey = f.FieldKey,
+                    FieldType = f.FieldType,
+                    IsRequired = f.IsRequired,
+                    ValidationRegex = f.ValidationRegex,
+                    ValidationMessage = f.ValidationMessage,
+                    DisplayOrder = f.DisplayOrder,
+                    DefaultValue = f.DefaultValue,
+                    Placeholder = f.Placeholder,
+                    MaxLength = f.MaxLength,
+                    MinLength = f.MinLength,
+                    Translations = f.Translations.Select(t => new CompanyTypeFieldTranslation
+                    {
+                        Id = Guid.NewGuid(),
+                        CompanyTypeFieldId = fieldId,
+                        LanguageCode = t.LanguageCode.ToLowerInvariant(),
+                        Label = t.Label,
+                        HelpText = t.HelpText,
+                        ValidationMessage = t.ValidationMessage
+                    }).ToList(),
+                    Options = new List<CompanyTypeFieldOption>()
+                };
+            }).ToList();
     }
 }

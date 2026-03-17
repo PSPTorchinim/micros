@@ -16,6 +16,13 @@ namespace CompanyAPI.Data
             services.AddScoped<IElementsRepository, ElementsRepository>();
             services.AddScoped<IPackagesRepository, PackagesRepository>();
             services.AddScoped<ICompanyTypeRepository, CompanyTypeRepository>();
+            services.AddScoped<IExternalCompanyTypeApiClient, ExternalCompanyTypeApiClient>();
+
+            // Named HTTP client for the external company-types API with a 30-second timeout
+            services.AddHttpClient(ExternalCompanyTypeApiClient.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
 
             services.AddScoped<IBrandsService, BrandsService>();
             services.AddScoped<IClientsService, ClientsService>();
