@@ -10,7 +10,9 @@ name: Create Release-to-Production PR
 #
 # Behaviour:
 #   - Finds the most recently created branch matching the releases/** pattern.
-#   - Opens a PR from that branch to production.
+#   - Verifies that the previous release branch (second-most-recent) has already
+#     been merged into production — skips PR creation if it has not.
+#   - Opens a PR from the latest branch to production.
 #   - Skips silently if no release branch exists or if an open PR already exists.
 #
 # Triggers:
@@ -101,7 +103,62 @@ jobs:
               return;
             }
 
-            // ── 4. Check for an existing open PR (head → base) ────────────────────
+            // ── 4. Guard: previous release branch must be merged into production ──
+            // Only enforce this check when there is more than one release branch.
+            // "Merged" means production contains all commits from the previous branch tip
+            // (compare status is "ahead" or "identical" when HEAD is production).
+            if (withDates.length >= 2) {
+              const previousBranch = withDates[1].name;
+              core.info(`Previous release branch: ${previousBranch}`);
+
+              let isMerged = false;
+              try {
+                // Compare previous release branch (base) against production (head).
+                // status "ahead"    → production has more commits than previousBranch,
+                //                     meaning previousBranch was merged into production.
+                // status "identical"→ both point to the same commit.
+                const { data: comparison } = await github.rest.repos.compareCommits({
+                  owner,
+                  repo,
+                  base: previousBranch,
+                  head: base,   // production
+                });
+                isMerged = comparison.status === 'ahead' || comparison.status === 'identical';
+              } catch (err) {
+                core.warning(
+                  `Could not compare "${previousBranch}" against "${base}": ${err.message}. ` +
+                  `Assuming it has not been merged — skipping PR creation.`
+                );
+                core.summary.addRaw(
+                  `## ⚠️ Merge Check Failed\n\n` +
+                  `Unable to verify whether \`${previousBranch}\` was merged into \`${base}\`. ` +
+                  `PR creation was skipped as a precaution.`
+                );
+                await core.summary.write();
+                return;
+              }
+
+              if (!isMerged) {
+                core.warning(
+                  `Previous release branch "${previousBranch}" has not been merged into ` +
+                  `"${base}" yet — skipping PR creation.`
+                );
+                core.summary.addRaw(
+                  `## ⏭️ PR Creation Skipped\n\n` +
+                  `The previous release branch \`${previousBranch}\` has not been merged into ` +
+                  `\`${base}\` yet.\n\n` +
+                  `Please merge or close that branch first, then re-run this workflow.`
+                );
+                await core.summary.write();
+                return;
+              }
+
+              core.info(
+                `✅ Previous release branch "${previousBranch}" is merged into "${base}" — proceeding.`
+              );
+            }
+
+            // ── 5. Check for an existing open PR (head → base) ────────────────────
             const { data: existingPRs } = await github.rest.pulls.list({
               owner,
               repo,
@@ -121,7 +178,7 @@ jobs:
               return;
             }
 
-            // ── 5. Create the pull request ────────────────────────────────────────
+            // ── 6. Create the pull request ────────────────────────────────────────
             const now   = new Date().toISOString().slice(0, 10);   // YYYY-MM-DD UTC
             const title = `chore: release ${head.replace('releases/', '')} → production (${now})`;
             const body  = [
