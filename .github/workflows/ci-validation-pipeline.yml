@@ -9,6 +9,7 @@ name: PR Validation
 # 6. Performs CodeQL security analysis on code (C# and JavaScript/TypeScript)
 # 7. Audits npm packages for security vulnerabilities (root, dj-panel, CMS)
 # 8. Audits .NET NuGet packages for security vulnerabilities
+# 9. Lints PR commit messages against Conventional Commits specification
 # All checks must pass before PR can be merged
 
 on:
@@ -249,6 +250,27 @@ jobs:
           
           echo "✅ No vulnerable packages found in .NET dependencies"
 
+  validate_commit_messages:
+    name: Lint PR Commit Messages
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install commitlint
+        run: npm install
+
+      - name: Lint commit messages
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
   report_status:
     name: PR Validation
     runs-on: ubuntu-latest
@@ -261,6 +283,7 @@ jobs:
       - security_codeql
       - security_npm_audit
       - security_dotnet_audit
+      - validate_commit_messages
     if: always()
     steps:
       - name: Report overall status
@@ -276,6 +299,7 @@ jobs:
           echo "CodeQL Security:        ${{ needs.security_codeql.result }}"
           echo "npm Package Security:   ${{ needs.security_npm_audit.result }}"
           echo ".NET Package Security:  ${{ needs.security_dotnet_audit.result }}"
+          echo "Commit Messages Lint:   ${{ needs.validate_commit_messages.result }}"
           echo "=========================================="
 
           if [ "${{ needs.lint_dockerfiles.result }}" = "success" ] && \
@@ -285,7 +309,8 @@ jobs:
              [ "${{ needs.validate_github_workflows.result }}" = "success" ] && \
              [ "${{ needs.security_codeql.result }}" = "success" ] && \
              [ "${{ needs.security_npm_audit.result }}" = "success" ] && \
-             [ "${{ needs.security_dotnet_audit.result }}" = "success" ]; \
+             [ "${{ needs.security_dotnet_audit.result }}" = "success" ] && \
+             [ "${{ needs.validate_commit_messages.result }}" = "success" ]; \
           then
             echo "✅ All validation jobs succeeded."
             exit 0

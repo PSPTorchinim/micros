@@ -2,6 +2,7 @@
   "name": "dj-beat-blaster-monorepo",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "DJ Beat Blaster Microservices Platform - Monorepo Root",
   "author": "PSPTorchinim",
   "license": "UNLICENSED",
@@ -9,6 +10,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react": "^7.37.5",
