@@ -1,0 +1,158 @@
+name: Create Release-to-Production PR
+
+# This workflow automatically creates a pull request from the latest release branch
+# to the production branch, approximately one week before the end of each month.
+#
+# Schedule logic:
+#   - Runs on the 24th of every month at midnight UTC.
+#     The 24th is 7 days before the 31st (the latest possible end-of-month),
+#     which satisfies the "1 week before end of month" requirement for all month lengths.
+#
+# Behaviour:
+#   - Finds the most recently created branch matching the releases/** pattern.
+#   - Opens a PR from that branch to production.
+#   - Skips silently if no release branch exists or if an open PR already exists.
+#
+# Triggers:
+#   - Monthly schedule on the 24th at midnight UTC
+#   - Manual workflow_dispatch (for testing / ad-hoc releases)
+
+on:
+  schedule:
+    # 24th of every month at 00:00 UTC — ~1 week before the end of the month
+    - cron: "0 0 24 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create_pr:
+    name: Create Release → Production PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Find latest release branch and open PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = 'production';
+
+            // ── 1. List all branches matching releases/** ──────────────────────────
+            let releaseBranches = [];
+            let page = 1;
+
+            while (true) {
+              const { data: branches } = await github.rest.repos.listBranches({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+
+              const matches = branches.filter(b => b.name.startsWith('releases/'));
+              releaseBranches.push(...matches);
+
+              if (branches.length < 100) break;
+              page++;
+            }
+
+            if (releaseBranches.length === 0) {
+              core.warning('No releases/** branches found — skipping PR creation.');
+              return;
+            }
+
+            // ── 2. Pick the most recently committed release branch ─────────────────
+            // Fetch commit dates in parallel for all release branches
+            const withDates = await Promise.all(
+              releaseBranches.map(async (b) => {
+                const { data: commit } = await github.rest.repos.getCommit({
+                  owner,
+                  repo,
+                  ref: b.commit.sha,
+                });
+                return {
+                  name: b.name,
+                  // Use author date — stable across rebases and cherry-picks
+                  date: new Date(commit.commit.author.date),
+                };
+              })
+            );
+
+            withDates.sort((a, b) => b.date - a.date);
+            const head = withDates[0].name;
+
+            core.info(`Latest release branch: ${head}`);
+
+            // ── 3. Ensure the base branch (production) exists ─────────────────────
+            try {
+              await github.rest.repos.getBranch({ owner, repo, branch: base });
+            } catch (err) {
+              core.setFailed(`Base branch "${base}" does not exist in this repository.`);
+              return;
+            }
+
+            // ── 4. Check for an existing open PR (head → base) ────────────────────
+            const { data: existingPRs } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              head:  `${owner}:${head}`,
+              base,
+            });
+
+            if (existingPRs.length > 0) {
+              core.info(
+                `Open PR already exists: #${existingPRs[0].number} — ${existingPRs[0].html_url}`
+              );
+              core.summary.addRaw(
+                `## ℹ️ PR Already Exists\n\nAn open pull request from \`${head}\` → \`${base}\` already exists: [#${existingPRs[0].number}](${existingPRs[0].html_url})`
+              );
+              await core.summary.write();
+              return;
+            }
+
+            // ── 5. Create the pull request ────────────────────────────────────────
+            const now   = new Date().toISOString().slice(0, 10);   // YYYY-MM-DD UTC
+            const title = `chore: release ${head.replace('releases/', '')} → production (${now})`;
+            const body  = [
+              `## 🚀 Release to Production`,
+              ``,
+              `This pull request was created automatically by the scheduled workflow, ` +
+              `approximately one week before the end of the month.`,
+              ``,
+              `| Field  | Value |`,
+              `|--------|-------|`,
+              `| Source | \`${head}\` |`,
+              `| Target | \`${base}\` |`,
+              `| Date   | ${now} (UTC) |`,
+              ``,
+              `Please review all changes before merging.`,
+            ].join('\n');
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner,
+              repo,
+              title,
+              body,
+              head,
+              base,
+            });
+
+            core.info(`✅ PR #${pr.number} created: ${pr.html_url}`);
+
+            core.summary.addRaw(
+              `## ✅ Pull Request Created\n\n` +
+              `A release pull request from \`${head}\` → \`${base}\` was opened:\n\n` +
+              `**[${title}](${pr.html_url})**`
+            );
+            await core.summary.write();
