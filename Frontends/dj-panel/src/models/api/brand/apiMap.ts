@@ -203,7 +203,6 @@ export class HttpClient<SecurityDataType = unknown> {
     if (
       type === ContentType.FormData &&
       body &&
-      body !== null &&
       typeof body === "object"
     ) {
       body = this.createFormData(body as Record<string, unknown>);
@@ -212,7 +211,6 @@ export class HttpClient<SecurityDataType = unknown> {
     if (
       type === ContentType.Text &&
       body &&
-      body !== null &&
       typeof body !== "string"
     ) {
       body = JSON.stringify(body);
