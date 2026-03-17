@@ -1,0 +1,163 @@
+name: Create Issue from Grafana Alert
+
+# This workflow automatically creates GitHub issues from Grafana alerts triggered
+# by log-based alert rules. Grafana sends a webhook (repository_dispatch) to this
+# workflow when an alert fires. The workflow parses the alert payload and opens a
+# new issue with the relevant log details so engineers can track and investigate.
+#
+# Trigger: Grafana webhook → GitHub repository_dispatch with event_type "grafana-alert"
+#
+# Required Grafana webhook configuration:
+#   URL:    https://api.github.com/repos/<owner>/<repo>/dispatches
+#   Method: POST
+#   Headers:
+#     Authorization: Bearer <GITHUB_DISPATCH_TOKEN>  (PAT with repo scope)
+#     Content-Type:  application/json
+#   Body (example):
+#   {
+#     "event_type": "grafana-alert",
+#     "client_payload": {
+#       "title":     "High error rate in IdentityAPI",
+#       "message":   "Error rate exceeded threshold of 5% in the last 5 minutes.",
+#       "severity":  "critical",
+#       "service":   "IdentityAPI",
+#       "dashboard": "https://grafana.example.com/d/abc123",
+#       "logs":      "2024-01-15 12:00:00 ERROR Failed to authenticate user\n..."
+#     }
+#   }
+
+on:
+  repository_dispatch:
+    types:
+      - grafana-alert
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create_issue:
+    name: Create GitHub Issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate payload
+        env:
+          TITLE: ${{ github.event.client_payload.title }}
+        run: |
+          if [ -z "$TITLE" ]; then
+            echo "❌ Missing required field: title"
+            exit 1
+          fi
+          echo "✅ Payload validated"
+
+      - name: Build issue body
+        id: build_body
+        env:
+          PAYLOAD_MESSAGE:   ${{ github.event.client_payload.message }}
+          PAYLOAD_SEVERITY:  ${{ github.event.client_payload.severity }}
+          PAYLOAD_SERVICE:   ${{ github.event.client_payload.service }}
+          PAYLOAD_DASHBOARD: ${{ github.event.client_payload.dashboard }}
+          PAYLOAD_LOGS:      ${{ github.event.client_payload.logs }}
+        run: |
+          SEVERITY="${PAYLOAD_SEVERITY:-unknown}"
+          SERVICE="${PAYLOAD_SERVICE:-unknown}"
+
+          # Choose an emoji that reflects severity
+          case "$SEVERITY" in
+            critical) EMOJI="🔴" ;;
+            high)     EMOJI="🟠" ;;
+            warning)  EMOJI="🟡" ;;
+            info)     EMOJI="🔵" ;;
+            *)        EMOJI="⚪" ;;
+          esac
+
+          # Write the issue body to a temp file to preserve multi-line content
+          TRIGGERED_AT="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+
+          cat > /tmp/issue_body.md <<BODY
+          ## $EMOJI Grafana Alert — $SEVERITY
+
+          | Field     | Value |
+          |-----------|-------|
+          | Severity  | \`$SEVERITY\` |
+          | Service   | \`$SERVICE\` |
+          | Triggered | $TRIGGERED_AT |
+
+          ### Description
+          ${PAYLOAD_MESSAGE:-_No description provided._}
+          BODY
+
+          if [ -n "$PAYLOAD_DASHBOARD" ]; then
+            printf '\n### 📊 Dashboard\n[%s](%s)\n' \
+              "$PAYLOAD_DASHBOARD" "$PAYLOAD_DASHBOARD" >> /tmp/issue_body.md
+          fi
+
+          if [ -n "$PAYLOAD_LOGS" ]; then
+            printf '\n### 📋 Log Excerpt\n```\n%s\n```\n' \
+              "$PAYLOAD_LOGS" >> /tmp/issue_body.md
+          fi
+
+          cat >> /tmp/issue_body.md <<FOOTER
+
+          ---
+          _This issue was created automatically by the [Create Issue from Grafana Alert](https://github.com/${{ github.repository }}/actions/workflows/create-issue-from-grafana.yml) workflow._
+          FOOTER
+
+          echo "issue_body_path=/tmp/issue_body.md" >> "$GITHUB_OUTPUT"
+
+      - name: Determine issue labels
+        id: labels
+        env:
+          PAYLOAD_SEVERITY: ${{ github.event.client_payload.severity }}
+          PAYLOAD_SERVICE:  ${{ github.event.client_payload.service }}
+        run: |
+          LABELS="grafana-alert"
+
+          case "${PAYLOAD_SEVERITY:-}" in
+            critical) LABELS="$LABELS,severity: critical" ;;
+            high)     LABELS="$LABELS,severity: high" ;;
+            warning)  LABELS="$LABELS,severity: warning" ;;
+            info)     LABELS="$LABELS,severity: info" ;;
+          esac
+
+          if [ -n "${PAYLOAD_SERVICE:-}" ]; then
+            LABELS="$LABELS,service: ${PAYLOAD_SERVICE,,}"
+          fi
+
+          echo "labels=$LABELS" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub issue
+        uses: actions/github-script@v7
+        env:
+          ISSUE_TITLE: ${{ github.event.client_payload.title }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/issue_body.md', 'utf8');
+            const rawLabels = '${{ steps.labels.outputs.labels }}';
+            const labels = rawLabels.split(',').map(l => l.trim()).filter(Boolean);
+            const title = process.env.ISSUE_TITLE || 'Grafana Alert';
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `[Grafana Alert] ${title}`,
+              body,
+              labels,
+            });
+
+            console.log(`✅ Issue #${issue.number} created: ${issue.html_url}`);
+            core.setOutput('issue_number', issue.number);
+            core.setOutput('issue_url',    issue.html_url);
+
+      - name: Print summary
+        run: |
+          echo "## 📋 Issue Created" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "A new GitHub issue was created from the Grafana alert." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Alert title:** ${{ github.event.client_payload.title }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Severity:** ${{ github.event.client_payload.severity }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Service:** ${{ github.event.client_payload.service }}" >> "$GITHUB_STEP_SUMMARY"
