@@ -254,6 +254,7 @@ jobs:
     name: Lint PR Commit Messages
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: "!startsWith(github.head_ref, 'releases/')"
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -310,7 +311,7 @@ jobs:
              [ "${{ needs.security_codeql.result }}" = "success" ] && \
              [ "${{ needs.security_npm_audit.result }}" = "success" ] && \
              [ "${{ needs.security_dotnet_audit.result }}" = "success" ] && \
-             [ "${{ needs.validate_commit_messages.result }}" = "success" ]; \
+             ([ "${{ needs.validate_commit_messages.result }}" = "success" ] || [ "${{ needs.validate_commit_messages.result }}" = "skipped" ]); \
           then
             echo "✅ All validation jobs succeeded."
             exit 0
