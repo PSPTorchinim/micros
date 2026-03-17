@@ -103,8 +103,9 @@ jobs:
           fi
 
           if [ -n "$PAYLOAD_LOGS" ]; then
-            printf '\n### 📋 Log Excerpt\n```\n%s\n```\n' \
-              "$PAYLOAD_LOGS" >> /tmp/issue_body.md
+            FENCE='```'
+            printf '\n### 📋 Log Excerpt\n%s\n%s\n%s\n' \
+              "$FENCE" "$PAYLOAD_LOGS" "$FENCE" >> /tmp/issue_body.md
           fi
 
           cat >> /tmp/issue_body.md <<FOOTER
@@ -163,11 +164,13 @@ jobs:
 
       - name: Print summary
         run: |
-          echo "## 📋 Issue Created" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "A new GitHub issue was created from the Grafana alert." >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Alert title:** ${{ github.event.client_payload.title }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Environment:** ${{ github.event.client_payload.environment }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Severity:** ${{ github.event.client_payload.severity }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Service:** ${{ github.event.client_payload.service }}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## 📋 Issue Created"
+            echo ""
+            echo "A new GitHub issue was created from the Grafana alert."
+            echo ""
+            echo "**Alert title:** ${{ github.event.client_payload.title }}"
+            echo "**Environment:** ${{ github.event.client_payload.environment }}"
+            echo "**Severity:** ${{ github.event.client_payload.severity }}"
+            echo "**Service:** ${{ github.event.client_payload.service }}"
+          } >> "$GITHUB_STEP_SUMMARY"
