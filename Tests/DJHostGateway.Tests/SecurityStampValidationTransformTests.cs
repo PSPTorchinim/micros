@@ -12,10 +12,11 @@ using Yarp.ReverseProxy.Transforms;
 
 namespace DJHostGateway.Tests
 {
-    public class SecurityStampValidationTransformTests
+    public class SecurityStampValidationTransformTests : IDisposable
     {
         private readonly Mock<ILogger<SecurityStampValidationTransform>> _loggerMock = new();
         private readonly IConfiguration _configuration;
+        private readonly List<IDisposable> _disposables = new();
 
         public SecurityStampValidationTransformTests()
         {
@@ -42,6 +43,7 @@ namespace DJHostGateway.Tests
             var httpClient = handler != null
                 ? new HttpClient(handler)
                 : new HttpClient();
+            _disposables.Add(httpClient);
             var httpClientFactoryMock = new Mock<IHttpClientFactory>();
             httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(httpClient);
             return new SecurityStampValidationTransform(
@@ -182,7 +184,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -244,7 +246,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -267,7 +269,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -282,6 +284,12 @@ namespace DJHostGateway.Tests
 
             // Assert – Authorization header should be kept for non-Strapi paths
             Assert.True(context.HttpContext.Request.Headers.ContainsKey("Authorization"));
+        }
+
+        public void Dispose()
+        {
+            foreach (var disposable in _disposables)
+                disposable.Dispose();
         }
 
         /// <summary>

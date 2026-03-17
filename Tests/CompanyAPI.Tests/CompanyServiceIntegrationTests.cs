@@ -93,7 +93,7 @@ namespace CompanyAPI.Tests
             }
             else
             {
-                _httpContextAccessorMock.Setup(h => h.HttpContext).Returns((HttpContext?)null);
+                _httpContextAccessorMock.Setup(h => h.HttpContext).Returns(default(HttpContext));
             }
 
             return new CompanyService(

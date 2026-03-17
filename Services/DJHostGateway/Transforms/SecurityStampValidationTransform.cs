@@ -13,6 +13,9 @@ namespace DJHostGateway.Transforms
         private readonly string _identityServiceUrl;
         private static int _consecutiveFailures = 0;
         private static readonly int MaxConsecutiveFailures = 5;
+
+        private static void IncrementConsecutiveFailures() => Interlocked.Increment(ref _consecutiveFailures);
+        private static void ResetConsecutiveFailures() => Interlocked.Exchange(ref _consecutiveFailures, 0);
         private const string StrapiPathPrefix = "/strapi/";
 
         public SecurityStampValidationTransform(
@@ -146,7 +149,7 @@ namespace DJHostGateway.Transforms
                 {
                     _logger.LogError("❌ [SecurityStamp] VALIDATION API CALL FAILED | CorrelationId: {CorrelationId} | UserId: {UserId} | StatusCode: {StatusCode} | ConsecutiveFailures: {Failures}", 
                         correlationId, userId, response.StatusCode, _consecutiveFailures + 1);
-                    Interlocked.Increment(ref _consecutiveFailures);
+                    IncrementConsecutiveFailures();
                     await WriteUnauthorizedResponse(context.HttpContext, "Security validation failed");
                     return;
                 }
@@ -158,7 +161,7 @@ namespace DJHostGateway.Transforms
                     var reason = validationResult?.Data?.Reason ?? "Unknown";
                     _logger.LogWarning("❌ [SecurityStamp] VALIDATION FAILED | CorrelationId: {CorrelationId} | UserId: {UserId} | Reason: {Reason} | Action: USER LOGGED OUT", 
                         correlationId, userId, reason);
-                    Interlocked.Exchange(ref _consecutiveFailures, 0); // Reset on successful call but invalid stamp
+                    ResetConsecutiveFailures(); // Reset on successful call but invalid stamp
                     await WriteUnauthorizedResponse(
                         context.HttpContext, 
                         "Unauthorized - " + reason,
@@ -167,7 +170,7 @@ namespace DJHostGateway.Transforms
                 }
 
                 // Success - reset failure counter
-                Interlocked.Exchange(ref _consecutiveFailures, 0);
+                ResetConsecutiveFailures();
                 _logger.LogInformation("✓ [SecurityStamp] VALIDATION SUCCESSFUL | CorrelationId: {CorrelationId} | UserId: {UserId} | Path: {Path} | Method: {Method}", 
                     StringHelper.SanitizeForLog(correlationId), StringHelper.SanitizeForLog(userId), 
                     StringHelper.SanitizeForLog(requestPath), StringHelper.SanitizeForLog(requestMethod));
@@ -194,28 +197,28 @@ namespace DJHostGateway.Transforms
             {
                 _logger.LogError("⏱️ [SecurityStamp] TIMEOUT | CorrelationId: {CorrelationId} | Timeout: 5s | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
                     correlationId, _consecutiveFailures + 1);
-                Interlocked.Increment(ref _consecutiveFailures);
+                IncrementConsecutiveFailures();
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation timeout");
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "🌐 [SecurityStamp] NETWORK ERROR | CorrelationId: {CorrelationId} | Error: {Message} | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
                     correlationId, ex.Message, _consecutiveFailures + 1);
-                Interlocked.Increment(ref _consecutiveFailures);
+                IncrementConsecutiveFailures();
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation service error");
             }
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "📄 [SecurityStamp] JSON PARSING ERROR | CorrelationId: {CorrelationId} | Error: {Message} | ConsecutiveFailures: {Failures} | Action: DENY ACCESS", 
                     correlationId, ex.Message, _consecutiveFailures + 1);
-                Interlocked.Increment(ref _consecutiveFailures);
+                IncrementConsecutiveFailures();
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 [SecurityStamp] UNEXPECTED ERROR | CorrelationId: {CorrelationId} | Type: {ExceptionType} | Message: {Message} | Action: DENY ACCESS", 
                     correlationId, ex.GetType().Name, ex.Message);
-                Interlocked.Increment(ref _consecutiveFailures);
+                IncrementConsecutiveFailures();
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
             }
         }

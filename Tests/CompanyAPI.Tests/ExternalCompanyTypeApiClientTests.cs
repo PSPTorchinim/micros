@@ -13,9 +13,10 @@ namespace CompanyAPI.Tests
     /// Tests for <see cref="ExternalCompanyTypeApiClient"/> focusing on the GLEIF API
     /// integration and the internal mapping + field-definition logic.
     /// </summary>
-    public class ExternalCompanyTypeApiClientTests
+    public class ExternalCompanyTypeApiClientTests : IDisposable
     {
         private readonly Mock<ILogger<IExternalCompanyTypeApiClient>> _loggerMock = new();
+        private readonly List<IDisposable> _disposables = new();
 
         // ── FetchCompanyTypesAsync — HTTP layer ───────────────────────────────
 
@@ -298,9 +299,12 @@ namespace CompanyAPI.Tests
         /// <summary>
         /// Builds a mocked <see cref="IHttpClientFactory"/> that returns a pre-canned response.
         /// </summary>
-        private static IHttpClientFactory BuildClientWithResponse(string json, HttpStatusCode statusCode)
+        private IHttpClientFactory BuildClientWithResponse(string json, HttpStatusCode statusCode)
         {
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+            handlerMock
+                .Protected()
+                .Setup("Dispose", ItExpr.IsAny<bool>());
             handlerMock
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -317,6 +321,7 @@ namespace CompanyAPI.Tests
             {
                 BaseAddress = new Uri("https://api.gleif.org/api/v1")
             };
+            _disposables.Add(httpClient);
 
             var factoryMock = new Mock<IHttpClientFactory>();
             factoryMock
@@ -324,6 +329,12 @@ namespace CompanyAPI.Tests
                 .Returns(httpClient);
 
             return factoryMock.Object;
+        }
+
+        public void Dispose()
+        {
+            foreach (var disposable in _disposables)
+                disposable.Dispose();
         }
     }
 }

@@ -64,8 +64,7 @@ namespace Shared.Services.Database
             settings.RetryWrites = true;
             settings.RetryReads = true;
 
-            var client = new MongoClient(settings);
-            services.AddSingleton(client);
+            services.AddSingleton(new MongoClient(settings));
         }
 
         private static async Task<WebApplication> UseDatabaseScopeAsync<C, P>(this WebApplication app, Func<C, Task<bool>> action) where C : DbContext
@@ -101,7 +100,7 @@ namespace Shared.Services.Database
                     logger.LogInformation("Database migrations applied successfully for {DatabaseName}", context.Database.GetDbConnection().Database);
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException)
                 {
                     logger.LogError(ex, "Database migration failed for {DatabaseName}", context.Database.GetDbConnection().Database);
                     logger.LogWarning("Continuing application startup despite migration failure");

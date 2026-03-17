@@ -105,7 +105,7 @@ namespace IdentityAPI.Tests
             var service = CreateService();
             var id = Guid.NewGuid();
             _permissionsRepositoryMock.Setup(r => r.Get(It.IsAny<System.Linq.Expressions.Expression<Func<Permission, bool>>>())).ReturnsAsync(new List<Permission>());
-            _mapperMock.Setup(m => m.Map<GetPermissionDTO>(It.IsAny<Permission>())).Returns((GetPermissionDTO?)null);
+            _mapperMock.Setup(m => m.Map<GetPermissionDTO>(It.IsAny<Permission>())).Returns(default(GetPermissionDTO));
             var result = await service.GetPermission(id);
             Assert.Null(result);
         }
