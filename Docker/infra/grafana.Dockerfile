@@ -29,12 +29,21 @@ ENV GF_SERVER_HTTP_PORT=3001
 ENV GF_PATHS_DATA=/var/lib/grafana
 ENV GF_PATHS_LOGS=/var/lib/grafana/logs
 ENV GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+# GITHUB_PAT, GITHUB_REPO_OWNER, and GITHUB_REPO_NAME are required at runtime
+# for the GitHub contact point defined in
+# Docker/init/grafana/alerting/github-contact-point.yml.
+# Provide them via docker-compose environment or a secrets manager.
+# Never set defaults — they must be explicitly supplied for Production deployments.
+ENV GITHUB_PAT=""
+ENV GITHUB_REPO_OWNER=""
+ENV GITHUB_REPO_NAME=""
 
 # Install su-exec for safe user switching and ensure proper permissions
 USER root
 RUN apk add --no-cache su-exec && \
     mkdir -p /etc/grafana/provisioning/datasources && \
     mkdir -p /etc/grafana/provisioning/dashboards && \
+    mkdir -p /etc/grafana/provisioning/alerting && \
     mkdir -p /var/lib/grafana && \
     mkdir -p /var/lib/grafana/plugins && \
     mkdir -p /var/lib/grafana/dashboards && \
@@ -48,6 +57,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Copy datasource configuration
 COPY Docker/init/grafana/datasources.yml /etc/grafana/provisioning/datasources/
 COPY Docker/init/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
+
+# Copy alerting provisioning (contact points and notification policies)
+COPY Docker/init/grafana/alerting/ /etc/grafana/provisioning/alerting/
 
 # Copy dashboard templates and generator script
 COPY Docker/init/grafana/dashboards-templates /etc/grafana/provisioning/dashboards-templates/
