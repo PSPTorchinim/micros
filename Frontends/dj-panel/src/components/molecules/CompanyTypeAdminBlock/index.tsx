@@ -45,7 +45,11 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
   const [formIsActive, setFormIsActive] = useState(true);
   const [formDisplayOrder, setFormDisplayOrder] = useState(0);
   const [formTranslations, setFormTranslations] = useState(
-    LANGUAGES.map((lang) => ({ languageCode: lang, name: '', description: '' })),
+    LANGUAGES.map((lang) => ({
+      languageCode: lang,
+      name: '',
+      description: '',
+    })),
   );
 
   // Add Field form state
@@ -121,7 +125,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
     clearMessages();
     const translations = formTranslations.filter((t) => t.name.trim());
     if (!formCode || !formCountryCode || translations.length === 0) {
-      setError('Code, country code, and at least one translation are required.');
+      setError(
+        'Code, country code, and at least one translation are required.',
+      );
       return;
     }
     const dto: CreateCompanyTypeDTO = {
@@ -297,7 +303,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
       if (fileInputRef.current) fileInputRef.current.value = '';
       await loadTypes();
     } else {
-      setError('Import failed. Ensure the file is a valid JSON array of company type definitions.');
+      setError(
+        'Import failed. Ensure the file is a valid JSON array of company type definitions.',
+      );
     }
   };
 
@@ -343,29 +351,57 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
         {tab === 'list' && (
           <div className="ctadmin-header-actions">
             <Button onClick={openCreate}>New Company Type</Button>
-            <Button variant="outline" onClick={() => { clearMessages(); setTab('sync'); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                clearMessages();
+                setTab('sync');
+              }}
+            >
               Sync (GLEIF)
             </Button>
-            <Button variant="outline" onClick={() => { clearMessages(); setTab('import'); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                clearMessages();
+                setTab('import');
+              }}
+            >
               Import JSON
             </Button>
           </div>
         )}
         {tab !== 'list' && (
-          <Button variant="outline" onClick={() => { clearMessages(); setTab('list'); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              clearMessages();
+              setTab('list');
+            }}
+          >
             ← Back to list
           </Button>
         )}
       </div>
 
-      {error && <p className="ctadmin-error" role="alert">{error}</p>}
-      {success && <p className="ctadmin-success" role="status">{success}</p>}
+      {error && (
+        <p className="ctadmin-error" role="alert">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="ctadmin-success" role="status">
+          {success}
+        </p>
+      )}
 
       {/* ── LIST ── */}
       {tab === 'list' && (
         <div className="ctadmin-list">
           {companyTypes.length === 0 ? (
-            <p className="ctadmin-empty">No company types found. Create one or sync from GLEIF.</p>
+            <p className="ctadmin-empty">
+              No company types found. Create one or sync from GLEIF.
+            </p>
           ) : (
             <table className="ctadmin-table">
               <thead>
@@ -381,19 +417,41 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
               <tbody>
                 {companyTypes.map((ct) => (
                   <tr key={ct.id}>
-                    <td><code>{ct.code}</code></td>
+                    <td>
+                      <code>{ct.code}</code>
+                    </td>
                     <td>{ct.countryCode}</td>
                     <td>{ct.name}</td>
                     <td>
-                      <span className={`ctadmin-badge ${ct.isActive ? 'ctadmin-badge--active' : 'ctadmin-badge--inactive'}`}>
+                      <span
+                        className={`ctadmin-badge ${ct.isActive ? 'ctadmin-badge--active' : 'ctadmin-badge--inactive'}`}
+                      >
                         {ct.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td>{ct.displayOrder}</td>
                     <td className="ctadmin-actions">
-                      <Button size="small" variant="outline" onClick={() => openEdit(ct)}>Edit</Button>
-                      <Button size="small" variant="outline" onClick={() => openAddField(ct.id)}>+ Field</Button>
-                      <Button size="small" variant="outline" onClick={() => handleDelete(ct.id)}>Delete</Button>
+                      <Button
+                        size="small"
+                        variant="outline"
+                        onClick={() => openEdit(ct)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outline"
+                        onClick={() => openAddField(ct.id)}
+                      >
+                        + Field
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outline"
+                        onClick={() => handleDelete(ct.id)}
+                      >
+                        Delete
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -410,7 +468,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
           onSubmit={tab === 'create' ? handleCreate : handleEdit}
         >
           <h2 className="ctadmin-form-title">
-            {tab === 'create' ? 'New Company Type' : `Edit: ${editingType?.code} (${editingType?.countryCode})`}
+            {tab === 'create'
+              ? 'New Company Type'
+              : `Edit: ${editingType?.code} (${editingType?.countryCode})`}
           </h2>
 
           {tab === 'create' && (
@@ -425,7 +485,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
               <Input
                 label="Country Code * (2-letter ISO)"
                 value={formCountryCode}
-                onChange={(e) => setFormCountryCode(e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  setFormCountryCode(e.target.value.toUpperCase())
+                }
                 placeholder="US"
                 required
               />
@@ -446,24 +508,32 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
               label="Display Order"
               type="number"
               value={String(formDisplayOrder)}
-              onChange={(e) => setFormDisplayOrder(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) =>
+                setFormDisplayOrder(parseInt(e.target.value, 10) || 0)
+              }
             />
           </div>
 
           <h3 className="ctadmin-section-title">Translations</h3>
           {formTranslations.map((t, i) => (
             <div key={t.languageCode} className="ctadmin-translation-row">
-              <span className="ctadmin-lang-badge">{t.languageCode.toUpperCase()}</span>
+              <span className="ctadmin-lang-badge">
+                {t.languageCode.toUpperCase()}
+              </span>
               <Input
                 label="Name"
                 value={t.name}
-                onChange={(e) => updateFormTranslation(i, 'name', e.target.value)}
+                onChange={(e) =>
+                  updateFormTranslation(i, 'name', e.target.value)
+                }
                 placeholder={`Name in ${t.languageCode}`}
               />
               <Input
                 label="Description"
                 value={t.description}
-                onChange={(e) => updateFormTranslation(i, 'description', e.target.value)}
+                onChange={(e) =>
+                  updateFormTranslation(i, 'description', e.target.value)
+                }
                 placeholder={`Description in ${t.languageCode}`}
               />
             </div>
@@ -473,7 +543,14 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
             <Button type="submit">
               {tab === 'create' ? 'Create' : 'Save'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => { clearMessages(); setTab('list'); }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                clearMessages();
+                setTab('list');
+              }}
+            >
               Cancel
             </Button>
           </div>
@@ -501,7 +578,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
                 onChange={(e) => setFieldType(e.target.value)}
               >
                 {FIELD_TYPES.map((ft) => (
-                  <option key={ft} value={ft}>{ft}</option>
+                  <option key={ft} value={ft}>
+                    {ft}
+                  </option>
                 ))}
               </select>
             </div>
@@ -521,7 +600,9 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
               label="Display Order"
               type="number"
               value={String(fieldDisplayOrder)}
-              onChange={(e) => setFieldDisplayOrder(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) =>
+                setFieldDisplayOrder(parseInt(e.target.value, 10) || 0)
+              }
             />
           </div>
 
@@ -558,23 +639,31 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
           <h3 className="ctadmin-section-title">Field Translations</h3>
           {fieldTranslations.map((t, i) => (
             <div key={t.languageCode} className="ctadmin-translation-row">
-              <span className="ctadmin-lang-badge">{t.languageCode.toUpperCase()}</span>
+              <span className="ctadmin-lang-badge">
+                {t.languageCode.toUpperCase()}
+              </span>
               <Input
                 label="Label"
                 value={t.label}
-                onChange={(e) => updateFieldTranslation(i, 'label', e.target.value)}
+                onChange={(e) =>
+                  updateFieldTranslation(i, 'label', e.target.value)
+                }
                 placeholder={`Label in ${t.languageCode}`}
               />
               <Input
                 label="Help Text"
                 value={t.helpText}
-                onChange={(e) => updateFieldTranslation(i, 'helpText', e.target.value)}
+                onChange={(e) =>
+                  updateFieldTranslation(i, 'helpText', e.target.value)
+                }
                 placeholder={`Help in ${t.languageCode}`}
               />
               <Input
                 label="Validation Message"
                 value={t.validationMessage}
-                onChange={(e) => updateFieldTranslation(i, 'validationMessage', e.target.value)}
+                onChange={(e) =>
+                  updateFieldTranslation(i, 'validationMessage', e.target.value)
+                }
                 placeholder={`Error in ${t.languageCode}`}
               />
             </div>
@@ -582,7 +671,14 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
 
           <div className="ctadmin-form-actions">
             <Button type="submit">Add Field</Button>
-            <Button type="button" variant="outline" onClick={() => { clearMessages(); setTab('list'); }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                clearMessages();
+                setTab('list');
+              }}
+            >
               Cancel
             </Button>
           </div>
@@ -595,11 +691,16 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
           <h2 className="ctadmin-form-title">Sync from GLEIF API</h2>
           <p className="ctadmin-help-text">
             Fetches legal entity form codes from the{' '}
-            <a href="https://api.gleif.org/api/v1/entity-legal-forms" target="_blank" rel="noreferrer">
+            <a
+              href="https://api.gleif.org/api/v1/entity-legal-forms"
+              target="_blank"
+              rel="noreferrer"
+            >
               GLEIF API
             </a>{' '}
-            for the specified country and upserts them into the database. Registration fields
-            (NIP, KRS, EIN, HRB, etc.) are applied from the built-in jurisdiction knowledge base.
+            for the specified country and upserts them into the database.
+            Registration fields (NIP, KRS, EIN, HRB, etc.) are applied from the
+            built-in jurisdiction knowledge base.
           </p>
           <form onSubmit={handleSync}>
             <Input
@@ -617,9 +718,15 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
           </form>
           {syncResult && (
             <div className="ctadmin-sync-result">
-              <p><strong>Created:</strong> {syncResult.created}</p>
-              <p><strong>Updated:</strong> {syncResult.updated}</p>
-              <p><strong>Failed:</strong> {syncResult.failed}</p>
+              <p>
+                <strong>Created:</strong> {syncResult.created}
+              </p>
+              <p>
+                <strong>Updated:</strong> {syncResult.updated}
+              </p>
+              <p>
+                <strong>Failed:</strong> {syncResult.failed}
+              </p>
               {syncResult.errors.length > 0 && (
                 <ul className="ctadmin-errors-list">
                   {syncResult.errors.map((e, i) => (
@@ -637,9 +744,10 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
         <div className="ctadmin-form">
           <h2 className="ctadmin-form-title">Import Company Types from JSON</h2>
           <p className="ctadmin-help-text">
-            Upload a <code>.json</code> file containing an array of company type definitions.
-            Existing types (matched by <code>code + countryCode</code>) will be updated; new ones
-            will be created. Download the{' '}
+            Upload a <code>.json</code> file containing an array of company type
+            definitions. Existing types (matched by{' '}
+            <code>code + countryCode</code>) will be updated; new ones will be
+            created. Download the{' '}
             <a
               href="data:application/json;charset=utf-8,%5B%7B%22code%22%3A%22LLC%22%2C%22countryCode%22%3A%22US%22%2C%22isActive%22%3Atrue%2C%22displayOrder%22%3A1%2C%22translations%22%3A%5B%7B%22languageCode%22%3A%22en%22%2C%22name%22%3A%22Limited%20Liability%20Company%22%2C%22description%22%3A%22%22%7D%5D%2C%22fields%22%3A%5B%5D%7D%5D"
               download="company-types-template.json"
@@ -673,9 +781,15 @@ export const CompanyTypeAdminBlock: React.FC<CompanyTypeAdminBlockProps> = ({
           </form>
           {syncResult && (
             <div className="ctadmin-sync-result">
-              <p><strong>Created:</strong> {syncResult.created}</p>
-              <p><strong>Updated:</strong> {syncResult.updated}</p>
-              <p><strong>Failed:</strong> {syncResult.failed}</p>
+              <p>
+                <strong>Created:</strong> {syncResult.created}
+              </p>
+              <p>
+                <strong>Updated:</strong> {syncResult.updated}
+              </p>
+              <p>
+                <strong>Failed:</strong> {syncResult.failed}
+              </p>
               {syncResult.errors.length > 0 && (
                 <ul className="ctadmin-errors-list">
                   {syncResult.errors.map((e, i) => (
