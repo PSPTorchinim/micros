@@ -15,3 +15,4 @@ export { CompanyBlock } from './CompanyBlock';
 export { CreateCompanyModal } from './CreateCompanyModal';
 export { RolesManagementBlock } from './RolesManagementBlock';
 export { UserRoleManagementBlock } from './UserRoleManagementBlock';
+export { CompanyTypeAdminBlock } from './CompanyTypeAdminBlock';

@@ -12,6 +12,7 @@ namespace CompanyAPI.Services
     public interface ICompanyTypeService : IService
     {
         Task<List<CompanyTypeDTO>> GetByCountry(string countryCode, string languageCode);
+        Task<List<CompanyTypeDTO>> GetAll(string languageCode = "en");
         Task<CompanyTypeWithFieldsDTO?> GetWithFields(Guid id, string languageCode);
         Task<CompanyTypeDTO?> Create(CreateCompanyTypeDTO dto);
         Task<bool> Update(Guid id, UpdateCompanyTypeDTO dto);
@@ -19,6 +20,7 @@ namespace CompanyAPI.Services
         Task<bool> UpdateFieldTranslations(Guid companyTypeId, Guid fieldId, UpdateFieldTranslationsDTO dto);
         Task<bool> Delete(Guid id);
         Task<CompanyTypeSyncResultDTO> SyncFromExternalApiAsync(string countryCode);
+        Task<CompanyTypeSyncResultDTO> ImportFromDefinitionsAsync(List<ExternalCompanyTypeDefinition> definitions);
     }
 
     public class CompanyTypeService : BaseService<ICompanyTypeService>, ICompanyTypeService
@@ -63,6 +65,15 @@ namespace CompanyAPI.Services
                 );
 
                 return result ?? new List<CompanyTypeDTO>();
+            }, _logger);
+        }
+
+        public async Task<List<CompanyTypeDTO>> GetAll(string languageCode = "en")
+        {
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var types = await _companyTypeRepository.Get();
+                return types.Select(ct => MapToDto(ct, languageCode)).ToList();
             }, _logger);
         }
 
@@ -266,6 +277,63 @@ namespace CompanyAPI.Services
                 }
 
                 return result;
+            }, _logger);
+        }
+
+        public async Task<CompanyTypeSyncResultDTO> ImportFromDefinitionsAsync(List<ExternalCompanyTypeDefinition> definitions)
+        {
+            return await ExceptionHandler.Handle(async () =>
+            {
+                var syncResult = new CompanyTypeSyncResultDTO { CountryCode = "MULTI" };
+                var affectedCountries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var definition in definitions)
+                {
+                    try
+                    {
+                        var normalizedCode = definition.Code.ToUpperInvariant();
+                        var normalizedCountry = definition.CountryCode.ToUpperInvariant();
+
+                        var allTypes = await _companyTypeRepository.GetByCountry(normalizedCountry);
+                        var existing = allTypes.FirstOrDefault(ct =>
+                            ct.Code.Equals(normalizedCode, StringComparison.OrdinalIgnoreCase));
+
+                        if (existing != null)
+                        {
+                            existing.IsActive = definition.IsActive;
+                            existing.DisplayOrder = definition.DisplayOrder;
+                            existing.Translations = MapExternalTranslations(definition.Translations, existing.Id);
+                            existing.Fields = MapExternalFields(definition.Fields, existing.Id);
+                            await _companyTypeRepository.Update(existing);
+                            syncResult.Updated++;
+                        }
+                        else
+                        {
+                            var newType = BuildEntityFromExternal(definition);
+                            await _companyTypeRepository.Add(newType);
+                            syncResult.Created++;
+                        }
+
+                        affectedCountries.Add(normalizedCountry);
+                    }
+                    catch (Exception ex)
+                    {
+                        syncResult.Failed++;
+                        syncResult.Errors.Add($"{definition.Code}: {ex.Message}");
+                        _logger.LogError(ex, "Failed to import company type {Code}", definition.Code);
+                    }
+                }
+
+                foreach (var country in affectedCountries)
+                {
+                    await InvalidateCountryCacheAsync(country);
+                }
+
+                _logger.LogInformation(
+                    "Import completed: {Created} created, {Updated} updated, {Failed} failed",
+                    syncResult.Created, syncResult.Updated, syncResult.Failed);
+
+                return syncResult;
             }, _logger);
         }
 

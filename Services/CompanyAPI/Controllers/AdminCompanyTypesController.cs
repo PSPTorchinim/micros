@@ -3,6 +3,7 @@ using CompanyAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Services.App;
+using System.Text.Json;
 
 namespace CompanyAPI.Controllers
 {
@@ -15,6 +16,16 @@ namespace CompanyAPI.Controllers
             : base(logger, serviceProvider)
         {
             _companyTypeService = serviceProvider.GetRequiredService<ICompanyTypeService>();
+        }
+
+        /// <summary>
+        /// Get all company types (all countries).
+        /// Requires: SuperOwner role.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllCompanyTypesV1([FromQuery] string languageCode = "en")
+        {
+            return await Handle(async () => await _companyTypeService.GetAll(languageCode));
         }
 
         /// <summary>
@@ -80,6 +91,41 @@ namespace CompanyAPI.Controllers
         public async Task<IActionResult> SyncFromExternalApiV1([FromQuery] string countryCode)
         {
             return await Handle(async () => await _companyTypeService.SyncFromExternalApiAsync(countryCode));
+        }
+
+        /// <summary>
+        /// Import company type definitions from an uploaded JSON file.
+        /// The file must contain an array of ExternalCompanyTypeDefinition objects.
+        /// Requires: SuperOwner role.
+        /// </summary>
+        [HttpPost("import")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> ImportFromFileV1(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { success = false, message = "No file uploaded." });
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (extension != ".json")
+                return BadRequest(new { success = false, message = "Only .json files are supported." });
+
+            List<ExternalCompanyTypeDefinition>? definitions;
+            try
+            {
+                using var stream = file.OpenReadStream();
+                definitions = await JsonSerializer.DeserializeAsync<List<ExternalCompanyTypeDefinition>>(
+                    stream,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException ex)
+            {
+                return BadRequest(new { success = false, message = $"Invalid JSON: {ex.Message}" });
+            }
+
+            if (definitions == null || definitions.Count == 0)
+                return BadRequest(new { success = false, message = "The file contains no company type definitions." });
+
+            return await Handle(async () => await _companyTypeService.ImportFromDefinitionsAsync(definitions));
         }
     }
 }
