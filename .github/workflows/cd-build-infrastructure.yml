@@ -733,6 +733,9 @@ jobs:
             echo "GRAFANA_HOST=${{ vars.GRAFANA_HOST }}" >> "$ENV_FILE"
             echo "GRAFANA_PORT=${{ vars.GRAFANA_PORT }}" >> "$ENV_FILE"
             echo "GRAFANA_PROTOCOL=${{ vars.GRAFANA_PROTOCOL }}" >> "$ENV_FILE"
+            echo "PIPELINE_PAT=${{ secrets.PIPELINE_PAT }}" >> "$ENV_FILE"
+            echo "GITHUB_REPO_OWNER=${{ github.repository_owner }}" >> "$ENV_FILE"
+            echo "GITHUB_REPO_NAME=${{ github.event.repository.name }}" >> "$ENV_FILE"
 
             # Set secure permissions (readable by owner only)
             if ! chmod 600 "$ENV_FILE"; then

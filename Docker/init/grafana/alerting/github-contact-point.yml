@@ -1,0 +1,75 @@
+# Grafana Alerting Provisioning — GitHub Contact Point
+#
+# Provisions a webhook contact point that POSTs to the GitHub repository dispatch
+# API whenever a Production alert fires in Grafana. The receiving GitHub Actions
+# workflow (.github/workflows/create-issue-from-grafana.yml) then creates an issue.
+#
+# Required environment variables (set in docker-compose or as secrets):
+#   PIPELINE_PAT      — Personal Access Token with `repo` scope for the target repository
+#   GITHUB_REPO_OWNER — GitHub organisation or user that owns the target repository
+#   GITHUB_REPO_NAME  — Name of the target repository
+#
+# Grafana alerting provisioning reference:
+#   https://grafana.com/docs/grafana/latest/alerting/set-up/provision-alerting-resources/file-provisioning/
+
+apiVersion: 1
+
+# ---------------------------------------------------------------------------
+# Contact points
+# ---------------------------------------------------------------------------
+contactPoints:
+  - orgId: 1
+    name: GitHub Issues (Production)
+    receivers:
+      - uid: github-issues-production
+        type: webhook
+        settings:
+          # GitHub repository dispatch endpoint.
+          # GITHUB_REPO_OWNER and GITHUB_REPO_NAME are expanded by Grafana at startup.
+          url: https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/dispatches
+
+          httpMethod: POST
+
+          # Bearer token auth — value is read from the PIPELINE_PAT env variable at
+          # Grafana startup (Grafana expands ${ENV_VAR} in provisioning files).
+          # GitHub PATs use the "Bearer" scheme (the "token" scheme is deprecated).
+          authorization_scheme: Bearer
+          authorization_credentials: ${PIPELINE_PAT}
+
+          # Custom payload matching the schema expected by create-issue-from-grafana.yml.
+          # Grafana template variables used:
+          #   {{ .CommonLabels.alertname }} — name of the firing alert rule
+          #   {{ .CommonAnnotations.summary }} — optional human-readable description
+          #   {{ .CommonLabels.severity }}    — severity label on the alert rule
+          #   {{ .CommonLabels.service }}     — service label on the alert rule
+          message: |
+            {
+              "event_type": "grafana-alert",
+              "client_payload": {
+                "environment": "Production",
+                "title":    "{{ .CommonLabels.alertname }}",
+                "message":  "{{ .CommonAnnotations.summary }}",
+                "severity": "{{ .CommonLabels.severity }}",
+                "service":  "{{ .CommonLabels.service }}",
+                "dashboard": "{{ .ExternalURL }}/d/{{ .CommonLabels.grafana_folder }}"
+              }
+            }
+
+        disableResolveMessage: true
+
+# ---------------------------------------------------------------------------
+# Notification policies
+# ---------------------------------------------------------------------------
+# Routes alerts with environment=Production to the GitHub contact point.
+# All other alerts fall through to Grafana's built-in default receiver.
+policies:
+  - orgId: 1
+    receiver: grafana-default-email
+    group_by:
+      - grafana_folder
+      - alertname
+    routes:
+      - receiver: GitHub Issues (Production)
+        matchers:
+          - environment = Production
+        continue: false
