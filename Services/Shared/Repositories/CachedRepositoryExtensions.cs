@@ -37,10 +37,11 @@ namespace Shared.Repositories
                 var cacheService = provider.GetRequiredService<ICacheService>();
                 var logger = provider.GetRequiredService<ILogger<CachedRepository<TEntity, TContext>>>();
 
-                return (TInterface)(object)new CachedRepository<TEntity, TContext>(
+                IRepository<TEntity> cachedRepo = new CachedRepository<TEntity, TContext>(
                     innerRepository,
                     cacheService,
                     logger);
+                return (TInterface)cachedRepo;
             });
 
             return services;

@@ -305,17 +305,19 @@ namespace CompanyAPI.Tests
             handlerMock
                 .Protected()
                 .Setup("Dispose", ItExpr.IsAny<bool>());
+            var httpResponse = new HttpResponseMessage
+            {
+                StatusCode = statusCode,
+                Content = new StringContent(json, System.Text.Encoding.UTF8, "application/vnd.api+json")
+            };
+            _disposables.Add(httpResponse);
             handlerMock
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
                     ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = statusCode,
-                    Content = new StringContent(json, System.Text.Encoding.UTF8, "application/vnd.api+json")
-                });
+                .ReturnsAsync(httpResponse);
 
             var httpClient = new HttpClient(handlerMock.Object)
             {

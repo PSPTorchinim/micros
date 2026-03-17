@@ -299,6 +299,7 @@ namespace DJHostGateway.Tests
         {
             private readonly HttpStatusCode _statusCode;
             private readonly HttpContent? _content;
+            private readonly List<HttpResponseMessage> _responses = new();
 
             public MockHttpMessageHandler(HttpStatusCode statusCode, HttpContent? content = null)
             {
@@ -310,10 +311,23 @@ namespace DJHostGateway.Tests
                 HttpRequestMessage request,
                 CancellationToken cancellationToken)
             {
-                return Task.FromResult(new HttpResponseMessage(_statusCode)
+                var response = new HttpResponseMessage(_statusCode)
                 {
                     Content = _content ?? new StringContent(string.Empty)
-                });
+                };
+                _responses.Add(response);
+                return Task.FromResult(response);
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    foreach (var response in _responses)
+                        response.Dispose();
+                    _responses.Clear();
+                }
+                base.Dispose(disposing);
             }
         }
     }
