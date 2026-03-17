@@ -68,7 +68,7 @@ namespace IdentityAPI.Services
                     if (b64.Length >= 32) return b64;
                 }
             }
-            catch { /* ignore and continue */ }
+            catch (FormatException) { /* ignore and continue */ }
 
             // Try Hex
             bool looksHex = raw.All(Uri.IsHexDigit) && raw.Length % 2 == 0;
