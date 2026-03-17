@@ -201,6 +201,13 @@ namespace CompanyAPI.Tests
         [InlineData("BV", "NL", "kvkNumber")]
         [InlineData("GMBH", "AT", "firmenbuchnummer")]
         [InlineData("GMBH", "CH", "uid")]
+        // Polish entity types
+        [InlineData("S.A.", "PL", "nip")]
+        [InlineData("S.A.", "PL", "krs")]
+        [InlineData("S.A.", "PL", "regon")]
+        [InlineData("SP. Z O.O.", "PL", "nip")]
+        [InlineData("SP. Z O.O.", "PL", "krs")]
+        [InlineData("SP. Z O.O.", "PL", "regon")]
         public void KnownRegistrationFields_ReturnsExpectedKeyField(string code, string country, string expectedFieldKey)
         {
             var fields = KnownRegistrationFields.GetFields(code, country);
@@ -247,6 +254,43 @@ namespace CompanyAPI.Tests
             Assert.Equal(14, siret.MaxLength);
             Assert.Equal(14, siret.MinLength);
             Assert.NotNull(siret.ValidationRegex);
+        }
+
+        [Fact]
+        public void KnownRegistrationFields_PlSa_NipFieldHasPolishTranslation()
+        {
+            var fields = KnownRegistrationFields.GetFields("S.A.", "PL");
+            var nip = fields.Single(f => f.FieldKey == "nip");
+
+            Assert.NotNull(nip.ValidationRegex);
+            Assert.True(nip.IsRequired);
+            Assert.Contains(nip.Translations, t => t.LanguageCode == "pl");
+            Assert.Contains(nip.Translations, t => t.LanguageCode == "en");
+        }
+
+        [Fact]
+        public void KnownRegistrationFields_PlSa_HasShareCapitalField()
+        {
+            var fields = KnownRegistrationFields.GetFields("S.A.", "PL");
+            Assert.Contains(fields, f => f.FieldKey == "shareCapital");
+        }
+
+        [Fact]
+        public void KnownRegistrationFields_PlSpZOO_HasRegisteredAddressField()
+        {
+            var fields = KnownRegistrationFields.GetFields("SP. Z O.O.", "PL");
+            Assert.Contains(fields, f => f.FieldKey == "registeredAddress");
+        }
+
+        [Fact]
+        public void KnownRegistrationFields_PlKrs_Has10CharConstraint()
+        {
+            var fields = KnownRegistrationFields.GetFields("S.A.", "PL");
+            var krs = fields.Single(f => f.FieldKey == "krs");
+
+            Assert.Equal(10, krs.MaxLength);
+            Assert.Equal(10, krs.MinLength);
+            Assert.NotNull(krs.ValidationRegex);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

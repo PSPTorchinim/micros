@@ -285,6 +285,7 @@ namespace CompanyAPI.Services
                 "NL" => GetNlFields(code.ToUpperInvariant()),
                 "AT" => GetAtFields(code.ToUpperInvariant()),
                 "CH" => GetChFields(code.ToUpperInvariant()),
+                "PL" => GetPlFields(code.ToUpperInvariant()),
                 _ => new List<ExternalCompanyTypeFieldDefinition>()
             };
 
@@ -299,20 +300,20 @@ namespace CompanyAPI.Services
                     FieldKey = "ein", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{2}-\d{7}$", DisplayOrder = 1,
                     Placeholder = "12-3456789", MaxLength = 10, MinLength = 10,
-                    Translations = BilingualField("Employer Identification Number (EIN)", "EIN / Arbeitgeberkennzahl", "Numéro d'identification de l'employeur (EIN)")
+                    Translations = BaseField("Employer Identification Number (EIN)", "EIN / Arbeitgeberkennzahl", "Numéro d'identification de l'employeur (EIN)")
                 },
                 new()
                 {
                     FieldKey = "stateOfFormation", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^[A-Z]{2}$", DisplayOrder = 2,
                     Placeholder = "DE", MaxLength = 2, MinLength = 2,
-                    Translations = BilingualField("State of Formation", "Gründungsstaat", "État de formation")
+                    Translations = BaseField("State of Formation", "Gründungsstaat", "État de formation")
                 },
                 new()
                 {
                     FieldKey = "registeredAgent", FieldType = "text", IsRequired = true,
                     DisplayOrder = 3, MaxLength = 255,
-                    Translations = BilingualField("Registered Agent", "Eingetragener Agent", "Agent enregistré")
+                    Translations = BaseField("Registered Agent", "Eingetragener Agent", "Agent enregistré")
                 }
             },
             "C-CORP" or "INC" or "CORP" => new List<ExternalCompanyTypeFieldDefinition>
@@ -322,20 +323,20 @@ namespace CompanyAPI.Services
                     FieldKey = "ein", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{2}-\d{7}$", DisplayOrder = 1,
                     Placeholder = "12-3456789", MaxLength = 10, MinLength = 10,
-                    Translations = BilingualField("Employer Identification Number (EIN)", "EIN / Arbeitgeberkennzahl", "Numéro d'identification de l'employeur (EIN)")
+                    Translations = BaseField("Employer Identification Number (EIN)", "EIN / Arbeitgeberkennzahl", "Numéro d'identification de l'employeur (EIN)")
                 },
                 new()
                 {
                     FieldKey = "stateOfIncorporation", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^[A-Z]{2}$", DisplayOrder = 2,
                     Placeholder = "DE", MaxLength = 2, MinLength = 2,
-                    Translations = BilingualField("State of Incorporation", "Gründungsstaat", "État de constitution")
+                    Translations = BaseField("State of Incorporation", "Gründungsstaat", "État de constitution")
                 },
                 new()
                 {
                     FieldKey = "authorizedShares", FieldType = "number", IsRequired = true,
                     DisplayOrder = 3,
-                    Translations = BilingualField("Number of Authorized Shares", "Anzahl genehmigter Aktien", "Nombre d'actions autorisées")
+                    Translations = BaseField("Number of Authorized Shares", "Anzahl genehmigter Aktien", "Nombre d'actions autorisées")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -352,19 +353,19 @@ namespace CompanyAPI.Services
                     FieldKey = "hrb", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^HRB\s?\d+$", DisplayOrder = 1,
                     Placeholder = "HRB 12345", MaxLength = 20,
-                    Translations = BilingualField("Commercial Register Number (HRB)", "Handelsregisternummer (HRB)", "Numéro du registre du commerce (HRB)")
+                    Translations = BaseField("Commercial Register Number (HRB)", "Handelsregisternummer (HRB)", "Numéro du registre du commerce (HRB)")
                 },
                 new()
                 {
                     FieldKey = "amtsgericht", FieldType = "text", IsRequired = true,
                     DisplayOrder = 2, MaxLength = 100,
-                    Translations = BilingualField("Local Court (Amtsgericht)", "Amtsgericht", "Tribunal de district (Amtsgericht)")
+                    Translations = BaseField("Local Court (Amtsgericht)", "Amtsgericht", "Tribunal de district (Amtsgericht)")
                 },
                 new()
                 {
                     FieldKey = "stammkapital", FieldType = "number", IsRequired = true,
                     DisplayOrder = 3,
-                    Translations = BilingualField("Share Capital (Stammkapital) in EUR", "Stammkapital in EUR", "Capital social (Stammkapital) en EUR")
+                    Translations = BaseField("Share Capital (Stammkapital) in EUR", "Stammkapital in EUR", "Capital social (Stammkapital) en EUR")
                 }
             },
             "AG" or "AKTIENGESELLSCHAFT" => new List<ExternalCompanyTypeFieldDefinition>
@@ -374,13 +375,13 @@ namespace CompanyAPI.Services
                     FieldKey = "hrb", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^HRB\s?\d+$", DisplayOrder = 1,
                     Placeholder = "HRB 12345", MaxLength = 20,
-                    Translations = BilingualField("Commercial Register Number (HRB)", "Handelsregisternummer (HRB)", "Numéro du registre du commerce (HRB)")
+                    Translations = BaseField("Commercial Register Number (HRB)", "Handelsregisternummer (HRB)", "Numéro du registre du commerce (HRB)")
                 },
                 new()
                 {
                     FieldKey = "grundkapital", FieldType = "number", IsRequired = true,
                     DisplayOrder = 2,
-                    Translations = BilingualField("Share Capital (Grundkapital) in EUR", "Grundkapital in EUR", "Capital social (Grundkapital) en EUR")
+                    Translations = BaseField("Share Capital (Grundkapital) in EUR", "Grundkapital in EUR", "Capital social (Grundkapital) en EUR")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -397,20 +398,20 @@ namespace CompanyAPI.Services
                     FieldKey = "siret", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{14}$", DisplayOrder = 1,
                     Placeholder = "12345678901234", MaxLength = 14, MinLength = 14,
-                    Translations = BilingualField("SIRET Number", "SIRET-Nummer", "Numéro SIRET")
+                    Translations = BaseField("SIRET Number", "SIRET-Nummer", "Numéro SIRET")
                 },
                 new()
                 {
                     FieldKey = "siren", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{9}$", DisplayOrder = 2,
                     Placeholder = "123456789", MaxLength = 9, MinLength = 9,
-                    Translations = BilingualField("SIREN Number", "SIREN-Nummer", "Numéro SIREN")
+                    Translations = BaseField("SIREN Number", "SIREN-Nummer", "Numéro SIREN")
                 },
                 new()
                 {
                     FieldKey = "capitalSocial", FieldType = "number", IsRequired = true,
                     DisplayOrder = 3,
-                    Translations = BilingualField("Share Capital (Capital Social) in EUR", "Stammkapital (Capital Social) in EUR", "Capital social en EUR")
+                    Translations = BaseField("Share Capital (Capital Social) in EUR", "Stammkapital (Capital Social) in EUR", "Capital social en EUR")
                 }
             },
             "SARL" or "SOCIÉTÉ À RESPONSABILITÉ LIMITÉE" => new List<ExternalCompanyTypeFieldDefinition>
@@ -420,14 +421,14 @@ namespace CompanyAPI.Services
                     FieldKey = "siret", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{14}$", DisplayOrder = 1,
                     Placeholder = "12345678901234", MaxLength = 14, MinLength = 14,
-                    Translations = BilingualField("SIRET Number", "SIRET-Nummer", "Numéro SIRET")
+                    Translations = BaseField("SIRET Number", "SIRET-Nummer", "Numéro SIRET")
                 },
                 new()
                 {
                     FieldKey = "siren", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{9}$", DisplayOrder = 2,
                     Placeholder = "123456789", MaxLength = 9, MinLength = 9,
-                    Translations = BilingualField("SIREN Number", "SIREN-Nummer", "Numéro SIREN")
+                    Translations = BaseField("SIREN Number", "SIREN-Nummer", "Numéro SIREN")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -444,14 +445,14 @@ namespace CompanyAPI.Services
                     FieldKey = "companiesHouseNumber", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^[A-Z0-9]{8}$", DisplayOrder = 1,
                     Placeholder = "12345678", MaxLength = 8, MinLength = 8,
-                    Translations = BilingualField("Companies House Number", "Companies House Nummer", "Numéro du registre des sociétés (Companies House)")
+                    Translations = BaseField("Companies House Number", "Companies House Nummer", "Numéro du registre des sociétés (Companies House)")
                 },
                 new()
                 {
                     FieldKey = "vatNumber", FieldType = "text", IsRequired = false,
                     ValidationRegex = @"^GB\d{9}$", DisplayOrder = 2,
                     Placeholder = "GB123456789", MaxLength = 11,
-                    Translations = BilingualField("VAT Registration Number", "USt-IdNr.", "Numéro de TVA")
+                    Translations = BaseField("VAT Registration Number", "USt-IdNr.", "Numéro de TVA")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -468,14 +469,14 @@ namespace CompanyAPI.Services
                     FieldKey = "kvkNumber", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d{8}$", DisplayOrder = 1,
                     Placeholder = "12345678", MaxLength = 8, MinLength = 8,
-                    Translations = BilingualField("KvK Number (Chamber of Commerce)", "KvK-Nummer (Handelskammer)", "Numéro KvK (Chambre de commerce)")
+                    Translations = BaseField("KvK Number (Chamber of Commerce)", "KvK-Nummer (Handelskammer)", "Numéro KvK (Chambre de commerce)")
                 },
                 new()
                 {
                     FieldKey = "btwNumber", FieldType = "text", IsRequired = false,
                     ValidationRegex = @"^NL\d{9}B\d{2}$", DisplayOrder = 2,
                     Placeholder = "NL123456789B01",
-                    Translations = BilingualField("BTW (VAT) Number", "BTW-Nummer (USt-IdNr.)", "Numéro BTW (TVA)")
+                    Translations = BaseField("BTW (VAT) Number", "BTW-Nummer (USt-IdNr.)", "Numéro BTW (TVA)")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -492,7 +493,7 @@ namespace CompanyAPI.Services
                     FieldKey = "firmenbuchnummer", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^\d+[a-zA-Z]$", DisplayOrder = 1,
                     Placeholder = "123456a",
-                    Translations = BilingualField("Firmenbuchnummer (Company Register Number)", "Firmenbuchnummer", "Numéro du registre des sociétés (Firmenbuchnummer)")
+                    Translations = BaseField("Firmenbuchnummer (Company Register Number)", "Firmenbuchnummer", "Numéro du registre des sociétés (Firmenbuchnummer)")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
@@ -509,18 +510,135 @@ namespace CompanyAPI.Services
                     FieldKey = "uid", FieldType = "text", IsRequired = true,
                     ValidationRegex = @"^CHE-\d{3}\.\d{3}\.\d{3}$", DisplayOrder = 1,
                     Placeholder = "CHE-123.456.789",
-                    Translations = BilingualField("UID Number (Unternehmens-Identifikationsnummer)", "UID-Nummer", "Numéro UID")
+                    Translations = BaseField("UID Number (Unternehmens-Identifikationsnummer)", "UID-Nummer", "Numéro UID")
                 }
             },
             _ => new List<ExternalCompanyTypeFieldDefinition>()
         };
 
+        // ── Poland ─────────────────────────────────────────────────────────────
+        // Sources: KRS (National Court Register), NIP (Tax Identification Number),
+        //          REGON (Statistical Number), GUS open data.
+
+        private static List<ExternalCompanyTypeFieldDefinition> GetPlFields(string code) => code switch
+        {
+            // Spółka z ograniczoną odpowiedzialnością (Sp. z o.o.) — Private limited
+            "SP. Z O.O." or "SP.Z O.O." or "SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ" => PlCommonFields(),
+
+            // Spółka Akcyjna (S.A.) — Joint-stock company
+            "S.A." or "SA" or "SPÓŁKA AKCYJNA" => new List<ExternalCompanyTypeFieldDefinition>
+            {
+                NipField(1),
+                KrsField(2),
+                RegonField(3),
+                new()
+                {
+                    FieldKey = "shareCapital", FieldType = "number", IsRequired = true,
+                    DisplayOrder = 4,
+                    Translations = LocalisedField(
+                        "Share Capital (Kapitał zakładowy) in PLN",
+                        "Grundkapital (Kapitał zakładowy) in PLN",
+                        "Capital social (Kapitał zakładowy) en PLN",
+                        "Kapitał zakładowy w PLN")
+                },
+                RegisteredAddressField(5)
+            },
+
+            // Spółka komandytowa (Sp. k.) — Limited partnership
+            "SP. K." or "SP.K." or "SPÓŁKA KOMANDYTOWA" => PlCommonFields(),
+
+            // Spółka jawna (Sp. j.) — General partnership
+            "SP. J." or "SP.J." or "SPÓŁKA JAWNA" => PlCommonFields(),
+
+            // Prosta Spółka Akcyjna (P.S.A.) — Simple joint-stock company (since 2021)
+            "P.S.A." or "PSA" or "PROSTA SPÓŁKA AKCYJNA" => PlCommonFields(),
+
+            _ => new List<ExternalCompanyTypeFieldDefinition>()
+        };
+
+        /// <summary>Fields required by all Polish company forms (NIP + KRS + REGON + address).</summary>
+        private static List<ExternalCompanyTypeFieldDefinition> PlCommonFields() =>
+            new()
+            {
+                NipField(1),
+                KrsField(2),
+                RegonField(3),
+                RegisteredAddressField(4)
+            };
+
+        private static ExternalCompanyTypeFieldDefinition NipField(int order) => new()
+        {
+            FieldKey = "nip", FieldType = "text", IsRequired = true,
+            // NIP accepts:
+            //   • 10 consecutive digits:          1234567890
+            //   • XXX-XXX-XX-XX (entity format):  123-456-78-90
+            //   • XXX-XX-XX-XXX (org format):     123-45-67-890
+            ValidationRegex = @"^\d{10}$|^\d{3}-\d{3}-\d{2}-\d{2}$|^\d{3}-\d{2}-\d{2}-\d{3}$",
+            ValidationMessage = "Enter NIP as 10 digits (1234567890) or formatted (123-456-78-90 / 123-45-67-890)",
+            DisplayOrder = order, Placeholder = "1234567890", MaxLength = 13, MinLength = 10,
+            Translations = LocalisedField(
+                "NIP (Tax Identification Number)",
+                "NIP (Steueridentifikationsnummer)",
+                "NIP (Numéro d'identification fiscale)",
+                "NIP (Numer Identyfikacji Podatkowej)")
+        };
+
+        private static ExternalCompanyTypeFieldDefinition KrsField(int order) => new()
+        {
+            FieldKey = "krs", FieldType = "text", IsRequired = true,
+            ValidationRegex = @"^\d{10}$",
+            DisplayOrder = order, Placeholder = "0000123456", MaxLength = 10, MinLength = 10,
+            Translations = LocalisedField(
+                "KRS (National Court Register Number)",
+                "KRS (Handelsregisternummer)",
+                "KRS (Numéro du registre national des tribunaux)",
+                "KRS (Numer w Krajowym Rejestrze Sądowym)")
+        };
+
+        private static ExternalCompanyTypeFieldDefinition RegonField(int order) => new()
+        {
+            FieldKey = "regon", FieldType = "text", IsRequired = true,
+            // REGON: 9 digits (entity) or 14 digits (local unit)
+            ValidationRegex = @"^\d{9}$|^\d{14}$",
+            DisplayOrder = order, Placeholder = "123456789", MaxLength = 14, MinLength = 9,
+            Translations = LocalisedField(
+                "REGON (Statistical Identification Number)",
+                "REGON (Statistische Kennnummer)",
+                "REGON (Numéro d'identification statistique)",
+                "REGON (Numer identyfikacyjny REGON)")
+        };
+
+        private static ExternalCompanyTypeFieldDefinition RegisteredAddressField(int order) => new()
+        {
+            FieldKey = "registeredAddress", FieldType = "text", IsRequired = true,
+            DisplayOrder = order, MaxLength = 500,
+            Translations = LocalisedField(
+                "Registered Address",
+                "Eingetragene Adresse",
+                "Adresse enregistrée",
+                "Adres siedziby")
+        };
+
         // ── Shared helpers ─────────────────────────────────────────────────────
 
         /// <summary>
-        /// Builds a translation list with English, German, and French labels for a field.
+        /// Builds a translation list with English, German, French, and Polish labels for a field.
         /// </summary>
-        private static List<CreateCompanyTypeFieldTranslationDTO> BilingualField(
+        private static List<CreateCompanyTypeFieldTranslationDTO> LocalisedField(
+            string en, string de, string fr, string pl) =>
+            new()
+            {
+                new() { LanguageCode = "en", Label = en },
+                new() { LanguageCode = "de", Label = de },
+                new() { LanguageCode = "fr", Label = fr },
+                new() { LanguageCode = "pl", Label = pl }
+            };
+
+        /// <summary>
+        /// Builds a translation list with English, German, and French labels for a field
+        /// (used for non-Polish jurisdictions).
+        /// </summary>
+        private static List<CreateCompanyTypeFieldTranslationDTO> BaseField(
             string en, string de, string fr) =>
             new()
             {
