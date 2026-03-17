@@ -18,10 +18,14 @@ namespace CompanyAPI.Data
             services.AddScoped<ICompanyTypeRepository, CompanyTypeRepository>();
             services.AddScoped<IExternalCompanyTypeApiClient, ExternalCompanyTypeApiClient>();
 
-            // Named HTTP client for the external company-types API with a 30-second timeout
+            // Named HTTP client for the GLEIF entity-legal-forms API.
+            // Base address defaults to the public GLEIF API; override via
+            // ASPNETCORE_EXTERNAL_COMPANY_TYPES_API_URL for mirrors or testing.
             services.AddHttpClient(ExternalCompanyTypeApiClient.HttpClientName, client =>
             {
+                client.BaseAddress = new Uri(ExternalCompanyTypeApiClient.GleifApiBaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             });
 
             services.AddScoped<IBrandsService, BrandsService>();
