@@ -25,5 +25,7 @@
         public static string WrongActivationCode = "WRONG_ACTIVATION_CODE";
 
         public static string CompanyNotFound = "COMPANY_NOT_FOUND";
+        public static string NotFound = "NOT_FOUND";
+        public static string CompanyTypeNotFound = "COMPANY_TYPE_NOT_FOUND";
     }
 }
