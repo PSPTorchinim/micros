@@ -200,10 +200,6 @@ namespace Shared.Repositories
             {
                 _logger.LogError(ex, "Error invalidating cache for {EntityName}", _entityName);
             }
-            catch (ObjectDisposedException ex)
-            {
-                _logger.LogError(ex, "Error invalidating cache for {EntityName}", _entityName);
-            }
         }
     }
 }
