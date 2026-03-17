@@ -1,0 +1,219 @@
+name: CodeQL Release Branch Scan
+
+# This workflow runs CodeQL security analysis on release branches and automatically
+# creates GitHub issues for any findings:
+# 1. Triggered on every push to releases/** branches
+# 2. Runs CodeQL analysis for C# and JavaScript/TypeScript
+# 3. After analysis, queries the code scanning API for open alerts
+# 4. Creates labeled GitHub issues for new findings (deduplicates by alert number)
+
+on:
+  push:
+    branches:
+      - "releases/**"
+
+# Prevent duplicate scans when multiple commits are pushed in quick succession
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  codeql_scan:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['csharp', 'javascript-typescript']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - name: Setup .NET SDK
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build .NET solution
+        if: matrix.language == 'csharp'
+        run: dotnet build Micros.sln --configuration Release
+
+      - name: Setup Node.js
+        if: matrix.language == 'javascript-typescript'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies for JavaScript/TypeScript projects
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          npm install
+          cd ${{ github.workspace }}/Frontends/dj-panel && npm install
+          cd ${{ github.workspace }}/CMS && npm install
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  create_issues_from_alerts:
+    name: Create Issues for CodeQL Findings
+    runs-on: ubuntu-latest
+    needs: codeql_scan
+    if: always() && needs.codeql_scan.result != 'cancelled'
+    permissions:
+      security-events: read
+      issues: write
+    steps:
+      - name: Ensure required labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'codeql-finding', color: 'e11d48', description: 'Automatically created from a CodeQL code scanning alert' },
+              { name: 'security', color: 'd73a4a', description: 'Security-related issue' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                });
+              } catch (error) {
+                if (error.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color,
+                    description: label.description,
+                  });
+                  console.log(`Created label: ${label.name}`);
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+      - name: Create GitHub Issues for open CodeQL alerts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = context.ref;
+
+            // Fetch all open CodeQL alerts for this ref
+            let alerts = [];
+            try {
+              alerts = await github.paginate(
+                github.rest.codeScanning.listAlertsForRepo,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'open',
+                  ref: ref,
+                }
+              );
+            } catch (error) {
+              console.log(`Failed to fetch CodeQL alerts: ${error.message}`);
+              return;
+            }
+
+            console.log(`Found ${alerts.length} open CodeQL alert(s) on ${ref}`);
+
+            if (alerts.length === 0) {
+              console.log('No open CodeQL alerts found. No issues will be created.');
+              return;
+            }
+
+            // Fetch existing open issues with the 'codeql-finding' label to avoid duplicates
+            const existingIssues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: 'codeql-finding',
+              }
+            );
+
+            // Track which alert numbers already have a corresponding issue
+            const trackedAlertNumbers = new Set();
+            for (const issue of existingIssues) {
+              const match = issue.body?.match(/\*\*Alert #:\*\* (\d+)/);
+              if (match) {
+                trackedAlertNumbers.add(parseInt(match[1], 10));
+              }
+            }
+
+            let created = 0;
+            for (const alert of alerts) {
+              if (trackedAlertNumbers.has(alert.number)) {
+                console.log(`Issue already exists for alert #${alert.number} (${alert.rule.id}) — skipping.`);
+                continue;
+              }
+
+              const location = alert.most_recent_instance?.location;
+              const locationStr = location
+                ? `${location.path}:${location.start_line}`
+                : 'Unknown location';
+
+              const severity =
+                alert.rule.security_severity_level ||
+                alert.rule.severity ||
+                'unknown';
+
+              const title = `[CodeQL] ${alert.rule.description}`;
+
+              const body = [
+                `## CodeQL Security Finding`,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| **Alert #:** | ${alert.number} |`,
+                `| **Rule:** | \`${alert.rule.id}\` |`,
+                `| **Severity:** | ${severity} |`,
+                `| **Location:** | \`${locationStr}\` |`,
+                `| **Branch:** | \`${ref}\` |`,
+                `| **Alert URL:** | [View Alert](${alert.html_url}) |`,
+                ``,
+                `### Description`,
+                `${alert.rule.description}`,
+                ``,
+                `### Help`,
+                alert.rule.help ?? '_No additional help available._',
+                ``,
+                `---`,
+                `_This issue was automatically created by the [CodeQL Release Branch Scan](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/codeql-release-scan.yml) workflow._`,
+              ].join('\n');
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['codeql-finding', 'security'],
+              });
+
+              console.log(`Created issue for alert #${alert.number}: ${title}`);
+              created++;
+            }
+
+            console.log(`Done. Created ${created} new issue(s).`);
