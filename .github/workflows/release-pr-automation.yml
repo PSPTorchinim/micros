@@ -1,0 +1,244 @@
+name: Release PR Automation
+
+# This workflow automates the lifecycle of release-to-production pull requests:
+#
+# 1. When a PR from a releases/** branch to production is marked "ready for review":
+#    - Adds the GitHub Copilot bot as a reviewer.
+#    - Resolves any open review threads so the PR is clean for final review.
+#
+# 2. When such a PR is successfully merged into production:
+#    - Computes the name of the next release branch (increments the YYYY-MM suffix).
+#    - Creates that new release branch from the freshly updated production branch.
+#    - Switches the repository default branch to the new release branch.
+#    - Deletes the release branch that was just merged (keeping the branch list clean).
+#
+# Triggers:
+#   - pull_request: ready_for_review, closed
+#   (Only acted upon when the PR targets "production" from a "releases/**" head branch.)
+
+on:
+  pull_request:
+    types:
+      - ready_for_review
+      - closed
+    branches:
+      - production
+
+permissions:
+  contents: write       # create / delete branches, update default branch
+  pull-requests: write  # add reviewers, resolve review threads
+
+jobs:
+  # ── Job 1: Add Copilot reviewer and resolve open review threads ──────────────
+  add_reviewer_and_resolve_comments:
+    name: Add Copilot Reviewer & Resolve Comments
+    if: >
+      github.event.action == 'ready_for_review' &&
+      startsWith(github.event.pull_request.head.ref, 'releases/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Add Copilot as reviewer and resolve open review threads
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            // ── 1. Request a review from GitHub Copilot ───────────────────────
+            // GitHub Copilot code review is triggered by posting a comment that
+            // mentions @copilot.  This is the supported API-compatible approach
+            // when the "Copilot code review" feature is enabled on the repository.
+            try {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: '@copilot review',
+              });
+              core.info('✅ Requested Copilot code review via comment.');
+            } catch (err) {
+              core.warning(`Could not request Copilot review: ${err.message}`);
+            }
+
+            // ── 2. Resolve all open review threads via the GraphQL API ─────────
+            // The REST API has no "resolve thread" endpoint; GraphQL is required.
+            // Fetch open review threads using GraphQL
+            const query = `
+              query($owner: String!, $repo: String!, $prNumber: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $prNumber) {
+                    reviewThreads(first: 100) {
+                      nodes {
+                        id
+                        isResolved
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            let threads;
+            try {
+              const result = await github.graphql(query, {
+                owner,
+                repo,
+                prNumber,
+              });
+              threads = result.repository.pullRequest.reviewThreads.nodes;
+            } catch (err) {
+              core.warning(`Could not fetch review threads: ${err.message}`);
+              return;
+            }
+
+            const openThreads = threads.filter(t => !t.isResolved);
+            core.info(`Found ${openThreads.length} open review thread(s).`);
+
+            const resolveMutation = `
+              mutation($threadId: ID!) {
+                resolveReviewThread(input: { threadId: $threadId }) {
+                  thread {
+                    id
+                    isResolved
+                  }
+                }
+              }
+            `;
+
+            for (const thread of openThreads) {
+              try {
+                await github.graphql(resolveMutation, { threadId: thread.id });
+                core.info(`✅ Resolved thread ${thread.id}.`);
+              } catch (err) {
+                core.warning(`Could not resolve thread ${thread.id}: ${err.message}`);
+              }
+            }
+
+  # ── Job 2: Post-merge cleanup and next release branch creation ───────────────
+  post_merge:
+    name: Post-Merge Branch Lifecycle
+    if: >
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'releases/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create next release branch, update default branch, delete merged branch
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            const owner       = context.repo.owner;
+            const repo        = context.repo.repo;
+            const mergedBranch = context.payload.pull_request.head.ref; // e.g. "releases/2025-04"
+            const base         = 'production';
+
+            core.info(`Merged branch: ${mergedBranch}`);
+
+            // ── 1. Compute the next release branch name ────────────────────────
+            // Convention: releases/YYYY-MM  →  increment month by 1.
+            // Falls back to releases/YYYY-MM-<n> style for non-date suffixes.
+            function nextReleaseBranchName(current) {
+              const datePattern = /^releases\/(\d{4})-(\d{2})$/;
+              const match = current.match(datePattern);
+
+              if (match) {
+                let year  = parseInt(match[1], 10);
+                let month = parseInt(match[2], 10);
+
+                month += 1;
+                if (month > 12) {
+                  month = 1;
+                  year += 1;
+                }
+                return `releases/${year}-${String(month).padStart(2, '0')}`;
+              }
+
+              // Fallback: append / increment a numeric suffix
+              const numericSuffix = /^(releases\/.+?)(?:-(\d+))?$/.exec(current);
+              if (numericSuffix) {
+                const branchBase = numericSuffix[1];
+                const n          = numericSuffix[2] ? parseInt(numericSuffix[2], 10) + 1 : 2;
+                return `${branchBase}-${n}`;
+              }
+
+              return `${current}-next`;
+            }
+
+            const nextBranch = nextReleaseBranchName(mergedBranch);
+            core.info(`Next release branch: ${nextBranch}`);
+
+            // ── 2. Resolve the current SHA of production ───────────────────────
+            let productionSha;
+            try {
+              const { data: ref } = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: `heads/${base}`,
+              });
+              productionSha = ref.object.sha;
+              core.info(`Production SHA: ${productionSha}`);
+            } catch (err) {
+              core.setFailed(`Failed to resolve "${base}" branch SHA: ${err.message}`);
+              return;
+            }
+
+            // ── 3. Create the next release branch from production ──────────────
+            try {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/heads/${nextBranch}`,
+                sha: productionSha,
+              });
+              core.info(`✅ Created branch "${nextBranch}" from ${productionSha}.`);
+            } catch (err) {
+              if (err.status === 422) {
+                core.warning(`Branch "${nextBranch}" already exists — skipping creation.`);
+              } else {
+                core.setFailed(`Failed to create branch "${nextBranch}": ${err.message}`);
+                return;
+              }
+            }
+
+            // ── 4. Set the new release branch as the default branch ────────────
+            try {
+              await github.rest.repos.update({
+                owner,
+                repo,
+                default_branch: nextBranch,
+              });
+              core.info(`✅ Default branch updated to "${nextBranch}".`);
+            } catch (err) {
+              core.setFailed(`Failed to update default branch to "${nextBranch}": ${err.message}`);
+              return;
+            }
+
+            // ── 5. Delete the merged release branch ───────────────────────────
+            try {
+              await github.rest.git.deleteRef({
+                owner,
+                repo,
+                ref: `heads/${mergedBranch}`,
+              });
+              core.info(`✅ Deleted merged branch "${mergedBranch}".`);
+            } catch (err) {
+              // Non-fatal: log a warning but don't fail the entire job.
+              core.warning(`Could not delete branch "${mergedBranch}": ${err.message}`);
+            }
+
+            // ── 6. Write a job summary ─────────────────────────────────────────
+            core.summary.addRaw(
+              `## ✅ Release Branch Lifecycle Complete\n\n` +
+              `| Step | Detail |\n` +
+              `|------|--------|\n` +
+              `| Merged branch | \`${mergedBranch}\` → \`${base}\` |\n` +
+              `| New release branch | \`${nextBranch}\` (created from \`${base}\` @ \`${productionSha.slice(0, 7)}\`) |\n` +
+              `| Default branch | Updated to \`${nextBranch}\` |\n` +
+              `| Deleted | \`${mergedBranch}\` |`
+            );
+            await core.summary.write();
