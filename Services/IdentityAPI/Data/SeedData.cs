@@ -181,7 +181,12 @@ namespace IdentityAPI.Data
                 
                 _logger?.LogInformation("Roles seeded successfully at {Time}", DateTime.UtcNow);
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
+            {
+                _logger?.LogError(ex, "Failed to seed roles at {Time}", DateTime.UtcNow);
+                // Don't re-throw - this makes the seeding idempotent and won't fail on subsequent runs
+            }
+            catch (InvalidOperationException ex)
             {
                 _logger?.LogError(ex, "Failed to seed roles at {Time}", DateTime.UtcNow);
                 // Don't re-throw - this makes the seeding idempotent and won't fail on subsequent runs

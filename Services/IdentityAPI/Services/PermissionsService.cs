@@ -2,6 +2,7 @@ using AutoMapper;
 using IdentityAPI.Data.DTO.Permission;
 using IdentityAPI.Entities;
 using IdentityAPI.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Shared.Data.Exceptions;
 using Shared.Helpers;
 using Shared.Services.App;
@@ -177,7 +178,12 @@ namespace IdentityAPI.Services
                 
                 _logger.LogInformation("SuperOwner role updated with {Count} permissions", allPermissions.Count);
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Failed to update SuperOwner role with new permissions");
+                // Don't throw - this is a best-effort operation
+            }
+            catch (InvalidOperationException ex)
             {
                 _logger.LogError(ex, "Failed to update SuperOwner role with new permissions");
                 // Don't throw - this is a best-effort operation

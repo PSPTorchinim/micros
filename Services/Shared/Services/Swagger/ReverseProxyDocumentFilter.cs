@@ -110,9 +110,9 @@ namespace Shared.Services.Swagger
                             {
                                 _logger.LogWarning(ex, "Invalid URL format for {Address}/{Path}", destination.Address, path);
                             }
-                            catch (Exception ex)
+                            catch (IOException ex)
                             {
-                                _logger.LogWarning(ex, "Unexpected error fetching swagger from {Address}/{Path}", destination.Address, path);
+                                _logger.LogWarning(ex, "IO error fetching swagger from {Address}/{Path}", destination.Address, path);
                             }
                         }
                     }
@@ -153,12 +153,10 @@ namespace Shared.Services.Swagger
 
             // Prevent access to private IP ranges to mitigate SSRF
             if ((uri.HostNameType == UriHostNameType.IPv4 || uri.HostNameType == UriHostNameType.IPv6)
-                && IPAddress.TryParse(uri.Host, out var ipAddress))
+                && IPAddress.TryParse(uri.Host, out var ipAddress)
+                && IsRestrictedIpAddress(ipAddress))
             {
-                if (IsRestrictedIpAddress(ipAddress))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;
