@@ -5,7 +5,7 @@
 # workflow (.github/workflows/create-issue-from-grafana.yml) then creates an issue.
 #
 # Required environment variables (set in docker-compose or as secrets):
-#   GITHUB_PAT        — Personal Access Token with `repo` scope for the target repository
+#   PIPELINE_PAT      — Personal Access Token with `repo` scope for the target repository
 #   GITHUB_REPO_OWNER — GitHub organisation or user that owns the target repository
 #   GITHUB_REPO_NAME  — Name of the target repository
 #
@@ -30,11 +30,11 @@ contactPoints:
 
           httpMethod: POST
 
-          # Bearer token auth — value is read from the GITHUB_PAT env variable at
+          # Bearer token auth — value is read from the PIPELINE_PAT env variable at
           # Grafana startup (Grafana expands ${ENV_VAR} in provisioning files).
           # GitHub PATs use the "Bearer" scheme (the "token" scheme is deprecated).
           authorization_scheme: Bearer
-          authorization_credentials: ${GITHUB_PAT}
+          authorization_credentials: ${PIPELINE_PAT}
 
           # Custom payload matching the schema expected by create-issue-from-grafana.yml.
           # Grafana template variables used:

@@ -14,7 +14,7 @@ name: Create Issue from Grafana Alert
 #   URL:    https://api.github.com/repos/<owner>/<repo>/dispatches
 #   Method: POST
 #   Headers:
-#     Authorization: Bearer <GITHUB_DISPATCH_TOKEN>  (PAT with repo scope)
+#     Authorization: Bearer <PIPELINE_PAT>  (PAT with repo scope — use the PIPELINE_PAT secret)
 #     Content-Type:  application/json
 #   Body (example):
 #   {

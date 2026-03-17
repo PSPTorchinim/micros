@@ -29,12 +29,12 @@ ENV GF_SERVER_HTTP_PORT=3001
 ENV GF_PATHS_DATA=/var/lib/grafana
 ENV GF_PATHS_LOGS=/var/lib/grafana/logs
 ENV GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-# GITHUB_PAT, GITHUB_REPO_OWNER, and GITHUB_REPO_NAME are required at runtime
+# PIPELINE_PAT, GITHUB_REPO_OWNER, and GITHUB_REPO_NAME are required at runtime
 # for the GitHub contact point defined in
 # Docker/init/grafana/alerting/github-contact-point.yml.
 # Provide them via docker-compose environment or a secrets manager.
 # Never set defaults — they must be explicitly supplied for Production deployments.
-ENV GITHUB_PAT=""
+ENV PIPELINE_PAT=""
 ENV GITHUB_REPO_OWNER=""
 ENV GITHUB_REPO_NAME=""
 
