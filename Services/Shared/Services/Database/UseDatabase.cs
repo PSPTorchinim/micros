@@ -100,13 +100,7 @@ namespace Shared.Services.Database
                     logger.LogInformation("Database migrations applied successfully for {DatabaseName}", context.Database.GetDbConnection().Database);
                     return true;
                 }
-                catch (DbUpdateException ex)
-                {
-                    logger.LogError(ex, "Database migration failed for {DatabaseName}", context.Database.GetDbConnection().Database);
-                    logger.LogWarning("Continuing application startup despite migration failure");
-                    return false;
-                }
-                catch (InvalidOperationException ex)
+                catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException)
                 {
                     logger.LogError(ex, "Database migration failed for {DatabaseName}", context.Database.GetDbConnection().Database);
                     logger.LogWarning("Continuing application startup despite migration failure");
