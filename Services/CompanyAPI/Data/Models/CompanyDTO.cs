@@ -24,6 +24,8 @@ namespace CompanyAPI.Data.Models
         public string? Logo { get; set; }
         public DateTime CreatedDate { get; set; }
         public Guid? CreatedByUserId { get; set; }
+        public Guid? CompanyTypeId { get; set; }
+        public string? CompanyTypeData { get; set; }
     }
 
     public class UpdateCompanyDTO
@@ -45,6 +47,8 @@ namespace CompanyAPI.Data.Models
         public string AddressLine1 { get; set; }
         public string? AddressLine2 { get; set; }
         public string? Logo { get; set; }
+        public Guid? CompanyTypeId { get; set; }
+        public string? CompanyTypeData { get; set; }
     }
 
     public class CompanyUserDTO

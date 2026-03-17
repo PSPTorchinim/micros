@@ -12,10 +12,11 @@ using Yarp.ReverseProxy.Transforms;
 
 namespace DJHostGateway.Tests
 {
-    public class SecurityStampValidationTransformTests
+    public class SecurityStampValidationTransformTests : IDisposable
     {
         private readonly Mock<ILogger<SecurityStampValidationTransform>> _loggerMock = new();
         private readonly IConfiguration _configuration;
+        private readonly List<IDisposable> _disposables = new();
 
         public SecurityStampValidationTransformTests()
         {
@@ -42,6 +43,7 @@ namespace DJHostGateway.Tests
             var httpClient = handler != null
                 ? new HttpClient(handler)
                 : new HttpClient();
+            _disposables.Add(httpClient);
             var httpClientFactoryMock = new Mock<IHttpClientFactory>();
             httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(httpClient);
             return new SecurityStampValidationTransform(
@@ -182,7 +184,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -244,7 +246,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -267,7 +269,7 @@ namespace DJHostGateway.Tests
             // Arrange
             var validationResponse = new
             {
-                Data = new { IsValid = true, Reason = (string?)null }
+                Data = new { IsValid = true, Reason = default(string) }
             };
             var handler = new MockHttpMessageHandler(
                 HttpStatusCode.OK,
@@ -284,6 +286,12 @@ namespace DJHostGateway.Tests
             Assert.True(context.HttpContext.Request.Headers.ContainsKey("Authorization"));
         }
 
+        public void Dispose()
+        {
+            foreach (var disposable in _disposables)
+                disposable.Dispose();
+        }
+
         /// <summary>
         /// A simple <see cref="HttpMessageHandler"/> stub that returns a predetermined response.
         /// </summary>
@@ -291,6 +299,7 @@ namespace DJHostGateway.Tests
         {
             private readonly HttpStatusCode _statusCode;
             private readonly HttpContent? _content;
+            private readonly List<HttpResponseMessage> _responses = new();
 
             public MockHttpMessageHandler(HttpStatusCode statusCode, HttpContent? content = null)
             {
@@ -302,10 +311,23 @@ namespace DJHostGateway.Tests
                 HttpRequestMessage request,
                 CancellationToken cancellationToken)
             {
-                return Task.FromResult(new HttpResponseMessage(_statusCode)
+                var response = new HttpResponseMessage(_statusCode)
                 {
                     Content = _content ?? new StringContent(string.Empty)
-                });
+                };
+                _responses.Add(response);
+                return Task.FromResult(response);
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    foreach (var response in _responses)
+                        response.Dispose();
+                    _responses.Clear();
+                }
+                base.Dispose(disposing);
             }
         }
     }

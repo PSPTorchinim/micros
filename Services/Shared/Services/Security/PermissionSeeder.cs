@@ -213,7 +213,7 @@ namespace Shared.Services.Security
                     _logger.LogInformation("Identity API health check passed, proceeding with individual permission seeding");
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
                 _logger.LogWarning(ex, "Health check failed before individual seeding, will attempt anyway");
             }
@@ -276,7 +276,12 @@ namespace Shared.Services.Security
                         failCount++;
                     }
                 }
-                catch (Exception ex)
+                catch (HttpRequestException ex)
+                {
+                    _logger.LogWarning(ex, "Error seeding permission {Permission}, continuing with others", permission.Name);
+                    failCount++;
+                }
+                catch (TaskCanceledException ex)
                 {
                     _logger.LogWarning(ex, "Error seeding permission {Permission}, continuing with others", permission.Name);
                     failCount++;

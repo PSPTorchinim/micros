@@ -10,6 +10,16 @@
         /// The user ID of the user who created this brand/company
         /// </summary>
         public Guid? CreatedByUserId { get; set; }
+
+        /// <summary>
+        /// The selected company type (references CompanyType.Id stored in MongoDB)
+        /// </summary>
+        public Guid? CompanyTypeId { get; set; }
+
+        /// <summary>
+        /// JSON storage for dynamic company-type-specific fields
+        /// </summary>
+        public string? CompanyTypeData { get; set; }
         
         public List<BrandCustomField> BrandCustomFields { get; set; }
         public List<Package> Packages { get; set; }

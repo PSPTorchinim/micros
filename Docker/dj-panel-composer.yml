@@ -984,6 +984,10 @@ services:
       - public
     volumes:
       - grafana_data:/var/lib/grafana
+    environment:
+      - PIPELINE_PAT=${PIPELINE_PAT}
+      - GITHUB_REPO_OWNER=${GITHUB_REPO_OWNER}
+      - GITHUB_REPO_NAME=${GITHUB_REPO_NAME}
     deploy:
       resources:
         limits:

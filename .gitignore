@@ -18,5 +18,6 @@ Docker/init/grafana/dashboards/*.json
 # CodeQL auto-fix generated reports
 codeql-report.md
 *.md
+!.github/**/*.md
 # Backslash-named build artefacts (created on Windows, should not be tracked)
 Frontends/dj-panel/obj*/

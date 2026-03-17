@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Reader;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -151,40 +152,55 @@ namespace Shared.Services.Swagger
             }
 
             // Prevent access to private IP ranges to mitigate SSRF
-            if (uri.HostNameType == UriHostNameType.IPv4 || uri.HostNameType == UriHostNameType.IPv6)
+            if ((uri.HostNameType == UriHostNameType.IPv4 || uri.HostNameType == UriHostNameType.IPv6)
+                && IPAddress.TryParse(uri.Host, out var ipAddress))
             {
-                if (IPAddress.TryParse(uri.Host, out var ipAddress))
+                if (IsRestrictedIpAddress(ipAddress))
                 {
-                    // Check if it's a private IP address
-                    var bytes = ipAddress.GetAddressBytes();
-
-                    // IPv4 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-                    var isPrivateIPv4 =
-                        ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
-                        (
-                            bytes[0] == PrivateClassAFirstOctet ||
-                            (bytes[0] == PrivateClassBFirstOctet &&
-                             bytes[1] >= PrivateClassBSecondOctetMin &&
-                             bytes[1] <= PrivateClassBSecondOctetMax) ||
-                            (bytes[0] == PrivateClassCFirstOctet &&
-                             bytes[1] == PrivateClassCSecondOctet)
-                        );
-
-                    // Allow private IPs only in development environment
-                    if (isPrivateIPv4 && !IsDevelopmentEnvironment())
-                    {
-                        return false;
-                    }
-
-                    // Link-local addresses (169.254.0.0/16) - always block
-                    if (bytes[0] == LinkLocalFirstOctet && bytes[1] == LinkLocalSecondOctet)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
             return true;
+        }
+
+        private bool IsRestrictedIpAddress(IPAddress ipAddress)
+        {
+            var bytes = ipAddress.GetAddressBytes();
+
+            // Allow private IPs only in development environment
+            if (IsPrivateIPv4Address(ipAddress, bytes) && !IsDevelopmentEnvironment())
+            {
+                return true;
+            }
+
+            // Link-local addresses (169.254.0.0/16) - always block
+            return bytes[0] == LinkLocalFirstOctet && bytes[1] == LinkLocalSecondOctet;
+        }
+
+        private static bool IsPrivateIPv4Address(IPAddress ipAddress, byte[] bytes)
+        {
+            if (ipAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                return false;
+            }
+
+            // 10.0.0.0/8
+            if (bytes[0] == PrivateClassAFirstOctet)
+            {
+                return true;
+            }
+
+            // 172.16.0.0/12
+            if (bytes[0] == PrivateClassBFirstOctet
+                && bytes[1] >= PrivateClassBSecondOctetMin
+                && bytes[1] <= PrivateClassBSecondOctetMax)
+            {
+                return true;
+            }
+
+            // 192.168.0.0/16
+            return bytes[0] == PrivateClassCFirstOctet && bytes[1] == PrivateClassCSecondOctet;
         }
 
         private async Task<OpenApiDocument?> FetchSwaggerDocumentAsync(string url)
@@ -234,9 +250,19 @@ namespace Shared.Services.Swagger
 
                 return document.Document;
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                _logger.LogWarning(ex, "Exception while fetching swagger from {Url}", url);
+                _logger.LogWarning(ex, "HTTP error while fetching swagger from {Url}", url);
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Timeout while fetching swagger from {Url}", url);
+                return null;
+            }
+            catch (IOException ex)
+            {
+                _logger.LogWarning(ex, "IO error while fetching swagger from {Url}", url);
                 return null;
             }
         }

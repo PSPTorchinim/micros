@@ -1,0 +1,309 @@
+.ctadmin-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.ctadmin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ctadmin-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ctadmin-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary, #1a202c);
+}
+
+.ctadmin-description {
+  font-size: 1rem;
+  color: var(--text-secondary, #718096);
+  margin: 0;
+}
+
+.ctadmin-error {
+  background-color: #fed7d7;
+  color: #c53030;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ctadmin-success {
+  background-color: #c6f6d5;
+  color: #22543d;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ── List ── */
+
+.ctadmin-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary, #718096);
+}
+
+.ctadmin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.ctadmin-table thead {
+  background: var(--bg-secondary, #f7fafc);
+}
+
+.ctadmin-table th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.ctadmin-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  color: var(--text-primary, #1a202c);
+  font-size: 0.875rem;
+}
+
+.ctadmin-table tbody tr:hover {
+  background-color: var(--bg-hover, #edf2f7);
+}
+
+.ctadmin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ctadmin-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ctadmin-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ctadmin-badge--active {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.ctadmin-badge--inactive {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+/* ── Form ── */
+
+.ctadmin-form {
+  background: var(--bg-secondary, #f7fafc);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.ctadmin-form-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: var(--text-primary, #1a202c);
+}
+
+.ctadmin-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
+  color: var(--text-primary, #1a202c);
+}
+
+.ctadmin-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: end;
+}
+
+.ctadmin-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.ctadmin-checkbox-row input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: var(--accent-primary, #4299e1);
+}
+
+.ctadmin-checkbox-row label {
+  font-size: 0.9rem;
+  color: var(--text-primary, #1a202c);
+  cursor: pointer;
+}
+
+/* Translations */
+.ctadmin-translation-row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 1fr;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.375rem;
+}
+
+.ctadmin-lang-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--accent-primary, #4299e1);
+  color: #fff;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Field form */
+.ctadmin-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ctadmin-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+}
+
+.ctadmin-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  color: var(--text-primary, #1a202c);
+  background: var(--bg-primary, #ffffff);
+}
+
+.ctadmin-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Sync/Import */
+.ctadmin-help-text {
+  color: var(--text-secondary, #718096);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.ctadmin-sync-result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.ctadmin-sync-result p {
+  margin: 0.25rem 0;
+  color: var(--text-primary, #1a202c);
+}
+
+.ctadmin-errors-list {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  color: #c53030;
+  font-size: 0.875rem;
+}
+
+/* File upload */
+.ctadmin-file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ctadmin-file-input {
+  padding: 0.5rem;
+  border: 1px dashed var(--border-color, #e2e8f0);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  background: var(--bg-primary, #ffffff);
+}
+
+.ctadmin-file-input:hover {
+  border-color: var(--accent-primary, #4299e1);
+}
+
+.ctadmin-file-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #718096);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ctadmin-container {
+    padding: 1rem;
+  }
+
+  .ctadmin-header {
+    flex-direction: column;
+  }
+
+  .ctadmin-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ctadmin-translation-row {
+    grid-template-columns: 2.5rem 1fr;
+  }
+
+  .ctadmin-translation-row > *:last-child {
+    grid-column: 2;
+  }
+
+  .ctadmin-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .ctadmin-form-actions {
+    flex-direction: column;
+  }
+}
