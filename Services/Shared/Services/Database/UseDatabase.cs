@@ -64,7 +64,7 @@ namespace Shared.Services.Database
             settings.RetryWrites = true;
             settings.RetryReads = true;
 
-            services.AddSingleton(new MongoClient(settings));
+            services.AddSingleton<MongoClient>(_ => new MongoClient(settings));
         }
 
         private static async Task<WebApplication> UseDatabaseScopeAsync<C, P>(this WebApplication app, Func<C, Task<bool>> action) where C : DbContext
