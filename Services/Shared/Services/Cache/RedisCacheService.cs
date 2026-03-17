@@ -140,9 +140,9 @@ namespace Shared.Services.Cache
                         _logger.LogInformation("Deleted {Count} cache keys with prefix {Prefix}", keys.Count, prefix);
                     }
                 }
-                catch (Exception ex)
+                catch (RedisException ex)
                 {
-                    _logger.LogError(ex, "Error removing cache keys by prefix {Prefix}", prefix);
+                    _logger.LogError(ex, "Redis error removing cache keys by prefix {Prefix}", prefix);
                 }
             }
             else

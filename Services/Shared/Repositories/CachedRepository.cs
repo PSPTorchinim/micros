@@ -196,7 +196,11 @@ namespace Shared.Repositories
                 await _cacheService.RemoveByPrefixAsync(GetEntityCachePrefix());
                 _logger.LogInformation("Cache invalidated for {EntityName}. Will be refreshed on next read.", _entityName);
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Error invalidating cache for {EntityName}", _entityName);
+            }
+            catch (ObjectDisposedException ex)
             {
                 _logger.LogError(ex, "Error invalidating cache for {EntityName}", _entityName);
             }
