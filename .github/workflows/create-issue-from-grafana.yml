@@ -5,6 +5,9 @@ name: Create Issue from Grafana Alert
 # workflow when an alert fires. The workflow parses the alert payload and opens a
 # new issue with the relevant log details so engineers can track and investigate.
 #
+# ⚠️  This workflow only processes alerts from the Production environment.
+#     Alerts with any other environment value (or no environment) are skipped.
+#
 # Trigger: Grafana webhook → GitHub repository_dispatch with event_type "grafana-alert"
 #
 # Required Grafana webhook configuration:
@@ -17,6 +20,7 @@ name: Create Issue from Grafana Alert
 #   {
 #     "event_type": "grafana-alert",
 #     "client_payload": {
+#       "environment": "Production",
 #       "title":     "High error rate in IdentityAPI",
 #       "message":   "Error rate exceeded threshold of 5% in the last 5 minutes.",
 #       "severity":  "critical",
@@ -40,6 +44,8 @@ jobs:
     name: Create GitHub Issue
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Only run for Production environment alerts — skip Development or unspecified
+    if: github.event.client_payload.environment == 'Production'
     steps:
       - name: Validate payload
         env:
@@ -54,14 +60,16 @@ jobs:
       - name: Build issue body
         id: build_body
         env:
-          PAYLOAD_MESSAGE:   ${{ github.event.client_payload.message }}
-          PAYLOAD_SEVERITY:  ${{ github.event.client_payload.severity }}
-          PAYLOAD_SERVICE:   ${{ github.event.client_payload.service }}
-          PAYLOAD_DASHBOARD: ${{ github.event.client_payload.dashboard }}
-          PAYLOAD_LOGS:      ${{ github.event.client_payload.logs }}
+          PAYLOAD_MESSAGE:     ${{ github.event.client_payload.message }}
+          PAYLOAD_SEVERITY:    ${{ github.event.client_payload.severity }}
+          PAYLOAD_SERVICE:     ${{ github.event.client_payload.service }}
+          PAYLOAD_DASHBOARD:   ${{ github.event.client_payload.dashboard }}
+          PAYLOAD_LOGS:        ${{ github.event.client_payload.logs }}
+          PAYLOAD_ENVIRONMENT: ${{ github.event.client_payload.environment }}
         run: |
           SEVERITY="${PAYLOAD_SEVERITY:-unknown}"
           SERVICE="${PAYLOAD_SERVICE:-unknown}"
+          ENVIRONMENT="$PAYLOAD_ENVIRONMENT"
 
           # Choose an emoji that reflects severity
           case "$SEVERITY" in
@@ -78,11 +86,12 @@ jobs:
           cat > /tmp/issue_body.md <<BODY
           ## $EMOJI Grafana Alert — $SEVERITY
 
-          | Field     | Value |
-          |-----------|-------|
-          | Severity  | \`$SEVERITY\` |
-          | Service   | \`$SERVICE\` |
-          | Triggered | $TRIGGERED_AT |
+          | Field       | Value |
+          |-------------|-------|
+          | Environment | \`$ENVIRONMENT\` |
+          | Severity    | \`$SEVERITY\` |
+          | Service     | \`$SERVICE\` |
+          | Triggered   | $TRIGGERED_AT |
 
           ### Description
           ${PAYLOAD_MESSAGE:-_No description provided._}
@@ -159,5 +168,6 @@ jobs:
           echo "A new GitHub issue was created from the Grafana alert." >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Alert title:** ${{ github.event.client_payload.title }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Environment:** ${{ github.event.client_payload.environment }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Severity:** ${{ github.event.client_payload.severity }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Service:** ${{ github.event.client_payload.service }}" >> "$GITHUB_STEP_SUMMARY"
