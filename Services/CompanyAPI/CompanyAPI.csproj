@@ -11,11 +11,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
-<<<<<<< copilot/add-company-types-international-support
     <PackageReference Include="MongoDB.Bson" Version="3.7.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.7.0" />
-=======
->>>>>>> releases/R2603
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
