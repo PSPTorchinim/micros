@@ -1,13 +1,17 @@
 import { act, renderHook } from '@testing-library/react';
 import { useInactivityTimeout } from './use-inactivity-timeout';
 
+const LAST_ACTIVITY_KEY = 'lastActivityAt';
+
 describe('useInactivityTimeout', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    localStorage.clear();
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    localStorage.clear();
   });
 
   it('calls onTimeout after 2 hours of inactivity when active', () => {
@@ -136,6 +140,67 @@ describe('useInactivityTimeout', () => {
     act(() => {
       jest.advanceTimersByTime(2 * 60 * 60 * 1000 - 1);
     });
+
+    expect(onTimeout).not.toHaveBeenCalled();
+  });
+
+  it('calls onTimeout immediately on mount when stored last activity is older than 2 hours', () => {
+    const onTimeout = jest.fn();
+    const moreThanTwoHoursAgo = Date.now() - (2 * 60 * 60 * 1000 + 1);
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(moreThanTwoHoursAgo));
+
+    renderHook(() => useInactivityTimeout(onTimeout, true));
+
+    expect(onTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onTimeout on mount when stored last activity is less than 2 hours ago', () => {
+    const onTimeout = jest.fn();
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(oneHourAgo));
+
+    renderHook(() => useInactivityTimeout(onTimeout, true));
+
+    expect(onTimeout).not.toHaveBeenCalled();
+  });
+
+  it('clears lastActivityAt from localStorage when isActive becomes false', () => {
+    const onTimeout = jest.fn();
+
+    const { rerender } = renderHook(
+      ({ isActive }: { isActive: boolean }) =>
+        useInactivityTimeout(onTimeout, isActive),
+      { initialProps: { isActive: true } },
+    );
+
+    expect(localStorage.getItem(LAST_ACTIVITY_KEY)).not.toBeNull();
+
+    rerender({ isActive: false });
+
+    expect(localStorage.getItem(LAST_ACTIVITY_KEY)).toBeNull();
+  });
+
+  it('persists lastActivityAt to localStorage on activity', () => {
+    const onTimeout = jest.fn();
+
+    renderHook(() => useInactivityTimeout(onTimeout, true));
+
+    const before = Number(localStorage.getItem(LAST_ACTIVITY_KEY));
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+      window.dispatchEvent(new MouseEvent('mousemove'));
+    });
+
+    const after = Number(localStorage.getItem(LAST_ACTIVITY_KEY));
+    expect(after).toBeGreaterThan(before);
+  });
+
+  it('does not call onTimeout on mount when stored lastActivityAt is an invalid value', () => {
+    const onTimeout = jest.fn();
+    localStorage.setItem(LAST_ACTIVITY_KEY, 'not-a-number');
+
+    renderHook(() => useInactivityTimeout(onTimeout, true));
 
     expect(onTimeout).not.toHaveBeenCalled();
   });

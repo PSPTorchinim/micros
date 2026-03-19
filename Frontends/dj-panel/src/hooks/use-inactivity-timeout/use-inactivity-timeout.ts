@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 const INACTIVITY_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+const LAST_ACTIVITY_KEY = 'lastActivityAt';
 
 const ACTIVITY_EVENTS: (keyof WindowEventMap)[] = [
   'mousemove',
@@ -28,10 +29,25 @@ export const useInactivityTimeout = (
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      localStorage.removeItem(LAST_ACTIVITY_KEY);
       return;
     }
 
+    // Check persisted last activity timestamp to handle page reloads/reopens
+    const stored = localStorage.getItem(LAST_ACTIVITY_KEY);
+    if (stored !== null) {
+      const lastActivity = Number(stored);
+      if (!Number.isNaN(lastActivity)) {
+        const elapsed = Date.now() - lastActivity;
+        if (elapsed >= INACTIVITY_TIMEOUT_MS) {
+          onTimeoutRef.current();
+          return;
+        }
+      }
+    }
+
     const resetTimer = () => {
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current);
       }
