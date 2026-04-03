@@ -77,12 +77,12 @@ describe('StepsContainerBlock', () => {
 
     const { container } = render(<StepsContainerBlock {...props} />);
 
-    // Check that step numbers are rendered (1, 2, 3)
-    const stepLabels = container.querySelectorAll('.steps-card-label');
-    expect(stepLabels).toHaveLength(3);
+    // Check that step number badges are rendered (1, 2, 3)
+    const stepBadges = container.querySelectorAll('.steps-card-badge');
+    expect(stepBadges).toHaveLength(3);
 
     mockSteps.forEach((_, index) => {
-      expect(stepLabels[index].textContent).toBe((index + 1).toString());
+      expect(stepBadges[index].textContent).toBe((index + 1).toString());
     });
   });
 

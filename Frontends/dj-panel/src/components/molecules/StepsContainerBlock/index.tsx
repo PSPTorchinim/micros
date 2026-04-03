@@ -69,7 +69,9 @@ export const StepsContainerBlock = (props: StepsContainer) => {
         <div className="steps-grid thq-grid-2">
           <div className="steps-section-header">
             <h2 className="thq-heading-2">{props.heading}</h2>
-            <p className="thq-body-large">{props.content}</p>
+            {props.content && (
+              <p className="thq-body-large">{props.content}</p>
+            )}
             {actionItem?.url && (
               <div className="steps-actions">
                 <a
@@ -98,13 +100,17 @@ export const StepsContainerBlock = (props: StepsContainer) => {
                   zIndex: index + 1,
                 }}
               >
-                <h2 className="thq-heading-2">{step.title}</h2>
-                <span className="steps-card-text thq-body-small">
+                <div className="steps-card-header">
+                  <div className="steps-card-badge" aria-hidden="true">
+                    {index + 1}
+                  </div>
+                  <h3 className="thq-heading-3 steps-card-title">
+                    {step.title}
+                  </h3>
+                </div>
+                <p className="steps-card-text thq-body-small">
                   {step.description}
-                </span>
-                <label className="steps-card-label thq-heading-3">
-                  {index + 1}
-                </label>
+                </p>
               </div>
             ))}
           </div>

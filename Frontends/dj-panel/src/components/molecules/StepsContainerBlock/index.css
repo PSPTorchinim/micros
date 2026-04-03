@@ -31,15 +31,40 @@
   will-change: transform;
   background-color: var(--dl-color-theme-neutral-light, #fff);
   margin-bottom: 1.5rem;
+  border-left: 4px solid var(--dl-color-theme-primary1, #2563eb);
 }
 
-.steps-card-text {
+.steps-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--dl-space-space-unit, 1rem);
+  margin-bottom: var(--dl-space-space-unit, 1rem);
+}
+
+.steps-card-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--dl-color-theme-primary1, #2563eb);
+  color: var(--dl-color-theme-button-text, #ffffff);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.steps-card-title {
+  margin: 0;
   flex: 1;
 }
 
-.steps-card-label {
-  align-self: flex-end;
-  opacity: 0.4;
+.steps-card-text {
+  color: var(--dl-color-theme-text-secondary, #666666);
+  margin: 0;
+  padding-left: calc(2.5rem + var(--dl-space-space-unit, 1rem));
 }
 
 @media (max-width: 767px) {
@@ -50,5 +75,9 @@
   .steps-card {
     position: static;
     transform: none !important;
+  }
+
+  .steps-card-text {
+    padding-left: 0;
   }
 }
