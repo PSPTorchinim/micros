@@ -7,7 +7,7 @@ name: Release PR Automation
 #    - Resolves any open review threads so the PR is clean for final review.
 #
 # 2. When such a PR is successfully merged into production:
-#    - Computes the name of the next release branch (increments the YYYY-MM suffix).
+#    - Computes the name of the next release branch (increments the RYYMM month suffix).
 #    - Creates that new release branch from the freshly updated production branch.
 #    - Switches the repository default branch to the new release branch.
 #    - Deletes the release branch that was just merged (keeping the branch list clean).
@@ -164,15 +164,37 @@ jobs:
           script: |
             const owner       = context.repo.owner;
             const repo        = context.repo.repo;
-            const mergedBranch = context.payload.pull_request.head.ref; // e.g. "releases/2025-04"
+            const mergedBranch = context.payload.pull_request.head.ref; // e.g. "releases/R2603"
             const base         = 'production';
 
             core.info(`Merged branch: ${mergedBranch}`);
 
             // ── 1. Compute the next release branch name ────────────────────────
-            // Convention: releases/YYYY-MM  →  increment month by 1.
-            // Falls back to releases/YYYY-MM-<n> style for non-date suffixes.
+            // Primary convention: releases/RYYMM or releases/RYYMM-N
+            //   → strip any -N suffix, increment MM by 1 (with year rollover).
+            //   e.g. "releases/R2603"   → "releases/R2604"
+            //        "releases/R2603-2" → "releases/R2604"
+            //        "releases/R2612"   → "releases/R2701"
+            // Legacy convention: releases/YYYY-MM  →  increment month by 1.
+            // Fallback: append / increment a numeric suffix for unrecognised patterns.
             function nextReleaseBranchName(current) {
+              // Primary pattern: releases/RYYMM or releases/RYYMM-N
+              const sprintPattern = /^releases\/R(\d{2})(\d{2})(?:-\d+)?$/;
+              const sprintMatch = current.match(sprintPattern);
+
+              if (sprintMatch) {
+                let year  = parseInt(sprintMatch[1], 10);
+                let month = parseInt(sprintMatch[2], 10);
+
+                month += 1;
+                if (month > 12) {
+                  month = 1;
+                  year += 1;
+                }
+                return `releases/R${String(year).padStart(2, '0')}${String(month).padStart(2, '0')}`;
+              }
+
+              // Legacy pattern: releases/YYYY-MM  →  increment month by 1.
               const datePattern = /^releases\/(\d{4})-(\d{2})$/;
               const match = current.match(datePattern);
 
