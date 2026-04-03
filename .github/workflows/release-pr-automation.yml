@@ -12,13 +12,11 @@ name: Release PR Automation
 #    - Switches the repository default branch to the new release branch.
 #    - Deletes the release branch that was just merged (keeping the branch list clean).
 #
-# 3. When a workflow run is waiting for environment approval (deployment_protection_rule):
-#    - Automatically approves the pending deployment gate so pipelines are not blocked.
-#
 # Triggers:
 #   - pull_request: ready_for_review, closed
 #   (Only acted upon when the PR targets "production" from a "releases/**" head branch.)
-#   - deployment_protection_rule (auto-approve environment gates)
+#
+# See also: auto-approve-deployments.yml — handles deployment_protection_rule events.
 
 on:
   pull_request:
@@ -27,12 +25,10 @@ on:
       - closed
     branches:
       - production
-  deployment_protection_rule:
 
 permissions:
   contents: write       # create / delete branches, update default branch
   pull-requests: write  # add reviewers, resolve review threads
-  actions: write        # approve deployment protection rules
 
 jobs:
   # ── Job 1: Add Copilot reviewer and resolve open review threads ──────────────
@@ -295,57 +291,3 @@ jobs:
               `| Deleted | \`${mergedBranch}\` |`
             );
             await core.summary.write();
-
-  # ── Job 3: Auto-approve deployment protection rule gates ─────────────────────
-  auto_approve_deployment:
-    name: Auto-Approve Deployment Gate
-    if: github.event_name == 'deployment_protection_rule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Approve pending deployment
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const callbackUrl = context.payload.deployment_callback_url;
-            const environment = context.payload.environment;
-
-            // Validate required payload fields are present
-            if (!callbackUrl) {
-              core.setFailed('deployment_callback_url is missing from the event payload.');
-              return;
-            }
-            if (!environment) {
-              core.setFailed('environment is missing from the event payload.');
-              return;
-            }
-
-            // Validate the callback URL belongs to the GitHub API domain to prevent SSRF,
-            // and extract the run_id so we can use the explicit Octokit endpoint format.
-            const urlPattern = /^https:\/\/api\.github\.com\/repos\/[^/]+\/[^/]+\/actions\/runs\/(\d+)\/deployment_protection_rule$/;
-            const match = callbackUrl.match(urlPattern);
-            if (!match) {
-              core.setFailed(`Unexpected callback URL format: ${callbackUrl}`);
-              return;
-            }
-            const runId = parseInt(match[1], 10);
-
-            core.info(`Approving deployment to environment: ${environment} (run ${runId})`);
-
-            try {
-              await github.request(
-                'POST /repos/{owner}/{repo}/actions/runs/{run_id}/deployment_protection_rule',
-                {
-                  owner: context.repo.owner,
-                  repo:  context.repo.repo,
-                  run_id: runId,
-                  environment_name: environment,
-                  state: 'approved',
-                  comment: 'Auto-approved by pipeline automation',
-                }
-              );
-              core.info(`✅ Deployment to "${environment}" approved automatically.`);
-            } catch (err) {
-              core.setFailed(`Failed to approve deployment to "${environment}": ${err.message}`);
-            }
