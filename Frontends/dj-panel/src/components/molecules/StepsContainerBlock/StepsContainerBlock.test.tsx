@@ -86,6 +86,54 @@ describe('StepsContainerBlock', () => {
     });
   });
 
+  it('applies sticky top and z-index styles to each step card', () => {
+    const props: StepsContainer = {
+      heading: 'Get Started',
+      content: 'Test content',
+      action: mockCta as any,
+      steps: mockSteps as any,
+    };
+
+    const { container } = render(<StepsContainerBlock {...props} />);
+
+    const cards = container.querySelectorAll('.steps-card');
+    expect(cards).toHaveLength(3);
+
+    cards.forEach((card, index) => {
+      const el = card as HTMLElement;
+      expect(el.style.top).toBe(`${80 + index * 20}px`);
+      expect(el.style.zIndex).toBe(String(index + 1));
+    });
+  });
+
+  it('registers and removes scroll event listener', () => {
+    const addSpy = jest.spyOn(window, 'addEventListener');
+    const removeSpy = jest.spyOn(window, 'removeEventListener');
+
+    const props: StepsContainer = {
+      heading: 'Get Started',
+      content: 'Test content',
+      steps: mockSteps as any,
+    };
+
+    const { unmount } = render(<StepsContainerBlock {...props} />);
+
+    const scrollAddCall = addSpy.mock.calls.find(
+      ([event]) => event === 'scroll',
+    );
+    expect(scrollAddCall).toBeDefined();
+    expect(scrollAddCall?.[2]).toEqual({ passive: true });
+
+    unmount();
+
+    expect(removeSpy.mock.calls.some(([event]) => event === 'scroll')).toBe(
+      true,
+    );
+
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+  });
+
   it('renders CTA with correct label and url', () => {
     const props: StepsContainer = {
       heading: 'Get Started',

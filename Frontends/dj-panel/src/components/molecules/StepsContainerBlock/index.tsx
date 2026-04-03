@@ -1,5 +1,5 @@
 // @ts-ignore - React is needed for JSX
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import './index.css';
 import type { StepsContainer, Cta } from '../../../models/api/strapi/apiMap';
 
@@ -10,6 +10,10 @@ interface Step {
   icon?: string;
 }
 
+const CARD_STICKY_TOP_BASE_PX = 80;
+const CARD_STICKY_TOP_INCREMENT_PX = 20;
+const CARD_SCALE_MAX_REDUCTION = 0.05;
+
 export const StepsContainerBlock = (props: StepsContainer) => {
   // Extract action - now it's a direct relation to CTA (oneToOne)
   const actionItem = props.action as unknown as Cta | null | undefined;
@@ -18,6 +22,46 @@ export const StepsContainerBlock = (props: StepsContainer) => {
   const stepsArray = Array.isArray(props.steps)
     ? (props.steps as unknown as Step[])
     : [];
+
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const updateCards = () => {
+      cardRefs.current.forEach((card, i) => {
+        if (!card || i >= cardRefs.current.length - 1) return;
+        const rect = card.getBoundingClientRect();
+        const stickyTop =
+          CARD_STICKY_TOP_BASE_PX + i * CARD_STICKY_TOP_INCREMENT_PX;
+        const coveredAmount = stickyTop - rect.top;
+
+        if (coveredAmount > 0) {
+          const progress = Math.min(coveredAmount / rect.height, 1);
+          const scale = 1 - progress * CARD_SCALE_MAX_REDUCTION;
+          card.style.transform = `scale(${scale})`;
+        } else {
+          card.style.transform = '';
+        }
+      });
+      rafRef.current = null;
+    };
+
+    const handleScroll = () => {
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(updateCards);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    updateCards();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [stepsArray.length]);
 
   return (
     <div className="steps-container thq-section-padding">
@@ -43,7 +87,17 @@ export const StepsContainerBlock = (props: StepsContainer) => {
           </div>
           <div className="steps-card-container">
             {stepsArray.map((step: Step, index: number) => (
-              <div key={step.id ?? index} className="steps-card thq-card">
+              <div
+                key={step.id ?? index}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                className="steps-card thq-card"
+                style={{
+                  top: `${CARD_STICKY_TOP_BASE_PX + index * CARD_STICKY_TOP_INCREMENT_PX}px`,
+                  zIndex: index + 1,
+                }}
+              >
                 <h2 className="thq-heading-2">{step.title}</h2>
                 <span className="steps-card-text thq-body-small">
                   {step.description}

@@ -1,30 +1,54 @@
-.steps-container-block {
-  padding: 2rem 1rem;
-  background: #f5f7fa;
-  border-radius: 1.5rem;
-  margin-bottom: 2rem;
-}
-.steps-container-block__steps {
+.steps-section-header {
+  position: sticky;
+  top: 5rem;
+  align-self: flex-start;
+  height: fit-content;
   display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  gap: var(--dl-space-space-oneandhalfunits, 1.5rem);
 }
-.steps-container-block__step {
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: 1.5rem;
-  min-width: 180px;
-  max-width: 260px;
-  text-align: center;
+
+.steps-actions {
+  display: flex;
 }
-.steps-container-block__step-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+
+.steps-button {
+  margin-top: var(--dl-space-space-unit, 1rem);
 }
-.steps-container-block__step-desc {
-  color: #555;
-  font-size: 1rem;
+
+.steps-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.steps-card {
+  position: sticky;
+  transform-origin: top center;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  will-change: transform;
+  background-color: var(--dl-color-theme-neutral-light, #fff);
+  margin-bottom: 1.5rem;
+}
+
+.steps-card-text {
+  flex: 1;
+}
+
+.steps-card-label {
+  align-self: flex-end;
+  opacity: 0.4;
+}
+
+@media (max-width: 767px) {
+  .steps-section-header {
+    position: static;
+  }
+
+  .steps-card {
+    position: static;
+    transform: none !important;
+  }
 }
