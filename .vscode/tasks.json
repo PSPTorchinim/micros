@@ -182,6 +182,219 @@
       "dependsOn": "build-mailingapi",
       "group": "build",
       "dependsOrder": "sequence"
+    },
+
+    // ================================================
+    // VALIDATION TASKS
+    // ================================================
+
+    {
+      "label": "validate: .vscode configuration",
+      "type": "shell",
+      "command": "node scripts/validate-vscode.js",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+
+    // ================================================
+    // DOCKER COMPOSE TASKS
+    // ================================================
+
+    {
+      "label": "docker: compose up infra",
+      "type": "shell",
+      "command": "docker compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose up backend",
+      "type": "shell",
+      "command": "docker compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose up frontends",
+      "type": "shell",
+      "command": "docker compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose down",
+      "type": "shell",
+      "command": "docker compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends down",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose down --volumes",
+      "type": "shell",
+      "command": "docker compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends down --volumes",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+
+    // ================================================
+    // PODMAN COMPOSE TASKS
+    // ================================================
+
+    {
+      "label": "podman: compose up infra",
+      "type": "shell",
+      "command": "podman compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "podman: compose up backend",
+      "type": "shell",
+      "command": "podman compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "podman: compose up frontends",
+      "type": "shell",
+      "command": "podman compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "podman: compose down",
+      "type": "shell",
+      "command": "podman compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends down",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "podman: compose down --volumes",
+      "type": "shell",
+      "command": "podman compose -f Docker/dj-panel-composer.yml --env-file Docker/.env --profile infra --profile backend --profile frontends down --volumes",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
     }
   ]
 }
