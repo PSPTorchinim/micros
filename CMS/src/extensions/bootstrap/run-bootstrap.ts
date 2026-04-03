@@ -103,26 +103,29 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     TASKS.allPublicPermissions,
   );
 
-  // Only run seeding tasks if database is empty
-  // This improves startup performance when data already exists
+  // Always seed content types so that any newly added block is automatically
+  // seeded with example data on the next startup. Each seeding function is
+  // idempotent – it checks for existing records before creating, so running
+  // this on every boot is safe.
+  console.info('');
+  console.info('[BOOT] 🎨 Seeding content types (runs on every startup to pick up new blocks)');
+  await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
+
+  // Only seed articles and pages on the very first run (when the database is
+  // empty), as these are large data sets that don't need to be re-checked on
+  // every startup.
   if (dbIsEmpty) {
     console.info('');
-    console.info('[BOOT] 📦 Running seeding tasks for empty database...');
-    console.info('[BOOT] Seeding order: content-types → articles → pages');
+    console.info('[BOOT] 📦 Running first-run seeding tasks (articles and pages)...');
     console.info('');
-    
-    // 1) Seed all content types (Hero Blocks, Feature Sections, etc.)
-    console.info('[BOOT] 🎨 Step 1/3: Seeding content types (dependencies)');
-    await runTask(strapi, 'seed-content-types', TASKS.seedContentTypes);
 
-    // 2) Seed DJ articles
-    console.info('');
-    console.info('[BOOT] 📝 Step 2/3: Seeding articles');
+    // 1) Seed DJ articles
+    console.info('[BOOT] 📝 Step 1/2: Seeding articles');
     await runTask(strapi, 'seed-articles', TASKS.seedArticles);
 
-    // 3) Seed standard pages (Login, Forgot Password, Home, About)
+    // 2) Seed standard pages (Login, Forgot Password, Home, About)
     console.info('');
-    console.info('[BOOT] 📄 Step 3/3: Seeding pages (depends on content-types and articles)');
+    console.info('[BOOT] 📄 Step 2/2: Seeding pages (depends on content-types and articles)');
     await runTask(strapi, 'seed-pages', TASKS.seedPages);
     
     console.info('');
@@ -131,8 +134,8 @@ export default async function runBootstrap({ strapi }: { strapi: StrapiAny }) {
     console.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } else {
     console.info('');
-    console.info('[BOOT] ⏭️  Skipping seeding tasks - database already contains data');
-    console.info('[BOOT] 💡 To reseed, delete the database and restart Strapi');
+    console.info('[BOOT] ⏭️  Skipping articles and pages seeding - database already contains data');
+    console.info('[BOOT] 💡 Content types have been checked and any new blocks have been seeded');
     console.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 }
