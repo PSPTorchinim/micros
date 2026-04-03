@@ -438,7 +438,9 @@ export class StrapiService {
         // @ts-expect-error - Strapi v5 supports complex populate objects for nested components, but generated types only allow strings
         populate: {
           columns: {
-            populate: '*',
+            populate: {
+              links: true,
+            },
           },
           socialLinks: true,
         },
