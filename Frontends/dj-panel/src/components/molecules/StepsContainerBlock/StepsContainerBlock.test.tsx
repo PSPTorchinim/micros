@@ -118,15 +118,17 @@ describe('StepsContainerBlock', () => {
 
     const { unmount } = render(<StepsContainerBlock {...props} />);
 
-    const scrollAddCall = addSpy.mock.calls.find(([event]) => event === 'scroll');
+    const scrollAddCall = addSpy.mock.calls.find(
+      ([event]) => event === 'scroll',
+    );
     expect(scrollAddCall).toBeDefined();
     expect(scrollAddCall?.[2]).toEqual({ passive: true });
 
     unmount();
 
-    expect(
-      removeSpy.mock.calls.some(([event]) => event === 'scroll'),
-    ).toBe(true);
+    expect(removeSpy.mock.calls.some(([event]) => event === 'scroll')).toBe(
+      true,
+    );
 
     addSpy.mockRestore();
     removeSpy.mockRestore();
