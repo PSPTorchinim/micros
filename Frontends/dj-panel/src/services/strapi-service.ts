@@ -435,7 +435,15 @@ export class StrapiService {
   public static async getFooterSingleton() {
     try {
       const res = await microservicesClient.strapi.footer.getFooter({
-        populate: 'columns.links,socialLinks',
+        // @ts-expect-error - Strapi v5 supports complex populate objects for nested components, but generated types only allow strings
+        populate: {
+          columns: {
+            populate: {
+              links: true,
+            },
+          },
+          socialLinks: true,
+        },
       });
       return res.data.data ?? null;
     } catch {
