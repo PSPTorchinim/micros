@@ -801,7 +801,7 @@ services:
   tempo:
     profiles: [infra]
     image: grafana/tempo:latest
-    command: [ "-config.file=/etc/tempo.yaml" ]
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
     restart: unless-stopped
     pull_policy: always
     ports:
@@ -814,7 +814,7 @@ services:
       - public
     volumes:
       - tempo_data:/var/tempo
-      - ./init/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - ./init/tempo:/etc/tempo:ro
     deploy:
       resources:
         limits:
