@@ -2,6 +2,7 @@ name: djpanel
 
 services:
   mongodb_container:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/mongodb.Dockerfile
@@ -28,6 +29,7 @@ services:
           memory: 512M
 
   strapi_db:
+    profiles: [infra]
     image: postgres:18
     environment:
       - POSTGRES_DB=${CMS_DATABASE_NAME}
@@ -59,6 +61,7 @@ services:
           memory: 512M
 
   rabbitmq:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/rabbitmq.Dockerfile
@@ -88,6 +91,7 @@ services:
           memory: 256M
 
   redis:
+    profiles: [infra]
     image: redis:8-alpine
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -118,6 +122,7 @@ services:
           memory: 128M
 
   sqlserver:
+    profiles: [infra]
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
@@ -149,6 +154,7 @@ services:
           memory: 512M
 
   apigateway:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -222,6 +228,7 @@ services:
           memory: 256M
 
   dj-panel:
+    profiles: [frontends]
     build:
       context: ../
       dockerfile: Docker/frontends/react.Dockerfile
@@ -254,6 +261,7 @@ services:
           memory: 128M
 
   storybook-dj-panel:
+    profiles: [frontends]
     build:
       context: ../
       dockerfile: Docker/frontends/storybook.Dockerfile
@@ -275,6 +283,7 @@ services:
           memory: 128M
 
   strapi:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/infra/strapi.Dockerfile
@@ -315,6 +324,7 @@ services:
           memory: 256M
 
   identity_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -378,6 +388,7 @@ services:
           memory: 128M
 
   music_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -441,6 +452,7 @@ services:
           memory: 128M
 
   gear_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -504,6 +516,7 @@ services:
           memory: 128M
 
   documents_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -567,6 +580,7 @@ services:
           memory: 128M
 
   brand_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -630,6 +644,7 @@ services:
           memory: 128M
 
   mailing_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -693,6 +708,7 @@ services:
           memory: 128M
 
   party_be:
+    profiles: [backend]
     build:
       context: ../
       dockerfile: Docker/services/dotnet.Dockerfile
@@ -760,6 +776,7 @@ services:
   # ================================================
 
   loki:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/loki.Dockerfile
@@ -782,6 +799,7 @@ services:
           memory: 128M
 
   tempo:
+    profiles: [infra]
     image: grafana/tempo:latest
     command: [ "-config.file=/etc/tempo.yaml" ]
     restart: unless-stopped
@@ -807,6 +825,7 @@ services:
           memory: 128M
 
   promtail:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/promtail.Dockerfile
@@ -833,6 +852,7 @@ services:
           memory: 64M
 
   prometheus:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/prometheus.Dockerfile
@@ -862,6 +882,7 @@ services:
           memory: 128M
 
   sqlserver-exporter:
+    profiles: [infra]
     image: awaragi/prometheus-mssql-exporter:latest
     environment:
       - SERVER=sqlserver
@@ -889,6 +910,7 @@ services:
           memory: 64M
 
   mongodb-exporter:
+    profiles: [infra]
     image: percona/mongodb_exporter:0.40
     environment:
       - MONGODB_URI=mongodb://${DATABASE_USER_MONGODB}:${DATABASE_PASSWORD_MONGODB}@mongodb_container:27017
@@ -913,6 +935,7 @@ services:
           memory: 64M
 
   postgres-exporter:
+    profiles: [infra]
     image: prometheuscommunity/postgres-exporter:latest
     environment:
       - DATA_SOURCE_NAME=postgresql://${CMS_DATABASE_USERNAME}:${CMS_DATABASE_PASSWORD}@strapi_db:5432/${CMS_DATABASE_NAME}?sslmode=disable
@@ -936,6 +959,7 @@ services:
           memory: 64M
 
   redis-exporter:
+    profiles: [infra]
     image: oliver006/redis_exporter:latest
     environment:
       - REDIS_ADDR=redis:6379
@@ -960,6 +984,7 @@ services:
           memory: 64M
 
   grafana:
+    profiles: [infra]
     build:
       context: ../
       dockerfile: Docker/infra/grafana.Dockerfile
