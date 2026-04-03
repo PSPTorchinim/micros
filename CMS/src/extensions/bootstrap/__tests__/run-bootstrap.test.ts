@@ -63,15 +63,19 @@ describe('Run Bootstrap', () => {
     // only create if it does not exist. This ensures running them multiple
     // times is safe and does not produce duplicates.
 
+    function shouldCreateRecord(existingRecord) {
+      return existingRecord === null;
+    }
+
     it('should skip creation when a record already exists', () => {
       const existingRecord = { id: 1, Label: 'Book DJ' };
-      const shouldCreate = existingRecord === null;
+      const shouldCreate = shouldCreateRecord(existingRecord);
       expect(shouldCreate).toBe(false);
     });
 
     it('should create a record when none exists yet', () => {
       const existingRecord = null;
-      const shouldCreate = existingRecord === null;
+      const shouldCreate = shouldCreateRecord(existingRecord);
       expect(shouldCreate).toBe(true);
     });
 
