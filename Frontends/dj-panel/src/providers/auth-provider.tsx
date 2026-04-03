@@ -6,6 +6,7 @@ import React, {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth-context';
+import { useInactivityTimeout } from '../hooks/use-inactivity-timeout/use-inactivity-timeout';
 import { microservicesClient } from '../models/api';
 import {
   GetUserDTO,
@@ -179,6 +180,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setRefreshToken(null);
     void navigate('/login');
   };
+
+  useInactivityTimeout(logout, !!token);
 
   return (
     <AuthContext.Provider
