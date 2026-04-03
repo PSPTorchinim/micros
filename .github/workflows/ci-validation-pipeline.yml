@@ -136,8 +136,8 @@ jobs:
         id: set-codeql-matrix
         run: |
           LANGS=()
-          [ "${{ steps.filter.outputs.csharp }}"      = "true" ] && LANGS+=("csharp")
-          [ "${{ steps.filter.outputs.javascript }}"   = "true" ] && LANGS+=("javascript-typescript")
+          [ "${{ steps.filter.outputs.csharp }}" = "true" ] && LANGS+=("csharp")
+          [ "${{ steps.filter.outputs.javascript }}" = "true" ] && LANGS+=("javascript-typescript")
 
           if [ ${#LANGS[@]} -eq 0 ]; then
             echo 'languages=[]' >> "$GITHUB_OUTPUT"
