@@ -30,13 +30,25 @@ export const StepsContainerBlock = (props: StepsContainer) => {
     const updateCards = () => {
       cardRefs.current.forEach((card, i) => {
         if (!card || i >= cardRefs.current.length - 1) return;
-        const rect = card.getBoundingClientRect();
-        const stickyTop =
-          CARD_STICKY_TOP_BASE_PX + i * CARD_STICKY_TOP_INCREMENT_PX;
-        const coveredAmount = stickyTop - rect.top;
+        const nextCard = cardRefs.current[i + 1];
+        if (!nextCard) return;
 
-        if (coveredAmount > 0) {
-          const progress = Math.min(coveredAmount / rect.height, 1);
+        const rect = card.getBoundingClientRect();
+        const nextRect = nextCard.getBoundingClientRect();
+        const nextStickyTop =
+          CARD_STICKY_TOP_BASE_PX + (i + 1) * CARD_STICKY_TOP_INCREMENT_PX;
+
+        // How far the next card is from its sticky position.
+        // 0 means the next card is stuck; positive means it's still scrolling toward its sticky position.
+        const distanceFromNextSticky = nextRect.top - nextStickyTop;
+
+        // Animate card i as the next card approaches its sticky position within one card height.
+        const progress = Math.min(
+          Math.max(0, 1 - distanceFromNextSticky / rect.height),
+          1,
+        );
+
+        if (progress > 0) {
           const scale = 1 - progress * CARD_SCALE_MAX_REDUCTION;
           card.style.transform = `scale(${scale})`;
         } else {

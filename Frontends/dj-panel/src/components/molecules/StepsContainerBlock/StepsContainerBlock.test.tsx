@@ -134,6 +134,99 @@ describe('StepsContainerBlock', () => {
     removeSpy.mockRestore();
   });
 
+  it('applies scale transform when next card approaches its sticky position', () => {
+    const rafMock = jest
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((cb) => {
+        cb(0);
+        return 0;
+      });
+
+    const props: StepsContainer = {
+      heading: 'Get Started',
+      content: 'Test content',
+      steps: mockSteps as any,
+    };
+
+    const { container } = render(<StepsContainerBlock {...props} />);
+    const cards = Array.from(
+      container.querySelectorAll('.steps-card'),
+    ) as HTMLElement[];
+
+    // Simulate: each next card is exactly at its sticky position (distanceFromNextSticky = 0),
+    // so all non-last cards should be at max scale reduction (progress = 1 → scale = 0.95).
+    const cardHeight = 200;
+    cards.forEach((card, i) => {
+      jest.spyOn(card, 'getBoundingClientRect').mockReturnValue({
+        top: 80 + i * 20,
+        bottom: 80 + i * 20 + cardHeight,
+        height: cardHeight,
+        width: 300,
+        left: 0,
+        right: 300,
+        x: 0,
+        y: 80 + i * 20,
+        toJSON: () => ({}),
+      });
+    });
+
+    window.dispatchEvent(new Event('scroll'));
+
+    // card 0 should have a scale transform applied (progress = 1 → scale = 0.95)
+    expect(cards[0].style.transform).toBe('scale(0.95)');
+    // card 1 should also have scale applied (same logic, progress = 1)
+    expect(cards[1].style.transform).toBe('scale(0.95)');
+    // last card is always excluded from animation
+    expect(cards[2].style.transform).toBe('');
+
+    rafMock.mockRestore();
+  });
+
+  it('does not apply scale transform when next card is far from its sticky position', () => {
+    const rafMock = jest
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((cb) => {
+        cb(0);
+        return 0;
+      });
+
+    const props: StepsContainer = {
+      heading: 'Get Started',
+      content: 'Test content',
+      steps: mockSteps as any,
+    };
+
+    const { container } = render(<StepsContainerBlock {...props} />);
+    const cards = Array.from(
+      container.querySelectorAll('.steps-card'),
+    ) as HTMLElement[];
+
+    const cardHeight = 200;
+    // Each next card is far above its sticky position (more than one card height away)
+    cards.forEach((card, i) => {
+      jest.spyOn(card, 'getBoundingClientRect').mockReturnValue({
+        top: 80 + i * 20 + cardHeight + 100, // far above sticky point
+        bottom: 80 + i * 20 + cardHeight + 100 + cardHeight,
+        height: cardHeight,
+        width: 300,
+        left: 0,
+        right: 300,
+        x: 0,
+        y: 80 + i * 20 + cardHeight + 100,
+        toJSON: () => ({}),
+      });
+    });
+
+    window.dispatchEvent(new Event('scroll'));
+
+    // No card should have a transform when the next card is far away
+    cards.forEach((card) => {
+      expect(card.style.transform).toBe('');
+    });
+
+    rafMock.mockRestore();
+  });
+
   it('renders CTA with correct label and url', () => {
     const props: StepsContainer = {
       heading: 'Get Started',
