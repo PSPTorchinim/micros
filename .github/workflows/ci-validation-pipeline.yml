@@ -126,6 +126,9 @@ jobs:
 
       - name: Lint workflows with actionlint
         uses: raven-actions/actionlint@v2
+        with:
+          # deployment_protection_rule is a valid GitHub event not yet in actionlint's schema
+          flags: "-ignore 'unknown Webhook event \"deployment_protection_rule\"'"
 
   security_codeql:
     name: CodeQL Security Analysis
