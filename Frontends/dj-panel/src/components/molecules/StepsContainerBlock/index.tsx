@@ -69,9 +69,7 @@ export const StepsContainerBlock = (props: StepsContainer) => {
         <div className="steps-grid thq-grid-2">
           <div className="steps-section-header">
             <h2 className="thq-heading-2">{props.heading}</h2>
-            {props.content && (
-              <p className="thq-body-large">{props.content}</p>
-            )}
+            {props.content && <p className="thq-body-large">{props.content}</p>}
             {actionItem?.url && (
               <div className="steps-actions">
                 <a
