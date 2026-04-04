@@ -814,7 +814,9 @@ services:
       - public
     volumes:
       - tempo_data:/var/tempo
-      - ./init/tempo/tempo-config.yaml:/tempo-config.yaml:ro
+    configs:
+      - source: tempo_config
+        target: /tempo-config.yaml
     deploy:
       resources:
         limits:
@@ -1079,3 +1081,7 @@ volumes:
     driver: local
   grafana_data:
     driver: local
+
+configs:
+  tempo_config:
+    file: ./init/tempo/tempo-config.yaml
