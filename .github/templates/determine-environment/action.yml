@@ -13,7 +13,7 @@ runs:
       run: |
         if [[ "${GITHUB_REF}" == *"/production" ]]; then
           echo "environment=Production" >> "$GITHUB_OUTPUT"
-        elif [[ "${GITHUB_REF}" == refs/heads/releases/* ]]; then
+        elif [[ "${GITHUB_REF}" == refs/heads/develop || "${GITHUB_REF}" == refs/heads/releases/* ]]; then
           echo "environment=Development" >> "$GITHUB_OUTPUT"
         else
           echo "environment=Development" >> "$GITHUB_OUTPUT"

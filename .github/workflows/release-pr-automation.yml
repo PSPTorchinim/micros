@@ -8,9 +8,9 @@ name: Release PR Automation
 #
 # 2. When such a PR is successfully merged into production:
 #    - Computes the name of the next release branch (increments the RYYMM month suffix).
-#    - Creates that new release branch from the freshly updated production branch.
-#    - Switches the repository default branch to the new release branch.
+#    - Creates that new release branch from the develop branch (the permanent main branch).
 #    - Deletes the release branch that was just merged (keeping the branch list clean).
+#    - Note: the default branch always remains "develop" and is never changed.
 #
 # Triggers:
 #   - pull_request: ready_for_review, closed
@@ -153,7 +153,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Create next release branch, update default branch, delete merged branch
+      - name: Create next release branch and delete merged branch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.PIPELINE_PAT }}
@@ -161,7 +161,8 @@ jobs:
             const owner       = context.repo.owner;
             const repo        = context.repo.repo;
             const mergedBranch = context.payload.pull_request.head.ref; // e.g. "releases/R2603"
-            const base         = 'production';
+            // The permanent main development branch — always the source for new release branches.
+            const developBranch = 'develop';
 
             core.info(`Merged branch: ${mergedBranch}`);
 
@@ -221,30 +222,33 @@ jobs:
             const nextBranch = nextReleaseBranchName(mergedBranch);
             core.info(`Next release branch: ${nextBranch}`);
 
-            // ── 2. Resolve the current SHA of production ───────────────────────
-            let productionSha;
+            // ── 2. Resolve the current SHA of develop ─────────────────────────
+            // New release branches are always cut from develop (the permanent main branch),
+            // not from production. This ensures the release branch starts with all current
+            // development work and accumulates further cherry-picks from develop.
+            let developSha;
             try {
               const { data: ref } = await github.rest.git.getRef({
                 owner,
                 repo,
-                ref: `heads/${base}`,
+                ref: `heads/${developBranch}`,
               });
-              productionSha = ref.object.sha;
-              core.info(`Production SHA: ${productionSha}`);
+              developSha = ref.object.sha;
+              core.info(`develop SHA: ${developSha}`);
             } catch (err) {
-              core.setFailed(`Failed to resolve "${base}" branch SHA: ${err.message}`);
+              core.setFailed(`Failed to resolve "${developBranch}" branch SHA: ${err.message}`);
               return;
             }
 
-            // ── 3. Create the next release branch from production ──────────────
+            // ── 3. Create the next release branch from develop ─────────────────
             try {
               await github.rest.git.createRef({
                 owner,
                 repo,
                 ref: `refs/heads/${nextBranch}`,
-                sha: productionSha,
+                sha: developSha,
               });
-              core.info(`✅ Created branch "${nextBranch}" from ${productionSha}.`);
+              core.info(`✅ Created branch "${nextBranch}" from ${developSha}.`);
             } catch (err) {
               if (err.status === 422) {
                 core.warning(`Branch "${nextBranch}" already exists — skipping creation.`);
@@ -254,20 +258,7 @@ jobs:
               }
             }
 
-            // ── 4. Set the new release branch as the default branch ────────────
-            try {
-              await github.rest.repos.update({
-                owner,
-                repo,
-                default_branch: nextBranch,
-              });
-              core.info(`✅ Default branch updated to "${nextBranch}".`);
-            } catch (err) {
-              core.setFailed(`Failed to update default branch to "${nextBranch}": ${err.message}`);
-              return;
-            }
-
-            // ── 5. Delete the merged release branch ───────────────────────────
+            // ── 4. Delete the merged release branch ───────────────────────────
             try {
               await github.rest.git.deleteRef({
                 owner,
@@ -280,14 +271,14 @@ jobs:
               core.warning(`Could not delete branch "${mergedBranch}": ${err.message}`);
             }
 
-            // ── 6. Write a job summary ─────────────────────────────────────────
+            // ── 5. Write a job summary ─────────────────────────────────────────
             core.summary.addRaw(
               `## ✅ Release Branch Lifecycle Complete\n\n` +
               `| Step | Detail |\n` +
               `|------|--------|\n` +
-              `| Merged branch | \`${mergedBranch}\` → \`${base}\` |\n` +
-              `| New release branch | \`${nextBranch}\` (created from \`${base}\` @ \`${productionSha.slice(0, 7)}\`) |\n` +
-              `| Default branch | Updated to \`${nextBranch}\` |\n` +
+              `| Merged branch | \`${mergedBranch}\` → \`production\` |\n` +
+              `| New release branch | \`${nextBranch}\` (created from \`${developBranch}\` @ \`${developSha.slice(0, 7)}\`) |\n` +
+              `| Default branch | \`${developBranch}\` (unchanged) |\n` +
               `| Deleted | \`${mergedBranch}\` |`
             );
             await core.summary.write();

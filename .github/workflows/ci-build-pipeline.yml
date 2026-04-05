@@ -10,13 +10,15 @@ name: Build Artifacts
 # On schedule or workflow_dispatch triggers, all components are always built.
 #
 # Triggers:
-# - Push to releases/** branches (when PRs are merged to releases)
+# - Push to develop branch (automatic deployment of merged changes to Development environment)
+# - Push to releases/** branches (cherry-picked changes for release staging)
 # - Monthly schedule on 1st day at midnight UTC (for Production environment)
 # - Manual workflow_dispatch
 
 on:
   push:
     branches:
+      - develop
       - "releases/**"
   schedule:
     # Monthly on the 1st at midnight (00:00 UTC) for Production environment
