@@ -15,12 +15,17 @@ name: Build TrueNAS Infrastructure
 # Triggers:
 # - Automatically after "Build Artifacts" workflow completes, but ONLY when at least one
 #   "Build & Push" job ran (i.e., new infra/backend/frontend packages were produced)
+# - Nightly schedule on develop branch at 02:00 UTC (always deploys)
 # - Manual workflow_dispatch (always deploys)
 #
 # Note: This workflow runs on the same branch as the "Build Artifacts" workflow that triggered it.
+# Scheduled runs always execute against the develop branch (GitHub schedules run on the default branch).
 
 on:
   workflow_dispatch:
+  schedule:
+    # Nightly at 02:00 UTC on develop branch
+    - cron: "0 2 * * *"
   workflow_run:
     workflows: ["Build Artifacts"]
     types:
@@ -49,10 +54,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # For workflow_dispatch, always deploy
+          # For workflow_dispatch or schedule, always deploy
           if [ "${{ github.event_name }}" != "workflow_run" ]; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  Triggered manually — deploying unconditionally."
+            echo "ℹ️  Triggered manually or on schedule — deploying unconditionally."
             exit 0
           fi
 
