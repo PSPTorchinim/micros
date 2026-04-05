@@ -11,10 +11,8 @@ runs:
       id: tag_set
       shell: bash
       run: |
-        if [[ "${GITHUB_REF}" == *"/production" ]]; then
+        if [[ "${GITHUB_REF}" == *"/production" || "${GITHUB_REF}" == refs/heads/releases/* ]]; then
           echo "target_branch=production" >> "$GITHUB_OUTPUT"
-        elif [[ "${GITHUB_REF}" == refs/heads/develop || "${GITHUB_REF}" == refs/heads/releases/* ]]; then
-          echo "target_branch=develop" >> "$GITHUB_OUTPUT"
         else
           echo "target_branch=develop" >> "$GITHUB_OUTPUT"
         fi
