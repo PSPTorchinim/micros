@@ -1,8 +1,8 @@
-name: CodeQL Production Branch Scan
+name: CodeQL Release Branch Scan
 
-# This workflow runs CodeQL security analysis on the production branch and automatically
+# This workflow runs CodeQL security analysis on the latest release branch and automatically
 # creates a single GitHub issue summarising all findings:
-# 1. Triggered on every push to the production branch
+# 1. Triggered on every push to a releases/** branch
 # 2. Runs CodeQL analysis for C# and JavaScript/TypeScript
 # 3. After analysis, queries the code scanning API for open alerts
 # 4. Closes any previously created summary issue, then opens one new issue
@@ -11,7 +11,7 @@ name: CodeQL Production Branch Scan
 on:
   push:
     branches:
-      - "production"
+      - "releases/**"
 
 # Prevent duplicate scans when multiple commits are pushed in quick succession
 concurrency:
@@ -193,7 +193,7 @@ jobs:
               ...rows,
               ``,
               `---`,
-              `_This issue was automatically created by the [CodeQL Production Branch Scan](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/codeql-production-scan.yml) workflow._`,
+              `_This issue was automatically created by the [CodeQL Release Branch Scan](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/codeql-production-scan.yml) workflow._`,
             ].join('\n');
 
             await github.rest.issues.create({

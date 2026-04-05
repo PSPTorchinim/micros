@@ -1,0 +1,267 @@
+name: Cherry-Pick to Release Branch
+
+# When a pull request is merged into the develop branch, this workflow automatically
+# cherry-picks the merged commits onto the current monthly release branch.
+#
+# Behaviour:
+#   - Finds the most recently created releases/** branch.
+#   - If no release branch exists, the cherry-pick is skipped and a warning is logged.
+#   - Detects whether the merge commit is a regular commit (squash/rebase merge) or a
+#     true merge commit (standard merge), and uses the appropriate cherry-pick strategy.
+#   - On success: commits are pushed directly to the release branch.
+#   - On conflict: a GitHub issue is opened with step-by-step manual resolution instructions.
+#     The label "cherry-pick-conflict" is created automatically if it does not already exist.
+#
+# Triggers:
+#   - pull_request closed (merged) targeting the develop branch
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+# Prevent concurrent cherry-picks for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  cherry_pick:
+    name: Cherry-Pick to Release Branch
+    # Only run when the PR was actually merged (not just closed/declined)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PIPELINE_PAT }}
+
+      - name: Find current release branch
+        id: find_release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+
+            // Fetch all branches matching releases/**
+            let releaseBranches = [];
+            let page = 1;
+            while (true) {
+              const { data: branches } = await github.rest.repos.listBranches({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+              releaseBranches.push(...branches.filter(b => b.name.startsWith('releases/')));
+              if (branches.length < 100) break;
+              page++;
+            }
+
+            if (releaseBranches.length === 0) {
+              core.warning('No releases/** branch found — skipping cherry-pick.');
+              core.setOutput('release_branch', '');
+              return;
+            }
+
+            // Pick the release branch with the most recent commit author date
+            const withDates = await Promise.all(
+              releaseBranches.map(async (b) => {
+                const { data: commit } = await github.rest.repos.getCommit({
+                  owner,
+                  repo,
+                  ref: b.commit.sha,
+                });
+                return {
+                  name: b.name,
+                  date: new Date(commit.commit.author.date),
+                };
+              })
+            );
+            withDates.sort((a, b) => b.date - a.date);
+
+            const releaseBranch = withDates[0].name;
+            core.info(`Current release branch: ${releaseBranch}`);
+            core.setOutput('release_branch', releaseBranch);
+
+      - name: Cherry-pick commits to release branch
+        id: cherry_pick
+        if: steps.find_release.outputs.release_branch != ''
+        env:
+          RELEASE_BRANCH: ${{ steps.find_release.outputs.release_branch }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          GH_TOKEN: ${{ secrets.PIPELINE_PAT }}
+        run: |
+          set -euo pipefail
+
+          # Configure git identity for automated commits
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          # Ensure all remote branches are available locally
+          git fetch --all --prune
+
+          echo "Target release branch : $RELEASE_BRANCH"
+          echo "Merge commit SHA      : $MERGE_COMMIT_SHA"
+
+          # Determine whether the merge commit is a true merge commit (has 2+ parents)
+          # or a regular commit produced by a squash/rebase merge (has 1 parent).
+          # `git rev-list --parents -n 1` outputs: <commit> <parent1> [<parent2> ...]
+          # Subtracting 1 from the word count gives the number of parents.
+          PARENT_COUNT=$(( $(git rev-list --parents -n 1 "$MERGE_COMMIT_SHA" | wc -w) - 1 ))
+          echo "Parent count: $PARENT_COUNT"
+
+          # Switch to the release branch
+          git checkout "$RELEASE_BRANCH"
+          git pull origin "$RELEASE_BRANCH"
+
+          # Attempt the cherry-pick
+          CHERRY_PICK_FAILED=false
+          if [ "$PARENT_COUNT" -gt 1 ]; then
+            # Standard merge commit: use -m 1 to treat the first parent (develop) as mainline
+            echo "Cherry-picking merge commit with -m 1 ..."
+            git cherry-pick -m 1 "$MERGE_COMMIT_SHA" || CHERRY_PICK_FAILED=true
+          else
+            # Squash / rebase commit: cherry-pick directly
+            echo "Cherry-picking regular commit ..."
+            git cherry-pick "$MERGE_COMMIT_SHA" || CHERRY_PICK_FAILED=true
+          fi
+
+          if [ "$CHERRY_PICK_FAILED" = "true" ]; then
+            echo "Cherry-pick encountered a conflict — aborting."
+            git cherry-pick --abort 2>/dev/null || true
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Push the cherry-picked commit(s) to the release branch
+          git push origin "$RELEASE_BRANCH"
+          echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure cherry-pick-conflict label exists
+        if: steps.cherry_pick.outputs.status == 'conflict'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                name:  'cherry-pick-conflict',
+              });
+            } catch (err) {
+              if (err.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner:       context.repo.owner,
+                  repo:        context.repo.repo,
+                  name:        'cherry-pick-conflict',
+                  color:       'e4e669',
+                  description: 'Cherry-pick from develop to release branch requires manual resolution',
+                });
+                core.info('Created label: cherry-pick-conflict');
+              } else {
+                throw err;
+              }
+            }
+
+      - name: Open conflict issue for manual resolution
+        if: steps.cherry_pick.outputs.status == 'conflict'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            // Read values from the event payload directly to avoid injection from
+            // special characters (backticks, quotes, etc.) in PR titles or URLs.
+            const pr            = context.payload.pull_request;
+            const prNumber      = pr.number;
+            const prTitle       = pr.title;
+            const prUrl         = pr.html_url;
+            const mergeCommit   = pr.merge_commit_sha;
+            const releaseBranch = '${{ steps.find_release.outputs.release_branch }}';
+
+            const body = [
+              `## ⚠️ Cherry-Pick Conflict`,
+              ``,
+              `The automated cherry-pick of [PR #${prNumber}](${prUrl}) **"${prTitle}"** ` +
+              `to \`${releaseBranch}\` failed due to a merge conflict.`,
+              ``,
+              `| Field | Value |`,
+              `|-------|-------|`,
+              `| PR | [#${prNumber} — ${prTitle}](${prUrl}) |`,
+              `| Merge commit | \`${mergeCommit}\` |`,
+              `| Target branch | \`${releaseBranch}\` |`,
+              ``,
+              `### Manual Resolution`,
+              ``,
+              `Run the following commands to cherry-pick and resolve the conflict manually:`,
+              ``,
+              `\`\`\`bash`,
+              `git fetch origin`,
+              `git checkout ${releaseBranch}`,
+              `git pull origin ${releaseBranch}`,
+              ``,
+              `# For a standard merge commit (use -m 1):`,
+              `git cherry-pick -m 1 ${mergeCommit}`,
+              `# — or, for a squash/rebase commit —`,
+              `git cherry-pick ${mergeCommit}`,
+              ``,
+              `# Resolve conflicts in your editor, then:`,
+              `git add .`,
+              `git cherry-pick --continue`,
+              `git push origin ${releaseBranch}`,
+              `\`\`\``,
+              ``,
+              `Once the conflict is resolved and pushed, please close this issue.`,
+            ].join('\n');
+
+            const { data: issue } = await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `Cherry-pick conflict: PR #${prNumber} → \`${releaseBranch}\``,
+              body,
+              labels: ['cherry-pick-conflict'],
+            });
+
+            core.info(`✅ Conflict issue created: #${issue.number} — ${issue.html_url}`);
+
+            core.summary.addRaw(
+              `## ⚠️ Cherry-Pick Conflict\n\n` +
+              `The cherry-pick of PR [#${prNumber}](${prUrl}) to \`${releaseBranch}\` ` +
+              `failed.\n\nConflict issue opened: [#${issue.number}](${issue.html_url})`
+            );
+            await core.summary.write();
+
+      - name: Write success summary
+        if: steps.cherry_pick.outputs.status == 'success'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            // Read values from the event payload directly to avoid injection.
+            const pr            = context.payload.pull_request;
+            const prNumber      = pr.number;
+            const prUrl         = pr.html_url;
+            const mergeCommit   = pr.merge_commit_sha;
+            const releaseBranch = '${{ steps.find_release.outputs.release_branch }}';
+
+            core.summary.addRaw(
+              `## ✅ Cherry-Pick Successful\n\n` +
+              `| Field | Value |\n` +
+              `|-------|-------|\n` +
+              `| PR | [#${prNumber}](${prUrl}) |\n` +
+              `| Commit | \`${mergeCommit.slice(0, 7)}\` |\n` +
+              `| Target | \`${releaseBranch}\` |`
+            );
+            await core.summary.write();

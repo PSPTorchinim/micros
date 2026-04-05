@@ -1,106 +1,35 @@
 name: Build TrueNAS Infrastructure
 
 # This workflow deploys the application stack to TrueNAS with zero-downtime:
-# 1. Checks whether new packages (infra/backend/frontend) were actually built by the triggering workflow
-# 2. Determines environment (Development/Production) and generates unique tags
-# 3. Calculates available ports on TrueNAS for service allocation
-# 4. Generates and uploads Docker Compose file with service configurations
-# 5. Tests generated Docker Compose file for validity before deployment
-# 6. Enables Cloudflare maintenance page to prevent user disruption
-# 7. Performs rolling update of services while keeping databases running
-# 8. Updates Cloudflare tunnel and DNS for service routing
-# 9. Disables maintenance page after successful deployment
-# 10. Includes automatic rollback on failure
+# 1. Determines environment (Development/Production) and generates unique tags
+# 2. Calculates available ports on TrueNAS for service allocation
+# 3. Generates and uploads Docker Compose file with service configurations
+# 4. Tests generated Docker Compose file for validity before deployment
+# 5. Enables Cloudflare maintenance page to prevent user disruption
+# 6. Performs rolling update of services while keeping databases running
+# 7. Updates Cloudflare tunnel and DNS for service routing
+# 8. Disables maintenance page after successful deployment
+# 9. Includes automatic rollback on failure
 #
 # Triggers:
-# - Automatically after "Build Artifacts" workflow completes, but ONLY when at least one
-#   "Build & Push" job ran (i.e., new infra/backend/frontend packages were produced)
-# - Manual workflow_dispatch (always deploys)
-#
-# Note: This workflow runs on the same branch as the "Build Artifacts" workflow that triggered it.
+# - Nightly schedule on develop branch at 02:00 UTC
+# - Manual workflow_dispatch
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Build Artifacts"]
-    types:
-      - completed
+  schedule:
+    # Nightly at 02:00 UTC on develop branch
+    - cron: "0 2 * * *"
 
 # Prevent concurrent deployments to the same environment
 concurrency:
-  group: deploy-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
+  group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Gate job: skip the entire deployment when no new packages were produced.
-  # For workflow_dispatch the deployment always proceeds.
-  # For workflow_run, the GitHub API is queried to verify that at least one
-  # "Build & Push" job in the triggering workflow actually succeeded (was not skipped).
-  check_build_artifacts:
-    name: Check if new packages were built
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-    outputs:
-      should_deploy: ${{ steps.check.outputs.should_deploy }}
-    steps:
-      - name: Check for newly built packages
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # For workflow_dispatch, always deploy
-          if [ "${{ github.event_name }}" != "workflow_run" ]; then
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  Triggered manually — deploying unconditionally."
-            exit 0
-          fi
-
-          # Bail out early when the triggering workflow did not succeed
-          CONCLUSION="${{ github.event.workflow_run.conclusion }}"
-          if [ "$CONCLUSION" != "success" ]; then
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "⏭️  Triggering workflow did not succeed (conclusion: ${CONCLUSION}) — skipping deployment."
-            exit 0
-          fi
-
-          # Query the jobs that ran in the triggering workflow run
-          RUN_ID="${{ github.event.workflow_run.id }}"
-          CURL_EXIT=0
-          JOBS_JSON=$(curl -fsSL \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs") \
-            || CURL_EXIT=$?
-
-          # If the API call failed or returned invalid JSON, deploy as a precaution
-          if [ "$CURL_EXIT" -ne 0 ] || ! echo "$JOBS_JSON" | jq empty 2>/dev/null; then
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-            echo "⚠️  Failed to retrieve workflow jobs from GitHub API — deploying as a precaution."
-            exit 0
-          fi
-
-          # Deployment is warranted only if at least one "Build & Push" job was not skipped
-          SHOULD_DEPLOY=$(echo "$JOBS_JSON" | jq -r '
-            [.jobs[] | select(.name | test("Build & Push"))]
-            | if length == 0 then "false"
-              elif all(.conclusion == "skipped") then "false"
-              else "true"
-              end
-          ')
-
-          echo "should_deploy=${SHOULD_DEPLOY}" >> "$GITHUB_OUTPUT"
-          if [ "${SHOULD_DEPLOY}" = "true" ]; then
-            echo "✅ New packages were built — proceeding with deployment."
-          else
-            echo "⏭️  No new packages were built (all build jobs were skipped) — skipping deployment."
-          fi
-
   # Consolidated setup job - combines environment, docker tag, and compose timestamp determination
   # This eliminates 3 separate checkout operations and reduces startup time
   setup:
-    if: ${{ needs.check_build_artifacts.outputs.should_deploy == 'true' }}
-    needs: [check_build_artifacts]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -117,7 +46,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Display workflow trigger information
         run: |
@@ -127,14 +56,7 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
           echo "Current branch (github.ref): ${{ github.ref }}"
           echo "Current SHA (github.sha): ${{ github.sha }}"
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
-            echo "Triggering workflow branch: ${{ github.event.workflow_run.head_branch }}"
-            echo "Triggering workflow SHA: ${{ github.event.workflow_run.head_sha }}"
-            echo "Checked out SHA: ${{ github.event.workflow_run.head_sha }}"
-          else
-            echo "Checked out SHA: ${{ github.sha }}"
-          fi
+          echo "Checked out SHA: ${{ github.sha }}"
           echo "Actual commit checked out:"
           git log -1 --oneline
           echo "Current branch:"
@@ -145,8 +67,7 @@ jobs:
         id: set_env
         uses: ./.github/templates/determine-environment
         env:
-          # Override GITHUB_REF when triggered by workflow_run to use the triggering workflow's branch
-          GITHUB_REF: ${{ github.event_name == 'workflow_run' && format('refs/heads/{0}', github.event.workflow_run.head_branch) || github.ref }}
+          GITHUB_REF: ${{ github.ref }}
 
       - name: Compute env slug
         id: compute_slug
@@ -158,8 +79,7 @@ jobs:
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
         env:
-          # Override GITHUB_REF when triggered by workflow_run to use the triggering workflow's branch
-          GITHUB_REF: ${{ github.event_name == 'workflow_run' && format('refs/heads/{0}', github.event.workflow_run.head_branch) || github.ref }}
+          GITHUB_REF: ${{ github.ref }}
 
       - name: Determine compose timestamp
         id: timestamp_set
@@ -178,7 +98,6 @@ jobs:
           cf_key: ${{ secrets.CLOUDFLARE_API_KEY }}
 
   setup_truenas_directories:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Setup TrueNAS directory structure (first-time)
     runs-on: ubuntu-latest
     needs: [setup]
@@ -225,7 +144,6 @@ jobs:
             echo "=========================================="
 
   backup_current_state:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Backup current deployment for rollback
     runs-on: ubuntu-latest
     needs: [setup, setup_truenas_directories]
@@ -270,7 +188,6 @@ jobs:
             fi
 
   backup_data_volumes:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Backup data volumes for rollback
     runs-on: ubuntu-latest
     needs: [setup, backup_current_state]
@@ -280,7 +197,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Prepare backup script for transfer
         id: transfer_script
@@ -333,7 +250,6 @@ jobs:
             rm -rf "$SCRIPT_DIR"
 
   stop_services:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Stop application services
     runs-on: ubuntu-latest
     needs: [setup, backup_data_volumes, enable_maintenance_page]
@@ -343,7 +259,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Prepare stop script for transfer
         id: transfer_stop_script
@@ -394,7 +310,6 @@ jobs:
             rm -rf "$SCRIPT_DIR"
 
   get_truenas_ports:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Get TrueNAS Ports
     runs-on: ubuntu-latest
     needs: [setup, backup_data_volumes]
@@ -417,7 +332,6 @@ jobs:
               | sort -n | uniq
 
   calculate_unused_ports:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Calculate Unused External and Internal Ports
     runs-on: ubuntu-latest
     needs: [get_truenas_ports]
@@ -428,7 +342,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Calculate unused internal ports (40010-49999)
         uses: ./.github/templates/calculate-unused-ports
@@ -449,7 +363,6 @@ jobs:
           tunnel_ports: ""
 
   generate_and_upload_truenas_compose_file:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Generate & Upload New Compose
     runs-on: ubuntu-latest
     environment: ${{ needs.setup.outputs.current_env }}
@@ -466,7 +379,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Install yq on runner
         run: |
@@ -1030,7 +943,6 @@ jobs:
             echo "=========================================="
 
   test_docker_compose:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Test Generated Docker Compose
     runs-on: ubuntu-latest
     needs: [generate_and_upload_truenas_compose_file, setup]
@@ -1158,7 +1070,6 @@ jobs:
             echo "=========================================="
 
   enable_maintenance_page:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Enable Cloudflare Maintenance Page
     runs-on: ubuntu-latest
     needs: [setup, generate_and_upload_truenas_compose_file]
@@ -1166,7 +1077,7 @@ jobs:
       - name: Checkout repository for maintenance page
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Enable Cloudflare maintenance mode for all external service hostnames
         run: |
@@ -1259,7 +1170,6 @@ jobs:
           echo "WORKER_NAME=${WORKER_NAME}" >> "$GITHUB_ENV"
 
   rolling_update_deployment:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Rolling update with zero downtime
     runs-on: ubuntu-latest
     needs:
@@ -1857,7 +1767,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Prepare restore script for transfer
         id: transfer_restore_script
@@ -1988,7 +1898,6 @@ jobs:
     name: Deployment Summary
     runs-on: ubuntu-latest
     needs:
-      - check_build_artifacts
       - setup
       - test_docker_compose
       - rolling_update_deployment
@@ -2000,16 +1909,6 @@ jobs:
         run: |
           set -euo pipefail
           echo "=========================================="
-          if [ "${{ needs.check_build_artifacts.outputs.should_deploy }}" != "true" ]; then
-            echo "  ⏭️  Deployment Skipped — no new packages were built"
-            echo "=========================================="
-            echo ""
-            echo "ℹ️  The 'Build Artifacts' workflow completed but all build jobs"
-            echo "   were skipped (no infra/backend/frontend files changed)."
-            echo "   Infrastructure deployment was not required."
-            echo "=========================================="
-            exit 0
-          fi
           if [ "${{ needs.rolling_update_deployment.result }}" = "success" ]; then
             echo "  🎉 Zero-Downtime Deployment Complete!"
           else
