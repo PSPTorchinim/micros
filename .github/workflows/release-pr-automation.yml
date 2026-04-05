@@ -8,7 +8,7 @@ name: Release PR Automation
 #
 # 2. When such a PR is successfully merged into production:
 #    - Computes the name of the next release branch (increments the RYYMM month suffix).
-#    - Creates that new release branch from the develop branch (the permanent main branch).
+#    - Creates that new release branch from the previous (just-merged) release branch.
 #    - Deletes the release branch that was just merged (keeping the branch list clean).
 #    - Note: the default branch always remains "develop" and is never changed.
 #
@@ -161,8 +161,10 @@ jobs:
             const owner       = context.repo.owner;
             const repo        = context.repo.repo;
             const mergedBranch = context.payload.pull_request.head.ref; // e.g. "releases/R2603"
-            // The permanent main development branch — always the source for new release branches.
-            const developBranch = 'develop';
+            // The SHA at the tip of the release branch that was just merged.
+            // New release branches are always cut from the previous release branch,
+            // so every release starts with exactly the same state as its predecessor.
+            const mergedBranchSha = context.payload.pull_request.head.sha;
 
             core.info(`Merged branch: ${mergedBranch}`);
 
@@ -222,33 +224,18 @@ jobs:
             const nextBranch = nextReleaseBranchName(mergedBranch);
             core.info(`Next release branch: ${nextBranch}`);
 
-            // ── 2. Resolve the current SHA of develop ─────────────────────────
-            // New release branches are always cut from develop (the permanent main branch),
-            // not from production. This ensures the release branch starts with all current
-            // development work and accumulates further cherry-picks from develop.
-            let developSha;
-            try {
-              const { data: ref } = await github.rest.git.getRef({
-                owner,
-                repo,
-                ref: `heads/${developBranch}`,
-              });
-              developSha = ref.object.sha;
-              core.info(`develop SHA: ${developSha}`);
-            } catch (err) {
-              core.setFailed(`Failed to resolve "${developBranch}" branch SHA: ${err.message}`);
-              return;
-            }
-
-            // ── 3. Create the next release branch from develop ─────────────────
+            // ── 2. Create the next release branch from the previous release branch ──
+            // By cutting the new branch from the merged release branch's tip we ensure
+            // each monthly release starts from exactly the same state as its predecessor
+            // and accumulates cherry-picks on top.
             try {
               await github.rest.git.createRef({
                 owner,
                 repo,
                 ref: `refs/heads/${nextBranch}`,
-                sha: developSha,
+                sha: mergedBranchSha,
               });
-              core.info(`✅ Created branch "${nextBranch}" from ${developSha}.`);
+              core.info(`✅ Created branch "${nextBranch}" from ${mergedBranchSha}.`);
             } catch (err) {
               if (err.status === 422) {
                 core.warning(`Branch "${nextBranch}" already exists — skipping creation.`);
@@ -258,7 +245,7 @@ jobs:
               }
             }
 
-            // ── 4. Delete the merged release branch ───────────────────────────
+            // ── 3. Delete the merged release branch ───────────────────────────
             try {
               await github.rest.git.deleteRef({
                 owner,
@@ -271,14 +258,14 @@ jobs:
               core.warning(`Could not delete branch "${mergedBranch}": ${err.message}`);
             }
 
-            // ── 5. Write a job summary ─────────────────────────────────────────
+            // ── 4. Write a job summary ─────────────────────────────────────────
             core.summary.addRaw(
               `## ✅ Release Branch Lifecycle Complete\n\n` +
               `| Step | Detail |\n` +
               `|------|--------|\n` +
               `| Merged branch | \`${mergedBranch}\` → \`production\` |\n` +
-              `| New release branch | \`${nextBranch}\` (created from \`${developBranch}\` @ \`${developSha.slice(0, 7)}\`) |\n` +
-              `| Default branch | \`${developBranch}\` (unchanged) |\n` +
+              `| New release branch | \`${nextBranch}\` (created from \`${mergedBranch}\` @ \`${mergedBranchSha.slice(0, 7)}\`) |\n` +
+              `| Default branch | \`develop\` (unchanged) |\n` +
               `| Deleted | \`${mergedBranch}\` |`
             );
             await core.summary.write();
