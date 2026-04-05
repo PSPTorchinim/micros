@@ -386,7 +386,7 @@ namespace CompanyAPI.Services
                             _logger.LogDebug("Created company type {Code} for country {CountryCode}", StringHelper.SanitizeForLog(normalizedCode), StringHelper.SanitizeForLog(normalizedCountry));
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
                     {
                         syncResult.Failed++;
                         syncResult.Errors.Add($"Failed to sync '{externalType.Code}'.");

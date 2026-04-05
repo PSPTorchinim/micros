@@ -77,7 +77,7 @@ namespace Shared.Services.App
                 ExceptionHandler.LogException(ex, _logger);
                 return StatusCode(StatusCodes.Status501NotImplemented, response);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
             {
                 response.Success = false;
                 response.Message = ex.Message;
