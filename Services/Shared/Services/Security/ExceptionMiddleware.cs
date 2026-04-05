@@ -26,7 +26,7 @@ public class ExceptionMiddleware
             await _next(httpContext);
             _logger.LogInformation("Request handled successfully: {StatusCode}", httpContext.Response.StatusCode);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
         {
             _logger.LogError(ex, "An unhandled exception occurred while processing the request.");
             await HandleExceptionAsync(httpContext, ex);

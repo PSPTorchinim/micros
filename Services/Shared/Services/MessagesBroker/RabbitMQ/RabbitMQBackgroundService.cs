@@ -30,7 +30,7 @@ namespace Shared.Services.MessagesBroker.RabbitMQ
             {
                 _logger.LogInformation("RabbitMQBackgroundService is stopping due to cancellation.");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
             {
                 _logger.LogError(ex, "An error occurred in RabbitMQBackgroundService.");
             }

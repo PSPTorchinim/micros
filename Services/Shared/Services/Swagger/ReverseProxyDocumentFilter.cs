@@ -118,7 +118,7 @@ namespace Shared.Services.Swagger
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
             {
                 _logger.LogError(ex, "Error applying ReverseProxyDocumentFilter");
             }

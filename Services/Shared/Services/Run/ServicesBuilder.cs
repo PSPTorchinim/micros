@@ -135,7 +135,7 @@ namespace Shared.Services.Run
                         Console.WriteLine($"Serilog configured for {serviceName} with Loki at {lokiUrl}");
                     }
 #pragma warning disable CA1031 // Do not catch general exception types
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
 #pragma warning restore CA1031 // Do not catch general exception types
                     {
                         // Intentionally catching all exceptions to ensure logging continues with console output
@@ -151,7 +151,7 @@ namespace Shared.Services.Run
                 Log.Logger = loggerConfig.CreateLogger();
             }
 #pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
 #pragma warning restore CA1031 // Do not catch general exception types
             {
                 // Intentionally catching all exceptions as a safety net to ensure the application
