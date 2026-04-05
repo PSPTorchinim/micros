@@ -66,7 +66,7 @@ namespace Shared.Services.MessagesBroker.RabbitMQ
                         var result = await action(converted);
                         _logger?.LogInformation("Message processed with result: {Result}", result);
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
                     {
                         _logger?.LogError(ex, "Error processing message from queue {QueueName}", queueName);
                     }

@@ -214,7 +214,7 @@ namespace DJHostGateway.Transforms
                 IncrementConsecutiveFailures();
                 await WriteUnauthorizedResponse(context.HttpContext, "Security validation error");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
             {
                 _logger.LogError(ex, "💥 [SecurityStamp] UNEXPECTED ERROR | CorrelationId: {CorrelationId} | Type: {ExceptionType} | Message: {Message} | Action: DENY ACCESS", 
                     correlationId, ex.GetType().Name, ex.Message);

@@ -172,7 +172,7 @@ namespace Shared.Services.Security
                     _logger.LogWarning(ex, "Request to Identity API timed out, attempt {Attempt}/{MaxRetries}", attempt + 1, maxRetries + 1);
                     await Task.Delay(initialDelayMs * (int)Math.Pow(2, attempt));
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
                 {
                     _logger.LogError(ex, "Failed to seed permissions using batch operation on attempt {Attempt}/{MaxRetries}", attempt + 1, maxRetries + 1);
                     

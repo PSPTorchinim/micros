@@ -131,7 +131,7 @@ namespace IdentityAPI.Services
                             _logger.LogWarning("Failed to add permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException or ThreadAbortException))
                     {
                         result.Failed++;
                         _logger.LogError(ex, "Error adding permission with name {Name}.", StringHelper.SanitizeForLog(permissionDto.Name));
