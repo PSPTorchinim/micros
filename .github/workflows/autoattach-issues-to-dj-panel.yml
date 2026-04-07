@@ -10,11 +10,6 @@ name: Autoattach Issues to DJ Panel Project
 #                    with the following scopes:
 #                      • repo  (to read issue data)
 #                      • project  (to add items to a GitHub Project v2)
-#
-# Required variable (repository or organisation level):
-#   DJ_PANEL_PROJECT_URL — the URL of the DJ Panel project, e.g.
-#     https://github.com/orgs/PSPTorchinim/projects/1
-#     https://github.com/users/PSPTorchinim/projects/1
 
 on:
   issues:
@@ -35,5 +30,5 @@ jobs:
       - name: Add issue to DJ Panel project
         uses: actions/add-to-project@v1.0.2
         with:
-          project-url: ${{ vars.DJ_PANEL_PROJECT_URL }}
+          project-url: https://github.com/users/PSPTorchinim/projects/10
           github-token: ${{ secrets.GH_PROJECT_PAT }}
