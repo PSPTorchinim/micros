@@ -1,0 +1,34 @@
+name: Autoattach Issues to DJ Panel Project
+
+# This workflow automatically adds every new or reopened issue in this repository
+# to the "DJ Panel" GitHub Project so that all work items are tracked centrally.
+#
+# Trigger: issues → opened | reopened | transferred
+#
+# Required secret:
+#   PIPELINE_PAT — a classic Personal Access Token (or a fine-grained token)
+#                  with the following scopes:
+#                    • repo  (to read issue data)
+#                    • project  (to add items to a GitHub Project v2)
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - transferred
+
+permissions:
+  issues: read
+
+jobs:
+  attach_to_project:
+    name: Add issue to DJ Panel project
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Add issue to DJ Panel project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/PSPTorchinim/projects/10
+          github-token: ${{ secrets.PIPELINE_PAT }}
