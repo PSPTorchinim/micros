@@ -6,10 +6,10 @@ name: Autoattach Issues to DJ Panel Project
 # Trigger: issues → opened | reopened | transferred
 #
 # Required secret:
-#   GH_PROJECT_PAT — a classic Personal Access Token (or a fine-grained token)
-#                    with the following scopes:
-#                      • repo  (to read issue data)
-#                      • project  (to add items to a GitHub Project v2)
+#   PIPELINE_PAT — a classic Personal Access Token (or a fine-grained token)
+#                  with the following scopes:
+#                    • repo  (to read issue data)
+#                    • project  (to add items to a GitHub Project v2)
 
 on:
   issues:
@@ -31,4 +31,4 @@ jobs:
         uses: actions/add-to-project@v1.0.2
         with:
           project-url: https://github.com/users/PSPTorchinim/projects/10
-          github-token: ${{ secrets.GH_PROJECT_PAT }}
+          github-token: ${{ secrets.PIPELINE_PAT }}
