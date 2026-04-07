@@ -1,0 +1,39 @@
+name: Autoattach Issues to DJ Panel Project
+
+# This workflow automatically adds every new or reopened issue in this repository
+# to the "DJ Panel" GitHub Project so that all work items are tracked centrally.
+#
+# Trigger: issues → opened | reopened | transferred
+#
+# Required secret:
+#   GH_PROJECT_PAT — a classic Personal Access Token (or a fine-grained token)
+#                    with the following scopes:
+#                      • repo  (to read issue data)
+#                      • project  (to add items to a GitHub Project v2)
+#
+# Required variable (repository or organisation level):
+#   DJ_PANEL_PROJECT_URL — the URL of the DJ Panel project, e.g.
+#     https://github.com/orgs/PSPTorchinim/projects/1
+#     https://github.com/users/PSPTorchinim/projects/1
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - transferred
+
+permissions:
+  issues: read
+
+jobs:
+  attach_to_project:
+    name: Add issue to DJ Panel project
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Add issue to DJ Panel project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: ${{ vars.DJ_PANEL_PROJECT_URL }}
+          github-token: ${{ secrets.GH_PROJECT_PAT }}
