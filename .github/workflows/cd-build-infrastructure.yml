@@ -10,6 +10,8 @@ name: Build TrueNAS Infrastructure
 # 7. Updates Cloudflare tunnel and DNS for service routing
 # 8. Disables maintenance page after successful deployment
 # 9. Includes automatic rollback on failure
+# 10. After successful Development deployment, moves project issues from
+#     "Review Completed" to "To test" in the DJ Panel GitHub Project
 #
 # Triggers:
 # - Nightly schedule on develop branch at 02:00 UTC
@@ -1893,6 +1895,170 @@ jobs:
           echo "Please verify the system is functioning correctly."
           echo "=========================================="
 
+  move_issues_to_test:
+    if: ${{ needs.rolling_update_deployment.result == 'success' && needs.setup.outputs.current_env == 'Development' }}
+    name: Move "Review Completed" issues to "To test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - setup
+      - rolling_update_deployment
+    permissions:
+      contents: read
+    steps:
+      - name: Move issues from "Review Completed" to "To test" in DJ Panel project
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PIPELINE_PAT }}
+          script: |
+            // DJ Panel GitHub Project (https://github.com/users/PSPTorchinim/projects/10)
+            const PROJECT_OWNER = 'PSPTorchinim';
+            const PROJECT_NUMBER = 10;
+            const SOURCE_STATUS = 'Review Completed';
+            const TARGET_STATUS = 'To test';
+
+            // Step 1: Get project ID and Status field metadata
+            const projectQuery = await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                user(login: $owner) {
+                  projectV2(number: $number) {
+                    id
+                    fields(first: 50) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options {
+                            id
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `, { owner: PROJECT_OWNER, number: PROJECT_NUMBER });
+
+            const project = projectQuery.user.projectV2;
+            const projectId = project.id;
+            core.info(`Project ID: ${projectId}`);
+
+            // Find the Status field and the relevant option IDs
+            const statusField = project.fields.nodes.find(
+              f => f.name === 'Status' && Array.isArray(f.options)
+            );
+            if (!statusField) {
+              core.setFailed('Could not find "Status" single-select field in the project.');
+              return;
+            }
+
+            const sourceOption = statusField.options.find(o => o.name === SOURCE_STATUS);
+            const targetOption = statusField.options.find(o => o.name === TARGET_STATUS);
+
+            if (!sourceOption) {
+              core.setFailed(`Could not find option "${SOURCE_STATUS}" in the Status field.`);
+              return;
+            }
+            if (!targetOption) {
+              core.setFailed(`Could not find option "${TARGET_STATUS}" in the Status field.`);
+              return;
+            }
+
+            core.info(`Status field ID: ${statusField.id}`);
+            core.info(`"${SOURCE_STATUS}" option ID: ${sourceOption.id}`);
+            core.info(`"${TARGET_STATUS}" option ID: ${targetOption.id}`);
+
+            // Step 2: Fetch all project items and filter those with SOURCE_STATUS
+            let itemsToUpdate = [];
+            let cursor = null;
+            let hasNextPage = true;
+
+            while (hasNextPage) {
+              const itemsQuery = await github.graphql(`
+                query($projectId: ID!, $cursor: String) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100, after: $cursor) {
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          id
+                          fieldValues(first: 20) {
+                            nodes {
+                              ... on ProjectV2ItemFieldSingleSelectValue {
+                                optionId
+                                field {
+                                  ... on ProjectV2SingleSelectField {
+                                    id
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `, { projectId, cursor });
+
+              const page = itemsQuery.node.items;
+              hasNextPage = page.pageInfo.hasNextPage;
+              cursor = page.pageInfo.endCursor;
+
+              for (const item of page.nodes) {
+                const statusValue = item.fieldValues.nodes.find(
+                  v => v.field && v.field.id === statusField.id
+                );
+                if (statusValue && statusValue.optionId === sourceOption.id) {
+                  itemsToUpdate.push(item.id);
+                }
+              }
+            }
+
+            core.info(`Found ${itemsToUpdate.length} item(s) with status "${SOURCE_STATUS}".`);
+
+            if (itemsToUpdate.length === 0) {
+              core.info('Nothing to update.');
+              return;
+            }
+
+            // Step 3: Move each item to TARGET_STATUS
+            let updatedCount = 0;
+            for (const itemId of itemsToUpdate) {
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: $fieldId
+                    value: { singleSelectOptionId: $optionId }
+                  }) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `, {
+                projectId,
+                itemId,
+                fieldId: statusField.id,
+                optionId: targetOption.id,
+              });
+              updatedCount++;
+              core.info(`Updated item ${itemId} → "${TARGET_STATUS}"`);
+            }
+
+            core.info(`✅ Moved ${updatedCount} issue(s) from "${SOURCE_STATUS}" to "${TARGET_STATUS}".`);
+
+            await core.summary
+              .addHeading('Issues moved to "To test"')
+              .addRaw(`Moved **${updatedCount}** issue(s) from **"${SOURCE_STATUS}"** to **"${TARGET_STATUS}"** after successful Development deployment.`)
+              .write();
+
   deployment_summary:
     if: ${{ always() }}
     name: Deployment Summary
@@ -1904,6 +2070,7 @@ jobs:
       - update_cloudflare_tunnel
       - update_cloudflare_dns_records
       - automatic_rollback_on_failure
+      - move_issues_to_test
     steps:
       - name: Summary
         run: |
@@ -1934,6 +2101,7 @@ jobs:
           echo "   Cloudflare Tunnel: ${{ needs.update_cloudflare_tunnel.result }}"
           echo "   DNS Records: ${{ needs.update_cloudflare_dns_records.result }}"
           echo "   Automatic Rollback: ${{ needs.automatic_rollback_on_failure.result }}"
+          echo "   Issues → To test: ${{ needs.move_issues_to_test.result }}"
           echo ""
           echo "📄 Compose File: ${{ needs.setup.outputs.compose_file_name }}"
           echo ""
