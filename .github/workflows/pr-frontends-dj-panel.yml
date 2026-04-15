@@ -1,0 +1,31 @@
+name: PR - Frontends - DJ Panel
+
+# Validates pull requests that touch the dj-panel frontend.
+# Triggered automatically when the changed files belong to this component.
+
+on:
+  pull_request:
+    paths:
+      - 'Frontends/dj-panel/**'
+      - 'Docker/frontends/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test DJ Panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
+        with:
+          service: dj-panel

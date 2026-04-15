@@ -1,0 +1,31 @@
+name: PR - Infra - Strapi
+
+# Validates pull requests that touch the Strapi Dockerfile or CMS source.
+# Triggered automatically when the changed files belong to this component.
+
+on:
+  pull_request:
+    paths:
+      - 'Docker/infra/strapi.Dockerfile'
+      - 'CMS/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint Strapi Dockerfile
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Docker/infra/strapi.Dockerfile

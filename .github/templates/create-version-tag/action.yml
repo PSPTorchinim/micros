@@ -1,0 +1,36 @@
+name: Create Version Tag
+description: >
+  Creates a CalVer development tag (vYYYY.MM.DD-{run_number}) pointing at the
+  current commit and pushes it using a PAT so downstream tag-triggered workflows
+  (e.g. the CD pipeline) are activated.
+inputs:
+  github-token:
+    description: PAT with contents:write scope — must be a PAT, not GITHUB_TOKEN, so the tag push triggers downstream workflows
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Create and push version tag
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+
+        # CalVer format: vYYYY.MM.DD-{run_number}
+        # The hyphen makes determine-environment classify this as a Development (pre-release) tag.
+        # To deploy to Production, manually push a stable tag, e.g. v1.0.0 (no hyphen).
+        TAG="v$(date -u +'%Y.%m.%d')-${{ github.run_number }}"
+        echo "Creating tag: $TAG"
+
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+        # Authenticate git remote with the PAT so the push triggers downstream workflows
+        REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+        git remote set-url origin "$REPO_URL"
+
+        git tag "$TAG"
+        git push origin "$TAG"
+
+        echo "✅ Tag $TAG created and pushed — CD pipeline will start shortly"
