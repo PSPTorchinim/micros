@@ -1,0 +1,274 @@
+# ============================================================
+# Database Metric Exporters for Prometheus
+# ============================================================
+
+# ── SQL Server Exporter ───────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: sqlserver-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sqlserver-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sqlserver-exporter
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      containers:
+        - name: sqlserver-exporter
+          image: awaragi/prometheus-mssql-exporter:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+              name: metrics
+          env:
+            - name: SERVER
+              value: sqlserver
+            - name: PORT
+              value: "1433"
+            - name: USERNAME
+              value: sa
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_PASSWORD_SQLSERVER
+            - name: DEBUG
+              value: "false"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: sqlserver-exporter
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: sqlserver-exporter
+  ports:
+    - name: metrics
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP
+---
+# ── MongoDB Exporter ──────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: mongodb-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mongodb-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb-exporter
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      containers:
+        - name: mongodb-exporter
+          image: percona/mongodb_exporter:0.40
+          imagePullPolicy: Always
+          args:
+            - --collect-all
+          ports:
+            - containerPort: 9216
+              name: metrics
+          env:
+            - name: MONGODB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_USER_MONGODB
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_PASSWORD_MONGODB
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGODB_USER):$(MONGODB_PASSWORD)@mongodb:27017"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: mongodb-exporter
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: mongodb-exporter
+  ports:
+    - name: metrics
+      port: 9216
+      targetPort: 9216
+  type: ClusterIP
+---
+# ── PostgreSQL Exporter ───────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: postgres-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-exporter
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      containers:
+        - name: postgres-exporter
+          image: prometheuscommunity/postgres-exporter:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9187
+              name: metrics
+          env:
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: CMS_DATABASE_USERNAME
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: CMS_DATABASE_PASSWORD
+            - name: PG_DB
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: CMS_DATABASE_NAME
+            - name: DATA_SOURCE_NAME
+              value: "postgresql://$(PG_USER):$(PG_PASSWORD)@postgres:5432/$(PG_DB)?sslmode=disable"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: postgres-exporter
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: postgres-exporter
+  ports:
+    - name: metrics
+      port: 9187
+      targetPort: 9187
+  type: ClusterIP
+---
+# ── Redis Exporter ────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: redis-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis-exporter
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      containers:
+        - name: redis-exporter
+          image: oliver006/redis_exporter:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9121
+              name: metrics
+          env:
+            - name: REDIS_ADDR
+              value: redis:6379
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: REDIS_PASSWORD
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: redis-exporter
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: redis-exporter
+  ports:
+    - name: metrics
+      port: 9121
+      targetPort: 9121
+  type: ClusterIP

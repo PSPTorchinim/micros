@@ -21,3 +21,6 @@ codeql-report.md
 !.github/**/*.md
 # Backslash-named build artefacts (created on Windows, should not be tracked)
 Frontends/dj-panel/obj*/
+
+# Kubernetes secrets file (never commit actual secrets)
+k8s/secrets.yaml

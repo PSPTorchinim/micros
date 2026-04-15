@@ -1,0 +1,225 @@
+# ============================================================
+# Identity API - Backend Service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: identity
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: identity
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: identity
+        app.kubernetes.io/component: identity
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      initContainers:
+        - name: wait-for-infra
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z sqlserver 1433 && nc -z redis 6379 && nc -z rabbitmq 5672; do
+                echo "Waiting for infrastructure..."
+                sleep 5
+              done
+      containers:
+        - name: identity
+          image: ghcr.io/psptorchinim/micros/services/identityapi:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: ASPNETCORE_DATABASE_HOST_SQLSERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: DATABASE_HOST_SQLSERVER
+            - name: ASPNETCORE_DATABASE_PORT_SQLSERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: DATABASE_PORT_SQLSERVER
+            - name: ASPNETCORE_DATABASE_USER_SQLSERVER
+              value: sa
+            - name: ASPNETCORE_DATABASE_PASSWORD_SQLSERVER
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_PASSWORD_SQLSERVER
+            - name: ASPNETCORE_DATABASE_HOST_MONGODB
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: DATABASE_HOST_MONGODB
+            - name: ASPNETCORE_DATABASE_PORT_MONGODB
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: DATABASE_PORT_MONGODB
+            - name: ASPNETCORE_DATABASE_USER_MONGODB
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_USER_MONGODB
+            - name: ASPNETCORE_DATABASE_PASSWORD_MONGODB
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DATABASE_PASSWORD_MONGODB
+            - name: ASPNETCORE_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: REDIS_HOST
+            - name: ASPNETCORE_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: REDIS_PORT
+            - name: ASPNETCORE_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: REDIS_PASSWORD
+            - name: ASPNETCORE_RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: RABBITMQ_HOST
+            - name: ASPNETCORE_RABBITMQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: RABBITMQ_PORT
+            - name: ASPNETCORE_RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: RABBITMQ_USER
+            - name: ASPNETCORE_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: ASPNETCORE_SECURE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: SECURE_KEY
+            - name: ASPNETCORE_JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: JWT_KEY
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: ENVIRONMENT
+            - name: ASPNETCORE_IDENTITY_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: IDENTITY_BE_ADDRESS
+            - name: ASPNETCORE_MUSIC_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: MUSIC_BE_ADDRESS
+            - name: ASPNETCORE_GEAR_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: GEAR_BE_ADDRESS
+            - name: ASPNETCORE_DOCUMENTS_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: DOCUMENTS_BE_ADDRESS
+            - name: ASPNETCORE_BRAND_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: BRAND_BE_ADDRESS
+            - name: ASPNETCORE_PARTY_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: PARTY_BE_ADDRESS
+            - name: ASPNETCORE_MAILING_BE_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: MAILING_BE_ADDRESS
+            - name: ASPNETCORE_DATABASE_CATALOG
+              valueFrom:
+                configMapKeyRef:
+                  name: djpanel-config
+                  key: IDENTITY_DATABASE_CATALOG
+            - name: ASPNETCORE_DJPANEL_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DJPANEL_USER_EMAIL
+            - name: ASPNETCORE_DJPANEL_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: djpanel-secrets
+                  key: DJPANEL_USER_PASSWORD
+            - name: ASPNETCORE_TEMPO_ENDPOINT
+              value: http://tempo:4317
+            - name: ASPNETCORE_LOKI_URL
+              value: http://loki:3100
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: identity
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: identity
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

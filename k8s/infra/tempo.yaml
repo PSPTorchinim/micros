@@ -1,0 +1,109 @@
+# ============================================================
+# Tempo - Distributed Tracing Backend
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tempo-data
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/part-of: djpanel
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/component: tracing
+    app.kubernetes.io/part-of: djpanel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tempo
+        app.kubernetes.io/component: tracing
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      containers:
+        - name: tempo
+          image: grafana/tempo:latest
+          imagePullPolicy: Always
+          args:
+            - -config.file=/tempo-config.yaml
+          ports:
+            - containerPort: 3200
+              name: http
+            - containerPort: 4317
+              name: otlp-grpc
+            - containerPort: 4318
+              name: otlp-http
+          volumeMounts:
+            - name: tempo-data
+              mountPath: /var/tempo
+            - name: tempo-config
+              mountPath: /tempo-config.yaml
+              subPath: tempo-config.yaml
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3200
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      securityContext:
+        runAsUser: 0
+      volumes:
+        - name: tempo-data
+          persistentVolumeClaim:
+            claimName: tempo-data
+        - name: tempo-config
+          configMap:
+            name: tempo-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/component: tracing
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: tempo
+  ports:
+    - name: http
+      port: 3200
+      targetPort: 3200
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+  type: ClusterIP

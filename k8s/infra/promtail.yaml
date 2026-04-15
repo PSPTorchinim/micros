@@ -1,0 +1,148 @@
+# ============================================================
+# Promtail - Log Collector (DaemonSet)
+# Reads container logs from Kubernetes pod log files
+# ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: promtail
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/part-of: djpanel
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: promtail
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/part-of: djpanel
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: promtail
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/part-of: djpanel
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: promtail
+subjects:
+  - kind: ServiceAccount
+    name: promtail
+    namespace: djpanel
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: promtail-positions
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/part-of: djpanel
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: promtail
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: promtail
+        app.kubernetes.io/component: logging
+        app.kubernetes.io/part-of: djpanel
+    spec:
+      serviceAccountName: promtail
+      containers:
+        - name: promtail
+          image: ghcr.io/psptorchinim/micros/infra/promtail:latest
+          imagePullPolicy: Always
+          args:
+            - -config.file=/etc/promtail/promtail-config.yaml
+          ports:
+            - containerPort: 9080
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/promtail
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: positions
+              mountPath: /var/lib/promtail
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      volumes:
+        - name: config
+          configMap:
+            name: promtail-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: positions
+          persistentVolumeClaim:
+            claimName: promtail-positions
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: promtail
+  namespace: djpanel
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: djpanel
+spec:
+  selector:
+    app.kubernetes.io/name: promtail
+  ports:
+    - name: http
+      port: 9080
+      targetPort: 9080
+  type: ClusterIP
