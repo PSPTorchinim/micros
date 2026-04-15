@@ -6,7 +6,8 @@ namespace Shared.Services.Security
 {
     /// <summary>
     /// Authorization handler that validates if a user has the required permission.
-    /// Checks the "permissions" claim in the JWT token.
+    /// Permissions are stored as individual <see cref="ClaimTypes.Role"/> claims in the JWT token,
+    /// with each claim value being a permission name (e.g. "company:update").
     /// </summary>
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
@@ -21,34 +22,33 @@ namespace Shared.Services.Security
             AuthorizationHandlerContext context,
             PermissionRequirement requirement)
         {
-            // Get the user's permissions from the claims
-            var permissionsClaim = context.User.FindFirst("permissions")?.Value;
-            
-            if (string.IsNullOrEmpty(permissionsClaim))
+            var userId = context.User.FindFirst("Id")?.Value
+                ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? "unknown";
+
+            // Permissions are stored as ClaimTypes.Role claims (one claim per permission name)
+            var userPermissions = context.User
+                .FindAll(ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (userPermissions.Count == 0)
             {
-                _logger.LogWarning("User {UserId} has no permissions claim", 
-                    context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown");
+                _logger.LogWarning("User {UserId} has no role/permission claims", userId);
                 return Task.CompletedTask;
             }
 
-            // Parse permissions (assuming comma-separated list)
-            var permissions = permissionsClaim.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Trim())
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
             // Check if user has the required permission
-            if (permissions.Contains(requirement.Permission))
+            if (userPermissions.Contains(requirement.Permission))
             {
-                _logger.LogDebug("User {UserId} has required permission: {Permission}", 
-                    context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown",
-                    requirement.Permission);
+                _logger.LogDebug("User {UserId} has required permission: {Permission}",
+                    userId, requirement.Permission);
                 context.Succeed(requirement);
             }
             else
             {
-                _logger.LogWarning("User {UserId} lacks required permission: {Permission}", 
-                    context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown",
-                    requirement.Permission);
+                _logger.LogWarning("User {UserId} lacks required permission: {Permission}",
+                    userId, requirement.Permission);
             }
 
             return Task.CompletedTask;

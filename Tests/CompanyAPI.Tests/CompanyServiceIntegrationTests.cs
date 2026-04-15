@@ -389,5 +389,86 @@ namespace CompanyAPI.Tests
             // Assert
             Assert.False(result);
         }
+
+        // ── CreateCompany tests ────────────────────────────────────────────────
+
+        [Fact]
+        public async Task CreateCompany_WhenNoBrandExists_CreatesNewBrand()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var service = CreateService(userId.ToString());
+            var dto = new UpdateCompanyDTO
+            {
+                Name = "DJ Beat Blaster",
+                Email = "contact@djbeatblaster.com",
+                Phone = "PHONE",
+                Country = "Country",
+                City = "City Name",
+                PostCode = "CODE",
+                AddressLine1 = "Street and Number"
+            };
+
+            // Act
+            var result = await service.CreateCompany(dto);
+            var brands = await _brandsRepository.Get();
+
+            // Assert
+            Assert.True(result);
+            Assert.Single(brands);
+            Assert.Equal("DJ Beat Blaster", brands[0].Name);
+            Assert.Equal("contact@djbeatblaster.com", brands[0].BrandEmail);
+            Assert.Equal(userId, brands[0].CreatedByUserId);
+        }
+
+        [Fact]
+        public async Task CreateCompany_WhenNoBrandExists_AddsCreatorAsBrandUser()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var service = CreateService(userId.ToString());
+            var dto = new UpdateCompanyDTO
+            {
+                Name = "New Company",
+                Email = "new@company.com",
+                Phone = "123",
+                Country = "US",
+                City = "New York",
+                PostCode = "10001",
+                AddressLine1 = "1 Main St"
+            };
+
+            // Act
+            await service.CreateCompany(dto);
+            var brandUsers = await _brandUsersRepository.Get();
+
+            // Assert
+            Assert.Single(brandUsers);
+            Assert.Equal(userId, brandUsers[0].UserId);
+            Assert.Equal(BrandUserRole.Creator, brandUsers[0].Role);
+        }
+
+        [Fact]
+        public async Task CreateCompany_WhenBrandAlreadyExists_ThrowsAppException()
+        {
+            // Arrange
+            var brand = CreateTestBrand("Existing Company");
+            await _brandsRepository.Add(brand);
+            var service = CreateService(Guid.NewGuid().ToString());
+            var dto = new UpdateCompanyDTO
+            {
+                Name = "Another Company",
+                Email = "another@company.com",
+                Phone = "123",
+                Country = "US",
+                City = "New York",
+                PostCode = "10001",
+                AddressLine1 = "1 Main St"
+            };
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<AppException>(() => service.CreateCompany(dto));
+            Assert.Equal(ExceptionCodes.CompanyAlreadyExists, ex.Message);
+        }
     }
 }

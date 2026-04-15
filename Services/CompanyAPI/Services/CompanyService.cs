@@ -12,6 +12,7 @@ namespace CompanyAPI.Services
     public interface ICompanyService : IService
     {
         Task<CompanyDTO?> GetCompany();
+        Task<bool> CreateCompany(UpdateCompanyDTO createDto);
         Task<bool> UpdateCompany(UpdateCompanyDTO updateDto);
         Task<List<CompanyUserDTO>> GetCompanyUsers();
         Task<bool> AddCompanyUser(AddCompanyUserDTO addUserDto);
@@ -80,6 +81,79 @@ namespace CompanyAPI.Services
                 );
                 
                 return result;
+            }, _logger);
+        }
+
+        public async Task<bool> CreateCompany(UpdateCompanyDTO createDto)
+        {
+            return await ExceptionHandler.Handle(async () =>
+            {
+                // Reject if a company already exists
+                var existing = (await brandsRepository.Get()).FirstOrDefault();
+                if (existing != null)
+                {
+                    _logger.LogWarning("Company creation attempted but a company already exists");
+                    throw new AppException(ExceptionCodes.CompanyAlreadyExists);
+                }
+
+                // Get current user ID for CreatedBy tracking
+                var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
+                Guid? createdByUserId = null;
+                if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+                {
+                    createdByUserId = userId;
+                }
+
+                var brand = new Brand
+                {
+                    Id = Guid.NewGuid(),
+                    Name = createDto.Name,
+                    BrandEmail = createDto.Email,
+                    BrandPhone = createDto.Phone,
+                    Country = createDto.Country,
+                    City = createDto.City,
+                    PostCode = createDto.PostCode,
+                    AddresLine1 = createDto.AddressLine1,
+                    AddresLine2 = createDto.AddressLine2,
+                    Logo = createDto.Logo,
+                    CompanyTypeId = createDto.CompanyTypeId,
+                    CompanyTypeData = createDto.CompanyTypeData,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = createdByUserId,
+                    BrandCustomFields = new List<BrandCustomField>(),
+                    Packages = new List<Package>(),
+                    Clients = new List<Client>(),
+                    BrandUsers = new List<BrandUser>()
+                };
+
+                await brandsRepository.Add(brand);
+
+                // Automatically add the current user as company creator
+                if (createdByUserId.HasValue)
+                {
+                    _logger.LogInformation($"Adding user {createdByUserId.Value} as company creator");
+                    var brandUser = new BrandUser
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = createdByUserId.Value,
+                        BrandId = brand.Id,
+                        Role = BrandUserRole.Creator
+                    };
+
+                    await brandUsersRepository.Add(brandUser);
+
+                    // Invalidate users cache since we added a new user
+                    await _cacheService.RemoveAsync($"{CompanyCachePrefix}Users");
+                }
+                else
+                {
+                    _logger.LogWarning("Could not determine current user ID to add as company creator");
+                }
+
+                // Invalidate company info cache
+                await _cacheService.RemoveAsync($"{CompanyCachePrefix}Info");
+
+                return true;
             }, _logger);
         }
 
