@@ -19,7 +19,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: gear
-        app.kubernetes.io/component: gear
+        app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: djpanel
     spec:
       initContainers:

@@ -19,7 +19,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: brand
-        app.kubernetes.io/component: brand
+        app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: djpanel
     spec:
       initContainers:

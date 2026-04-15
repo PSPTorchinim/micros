@@ -19,7 +19,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: apigateway
-        app.kubernetes.io/component: apigateway
+        app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: djpanel
     spec:
       initContainers:

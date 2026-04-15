@@ -19,7 +19,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: party
-        app.kubernetes.io/component: party
+        app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: djpanel
     spec:
       initContainers:
