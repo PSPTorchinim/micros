@@ -91,23 +91,29 @@ scrape_configs:
       # Normalize Docker json-file logs (handles docker's framing/fields)
       - docker: {}
 
-      # Parse JSON payloads from .NET Serilog-style logs
-      - json:
-          expressions:
-            timestamp: Timestamp
-            level: Level
-            message: RenderedMessage
-            exception: Exception
+      # Parse JSON payloads from .NET Serilog-style logs only for backend microservices.
+      # Frontend containers (host_fe, strapi) emit plain-text logs and must not have
+      # their log lines replaced by an empty "message" field extracted from failed JSON
+      # parsing, which would cause all frontend logs to silently disappear in Loki.
+      - match:
+          selector: '{compose_service=~"identity_be|music_be|gear_be|documents_be|brand_be|party_be|mailing_be|apigateway"}'
+          stages:
+            - json:
+                expressions:
+                  timestamp: Timestamp
+                  level: Level
+                  message: RenderedMessage
+                  exception: Exception
 
-      # Expose level as a label
-      - labels:
-          level:
+            # Expose level as a label
+            - labels:
+                level:
 
-      # Use the app-provided timestamp (RFC3339Nano)
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
+            # Use the app-provided timestamp (RFC3339Nano)
+            - timestamp:
+                source: timestamp
+                format: RFC3339Nano
 
-      # Emit only the message as the log line
-      - output:
-          source: message
+            # Emit only the message as the log line
+            - output:
+                source: message
