@@ -227,7 +227,7 @@ services:
           cpus: '0.25'
           memory: 256M
 
-  dj-panel:
+  host_fe:
     profiles: [frontends]
     build:
       context: ../
