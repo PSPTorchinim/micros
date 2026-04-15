@@ -152,7 +152,7 @@ namespace CompanyAPI.Tests
         }
 
         [Fact]
-        public async Task UpdateCompany_WhenNoBrandExists_CreatesNewBrand()
+        public async Task UpdateCompany_WhenNoBrandExists_ThrowsAppException()
         {
             // Arrange
             var userId = Guid.NewGuid();
@@ -168,14 +168,9 @@ namespace CompanyAPI.Tests
                 AddressLine1 = "10 Downing St"
             };
 
-            // Act
-            var result = await service.UpdateCompany(dto);
-            var brands = await _brandsRepository.Get();
-
-            // Assert
-            Assert.True(result);
-            Assert.Single(brands);
-            Assert.Equal("New Company", brands[0].Name);
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<AppException>(() => service.UpdateCompany(dto));
+            Assert.Equal(ExceptionCodes.CompanyNotFound, ex.Message);
         }
 
         [Fact]
