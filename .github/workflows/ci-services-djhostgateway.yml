@@ -1,4 +1,4 @@
-name: CI - DJHostGateway
+name: CI - Services - DJHostGateway
 
 # Triggers on changes to DJHostGateway source or any shared .NET code,
 # giving developers fast feedback without waiting for all other services to build.

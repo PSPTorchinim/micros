@@ -1,13 +1,13 @@
-name: PR - MailingAPI
+name: PR - Services - DJHostGateway
 
-# Validates pull requests that touch the MailingAPI service.
+# Validates pull requests that touch the DJHostGateway service.
 # Triggered automatically when the changed files belong to this component.
 
 on:
   pull_request:
     paths:
-      - 'Services/MailingAPI/**'
-      - 'Tests/MailingAPI.Tests/**'
+      - 'Services/DJHostGateway/**'
+      - 'Tests/DJHostGateway.Tests/**'
       - 'Services/Shared/**'
       - 'Tests/Shared.Tests/**'
       - 'Micros.sln'
@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test MailingAPI
+    name: Build & Test DJHostGateway
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -32,4 +32,4 @@ jobs:
       - name: Build .NET Service
         uses: ./.github/templates/build-dotnet-service
         with:
-          service: MailingAPI
+          service: DJHostGateway

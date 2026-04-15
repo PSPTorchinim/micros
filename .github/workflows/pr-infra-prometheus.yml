@@ -1,4 +1,4 @@
-name: PR - Infra Prometheus
+name: PR - Infra - Prometheus
 
 # Validates pull requests that touch the Prometheus Dockerfile.
 # Triggered automatically when the changed files belong to this component.

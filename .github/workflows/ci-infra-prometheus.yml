@@ -1,4 +1,4 @@
-name: CI - Infra Prometheus
+name: CI - Infra - Prometheus
 
 # Triggers on changes to the Prometheus Dockerfile,
 # linting it to catch issues before they reach the CD pipeline.

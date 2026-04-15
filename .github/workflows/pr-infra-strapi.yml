@@ -1,4 +1,4 @@
-name: PR - Infra Strapi
+name: PR - Infra - Strapi
 
 # Validates pull requests that touch the Strapi Dockerfile or CMS source.
 # Triggered automatically when the changed files belong to this component.

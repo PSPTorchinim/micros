@@ -1,4 +1,4 @@
-name: CI - Infra MongoDB
+name: CI - Infra - MongoDB
 
 # Triggers on changes to the MongoDB Dockerfile,
 # linting it to catch issues before they reach the CD pipeline.

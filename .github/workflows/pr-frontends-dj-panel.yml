@@ -1,17 +1,13 @@
-name: PR - PartyAPI
+name: PR - Frontends - DJ Panel
 
-# Validates pull requests that touch the PartyAPI service.
+# Validates pull requests that touch the dj-panel frontend.
 # Triggered automatically when the changed files belong to this component.
 
 on:
   pull_request:
     paths:
-      - 'Services/PartyAPI/**'
-      - 'Tests/PartyAPI.Tests/**'
-      - 'Services/Shared/**'
-      - 'Tests/Shared.Tests/**'
-      - 'Micros.sln'
-      - 'Docker/services/dotnet.Dockerfile'
+      - 'Frontends/dj-panel/**'
+      - 'Docker/frontends/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -22,14 +18,14 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test PartyAPI
+    name: Build & Test DJ Panel
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Build .NET Service
-        uses: ./.github/templates/build-dotnet-service
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
         with:
-          service: PartyAPI
+          service: dj-panel

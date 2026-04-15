@@ -1,16 +1,19 @@
-name: PR - DJ Panel Frontend
+name: CI - Frontends - DJ Panel
 
-# Validates pull requests that touch the dj-panel frontend.
-# Triggered automatically when the changed files belong to this component.
+# Triggers on changes to the dj-panel frontend or its Docker configuration,
+# giving developers fast feedback without waiting for all other components to build.
 
 on:
-  pull_request:
+  push:
+    branches:
+      - develop
     paths:
       - 'Frontends/dj-panel/**'
       - 'Docker/frontends/**'
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

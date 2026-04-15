@@ -1,4 +1,4 @@
-name: PR - Infra RabbitMQ
+name: PR - Infra - RabbitMQ
 
 # Validates pull requests that touch the RabbitMQ Dockerfile.
 # Triggered automatically when the changed files belong to this component.

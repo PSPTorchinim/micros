@@ -1,6 +1,6 @@
-name: CI - IdentityAPI
+name: CI - Services - DocumentsAPI
 
-# Triggers on changes to IdentityAPI source or any shared .NET code,
+# Triggers on changes to DocumentsAPI source or any shared .NET code,
 # giving developers fast feedback without waiting for all other services to build.
 
 on:
@@ -8,8 +8,8 @@ on:
     branches:
       - develop
     paths:
-      - 'Services/IdentityAPI/**'
-      - 'Tests/IdentityAPI.Tests/**'
+      - 'Services/DocumentsAPI/**'
+      - 'Tests/DocumentsAPI.Tests/**'
       - 'Services/Shared/**'
       - 'Tests/Shared.Tests/**'
       - 'Micros.sln'
@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test IdentityAPI
+    name: Build & Test DocumentsAPI
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -35,4 +35,4 @@ jobs:
       - name: Build .NET Service
         uses: ./.github/templates/build-dotnet-service
         with:
-          service: IdentityAPI
+          service: DocumentsAPI

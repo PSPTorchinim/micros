@@ -1,4 +1,4 @@
-name: CI - Infra Strapi
+name: CI - Infra - Strapi
 
 # Triggers on changes to the Strapi Dockerfile or CMS source,
 # linting the Dockerfile to catch issues before they reach the CD pipeline.

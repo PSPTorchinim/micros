@@ -1,4 +1,4 @@
-name: PR - Infra MongoDB
+name: PR - Infra - MongoDB
 
 # Validates pull requests that touch the MongoDB Dockerfile.
 # Triggered automatically when the changed files belong to this component.

@@ -1,23 +1,20 @@
-name: CI - DocumentsAPI
+name: PR - Services - CompanyAPI
 
-# Triggers on changes to DocumentsAPI source or any shared .NET code,
-# giving developers fast feedback without waiting for all other services to build.
+# Validates pull requests that touch the CompanyAPI service.
+# Triggered automatically when the changed files belong to this component.
 
 on:
-  push:
-    branches:
-      - develop
+  pull_request:
     paths:
-      - 'Services/DocumentsAPI/**'
-      - 'Tests/DocumentsAPI.Tests/**'
+      - 'Services/CompanyAPI/**'
+      - 'Tests/CompanyAPI.Tests/**'
       - 'Services/Shared/**'
       - 'Tests/Shared.Tests/**'
       - 'Micros.sln'
       - 'Docker/services/dotnet.Dockerfile'
-  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -25,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test DocumentsAPI
+    name: Build & Test CompanyAPI
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -35,4 +32,4 @@ jobs:
       - name: Build .NET Service
         uses: ./.github/templates/build-dotnet-service
         with:
-          service: DocumentsAPI
+          service: CompanyAPI

@@ -1,4 +1,4 @@
-name: CI - Infra Grafana
+name: CI - Infra - Grafana
 
 # Triggers on changes to the Grafana Dockerfile,
 # linting it to catch issues before they reach the CD pipeline.

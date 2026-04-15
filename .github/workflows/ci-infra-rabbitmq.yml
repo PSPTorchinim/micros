@@ -1,4 +1,4 @@
-name: CI - Infra RabbitMQ
+name: CI - Infra - RabbitMQ
 
 # Triggers on changes to the RabbitMQ Dockerfile,
 # linting it to catch issues before they reach the CD pipeline.

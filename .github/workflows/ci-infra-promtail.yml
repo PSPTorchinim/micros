@@ -1,4 +1,4 @@
-name: CI - Infra Promtail
+name: CI - Infra - Promtail
 
 # Triggers on changes to the Promtail Dockerfile,
 # linting it to catch issues before they reach the CD pipeline.

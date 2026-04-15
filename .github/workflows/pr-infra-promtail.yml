@@ -1,4 +1,4 @@
-name: PR - Infra Promtail
+name: PR - Infra - Promtail
 
 # Validates pull requests that touch the Promtail Dockerfile.
 # Triggered automatically when the changed files belong to this component.

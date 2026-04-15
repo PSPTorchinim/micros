@@ -1,4 +1,4 @@
-name: PR - Infra Loki
+name: PR - Infra - Loki
 
 # Validates pull requests that touch the Loki Dockerfile.
 # Triggered automatically when the changed files belong to this component.

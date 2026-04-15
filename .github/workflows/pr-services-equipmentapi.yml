@@ -1,23 +1,20 @@
-name: CI - MusicAPI
+name: PR - Services - EquipmentAPI
 
-# Triggers on changes to MusicAPI source or any shared .NET code,
-# giving developers fast feedback without waiting for all other services to build.
+# Validates pull requests that touch the EquipmentAPI service.
+# Triggered automatically when the changed files belong to this component.
 
 on:
-  push:
-    branches:
-      - develop
+  pull_request:
     paths:
-      - 'Services/MusicAPI/**'
-      - 'Tests/MusicAPI.Tests/**'
+      - 'Services/EquipmentAPI/**'
+      - 'Tests/EquipmentAPI.Tests/**'
       - 'Services/Shared/**'
       - 'Tests/Shared.Tests/**'
       - 'Micros.sln'
       - 'Docker/services/dotnet.Dockerfile'
-  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -25,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test MusicAPI
+    name: Build & Test EquipmentAPI
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -35,4 +32,4 @@ jobs:
       - name: Build .NET Service
         uses: ./.github/templates/build-dotnet-service
         with:
-          service: MusicAPI
+          service: EquipmentAPI

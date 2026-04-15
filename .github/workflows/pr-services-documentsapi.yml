@@ -1,0 +1,35 @@
+name: PR - Services - DocumentsAPI
+
+# Validates pull requests that touch the DocumentsAPI service.
+# Triggered automatically when the changed files belong to this component.
+
+on:
+  pull_request:
+    paths:
+      - 'Services/DocumentsAPI/**'
+      - 'Tests/DocumentsAPI.Tests/**'
+      - 'Services/Shared/**'
+      - 'Tests/Shared.Tests/**'
+      - 'Micros.sln'
+      - 'Docker/services/dotnet.Dockerfile'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test DocumentsAPI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build .NET Service
+        uses: ./.github/templates/build-dotnet-service
+        with:
+          service: DocumentsAPI
