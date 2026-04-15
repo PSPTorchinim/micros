@@ -163,87 +163,31 @@ namespace CompanyAPI.Services
             {
                 // Get the first brand (company)
                 var brand = (await brandsRepository.Get()).FirstOrDefault();
-                
+
                 if (brand == null)
                 {
-                    // Create new company if none exists
-                    _logger.LogInformation("No company found, creating new company");
-                    
-                    // Get current user ID for CreatedBy tracking
-                    var userIdClaim = GetClaim("sub") ?? GetClaim("userId");
-                    Guid? createdByUserId = null;
-                    if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
-                    {
-                        createdByUserId = userId;
-                    }
-                    
-                    brand = new Brand
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = updateDto.Name,
-                        BrandEmail = updateDto.Email,
-                        BrandPhone = updateDto.Phone,
-                        Country = updateDto.Country,
-                        City = updateDto.City,
-                        PostCode = updateDto.PostCode,
-                        AddresLine1 = updateDto.AddressLine1,
-                        AddresLine2 = updateDto.AddressLine2,
-                        Logo = updateDto.Logo,
-                        CompanyTypeId = updateDto.CompanyTypeId,
-                        CompanyTypeData = updateDto.CompanyTypeData,
-                        CreatedDate = DateTime.UtcNow,
-                        CreatedByUserId = createdByUserId,
-                        BrandCustomFields = new List<BrandCustomField>(),
-                        Packages = new List<Package>(),
-                        Clients = new List<Client>(),
-                        BrandUsers = new List<BrandUser>()
-                    };
-                    
-                    await brandsRepository.Add(brand);
-                    
-                    // Automatically add the current user as company creator
-                    if (createdByUserId.HasValue)
-                    {
-                        _logger.LogInformation($"Adding user {createdByUserId.Value} as company creator");
-                        var brandUser = new BrandUser
-                        {
-                            Id = Guid.NewGuid(),
-                            UserId = createdByUserId.Value,
-                            BrandId = brand.Id,
-                            Role = BrandUserRole.Creator
-                        };
-                        
-                        await brandUsersRepository.Add(brandUser);
-                        
-                        // Invalidate users cache since we added a new user
-                        await _cacheService.RemoveAsync($"{CompanyCachePrefix}Users");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Could not determine current user ID to add as company creator");
-                    }
+                    _logger.LogWarning("UpdateCompany called but no company exists");
+                    throw new AppException(ExceptionCodes.CompanyNotFound);
                 }
-                else
-                {
-                    // Update existing brand properties
-                    brand.Name = updateDto.Name;
-                    brand.BrandEmail = updateDto.Email;
-                    brand.BrandPhone = updateDto.Phone;
-                    brand.Country = updateDto.Country;
-                    brand.City = updateDto.City;
-                    brand.PostCode = updateDto.PostCode;
-                    brand.AddresLine1 = updateDto.AddressLine1;
-                    brand.AddresLine2 = updateDto.AddressLine2;
-                    brand.Logo = updateDto.Logo;
-                    brand.CompanyTypeId = updateDto.CompanyTypeId;
-                    brand.CompanyTypeData = updateDto.CompanyTypeData;
 
-                    await brandsRepository.Update(brand);
-                }
-                
+                // Update existing brand properties
+                brand.Name = updateDto.Name;
+                brand.BrandEmail = updateDto.Email;
+                brand.BrandPhone = updateDto.Phone;
+                brand.Country = updateDto.Country;
+                brand.City = updateDto.City;
+                brand.PostCode = updateDto.PostCode;
+                brand.AddresLine1 = updateDto.AddressLine1;
+                brand.AddresLine2 = updateDto.AddressLine2;
+                brand.Logo = updateDto.Logo;
+                brand.CompanyTypeId = updateDto.CompanyTypeId;
+                brand.CompanyTypeData = updateDto.CompanyTypeData;
+
+                await brandsRepository.Update(brand);
+
                 // Invalidate cache
                 await _cacheService.RemoveAsync($"{CompanyCachePrefix}Info");
-                
+
                 return true;
             }, _logger);
         }
