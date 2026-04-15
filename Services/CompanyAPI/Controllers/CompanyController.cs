@@ -16,6 +16,20 @@ namespace CompanyAPI.Controllers
         }
 
         /// <summary>
+        /// Create a new company for the current user.
+        /// Any authenticated user who is not yet part of a company can call this endpoint.
+        /// Returns 409 Conflict if a company already exists.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateCompanyV1(UpdateCompanyDTO createDto)
+        {
+            return await Handle(
+                async () => await CompanyService.CreateCompany(createDto),
+                result => CreatedAtAction(nameof(GetCompanyInfoV1), null, result)
+            );
+        }
+
+        /// <summary>
         /// Get company information for the current user's company.
         /// Requires: User must be a member of the company.
         /// </summary>

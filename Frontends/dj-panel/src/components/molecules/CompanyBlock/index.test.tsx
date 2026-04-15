@@ -58,6 +58,7 @@ describe('CompanyBlock', () => {
     (CompanyService.getCompany as jest.Mock).mockResolvedValue(mockCompanyData);
     (CompanyService.getCompanyUsers as jest.Mock).mockResolvedValue(mockUsers);
     (CompanyService.getCompanyStructure as jest.Mock).mockResolvedValue([]);
+    (CompanyService.createCompany as jest.Mock).mockResolvedValue(true);
   });
 
   it('renders loading state initially', async () => {
