@@ -60,7 +60,7 @@ export const CreateCompanyModal: React.FC<CreateCompanyModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const success = await CompanyService.updateCompany(formData);
+      const success = await CompanyService.createCompany(formData);
       if (success) {
         onSuccess();
         setFormData({

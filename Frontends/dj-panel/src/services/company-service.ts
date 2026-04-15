@@ -72,6 +72,18 @@ export class CompanyService {
     }
   }
 
+  public static async createCompany(
+    createDto: UpdateCompanyDTO,
+  ): Promise<boolean> {
+    try {
+      const response =
+        await microservicesClient.brand.company.v1CompanyCreate(createDto);
+      return (response.data as any)?.success && (response.data as any)?.data;
+    } catch {
+      return false;
+    }
+  }
+
   public static async updateCompany(
     updateDto: UpdateCompanyDTO,
   ): Promise<boolean> {
