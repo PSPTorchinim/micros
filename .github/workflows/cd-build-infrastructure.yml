@@ -1,8 +1,8 @@
-name: Build TrueNAS Infrastructure
+name: CD Pipeline
 
-# Reusable deployment workflow. Called by environment-specific trigger pipelines:
-#   - cd-development.yml  → fires on pre-release tags (v*-*), e.g. v2026.04.15-42
-#   - cd-production.yml   → fires on stable tags (no hyphen), e.g. v1.0.0
+# Single deployment pipeline. Fires on every version tag push and auto-detects environment:
+#   - Pre-release CalVer tag (e.g. v2026.04.15-42, contains '-') → Development
+#   - Stable SemVer tag (e.g. v1.0.0, no '-') → Production
 #
 # This workflow builds Docker images and deploys the application stack to TrueNAS:
 # 1. Extracts IMAGE_TAG from the version tag that triggered this run
@@ -20,8 +20,18 @@ name: Build TrueNAS Infrastructure
 #     "Review Completed" to "To test" in the DJ Panel GitHub Project
 
 on:
-  workflow_call:
+  push:
+    tags:
+      - 'v*'  # All version tags: pre-release CalVer (v*-*) → Development; stable SemVer (v*) → Production
   workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   # Consolidated setup job - determines environment, IMAGE_TAG, and compose metadata
