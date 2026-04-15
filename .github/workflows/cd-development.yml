@@ -1,0 +1,29 @@
+name: CD - Development Deployment
+
+# Triggered automatically when a pre-release CalVer tag is pushed
+# (e.g. v2026.04.15-42 created by the CI pipeline after a successful develop build).
+#
+# Calls the shared cd-build-infrastructure.yml reusable workflow, which:
+#   - Determines environment = Development (from the tag pattern)
+#   - Builds and pushes all Docker images to GHCR
+#   - Deploys the full stack to TrueNAS with zero-downtime rolling update
+
+on:
+  push:
+    tags:
+      - 'v*-*'  # Pre-release CalVer tags, e.g. v2026.04.15-42
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+# Permissions required by the called workflow's jobs (build images + deploy)
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Deploy to Development
+    uses: ./.github/workflows/cd-build-infrastructure.yml
+    secrets: inherit
