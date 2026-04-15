@@ -2,16 +2,24 @@ name: Determine Environment
 description: Determine the environment for the service
 outputs:
   current_env:
-    description: The environment determined based on the current branch
+    description: The environment determined based on the current branch or tag
     value: ${{ steps.tag_set.outputs.environment }}
 runs:
   using: composite
   steps:
-    - name: Set environment based on branch
+    - name: Set environment based on branch or tag
       id: tag_set
       shell: bash
       run: |
-        if [[ "${GITHUB_REF}" == *"/production" ]]; then
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          # Tag-based: stable tags (e.g. v1.0.0) → Production; pre-release tags (e.g. v1.0.0-rc.1) → Development
+          TAG="${GITHUB_REF#refs/tags/}"
+          if [[ "$TAG" == *"-"* ]]; then
+            echo "environment=Development" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=Production" >> "$GITHUB_OUTPUT"
+          fi
+        elif [[ "${GITHUB_REF}" == *"/production" ]]; then
           echo "environment=Production" >> "$GITHUB_OUTPUT"
         elif [[ "${GITHUB_REF}" == refs/heads/develop || "${GITHUB_REF}" == refs/heads/releases/* ]]; then
           echo "environment=Development" >> "$GITHUB_OUTPUT"

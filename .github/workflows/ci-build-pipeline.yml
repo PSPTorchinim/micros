@@ -1,226 +1,46 @@
-name: Build Artifacts
+name: CI Pipeline
 
-# This workflow builds and pushes Docker images for changed application components:
-# 1. Determines deployment environment and Docker image tags
-# 2. Detects which parts of the system changed (push events only)
-# 3. Builds only the changed .NET microservices with database migrations
-# 4. Builds React frontends with environment-specific configurations (if changed)
-# 5. Builds only the changed infrastructure images (databases, message brokers, monitoring tools)
-# All images are pushed to GitHub Container Registry (GHCR)
-# On schedule or workflow_dispatch triggers, all components are always built.
+# This workflow validates code and creates a release tag on push to develop:
+# 1. Builds all .NET microservices (compile + unit tests)
+# 2. Builds React frontends (compile + tests)
+# 3. Creates a CalVer version tag to trigger the CD pipeline
+#    — format: vYYYY.MM.DD-{run_number} (pre-release → Development environment)
+#    — to deploy to Production, manually push a stable tag, e.g. v1.0.0
 #
 # Triggers:
-# - Push to develop branch (automatic deployment of merged changes to Development environment)
-# - Monthly schedule on 1st day at midnight UTC (for Production environment)
-# - Manual workflow_dispatch
+# - Push to develop branch when relevant source files change
+# - Manual workflow_dispatch (skips tag creation to avoid unintended releases)
 
 on:
   push:
     branches:
       - develop
-  schedule:
-    # Monthly on the 1st at midnight (00:00 UTC) for Production environment
-    - cron: "0 0 1 * *"
+    paths:
+      - 'Services/**'
+      - 'Tests/**'
+      - 'Frontends/**'
+      - 'CMS/**'
+      - 'Docker/**'
+      - 'Micros.sln'
   workflow_dispatch:
 
-# Prevent duplicate builds when multiple triggers occur simultaneously
+# Cancel in-progress runs when a new commit is pushed to the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Minimal permissions - jobs that need more will specify them
 permissions:
   contents: read
 
 jobs:
-  setup:
-    name: Setup Build Configuration
-    runs-on: ubuntu-latest
-    outputs:
-      current_env: ${{ steps.set_env.outputs.current_env }}
-      env_slug: ${{ steps.compute_slug.outputs.env_slug }}
-      docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
-      latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
-      all_tags: ${{ steps.tag_set.outputs.all_tags }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-
-      - name: Set Environment
-        id: set_env
-        uses: ./.github/templates/determine-environment
-
-      - name: Compute env slug
-        id: compute_slug
-        uses: ./.github/templates/compute-env-slug
-        with:
-          environment: ${{ steps.set_env.outputs.current_env }}
-
-      - name: Determine Docker tag based on branch
-        id: tag_set
-        uses: ./.github/templates/determine-docker-tag
-
-  detect_changes:
-    name: Detect Changed Components
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      dotnet_services: ${{ steps.set-dotnet-matrix.outputs.services }}
-      react_changed: ${{ steps.set-react.outputs.changed }}
-      infra_images: ${{ steps.set-infra-matrix.outputs.images }}
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v5
-
-      - name: Filter changed paths
-        uses: dorny/paths-filter@v3
-        id: filter
-        if: github.event_name == 'push'
-        with:
-          filters: |
-            shared_dotnet:
-              - 'Services/Shared/**'
-              - 'Tests/Shared.Tests/**'
-              - 'Micros.sln'
-              - 'Docker/services/dotnet.Dockerfile'
-            CompanyAPI:
-              - 'Services/CompanyAPI/**'
-              - 'Tests/CompanyAPI.Tests/**'
-            DJHostGateway:
-              - 'Services/DJHostGateway/**'
-              - 'Tests/DJHostGateway.Tests/**'
-            DocumentsAPI:
-              - 'Services/DocumentsAPI/**'
-              - 'Tests/DocumentsAPI.Tests/**'
-            EquipmentAPI:
-              - 'Services/EquipmentAPI/**'
-              - 'Tests/EquipmentAPI.Tests/**'
-            IdentityAPI:
-              - 'Services/IdentityAPI/**'
-              - 'Tests/IdentityAPI.Tests/**'
-            MailingAPI:
-              - 'Services/MailingAPI/**'
-              - 'Tests/MailingAPI.Tests/**'
-            MusicAPI:
-              - 'Services/MusicAPI/**'
-              - 'Tests/MusicAPI.Tests/**'
-            PartyAPI:
-              - 'Services/PartyAPI/**'
-              - 'Tests/PartyAPI.Tests/**'
-            react:
-              - 'Frontends/**'
-              - 'Docker/frontends/**'
-            mongodb:
-              - 'Docker/infra/mongodb.Dockerfile'
-            rabbitmq:
-              - 'Docker/infra/rabbitmq.Dockerfile'
-            strapi:
-              - 'Docker/infra/strapi.Dockerfile'
-              - 'CMS/**'
-            loki:
-              - 'Docker/infra/loki.Dockerfile'
-            promtail:
-              - 'Docker/infra/promtail.Dockerfile'
-            grafana:
-              - 'Docker/infra/grafana.Dockerfile'
-            prometheus:
-              - 'Docker/infra/prometheus.Dockerfile'
-
-      - name: Set .NET services matrix
-        id: set-dotnet-matrix
-        run: |
-          ALL_SERVICES='["CompanyAPI","DJHostGateway","DocumentsAPI","EquipmentAPI","IdentityAPI","MailingAPI","MusicAPI","PartyAPI"]'
-
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
-            echo "services=$ALL_SERVICES" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          SERVICES=()
-          if [ "${{ steps.filter.outputs.shared_dotnet }}" = "true" ]; then
-            # Shared library or shared Dockerfile changed — all services must be rebuilt
-            SERVICES=("CompanyAPI" "DJHostGateway" "DocumentsAPI" "EquipmentAPI" "IdentityAPI" "MailingAPI" "MusicAPI" "PartyAPI")
-          else
-            [ "${{ steps.filter.outputs.CompanyAPI }}"    = "true" ] && SERVICES+=("CompanyAPI")
-            [ "${{ steps.filter.outputs.DJHostGateway }}" = "true" ] && SERVICES+=("DJHostGateway")
-            [ "${{ steps.filter.outputs.DocumentsAPI }}"  = "true" ] && SERVICES+=("DocumentsAPI")
-            [ "${{ steps.filter.outputs.EquipmentAPI }}"  = "true" ] && SERVICES+=("EquipmentAPI")
-            [ "${{ steps.filter.outputs.IdentityAPI }}"   = "true" ] && SERVICES+=("IdentityAPI")
-            [ "${{ steps.filter.outputs.MailingAPI }}"    = "true" ] && SERVICES+=("MailingAPI")
-            [ "${{ steps.filter.outputs.MusicAPI }}"      = "true" ] && SERVICES+=("MusicAPI")
-            [ "${{ steps.filter.outputs.PartyAPI }}"      = "true" ] && SERVICES+=("PartyAPI")
-          fi
-
-          if [ ${#SERVICES[@]} -eq 0 ]; then
-            echo 'services=[]' >> "$GITHUB_OUTPUT"
-          else
-            JSON="["
-            for i in "${!SERVICES[@]}"; do
-              [ "$i" -gt 0 ] && JSON+=","
-              JSON+="\"${SERVICES[$i]}\""
-            done
-            JSON+="]"
-            echo "services=$JSON" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Set React changed flag
-        id: set-react
-        run: |
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=${{ steps.filter.outputs.react }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Set infrastructure images matrix
-        id: set-infra-matrix
-        run: |
-          ALL_INFRA='["mongodb","rabbitmq","strapi","loki","promtail","grafana","prometheus"]'
-
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
-            echo "images=$ALL_INFRA" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          IMAGES=()
-          [ "${{ steps.filter.outputs.mongodb }}"    = "true" ] && IMAGES+=("mongodb")
-          [ "${{ steps.filter.outputs.rabbitmq }}"   = "true" ] && IMAGES+=("rabbitmq")
-          [ "${{ steps.filter.outputs.strapi }}"     = "true" ] && IMAGES+=("strapi")
-          [ "${{ steps.filter.outputs.loki }}"       = "true" ] && IMAGES+=("loki")
-          [ "${{ steps.filter.outputs.promtail }}"   = "true" ] && IMAGES+=("promtail")
-          [ "${{ steps.filter.outputs.grafana }}"    = "true" ] && IMAGES+=("grafana")
-          [ "${{ steps.filter.outputs.prometheus }}" = "true" ] && IMAGES+=("prometheus")
-
-          if [ ${#IMAGES[@]} -eq 0 ]; then
-            echo 'images=[]' >> "$GITHUB_OUTPUT"
-          else
-            JSON="["
-            for i in "${!IMAGES[@]}"; do
-              [ "$i" -gt 0 ] && JSON+=","
-              JSON+="\"${IMAGES[$i]}\""
-            done
-            JSON+="]"
-            echo "images=$JSON" >> "$GITHUB_OUTPUT"
-          fi
-
   build_dotnet_services:
-    environment: ${{ needs.setup.outputs.current_env }}
-    name: Build & Push .NET Services
-    needs:
-      - setup
-      - detect_changes
-    if: needs.detect_changes.outputs.dotnet_services != '[]'
+    name: Build & Test .NET Services
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: read
-      packages: write
     strategy:
+      fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.detect_changes.outputs.dotnet_services) }}
+        service: ["CompanyAPI", "DJHostGateway", "DocumentsAPI", "EquipmentAPI", "IdentityAPI", "MailingAPI", "MusicAPI", "PartyAPI"]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -230,46 +50,14 @@ jobs:
         with:
           service: ${{ matrix.service }}
 
-      - name: Build and Push Docker Image
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: ${{ matrix.service }}
-          service-type: services
-          docker-tag: ${{ needs.setup.outputs.docker_tag }}
-          latest-tag: ${{ needs.setup.outputs.latest_tag }}
-          dockerfile: Docker/services/dotnet.Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          build-args: |
-            MICROSERVICE_NAME=${{ matrix.service }}
-
   build_react_frontends:
-    environment: ${{ needs.setup.outputs.current_env }}
-    name: Build & Push React Frontends
-    needs:
-      - setup
-      - detect_changes
-    if: needs.detect_changes.outputs.react_changed == 'true'
+    name: Build & Test React Frontends
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: read
-      packages: write
     strategy:
+      fail-fast: false
       matrix:
-        image:
-          - {
-              name: "dj-panel",
-              dockerfile: "Docker/frontends/react.Dockerfile"
-            }
-    env:
-      API_GATEWAY: ${{ vars.API_GATEWAY }}
-      API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
-      API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
-      CMS_HOST: ${{ vars.CMS_HOST }}
-      CMS_PORT: ${{ vars.CMS_PORT }}
-      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
-      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
+        service: ["dj-panel"]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
@@ -277,121 +65,24 @@ jobs:
       - name: Build React Service
         uses: ./.github/templates/build-react-service
         with:
-          service: ${{ matrix.image.name }}
+          service: ${{ matrix.service }}
 
-      - name: Build and Push Frontend Docker Image
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: ${{ matrix.image.name }}
-          service-type: frontends
-          docker-tag: ${{ needs.setup.outputs.docker_tag }}
-          latest-tag: ${{ needs.setup.outputs.latest_tag }}
-          dockerfile: ${{ matrix.image.dockerfile }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          build-args: |
-            MICROFRONTEND_NAME=${{ matrix.image.name }}
-            API_GATEWAY=${{ env.API_GATEWAY }}
-            SECURE_KEY=${{ env.API_SECURE_KEY }}
-            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
-            CMS_HOST=${{ env.CMS_HOST }}
-            CMS_PORT=${{ env.CMS_PORT }}
-            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
-            CMS_API_PATH=${{ env.CMS_API_PATH }}
-
-      - name: Build and Push Storybook Docker Image
-        uses: ./.github/templates/docker-build-push
-        with:
-          service-name: "storybook-${{ matrix.image.name }}"
-          service-type: frontends
-          docker-tag: ${{ needs.setup.outputs.docker_tag }}
-          latest-tag: ${{ needs.setup.outputs.latest_tag }}
-          dockerfile: "Docker/frontends/storybook.Dockerfile"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          build-args: |
-            MICROFRONTEND_NAME=${{ matrix.image.name }}
-
-  build_infrastructure_images:
-    name: Build & Push Infrastructure Images
-    needs:
-      - setup
-      - detect_changes
-    if: needs.detect_changes.outputs.infra_images != '[]'
+  create_release_tag:
+    name: Create Release Tag
     runs-on: ubuntu-latest
-    environment: ${{ needs.setup.outputs.current_env }}
-    timeout-minutes: 15
+    timeout-minutes: 5
+    # Only create the tag on a real branch push — not on manual dispatch
+    if: github.event_name == 'push'
+    needs:
+      - build_dotnet_services
+      - build_react_frontends
     permissions:
-      contents: read
-      packages: write
-    env:
-      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
-      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
-      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
-      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
-      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
-      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
-      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
-      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
-      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
-      CMS_DATABASE_HOST: ${{ vars.CMS_DATABASE_HOST }}
-      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
-      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
-      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
-      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
-      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-      CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
-      GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
-      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-      GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
-      GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
-      GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
-    strategy:
-      matrix:
-        image: ${{ fromJson(needs.detect_changes.outputs.infra_images) }}
-        # Note: redis, postgres, sqlserver, and 4x exporters now use official images
-        # configured directly in docker-compose.yml (no custom build required)
-
+      contents: write
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v5
 
-      - name: Build and Push Docker Image
-        uses: ./.github/templates/docker-build-push
+      - name: Create and push version tag
+        uses: ./.github/templates/create-version-tag
         with:
-          service-name: ${{ matrix.image }}
-          service-type: infra
-          docker-tag: ${{ needs.setup.outputs.docker_tag }}
-          latest-tag: ${{ needs.setup.outputs.latest_tag }}
-          dockerfile: Docker/infra/${{ matrix.image }}.Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository-owner: ${{ github.repository_owner }}
-          # Pass ALL possible args; Docker will ignore ones not declared via ARG
-          build-args: |
-            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
-            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
-            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
-            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
-            DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
-            DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
-            DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
-            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
-            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
-            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
-            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
-            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
-            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
-            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
-            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
-            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
-            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
-            CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
-            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
-            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
-            GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
-            GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
-            PROJECT_NAME=ix-dj-panel-${{ needs.setup.outputs.env_slug }}
-            REPLICA_INDEX=1
+          github-token: ${{ secrets.PIPELINE_PAT }}

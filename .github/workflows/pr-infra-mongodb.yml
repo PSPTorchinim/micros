@@ -1,0 +1,30 @@
+name: PR - Infra - MongoDB
+
+# Validates pull requests that touch the MongoDB Dockerfile.
+# Triggered automatically when the changed files belong to this component.
+
+on:
+  pull_request:
+    paths:
+      - 'Docker/infra/mongodb.Dockerfile'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint MongoDB Dockerfile
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Docker/infra/mongodb.Dockerfile

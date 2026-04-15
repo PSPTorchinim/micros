@@ -1,31 +1,46 @@
 name: Determine Docker Tag
-description: Determine the Docker tag for the service using commit hash (dev-{commit} or prod-{commit}) and latest alias
+description: Determine the Docker tag for the service. For tag-based triggers, uses the version tag itself (e.g. v1.0.0). For branch-based triggers, falls back to commit hash (dev-{commit} or prod-{commit}).
 outputs:
   docker_tag:
-    description: The commit-based Docker tag (dev-{commit} or prod-{commit})
+    description: The Docker tag (version tag or commit-based fallback)
     value: ${{ steps.tag_set.outputs.docker_tag }}
   latest_tag:
     description: The latest tag alias for the Docker tag (dev-latest or prod-latest)
     value: ${{ steps.tag_set.outputs.latest_tag }}
   all_tags:
-    description: All tags to push (commit-based and latest)
+    description: All tags to push (version/commit-based and latest)
     value: ${{ steps.tag_set.outputs.all_tags }}
 runs:
   using: composite
   steps:
-    - name: Set docker tag based on branch and commit
+    - name: Set docker tag based on branch or tag and commit
       id: tag_set
       shell: bash
       run: |
-        # Get short commit hash (7 characters)
-        COMMIT_HASH=$(git rev-parse --short=7 HEAD)
-
-        if [[ "${GITHUB_REF}" == *"/production" ]]; then
-          echo "docker_tag=prod-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
-          echo "latest_tag=prod-latest" >> "$GITHUB_OUTPUT"
-          echo "all_tags=prod-${COMMIT_HASH},prod-latest" >> "$GITHUB_OUTPUT"
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          # Tag-based trigger: use the version tag itself as the Docker tag
+          VERSION_TAG="${GITHUB_REF#refs/tags/}"
+          if [[ "$VERSION_TAG" == *"-"* ]]; then
+            # Pre-release tag (e.g. v1.0.0-rc.1) → development
+            echo "docker_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=dev-latest" >> "$GITHUB_OUTPUT"
+            echo "all_tags=${VERSION_TAG},dev-latest" >> "$GITHUB_OUTPUT"
+          else
+            # Stable tag (e.g. v1.0.0) → production
+            echo "docker_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=prod-latest" >> "$GITHUB_OUTPUT"
+            echo "all_tags=${VERSION_TAG},prod-latest" >> "$GITHUB_OUTPUT"
+          fi
         else
-          echo "docker_tag=dev-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
-          echo "latest_tag=dev-latest" >> "$GITHUB_OUTPUT"
-          echo "all_tags=dev-${COMMIT_HASH},dev-latest" >> "$GITHUB_OUTPUT"
+          # Branch-based fallback: use commit hash
+          COMMIT_HASH=$(git rev-parse --short=7 HEAD)
+          if [[ "${GITHUB_REF}" == *"/production" ]]; then
+            echo "docker_tag=prod-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=prod-latest" >> "$GITHUB_OUTPUT"
+            echo "all_tags=prod-${COMMIT_HASH},prod-latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_tag=dev-${COMMIT_HASH}" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=dev-latest" >> "$GITHUB_OUTPUT"
+            echo "all_tags=dev-${COMMIT_HASH},dev-latest" >> "$GITHUB_OUTPUT"
+          fi
         fi

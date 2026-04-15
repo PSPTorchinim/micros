@@ -1,36 +1,40 @@
-name: Build TrueNAS Infrastructure
+name: CD Pipeline
 
-# This workflow deploys the application stack to TrueNAS with zero-downtime:
-# 1. Determines environment (Development/Production) and generates unique tags
-# 2. Calculates available ports on TrueNAS for service allocation
-# 3. Generates and uploads Docker Compose file with service configurations
-# 4. Tests generated Docker Compose file for validity before deployment
-# 5. Enables Cloudflare maintenance page to prevent user disruption
-# 6. Performs rolling update of services while keeping databases running
-# 7. Updates Cloudflare tunnel and DNS for service routing
-# 8. Disables maintenance page after successful deployment
-# 9. Includes automatic rollback on failure
-# 10. After successful Development deployment, moves project issues from
-#     "Review Completed" to "To test" in the DJ Panel GitHub Project
+# Single deployment pipeline. Fires on every version tag push and auto-detects environment:
+#   - Pre-release CalVer tag (e.g. v2026.04.15-42, contains '-') → Development
+#   - Stable SemVer tag (e.g. v1.0.0, no '-') → Production
 #
-# Triggers:
-# - Nightly schedule on develop branch at 02:00 UTC
-# - Manual workflow_dispatch
+# This workflow builds Docker images and deploys the application stack to TrueNAS:
+# 1. Extracts IMAGE_TAG from the version tag that triggered this run
+# 2. Determines deployment environment (stable tag → Production; pre-release → Development)
+# 3. Builds and pushes all Docker images with IMAGE_TAG to GHCR
+# 4. Calculates available ports on TrueNAS for service allocation
+# 5. Generates and uploads Docker Compose file with service configurations
+# 6. Tests generated Docker Compose file for validity before deployment
+# 7. Enables Cloudflare maintenance page to prevent user disruption
+# 8. Performs rolling update of services while keeping databases running
+# 9. Updates Cloudflare tunnel and DNS for service routing
+# 10. Disables maintenance page after successful deployment
+# 11. Includes automatic rollback on failure
+# 12. After successful Development deployment, moves project issues from
+#     "Review Completed" to "To test" in the DJ Panel GitHub Project
 
 on:
+  push:
+    tags:
+      - 'v*'  # All version tags: pre-release CalVer (v*-*) → Development; stable SemVer (v*) → Production
   workflow_dispatch:
-  schedule:
-    # Nightly at 02:00 UTC on develop branch
-    - cron: "0 2 * * *"
 
-# Prevent concurrent deployments to the same environment
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  # Consolidated setup job - combines environment, docker tag, and compose timestamp determination
-  # This eliminates 3 separate checkout operations and reduces startup time
+  # Consolidated setup job - determines environment, IMAGE_TAG, and compose metadata
   setup:
     runs-on: ubuntu-latest
     permissions:
@@ -41,6 +45,7 @@ jobs:
       env_slug: ${{ steps.compute_slug.outputs.env_slug }}
       docker_tag: ${{ steps.tag_set.outputs.docker_tag }}
       latest_tag: ${{ steps.tag_set.outputs.latest_tag }}
+      all_tags: ${{ steps.tag_set.outputs.all_tags }}
       compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
       compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
       base_domain: ${{ steps.derive_domain.outputs.base_domain }}
@@ -48,7 +53,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.ref }}
 
       - name: Display workflow trigger information
         run: |
@@ -56,20 +61,16 @@ jobs:
           echo "Workflow Trigger Information"
           echo "=========================================="
           echo "Event name: ${{ github.event_name }}"
-          echo "Current branch (github.ref): ${{ github.ref }}"
+          echo "Ref (github.ref): ${{ github.ref }}"
+          echo "Tag name (github.ref_name): ${{ github.ref_name }}"
           echo "Current SHA (github.sha): ${{ github.sha }}"
-          echo "Checked out SHA: ${{ github.sha }}"
           echo "Actual commit checked out:"
           git log -1 --oneline
-          echo "Current branch:"
-          git branch --show-current || echo "(detached HEAD)"
           echo "=========================================="
 
       - name: Set Environment
         id: set_env
         uses: ./.github/templates/determine-environment
-        env:
-          GITHUB_REF: ${{ github.ref }}
 
       - name: Compute env slug
         id: compute_slug
@@ -80,8 +81,6 @@ jobs:
       - name: Determine Docker tag
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
-        env:
-          GITHUB_REF: ${{ github.ref }}
 
       - name: Determine compose timestamp
         id: timestamp_set
@@ -98,6 +97,189 @@ jobs:
           tunnel_uuid: ${{ secrets.CLOUDFLARE_TUNNEL_UUID }}
           cf_email: ${{ secrets.CLOUDFLARE_EMAIL }}
           cf_key: ${{ secrets.CLOUDFLARE_API_KEY }}
+
+  # ── Docker image builds ──────────────────────────────────────────────────────
+  # All components are built for every tag release (no diff filtering needed).
+
+  build_dotnet_images:
+    name: Build & Push .NET Services
+    environment: ${{ needs.setup.outputs.current_env }}
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: ["CompanyAPI", "DJHostGateway", "DocumentsAPI", "EquipmentAPI", "IdentityAPI", "MailingAPI", "MusicAPI", "PartyAPI"]
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build .NET Service
+        uses: ./.github/templates/build-dotnet-service
+        with:
+          service: ${{ matrix.service }}
+
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: ${{ matrix.service }}
+          service-type: services
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
+          dockerfile: Docker/services/dotnet.Dockerfile
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROSERVICE_NAME=${{ matrix.service }}
+
+  build_react_images:
+    name: Build & Push React Frontends
+    environment: ${{ needs.setup.outputs.current_env }}
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        image:
+          - {
+              name: "dj-panel",
+              dockerfile: "Docker/frontends/react.Dockerfile"
+            }
+    env:
+      API_GATEWAY: ${{ vars.API_GATEWAY }}
+      API_SECURE_KEY: ${{ secrets.SECURE_KEY }}
+      API_JWT_TOKEN: ${{ secrets.JWT_KEY }}
+      CMS_HOST: ${{ vars.CMS_HOST }}
+      CMS_PORT: ${{ vars.CMS_PORT }}
+      CMS_PROTOCOL: ${{ vars.CMS_PROTOCOL }}
+      CMS_API_PATH: ${{ vars.CMS_API_PATH }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build React Service
+        uses: ./.github/templates/build-react-service
+        with:
+          service: ${{ matrix.image.name }}
+
+      - name: Build and Push Frontend Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: ${{ matrix.image.name }}
+          service-type: frontends
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
+          dockerfile: ${{ matrix.image.dockerfile }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
+            API_GATEWAY=${{ env.API_GATEWAY }}
+            SECURE_KEY=${{ env.API_SECURE_KEY }}
+            JWT_TOKEN=${{ env.API_JWT_TOKEN }}
+            CMS_HOST=${{ env.CMS_HOST }}
+            CMS_PORT=${{ env.CMS_PORT }}
+            CMS_PROTOCOL=${{ env.CMS_PROTOCOL }}
+            CMS_API_PATH=${{ env.CMS_API_PATH }}
+
+      - name: Build and Push Storybook Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: "storybook-${{ matrix.image.name }}"
+          service-type: frontends
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
+          dockerfile: "Docker/frontends/storybook.Dockerfile"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          build-args: |
+            MICROFRONTEND_NAME=${{ matrix.image.name }}
+
+  build_infra_images:
+    name: Build & Push Infrastructure Images
+    environment: ${{ needs.setup.outputs.current_env }}
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    env:
+      DATABASE_USER_MONGODB: ${{ vars.DATABASE_USER_MONGODB }}
+      DATABASE_PASSWORD_MONGODB: ${{ secrets.DATABASE_PASSWORD_MONGODB }}
+      DATABASE_USER_SQLSERVER: ${{ vars.DATABASE_USER_SQLSERVER }}
+      DATABASE_PASSWORD_SQLSERVER: ${{ secrets.DATABASE_PASSWORD_SQLSERVER }}
+      CMS_DATABASE_NAME: ${{ vars.CMS_DATABASE_NAME }}
+      CMS_DATABASE_USERNAME: ${{ vars.CMS_DATABASE_USERNAME }}
+      CMS_DATABASE_PASSWORD: ${{ secrets.CMS_DATABASE_PASSWORD }}
+      CMS_DATABASE_CLIENT: ${{ vars.CMS_DATABASE_CLIENT }}
+      CMS_NODE_ENV: ${{ vars.CMS_NODE_ENV }}
+      CMS_DATABASE_HOST: ${{ vars.CMS_DATABASE_HOST }}
+      CMS_DATABASE_PORT: ${{ vars.CMS_DATABASE_PORT }}
+      CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}
+      CMS_ADMIN_JWT_SECRET: ${{ secrets.CMS_ADMIN_JWT_SECRET }}
+      CMS_APP_KEYS: ${{ secrets.CMS_APP_KEYS }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      RABBITMQ_USER: ${{ vars.RABBITMQ_USER }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      CMS_API_TOKEN_SALT: ${{ secrets.CMS_API_TOKEN_SALT }}
+      GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
+      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+      GRAFANA_HOST: ${{ vars.GRAFANA_HOST }}
+      GRAFANA_PORT: ${{ vars.GRAFANA_PORT }}
+      GRAFANA_PROTOCOL: ${{ vars.GRAFANA_PROTOCOL }}
+    strategy:
+      matrix:
+        image: ["mongodb", "rabbitmq", "strapi", "loki", "promtail", "grafana", "prometheus"]
+        # Note: redis, postgres, sqlserver, and 4x exporters use official images
+        # configured directly in docker-compose.yml (no custom build required)
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build and Push Docker Image
+        uses: ./.github/templates/docker-build-push
+        with:
+          service-name: ${{ matrix.image }}
+          service-type: infra
+          docker-tag: ${{ needs.setup.outputs.docker_tag }}
+          latest-tag: ${{ needs.setup.outputs.latest_tag }}
+          dockerfile: Docker/infra/${{ matrix.image }}.Dockerfile
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository-owner: ${{ github.repository_owner }}
+          # Pass ALL possible args; Docker will ignore ones not declared via ARG
+          build-args: |
+            DATABASE_USER_MONGODB=${{ env.DATABASE_USER_MONGODB }}
+            DATABASE_PASSWORD_MONGODB=${{ env.DATABASE_PASSWORD_MONGODB }}
+            DATABASE_USER_SQLSERVER=${{ env.DATABASE_USER_SQLSERVER }}
+            DATABASE_PASSWORD_SQLSERVER=${{ env.DATABASE_PASSWORD_SQLSERVER }}
+            DATABASE_NAME_POSTGRES=${{ env.CMS_DATABASE_NAME }}
+            DATABASE_USERNAME_POSTGRES=${{ env.CMS_DATABASE_USERNAME }}
+            DATABASE_PASSWORD_POSTGRES=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_NAME=${{ env.CMS_DATABASE_NAME }}
+            CMS_DATABASE_USERNAME=${{ env.CMS_DATABASE_USERNAME }}
+            CMS_DATABASE_PASSWORD=${{ env.CMS_DATABASE_PASSWORD }}
+            CMS_DATABASE_CLIENT=${{ env.CMS_DATABASE_CLIENT }}
+            CMS_NODE_ENV=${{ env.CMS_NODE_ENV }}
+            CMS_DATABASE_HOST=${{ env.CMS_DATABASE_HOST }}
+            CMS_DATABASE_PORT=${{ env.CMS_DATABASE_PORT }}
+            CMS_JWT_SECRET=${{ env.CMS_JWT_SECRET }}
+            CMS_ADMIN_JWT_SECRET=${{ env.CMS_ADMIN_JWT_SECRET }}
+            CMS_APP_KEYS=${{ env.CMS_APP_KEYS }}
+            CMS_API_TOKEN_SALT=${{ secrets.CMS_API_TOKEN_SALT }}
+            REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+            RABBITMQ_USER=${{ env.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ env.RABBITMQ_PASSWORD }}
+            GRAFANA_ADMIN_USER=${{ env.GRAFANA_ADMIN_USER }}
+            GRAFANA_ADMIN_PASSWORD=${{ env.GRAFANA_ADMIN_PASSWORD }}
+            PROJECT_NAME=ix-dj-panel-${{ needs.setup.outputs.env_slug }}
+            REPLICA_INDEX=1
 
   setup_truenas_directories:
     name: Setup TrueNAS directory structure (first-time)
@@ -373,6 +555,9 @@ jobs:
         setup,
         calculate_unused_ports,
         backup_current_state,
+        build_dotnet_images,
+        build_react_images,
+        build_infra_images,
       ]
     outputs:
       new_compose_abs: ${{ steps.parse_upload.outputs.new_compose_abs }}
