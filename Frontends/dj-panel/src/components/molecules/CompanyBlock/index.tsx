@@ -106,12 +106,18 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
 
   const handleSaveCompany = async () => {
     if (editedCompany) {
-      const success = await CompanyService.updateCompany(editedCompany);
+      const success = company
+        ? await CompanyService.updateCompany(editedCompany)
+        : await CompanyService.createCompany(editedCompany);
       if (success) {
         await loadCompanyData();
         setIsEditingCompany(false);
       } else {
-        console.error('Failed to update company information');
+        console.error(
+          company
+            ? 'Failed to update company information'
+            : 'Failed to create company',
+        );
         // TODO: Replace with proper toast notification
       }
     }
