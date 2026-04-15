@@ -62,12 +62,12 @@ jobs:
       - name: Resolve deployment ref from tag
         id: resolve_ref
         run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
             # Fetch all tags so we can identify which tag triggered the build
             git fetch --tags --force
             HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
             TAG=$(git tag --points-at "$HEAD_SHA" | grep '^v' | head -1)
-            if [ -n "$TAG" ]; then
+            if [[ -n "$TAG" ]]; then
               echo "deployment_ref=refs/tags/$TAG" >> "$GITHUB_OUTPUT"
               echo "Resolved deployment ref: refs/tags/$TAG"
             else
