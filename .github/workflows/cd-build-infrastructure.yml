@@ -14,14 +14,14 @@ name: Build TrueNAS Infrastructure
 #     "Review Completed" to "To test" in the DJ Panel GitHub Project
 #
 # Triggers:
-# - Nightly schedule on develop branch at 02:00 UTC
+# - After a successful "Build Artifacts" run (tag-based: triggered when a v* tag is pushed)
 # - Manual workflow_dispatch
 
 on:
   workflow_dispatch:
-  schedule:
-    # Nightly at 02:00 UTC on develop branch
-    - cron: "0 2 * * *"
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types: [completed]
 
 # Prevent concurrent deployments to the same environment
 concurrency:
@@ -33,6 +33,13 @@ jobs:
   # This eliminates 3 separate checkout operations and reduces startup time
   setup:
     runs-on: ubuntu-latest
+    # Only deploy when the triggering build succeeded (skip failed or cancelled builds).
+    # For workflow_run, also require the build came from this repository (not a fork).
+    if: >
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     permissions:
       contents: read
     name: Setup Build Configuration
@@ -44,11 +51,33 @@ jobs:
       compose_timestamp: ${{ steps.timestamp_set.outputs.compose_timestamp }}
       compose_file_name: ${{ steps.timestamp_set.outputs.compose_file_name }}
       base_domain: ${{ steps.derive_domain.outputs.base_domain }}
+      deployment_ref: ${{ steps.resolve_ref.outputs.deployment_ref }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Resolve deployment ref from tag
+        id: resolve_ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Fetch all tags so we can identify which tag triggered the build
+            git fetch --tags --force
+            HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+            TAG=$(git tag --points-at "$HEAD_SHA" | grep '^v' | head -1)
+            if [ -n "$TAG" ]; then
+              echo "deployment_ref=refs/tags/$TAG" >> "$GITHUB_OUTPUT"
+              echo "Resolved deployment ref: refs/tags/$TAG"
+            else
+              echo "❌ No version tag (v*) found on commit $HEAD_SHA — cannot determine deployment target."
+              exit 1
+            fi
+          else
+            echo "deployment_ref=${{ github.ref }}" >> "$GITHUB_OUTPUT"
+            echo "Deployment ref (workflow_dispatch): ${{ github.ref }}"
+          fi
 
       - name: Display workflow trigger information
         run: |
@@ -58,7 +87,7 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
           echo "Current branch (github.ref): ${{ github.ref }}"
           echo "Current SHA (github.sha): ${{ github.sha }}"
-          echo "Checked out SHA: ${{ github.sha }}"
+          echo "Deployment ref: ${{ steps.resolve_ref.outputs.deployment_ref }}"
           echo "Actual commit checked out:"
           git log -1 --oneline
           echo "Current branch:"
@@ -69,7 +98,7 @@ jobs:
         id: set_env
         uses: ./.github/templates/determine-environment
         env:
-          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF: ${{ steps.resolve_ref.outputs.deployment_ref }}
 
       - name: Compute env slug
         id: compute_slug
@@ -81,7 +110,7 @@ jobs:
         id: tag_set
         uses: ./.github/templates/determine-docker-tag
         env:
-          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF: ${{ steps.resolve_ref.outputs.deployment_ref }}
 
       - name: Determine compose timestamp
         id: timestamp_set

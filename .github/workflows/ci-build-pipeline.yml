@@ -7,20 +7,17 @@ name: Build Artifacts
 # 4. Builds React frontends with environment-specific configurations (if changed)
 # 5. Builds only the changed infrastructure images (databases, message brokers, monitoring tools)
 # All images are pushed to GitHub Container Registry (GHCR)
-# On schedule or workflow_dispatch triggers, all components are always built.
+# On tag push, schedule, or workflow_dispatch triggers, all components are always built.
 #
 # Triggers:
-# - Push to develop branch (automatic deployment of merged changes to Development environment)
-# - Monthly schedule on 1st day at midnight UTC (for Production environment)
+# - Push of a version tag (v*) — stable tags (e.g. v1.0.0) deploy to Production;
+#   pre-release tags (e.g. v1.0.0-rc.1) deploy to Development
 # - Manual workflow_dispatch
 
 on:
   push:
-    branches:
-      - develop
-  schedule:
-    # Monthly on the 1st at midnight (00:00 UTC) for Production environment
-    - cron: "0 0 1 * *"
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 # Prevent duplicate builds when multiple triggers occur simultaneously
@@ -131,8 +128,8 @@ jobs:
         run: |
           ALL_SERVICES='["CompanyAPI","DJHostGateway","DocumentsAPI","EquipmentAPI","IdentityAPI","MailingAPI","MusicAPI","PartyAPI"]'
 
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
+          # On tag push, schedule, or workflow_dispatch there is no file diff — build everything
+          if [ "${{ github.event_name }}" != "push" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "services=$ALL_SERVICES" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -167,8 +164,8 @@ jobs:
       - name: Set React changed flag
         id: set-react
         run: |
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
+          # On tag push, schedule, or workflow_dispatch there is no file diff — build everything
+          if [ "${{ github.event_name }}" != "push" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo 'changed=true' >> "$GITHUB_OUTPUT"
           else
             echo "changed=${{ steps.filter.outputs.react }}" >> "$GITHUB_OUTPUT"
@@ -179,8 +176,8 @@ jobs:
         run: |
           ALL_INFRA='["mongodb","rabbitmq","strapi","loki","promtail","grafana","prometheus"]'
 
-          # On schedule/workflow_dispatch there is no push diff — build everything
-          if [ "${{ github.event_name }}" != "push" ]; then
+          # On tag push, schedule, or workflow_dispatch there is no file diff — build everything
+          if [ "${{ github.event_name }}" != "push" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "images=$ALL_INFRA" >> "$GITHUB_OUTPUT"
             exit 0
           fi
