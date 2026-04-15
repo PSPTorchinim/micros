@@ -293,6 +293,24 @@ export class Api<
      * No description
      *
      * @tags Company
+     * @name V1CompanyCreate
+     * @request POST:/brand/v1/Company
+     * @secure
+     */
+    v1CompanyCreate: (data: UpdateCompanyDTO, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/brand/v1/Company`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Company
      * @name V1CompanyUpdate
      * @request PUT:/brand/v1/Company
      * @secure

@@ -173,7 +173,7 @@ export const CompanyBlock: React.FC<CompanyBlockProps> = ({
 
     setIsCreatingCompany(true);
     try {
-      const success = await CompanyService.updateCompany(newCompany);
+      const success = await CompanyService.createCompany(newCompany);
       if (success) {
         await loadCompanyData();
         setNewCompany({
