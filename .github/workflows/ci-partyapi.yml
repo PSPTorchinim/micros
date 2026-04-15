@@ -1,0 +1,38 @@
+name: CI - PartyAPI
+
+# Triggers on changes to PartyAPI source or any shared .NET code,
+# giving developers fast feedback without waiting for all other services to build.
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Services/PartyAPI/**'
+      - 'Tests/PartyAPI.Tests/**'
+      - 'Services/Shared/**'
+      - 'Tests/Shared.Tests/**'
+      - 'Micros.sln'
+      - 'Docker/services/dotnet.Dockerfile'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test PartyAPI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Build .NET Service
+        uses: ./.github/templates/build-dotnet-service
+        with:
+          service: PartyAPI

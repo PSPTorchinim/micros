@@ -1,0 +1,33 @@
+name: CI - Infra Loki
+
+# Triggers on changes to the Loki Dockerfile,
+# linting it to catch issues before they reach the CD pipeline.
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Docker/infra/loki.Dockerfile'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint Loki Dockerfile
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v5
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Docker/infra/loki.Dockerfile
