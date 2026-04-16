@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using CompanyAPI.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CompanyAPI.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(BrandContext))]
+    [Migration("20260316000000_AddCompanyTypeFields")]
     public partial class AddCompanyTypeFields : Migration
     {
         /// <inheritdoc />
